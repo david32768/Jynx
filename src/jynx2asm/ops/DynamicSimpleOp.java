@@ -1,0 +1,69 @@
+package jynx2asm.ops;
+
+import java.util.Objects;
+
+import org.objectweb.asm.ConstantDynamic;
+
+import asm.instruction.DynamicInstruction;
+import asm.instruction.Instruction;
+import jvm.AsmOp;
+import jynx2asm.ClassChecker;
+import jynx2asm.JynxConstantDynamic;
+import jynx2asm.JynxScanner;
+import jynx2asm.Line;
+import jynx2asm.NameDesc;
+
+public class DynamicSimpleOp implements DynamicOp {
+
+    private final String name;
+    private final String desc;
+    private final String bootmethodName;
+    private final String bootdescplus;
+    
+    private DynamicSimpleOp(String name, String desc, String boot, String bootdescplus) {
+        this.name = name;
+        this.desc = desc;
+        this.bootmethodName = boot;
+        this.bootdescplus = bootdescplus;
+    }
+    
+    public static DynamicSimpleOp getInstance(String name, String desc,
+            String bootclass, String bootmethod, String bootdescplus) {
+        Objects.nonNull(bootclass);
+        Objects.nonNull(bootmethod);
+        assert name == null || NameDesc.METHOD_ID.validate(name);
+        assert desc == null || NameDesc.DESC.validate(desc);
+        assert NameDesc.CLASS_NAME.validate(bootclass);
+        assert NameDesc.METHOD_ID.validate(bootmethod);
+        String boot = bootclass + '/' + bootmethod;
+        return new DynamicSimpleOp(name, desc, boot, bootdescplus);
+    }
+
+    @Override
+    public Instruction getInstruction(JynxScanner js,Line line, ClassChecker checker) {
+        String namex = name;
+        String descx = desc;
+        if (namex == null) {
+            String namedesc = line.nextToken().asString();
+            int lbindex = namedesc.indexOf('(');
+            if (lbindex >= 0 && desc == null) {
+                namex = namedesc.substring(0,lbindex);
+                descx = namedesc.substring(lbindex);
+            } else {
+                namex = namedesc;
+            }
+        }
+        if (descx == null) {
+            descx = line.nextToken().asString();
+        }
+        JynxConstantDynamic jcd = new JynxConstantDynamic(js, line, checker);
+        ConstantDynamic cd = jcd.getSimple(namex, descx, bootmethodName, bootdescplus);
+        return new DynamicInstruction(AsmOp.asm_invokedynamic, cd);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("*DynamicSimple boot %s %s",bootmethodName,bootdescplus);
+    }
+    
+}
