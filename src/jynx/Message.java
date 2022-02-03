@@ -12,7 +12,7 @@ public enum Message {
     M5(BLANK,"%nUsage: {options} %s-file"),
 
     M7(BLANK,"%nOptions are:%n"),
-
+    M8(BLANK,"check that non-java methods exist (on class path)"),
     M9(BLANK,"generate line numbers"),
     M10(BLANK,"warn if label unreferenced or alias"),
 
@@ -283,6 +283,8 @@ public enum Message {
 
     M370("Type annotations not allowed for Module"),
     M394("END OF CLASS HEADER - SHOULD NOT APPEAR!; %s"),
+    
+    M400(ENDINFO,"unable to find method %s because of %s"),
     
     M900("unknown enum constant %s in enum %s"),
     M901("unknown ASM type %s as it starts with '%c'"),

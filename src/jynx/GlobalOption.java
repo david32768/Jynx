@@ -1,6 +1,5 @@
 package jynx;
 
-import java.util.EnumSet;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -19,6 +18,7 @@ public enum GlobalOption {
     WARN_INDENT(M14), // "check indent for structured code"
     BASIC_VERIFIER(M16), // "use ASM BasicVerifier"
     SIMPLE_VERIFIER(M17), // "use ASM SimpleVerifier (default)"
+    CHECK_METHOD_REFERENCES(M8), // "check that non-java methods exist (on class path)"
     // DEBUG options - may change
     __EXIT_IF_ERROR(M13), // "exit if error"
     __TREAT_WARNINGS_AS_ERRORS(M25), // "treat warnings as errors"

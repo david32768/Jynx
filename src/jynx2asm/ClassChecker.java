@@ -1,5 +1,8 @@
 package jynx2asm;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -28,6 +31,7 @@ import jvm.JvmVersion;
 import jynx.Access;
 import jynx.ClassType;
 import jynx.Directive;
+import jynx.GlobalOption;
 
 public class ClassChecker {
     
@@ -108,8 +112,9 @@ public class ClassChecker {
     }
 
     public void used(OwnerNameDesc cmd, JvmOp jvmop, Line line) {
-        if (cmd.getOwner().equals(className)) {
-            AsmOp base = jvmop.getBase();
+        AsmOp base = jvmop.getBase();
+        String owner = cmd.getOwner();
+        if (owner.equals(className)) {
             switch (base) {
                 case asm_invokevirtual:
                     ownVirtualMethodsUsed.putIfAbsent(cmd, line);
@@ -121,6 +126,38 @@ public class ClassChecker {
                     ownSpecialMethodsUsed.putIfAbsent(cmd, line);
                     break;
             }
+        } else if (owner.startsWith("java/") || OPTION(GlobalOption.CHECK_METHOD_REFERENCES)) {
+            checkMethodExists(cmd, base);
+        }
+    }
+    
+    private final static MethodHandles.Lookup LOOKUP = MethodHandles.publicLookup();
+    
+    private static void checkMethodExists(OwnerNameDesc ond, AsmOp base) {
+        boolean virtual;
+        switch (base) {
+            case asm_invokestatic:
+                virtual = false;
+                break;
+            case asm_invokeinterface:
+            case asm_invokevirtual:
+                virtual = true;
+                break;
+            default:
+                return;
+        }
+        try {
+            MethodType mt = MethodType.fromMethodDescriptorString(ond.getDesc(), null);
+            Class<?> klass = Class.forName(ond.getOwner().replace('/', '.'),false,ClassLoader.getSystemClassLoader());
+            String mname = ond.getName();
+            MethodHandle mh = virtual?LOOKUP.findVirtual(klass, mname, mt):LOOKUP.findStatic(klass, mname, mt);
+        } catch (ClassNotFoundException
+                | IllegalArgumentException
+                | TypeNotPresentException
+                | NoSuchMethodException
+                | IllegalAccessException ex) {
+             // "unable to find method %s because of %s"
+            LOG(M400,ond.toJynx(),ex.getClass().getSimpleName());
         }
     }
     
