@@ -150,6 +150,8 @@ public enum Message {
 
     M150("expected equal values for index length = %d numind = %d"),
 
+    M179("String length of %d exceeds maximum %d"),
+
     M152("zero length name"),
     M153(WARNING,"as class has a %s method it should have a %s method"),
 

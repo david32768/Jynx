@@ -5,10 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-
 
 import static jynx.Global.*;
 import static jynx.GlobalOption.*;
@@ -78,29 +76,31 @@ public class Main {
     
     
     private static Optional<String> setOptions(String[] args) {
-        for (int i = 0; i < args.length; ++i) {
+        int i = 0;
+        String[] remainder = new String[0];
+        for (; i < args.length; ++i) {
             String argi = args[i];
             if (argi.isEmpty()) {
                 continue;
             }
-            if (argi.startsWith(GlobalOption.OPTION_PREFIX)) {
+            if (GlobalOption.mayBeOption(argi)) {
                 Optional<GlobalOption> opt = GlobalOption.optArgInstance(argi);
                 if (opt.isPresent()) {
                     GlobalOption option = opt.get();
-                        ADD_OPTION(option);
+                    ADD_OPTION(option);
                 } else {
                     LOG(M32,argi); // "%s is not a valid option"
                 }
             } else {
-                args = Arrays.copyOfRange(args, i, args.length);
-                if (args.length != 1) {
-                    LOG(M219,Arrays.asList(args)); // "wrong number of parameters after options %s"
-                    return Optional.empty();
+                remainder = Arrays.copyOfRange(args, i, args.length);
+                if (remainder.length != 1) {
+                    break;
                 } else {
-                    return Optional.of(args[0]);
+                    return Optional.of(args[i]);
                 }
             }
         }
+        LOG(M219,Arrays.asList(remainder)); // "wrong number of parameters after options %s"
         return Optional.empty();
     }
 
@@ -109,19 +109,21 @@ public class Main {
             usage();
             return 0;
         }
-        newGlobal(EnumSet.noneOf(GlobalOption.class));
-        String option = args[0];
-        if (VERSION.argName().equalsIgnoreCase(option)) {
-            version();
-            return 0;
-        }
-        if (HELP.argName().equalsIgnoreCase(option)) {
-            usage();
-            return 0;
+        if (args.length == 1) {
+            String option = args[0];
+            if (VERSION.isArg(option)) {
+                version();
+                return 0;
+            }
+            if (HELP.isArg(option)) {
+                usage();
+                return 0;
+            }
         }
         Optional<String> optname = setOptions(args);
-        if (!optname.isPresent()) {
-            System.out.println(M3.format()); // "program terminated because of errors"
+        if (!optname.isPresent() || LOGGER().numErrors() != 0) {
+            LOG(M3); // "program terminated because of errors"
+            usage();
             return 1;
         }
         newGlobal(OPTIONS());

@@ -1,5 +1,6 @@
 package jynx;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -8,8 +9,8 @@ import static jynx.Message.*;
 public enum GlobalOption {
 
     // information
-    HELP(M1), // "display help message"
-    VERSION(M2), //"display version information"
+    HELP(M1,'h'), // "display help message"
+    VERSION(M2,'V'), //"display version information"
 
     USE_STACK_MAP(M19), // "use user stack map instead of ASM generated"
     WARN_UNNECESSARY_LABEL(M10), // "warn if label unreferenced or alias"
@@ -27,21 +28,41 @@ public enum GlobalOption {
     ;
 
     private final String msg;
+    private final Character abbrev;
 
     private GlobalOption(Message msg) {
         this.msg = msg.format();
+        this.abbrev = null;
     }
 
-    final static String OPTION_PREFIX = "--";
+    private GlobalOption(Message msg, char abbrev) {
+        this.msg = msg.format();
+        this.abbrev = abbrev;
+    }
 
-    String argName() {
+    private final static String OPTION_PREFIX = "--";
+    private final static String ABBREV_PREFIX = "-";
+
+    private String argName() {
         return OPTION_PREFIX + name();
     }
     
-    public boolean isInfo() {
-        return this == HELP || this == VERSION;
+    private String abbrevArgName() {
+        if (abbrev == null) {
+            return argName();
+        }
+        return ABBREV_PREFIX + abbrev;
     }
-
+    
+    public static boolean mayBeOption(String option) {
+        return option.startsWith(ABBREV_PREFIX);
+    }
+    
+    public boolean isArg(String option) {
+        return argName().equalsIgnoreCase(option)
+                || abbrevArgName().equals(option);
+    }
+    
     public static Optional<GlobalOption> optInstance(String str) {
         return Stream.of(values())
                 .filter(g -> g.name().equalsIgnoreCase(str))
@@ -50,8 +71,7 @@ public enum GlobalOption {
 
     public static Optional<GlobalOption> optArgInstance(String str) {
         return Stream.of(values())
-                .filter(g->!g.isInfo())
-                .filter(g -> g.argName().equalsIgnoreCase(str))
+                .filter(g -> g.isArg(str))
                 .findFirst();
     }
     

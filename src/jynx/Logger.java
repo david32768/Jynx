@@ -54,7 +54,11 @@ public class Logger {
         currentLine = lines.pop(); // removeFirst
     }
 
-    private void printLineMessage(String fmt, Object... args) {
+    private void printInfo(Message msg, Object... args) {
+        System.err.println(msg.format(args));
+    }
+    
+    private void printLineMessage(Message msg, Object... args) {
         if (Objects.equals(currentLine,lastErrorLine)) {
         } else {
             System.err.println();
@@ -67,56 +71,50 @@ public class Logger {
             }
         }
         lastErrorLine = currentLine;
-        System.err.format(fmt, args);
-        System.err.println();
+        printInfo(msg, args);
     }
 
-    private void printError(String fmt, Object... args) {
-        printLineMessage(fmt, args);
+    private void printError(Message msg, Object... args) {
+        printLineMessage(msg, args);
         errct++;
     }
 
-    private void printInfo(String fmt, Object... args) {
-        System.err.format(fmt,args);
-        System.err.println();
-    }
-    
-    private void addEndInfo(String fmt, Object... args) {
-        endinfo.add(String.format(fmt, args));
+    private void addEndInfo(Message msg, Object... args) {
+        endinfo.add(msg.format(args));
     }
     
     boolean printEndInfo(String classname){
         System.err.println();
         for (String msg:endinfo) {
-            printInfo(msg);
+            System.err.println(msg);
         }
         if (!endinfo.isEmpty()) {
             System.err.println();
         }
         endinfo.clear();
         if (errct == 0) {
-            printInfo(M104.format(classname)); // "class %s assembly completed successfully"
+            printInfo(M104,classname); // "class %s assembly completed successfully"
         } else {
-            printInfo(M131.format(classname,errct)); // "class %s assembly completed  unsuccesfully - number of errors is %d"
+             // "class %s assembly completed  unsuccesfully - number of errors is %d"
+            printInfo(M131,classname,errct);
         }
         currentLine = null;
         return errct == 0;
     }
 
     void log(LogMsgType logtype, Message msg, Object... objs) {
-        String message = msg.format(objs);
         switch (logtype) {
             case SEVERE:
-                printError(message);
-                printInfo(M84.format()); // "assembly terminated because of severe error"
+                printError(msg,objs);
+                printInfo(M84); // "assembly terminated because of severe error"
                 throw new SevereError();
             case STYLE:
                 // fall through to warning
             case WARNING:
-                printLineMessage(message);
+                printLineMessage(msg,objs);
                 break;
             case ERROR:
-                printError(message);
+                printError(msg,objs);
                 if (exitOnError) {
                     if (OPTION(GlobalOption.__EXIT_IF_ERROR)) {
                         (new Exception()).printStackTrace();
@@ -124,18 +122,18 @@ public class Logger {
                     System.exit(1);
                 }
                 if (errct > MAX_ERRORS) {
-                    printInfo(M85.format()); // "assembly terminated because of too many errors"
+                    printInfo(M85); // "assembly terminated because of too many errors"
                     throw new SevereError();
                 }
                 break;
             case ENDINFO:
-                addEndInfo(message);
+                addEndInfo(msg, objs);
                 break;
             case INFO:
-                printInfo(message);
+                printInfo(msg,objs);
                 break;
             case BLANK:
-                printInfo(message);
+                printInfo(msg,objs);
                 break;
             default:
                 throw new EnumAssertionError(logtype);
@@ -151,7 +149,7 @@ public class Logger {
     }
 
     void log(Exception ex) {
-        printError("%s",ex);
+        printError(M999,ex); // "%s"
         if (exitOnError) {
             ex.printStackTrace();
             System.exit(1);

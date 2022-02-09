@@ -18,7 +18,7 @@ public class Global {
 
     private Global() {
         this.options = EnumSet.noneOf(GlobalOption.class);
-        this.logger  = new Logger(true);
+        this.logger  = new Logger(false);
         this.jvmVersion = null;
     }
 
