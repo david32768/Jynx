@@ -68,10 +68,12 @@ public class WasmMacroLib  extends MacroLib {
     aux_igt(asm_i2l,asm_lneg,asm_iconst_m1,asm_lushr,asm_l2i),
     aux_ige(aux_ilt,asm_iconst_1,asm_ixor),
 
+    aux_addData(LineOps.insert(WASM_STORAGE,"putBase64String","(ILjava/lang/String;I)V"),asm_invokestatic),
+    aux_memsetup(LineOps.insert(WASM_STORAGE,"setInstance","(III)V"),asm_invokestatic),
+
     // init functions
-    MEMORY_SET(LineOps.insert(WASM_STORAGE,"setInstance","(III)V"),asm_invokestatic),
-    ADD_SEGMENT(LineOps.insert(WASM_STORAGE,"add","(Lwasmrun/Data;)V"),asm_invokestatic),
-    DATA_INSTANCE(LineOps.insert(WASM_DATA,"getInstance","(IILjava/lang/String;)Lwasmrun/Data;"),asm_invokestatic),
+    MEMORY_SET(asm_ldc,asm_ldc,asm_ldc,aux_memsetup),
+    ADD_SEGMENT(asm_ldc,asm_ldc,asm_ldc,asm_swap,aux_addData),
     ADD_ENTRY(DynamicOp.objectArray("handleArray", "()V", WASM_TABLE, "handleBootstrap","I" + MH_ARRAY)),
     
         // control operators
