@@ -215,4 +215,23 @@ public class StringUtil {
         }
     }
     
+    private static int modifiedUTF8Size(int c) {
+        if (c == 0) {
+            return 2;
+        }
+        if (c < 0x80) {
+            return 1;
+        }
+        if (c < 0x100) {
+            return 2;
+        }
+        return 3;
+    } 
+
+    public static long modifiedUTF8Length(String str) {
+        return str.chars()
+                .map(StringUtil::modifiedUTF8Size)
+                .sum();
+    }
+    
 }

@@ -24,6 +24,8 @@ public class Token {
     public final static Token END_CLASS_TOKEN = new Token("." + Directive.end_class.name());
     private final static String2Object S2O = new String2Object();
     
+    private final static int  MAX_UTF8_STRING = 2*Short.MAX_VALUE + 1;
+    
     private final String token;
 
     private Token(String token) {
@@ -47,6 +49,11 @@ public class Token {
     }
 
     public String asString() {
+        long len = token.length();
+        if (len > MAX_UTF8_STRING/3 && StringUtil.modifiedUTF8Length(token) > MAX_UTF8_STRING) {
+            // "String length of %d exceeds maximum %d"
+            throw new LogIllegalArgumentException(M179,len,MAX_UTF8_STRING);
+        }
         return token;
     }
 
