@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import static jynx.Global.LOG;
 import static jynx.Message.M140;
+import static jynx.Message.M402;
 import static jynx.Message.M90;
 
 import jvm.AccessFlag;
@@ -19,7 +20,12 @@ public interface TokenDeque {
     public Deque<Token> getDeque();
     
     public default Token peekToken() {
-        return getDeque().getFirst();
+        Token token = getDeque().peekFirst();
+        if (token == null) {
+            throw new LogIllegalStateException(M140);  // "reading next token after reaching last"
+        } else {
+            return token;
+        }
     }
 
     public default Token nextToken() {
@@ -31,13 +37,17 @@ public interface TokenDeque {
     }
 
     public default void insert(Token insert) {
+        if (insert == Token.END_TOKEN) {
+            throw new LogIllegalStateException(M402);  // "cannot insert end_token"
+        }
         getDeque().addFirst(insert);
     }
 
     public default void noMoreTokens() {
-        Deque<Token> tokens = getDeque();
-        if (!tokens.isEmpty() && (tokens.size() != 1 || peekToken() != Token.END_TOKEN)) {
-            LOG(M90,tokens.peekFirst());    // "unused tokens - starting at %s"
+        Token token = getDeque().peekFirst();
+        if (token == null || token == Token.END_TOKEN) {
+        } else {
+            LOG(M90,token);    // "unused tokens - starting at %s"
             skipTokens();
         }
     }

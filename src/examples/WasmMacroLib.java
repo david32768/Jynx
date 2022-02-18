@@ -22,11 +22,13 @@ import jynx2asm.ops.MacroOp;
 public class WasmMacroLib  extends MacroLib {
     
         public final static String WASM_STORAGE = "wasmrun/Storage";
+        public final static String WASM_STORAGE_L = "L" + WASM_STORAGE + ";";
         public final static String WASM_HELPER = "wasmrun/Helper";
         public final static String WASM_TABLE = "wasmrun/Table";
+        public final static String WASM_TABLE_L =  "L" + WASM_TABLE + ";";
         public final static String WASM_DATA = "wasmrun/Data";
         public final static String MH_ARRAY = Type.getType(MethodHandle[].class).getInternalName();
-        public final static String MH = Type.getType(MethodHandle.class).getInternalName();
+        public final static String MH = "L" + Type.getType(MethodHandle.class).getInternalName() + ";";
         
         @Override
         public Stream<MacroOp> streamExternal() {
@@ -34,25 +36,14 @@ public class WasmMacroLib  extends MacroLib {
                 .filter(m-> Character.isUpperCase(m.toString().codePointAt(0)))
                 .map(m->(MacroOp)m);
         }
-    
+        
+        public static DynamicOp dynStorage(String method, String parms) {
+            return DynamicOp.withBootParms(method, parms, WASM_STORAGE,
+                "storageBootstrap",MH + "I","GS:MEMORY0()" + WASM_STORAGE_L);
+        }
+        
     private enum WasmOp implements MacroOp {
 
-    inv_loadByte(LineOps.insert(WASM_STORAGE,"loadByte","(II)I"),asm_invokestatic),
-    inv_loadShort(LineOps.insert(WASM_STORAGE ,"loadShort","(II)I"),asm_invokestatic),
-    inv_loadInt(LineOps.insert(WASM_STORAGE ,"loadInt","(II)I"),asm_invokestatic),
-    inv_loadFloat(LineOps.insert(WASM_STORAGE ,"loadFloat","(II)F"),asm_invokestatic),
-    inv_loadLong(LineOps.insert(WASM_STORAGE ,"loadLong","(II)J"),asm_invokestatic),
-    inv_loadDouble(LineOps.insert(WASM_STORAGE ,"loadDouble","(II)D"),asm_invokestatic),
-    
-    inv_storeByte(LineOps.insert(WASM_STORAGE ,"storeByte","(III)V"),asm_invokestatic),
-    inv_storeShort(LineOps.insert(WASM_STORAGE ,"storeShort","(III)V"),asm_invokestatic),
-    inv_storeInt(LineOps.insert(WASM_STORAGE ,"storeInt","(III)V"),asm_invokestatic),
-    inv_storeFloat(LineOps.insert(WASM_STORAGE ,"storeFloat","(IFI)V"),asm_invokestatic),
-    inv_storeLong(LineOps.insert(WASM_STORAGE ,"storeLong","(IJI)V"),asm_invokestatic),
-    inv_storeDouble(LineOps.insert(WASM_STORAGE ,"storeDouble","(IDI)V"),asm_invokestatic),
-    inv_current(LineOps.insert(WASM_STORAGE ,"current","(I)I"),asm_invokestatic),
-    inv_grow(LineOps.insert(WASM_STORAGE ,"grow","(II)I"),asm_invokestatic),
-    
     aux_ilt(asm_iconst_m1,asm_iushr),
     // boolean result; top of stack must be one of (-1, 0, 1)
     aux_ine_m101(asm_iconst_1,asm_iand),
@@ -68,13 +59,17 @@ public class WasmMacroLib  extends MacroLib {
     aux_igt(asm_i2l,asm_lneg,asm_iconst_m1,asm_lushr,asm_l2i),
     aux_ige(aux_ilt,asm_iconst_1,asm_ixor),
 
-    aux_addData(LineOps.insert(WASM_STORAGE,"putBase64String","(ILjava/lang/String;I)V"),asm_invokestatic),
-    aux_memsetup(LineOps.insert(WASM_STORAGE,"setInstance","(III)V"),asm_invokestatic),
+    aux_newtable(LineOps.insert(WASM_TABLE,"getInstance","()" + WASM_TABLE_L),asm_invokestatic),
+    aux_newmem(LineOps.insert(WASM_STORAGE,"getInstance","(II)" + WASM_STORAGE_L),asm_invokestatic),
 
     // init functions
-    MEMORY_SET(asm_ldc,asm_ldc,asm_ldc,aux_memsetup),
-    ADD_SEGMENT(asm_ldc,asm_ldc,asm_ldc,asm_swap,aux_addData),
-    ADD_ENTRY(DynamicOp.objectArray("handleArray", "()V", WASM_TABLE, "handleBootstrap","I" + MH_ARRAY)),
+    MEMORY_NEW(asm_ldc,asm_ldc,aux_newmem),
+    MEMORY_CHECK(asm_ldc,asm_ldc,WasmMacroLib.dynStorage("checkIntance", "(II)V")),
+    ADD_SEGMENT(asm_ldc,tok_swap,asm_ldc,WasmMacroLib.dynStorage("putBase64String", "(ILjava/lang/String;)V")),
+    
+    TABLE_NEW(aux_newtable),
+    ADD_ENTRY(DynamicOp.withBootParms("add", "()V",
+            WASM_TABLE, "handleBootstrap",MH + "II" + MH_ARRAY,"GS:TABLE0()" + WASM_TABLE_L)),
     
         // control operators
         UNREACHABLE(LineOps.insert(WASM_HELPER ,"unreachable","()Ljava/lang/AssertionError;"),asm_invokestatic,asm_athrow),
@@ -82,8 +77,9 @@ public class WasmMacroLib  extends MacroLib {
         BR_IF(ext_BR_IFNEZ),
         BR_TABLE(asm_tableswitch),
         CALL(asm_invokestatic),
-        CALL_INDIRECT(DynamicOp.of("table", null, WASM_TABLE, "callIndirectBootstrap")),
-        TABLE_CALL(DynamicOp.of("table", null, WASM_TABLE, "callIndirectBootstrap")),
+//        CALL_INDIRECT(DynamicOp.of("table", null, WASM_TABLE, "callIndirectBootstrap")),
+        CALL_INDIRECT(DynamicOp.withBootParms("table", null, WASM_TABLE,
+                "callIndirectBootstrap",MH,"GS:TABLE0()" + WASM_TABLE_L)),
         // parametric operators
         NOP(asm_nop),
         DROP(opc_popn),
@@ -97,37 +93,45 @@ public class WasmMacroLib  extends MacroLib {
         GLOBAL_SET(asm_putstatic),
 
         // memory - args are alignment and offset(alignment currently ignored)
-        I32_LOAD(tok_skip,opc_ildc,inv_loadInt),
-        I64_LOAD(tok_skip,opc_ildc,inv_loadLong),
-        F32_LOAD(tok_skip,opc_ildc,inv_loadFloat),
-        F64_LOAD(tok_skip,opc_ildc,inv_loadDouble),
+        I32_LOAD(tok_skip,WasmMacroLib.dynStorage("loadInt", "(I)I")),
+        I64_LOAD(tok_skip,WasmMacroLib.dynStorage("loadLong", "(I)J")),
+        F32_LOAD(tok_skip,WasmMacroLib.dynStorage("loadFloat", "(I)F")),
+        F64_LOAD(tok_skip,WasmMacroLib.dynStorage("loadDouble", "(I)D")),
 
-        I32_LOAD8_S(tok_skip,opc_ildc,inv_loadByte),
-        I32_LOAD8_U(tok_skip,opc_ildc,inv_loadByte,inv_bu2i),
-        I32_LOAD16_S(tok_skip,opc_ildc,inv_loadShort),
-        I32_LOAD16_U(tok_skip,opc_ildc,inv_loadShort,inv_su2i),
+        I32_LOAD8_S(tok_skip,WasmMacroLib.dynStorage("loadByte", "(I)I")),
+        I32_LOAD8_U(tok_skip,WasmMacroLib.dynStorage("loadUByte", "(I)I")),
+        I32_LOAD16_S(tok_skip,WasmMacroLib.dynStorage("loadShort", "(I)I")),
+        I32_LOAD16_U(tok_skip,WasmMacroLib.dynStorage("loadUShort", "(I)I")),
 
-        I64_LOAD8_S(tok_skip,opc_ildc,inv_loadByte,asm_i2l),
-        I64_LOAD8_U(tok_skip,opc_ildc,inv_loadByte,inv_bu2l),
-        I64_LOAD16_S(tok_skip,opc_ildc,inv_loadShort,asm_i2l),
-        I64_LOAD16_U(tok_skip,opc_ildc,inv_loadShort,inv_su2l),
-        I64_LOAD32_S(tok_skip,opc_ildc,inv_loadInt,asm_i2l),
-        I64_LOAD32_U(tok_skip,opc_ildc,inv_loadInt,inv_iu2l),
+        I64_LOAD8_S(tok_skip,WasmMacroLib.dynStorage("loadByte2Long", "(I)J")),
+        I64_LOAD8_U(tok_skip,WasmMacroLib.dynStorage("loadUByte2Long", "(I)J")),
+        I64_LOAD16_S(tok_skip,WasmMacroLib.dynStorage("loadShort2Long", "(I)J")),
+        I64_LOAD16_U(tok_skip,WasmMacroLib.dynStorage("loadUShort2Long", "(I)J")),
+        I64_LOAD32_S(tok_skip,WasmMacroLib.dynStorage("loadInt2Long", "(I)J")),
+        I64_LOAD32_U(tok_skip,WasmMacroLib.dynStorage("loadUInt2Long", "(I)J")),
 
-        I32_STORE(tok_skip,opc_ildc, inv_storeInt),
-        I64_STORE(tok_skip,opc_ildc, inv_storeLong),
-        F32_STORE(tok_skip,opc_ildc, inv_storeFloat),
-        F64_STORE(tok_skip,opc_ildc, inv_storeDouble),
+        I32_STORE(tok_skip,WasmMacroLib.dynStorage("storeInt", "(II)V")),
+        I64_STORE(tok_skip,WasmMacroLib.dynStorage("storeLong", "(IJ)V")),
+        F32_STORE(tok_skip,WasmMacroLib.dynStorage("storeFloat", "(IF)V")),
+        F64_STORE(tok_skip,WasmMacroLib.dynStorage("storeDouble", "(ID)V")),
 
-        I32_STORE8(tok_skip,opc_ildc, inv_storeByte),
-        I32_STORE16(tok_skip,opc_ildc, inv_storeShort),
-        I64_STORE8(asm_l2i,tok_skip,opc_ildc,inv_storeByte),
-        I64_STORE16(asm_l2i,tok_skip,opc_ildc,inv_storeShort),
-        I64_STORE32(asm_l2i,tok_skip,opc_ildc,inv_storeInt),
+        I32_STORE8(tok_skip,WasmMacroLib.dynStorage("storeByte", "(II)V")),
+        I32_STORE16(tok_skip,WasmMacroLib.dynStorage("storeShort", "(II)V")),
 
-        // memory 0
-        MEMORY_SIZE(opc_ildc,inv_current),
-        MEMORY_GROW(opc_ildc,inv_grow),
+        I64_STORE8(tok_skip,WasmMacroLib.dynStorage("storeLong2Byte", "(IJ)V")),
+        I64_STORE16(tok_skip,WasmMacroLib.dynStorage("storeLong2Short", "(IJ)V")),
+        I64_STORE32(tok_skip,WasmMacroLib.dynStorage("storeLong2Int", "(IJ)V")),
+
+
+        // memory number is passed as 'disp' parameter
+//    inv_current(LineOps.insert(WASM_STORAGE ,"current","(I)I"),asm_invokestatic),
+//    inv_grow(LineOps.insert(WASM_STORAGE ,"grow","(II)I"),asm_invokestatic),
+//    
+//        MEMORY_SIZE(opc_ildc,inv_current),
+//        MEMORY_GROW(opc_ildc,inv_grow),
+//
+        MEMORY_SIZE(WasmMacroLib.dynStorage("currentPages", "()I")),
+        MEMORY_GROW(WasmMacroLib.dynStorage("grow", "(I)I")),
 
         // constants
         I32_CONST(opc_ildc),

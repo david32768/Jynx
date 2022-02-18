@@ -20,7 +20,7 @@ public class Main {
     private final static String SUFFIX = ".jx";
      
     private static void version() {
-        LOG(M0,JvmVersion.MAX_VERSION); // "Jynx version 0.96; maximum Java version is %s"
+        LOG(M0,JvmVersion.MAX_VERSION); // "Jynx version 0.9.7; maximum Java version is %s"
     }
     
     private static void usage() {
@@ -46,7 +46,7 @@ public class Main {
         Path pathc = Paths.get(fname.replace(SUFFIX,".class"));
         try {
             List<String> lines = getLines(fname);
-            JynxClass jclass = JynxClass.getInstance(fname, lines,OPTION(USE_STACK_MAP));
+            JynxClass jclass = JynxClass.getInstance(fname, lines);
             byte[] ba = jclass.toByteArray();
             if (ba != null) {
                 String cname = jclass.getClassName();

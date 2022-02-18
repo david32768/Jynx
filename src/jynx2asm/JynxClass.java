@@ -33,7 +33,6 @@ public class JynxClass {
     private final JynxScanner js;
     private final String file_source;
     private final String default_source;
-    private final boolean usestack;
     
     private JvmVersion jvmVersion;
     private String source;
@@ -51,19 +50,18 @@ public class JynxClass {
     
     private final Map<Directive,Line> unique_directives;
 
-    private JynxClass(String file_source, JynxScanner js, boolean usestack) {
+    private JynxClass(String file_source, JynxScanner js) {
         this.js = js;
         this.file_source = file_source;
-        this.usestack = usestack;
         int index = file_source.lastIndexOf(File.separatorChar);
         this.default_source = file_source.substring(index + 1);
         this.source = null;
         this.unique_directives = new HashMap<>();
     }
 
-    public static JynxClass getInstance(String default_source, List<String> lines, boolean usestack) {
+    public static JynxClass getInstance(String default_source, List<String> lines) {
         Global.resolveAmbiguity(SIMPLE_VERIFIER, BASIC_VERIFIER);
-        JynxClass jclass =  new JynxClass(default_source, new JynxScanner(lines),usestack);
+        JynxClass jclass =  new JynxClass(default_source, new JynxScanner(lines));
         jclass.assemble();
         return jclass;
     }
@@ -176,12 +174,14 @@ public class JynxClass {
     
     public void setClass(Directive dir) {
         ClassType classtype = ClassType.of(dir);
+        boolean usestack = OPTION(GlobalOption.USE_STACK_MAP);
         if (source == null && !usestack) {
             LOG(M143,Directive.dir_source,default_source); // "%s %s assumed"
             source = default_source;
         }
         LOG(M89, file_source,jvmVersion); // "file = %s version = %s"
-        jclasshdr = JynxClassHdr.getInstance(jvmVersion, source, js.getLine(), classtype, usestack);
+        jclasshdr = JynxClassHdr.getInstance(jvmVersion, source, js.getLine(), classtype);
+        Global.setClassName(jclasshdr.getClassName());
         state = State.getState(classtype);
         sd = jclasshdr;
         if (classtype == ClassType.MODULE) {

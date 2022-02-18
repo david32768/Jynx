@@ -253,6 +253,22 @@ public class ClassChecker {
         }
     }
 
+    public void checkFieldReference(OwnerNameDesc fd, JvmOp jvmop) {
+        if (fd.getOwner().equals(className)) {
+            AsmOp asmop = jvmop.getBase();
+            boolean instance = asmop == AsmOp.asm_getfield || asmop == AsmOp.asm_putfield;
+            JynxFieldNode jfn = fields.get(fd.getNameDesc());
+            if (jfn == null) {
+                // "field %s does not exist in this class but may exist in superclass/superinterface"
+                LOG(M214,fd.getName());
+            } else if (jfn.isInstanceField() ^ instance) {
+                String fieldtype = jfn.isInstanceField()?"instance":"static";
+                String optype = instance?"instance":"static";
+                LOG(M215,fieldtype,fd.getName(),optype,jvmop); // " %s field %s accessed by %s op %s"
+            }
+        }
+    }
+    
     private void mustHaveVirtualMethod(OwnerNameDesc namedesc) {
         if (!virtualMethods.containsKey(namedesc)) {
             LOG(M132,classType, namedesc.toJynx());   // "%s must have a %s method"

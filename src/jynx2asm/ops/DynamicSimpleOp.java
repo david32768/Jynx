@@ -19,16 +19,19 @@ public class DynamicSimpleOp implements DynamicOp {
     private final String desc;
     private final String bootmethodName;
     private final String bootdescplus;
-    
-    private DynamicSimpleOp(String name, String desc, String boot, String bootdescplus) {
+    private final String[] bootparms;
+
+    public DynamicSimpleOp(String name, String desc, String bootmethodName,
+            String bootdescplus, String... bootparms) {
         this.name = name;
         this.desc = desc;
-        this.bootmethodName = boot;
+        this.bootmethodName = bootmethodName;
         this.bootdescplus = bootdescplus;
+        this.bootparms = bootparms;
     }
     
     public static DynamicSimpleOp getInstance(String name, String desc,
-            String bootclass, String bootmethod, String bootdescplus) {
+            String bootclass, String bootmethod, String bootdescplus, String... bootparms) {
         Objects.nonNull(bootclass);
         Objects.nonNull(bootmethod);
         assert name == null || NameDesc.METHOD_ID.validate(name);
@@ -36,7 +39,7 @@ public class DynamicSimpleOp implements DynamicOp {
         assert NameDesc.CLASS_NAME.validate(bootclass);
         assert NameDesc.METHOD_ID.validate(bootmethod);
         String boot = bootclass + '/' + bootmethod;
-        return new DynamicSimpleOp(name, desc, boot, bootdescplus);
+        return new DynamicSimpleOp(name, desc, boot, bootdescplus,bootparms);
     }
 
     @Override
@@ -57,13 +60,14 @@ public class DynamicSimpleOp implements DynamicOp {
             descx = line.nextToken().asString();
         }
         JynxConstantDynamic jcd = new JynxConstantDynamic(js, line, checker);
-        ConstantDynamic cd = jcd.getSimple(namex, descx, bootmethodName, bootdescplus);
+        ConstantDynamic cd = jcd.getSimple(namex, descx, bootmethodName, bootdescplus,bootparms);
         return new DynamicInstruction(AsmOp.asm_invokedynamic, cd);
     }
 
     @Override
     public String toString() {
-        return String.format("*DynamicSimple boot %s %s",bootmethodName,bootdescplus);
+        return String.format("*DynamicSimple boot %s %s %s",
+                bootmethodName,bootdescplus,String.join(" ", bootparms));
     }
     
 }

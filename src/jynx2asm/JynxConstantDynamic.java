@@ -207,8 +207,9 @@ public class JynxConstantDynamic {
         return new Type[0];
     }
     
-    private Object[] getSimpleBootArga(String bootdescplus){
+    private Object[] getSimpleBootArgs(String bootdescplus,String[] bootparms){
         List<Object> arglist = new ArrayList<>();
+        int bootparmct = 0;
         if (!bootdescplus.isEmpty()) {
             Type arraytype = null;
             Type[] types = Type.getArgumentTypes("(" + bootdescplus + ")V");
@@ -218,6 +219,9 @@ public class JynxConstantDynamic {
                     throw new LogIllegalArgumentException(M50,type,arraytype);
                 }
                 if (type.getSort() == Type.ARRAY) {
+                    if (bootparmct < bootparms.length) {
+                        throw new AssertionError();
+                    }
                     arraytype = type;
                     ConstType ct = ConstType.getFromType(type.getElementType(),Context.JVMCONSTANT);
                     TokenArray tokenarr = TokenArray.getInstance(js, line);
@@ -232,7 +236,13 @@ public class JynxConstantDynamic {
                     }
                 } else {
                     ConstType ct = ConstType.getFromType(type,Context.JVMCONSTANT);
-                    Token token = line.nextToken();
+                    Token token;
+                    if (bootparmct < bootparms.length) {
+                        token = Token.getInstance(bootparms[bootparmct]);
+                        ++bootparmct;
+                    } else {
+                        token = line.nextToken();
+                    }
                     Object value = token.getValue(ct);
                     checker.mayBeHandle(value, line);
                     arglist.add(value);
@@ -288,8 +298,9 @@ public class JynxConstantDynamic {
 
     private static final String ARRAY_BOOT_DESC_FORMAT = "(" + INVOKE3 + "%s)Ljava/lang/invoke/CallSite;";
 
-    public ConstantDynamic getSimple(String name, String desc, String bootmethod, String bootdescplus) {
-        Object[] bootargs = getSimpleBootArga(bootdescplus);
+    public ConstantDynamic getSimple(String name, String desc, String bootmethod,
+            String bootdescplus,String... bootparms) {
+        Object[] bootargs = getSimpleBootArgs(bootdescplus,bootparms);
         NameDesc.NAME_DESC.validate(name+desc); // not <init> or <clinit>
         String bootdesc = String.format(ARRAY_BOOT_DESC_FORMAT,bootdescplus);
         String bootstrap = "ST:" + bootmethod + bootdesc;

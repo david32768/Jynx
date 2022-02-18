@@ -136,6 +136,13 @@ public class JynxComponentNode implements ContextDependent {
     }
 
     @Override
+    public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+        JynxAnnotationNode jan = JynxAnnotationNode.getInstance(desc,visible);
+        annotations.add(jan);
+        return jan;
+    }
+
+    @Override
     public AnnotationVisitor visitTypeAnnotation(int typeref, TypePath tp, String desc, boolean visible) {
         JynxTypeAnnotationNode tan = JynxTypeAnnotationNode.getInstance(typeref, tp, desc,visible);
         annotations.add(tan);

@@ -15,11 +15,13 @@ public class Global {
     private final Logger logger;
     private final EnumSet<GlobalOption> options;
     private JvmVersion jvmVersion;
-
+    private String classname;
+    
     private Global() {
         this.options = EnumSet.noneOf(GlobalOption.class);
         this.logger  = new Logger(false);
         this.jvmVersion = null;
+        this.classname = null;
     }
 
     private Global(EnumSet<GlobalOption> options) {
@@ -61,9 +63,19 @@ public class Global {
         global.jvmVersion = jvmversion;
     }
     
+    public static void setClassName(String classname) {
+        assert global.classname == null;
+        global.classname = classname;
+    }
+    
     public static JvmVersion JVM_VERSION() {
         Objects.nonNull(global.jvmVersion);
         return global.jvmVersion;
+    }
+    
+    public static String CLASS_NAME() {
+        Objects.nonNull(global.classname);
+        return global.classname;
     }
     
     public static boolean CHECK_SUPPORTS(JvmVersioned feature) {

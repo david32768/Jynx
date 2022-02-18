@@ -12,6 +12,7 @@ import static jynx.Message.*;
 import jvm.ConstType;
 import jvm.HandleType;
 import jvm.NumType;
+import jynx.Global;
 import jynx.LogIllegalArgumentException;
 import jynx.StringUtil;
 
@@ -98,8 +99,8 @@ public class String2Object {
         }
         String htag = token.substring(0,colon);
         HandleType ht = HandleType.fromMnemonic(htag);
-        
-        OwnerNameDesc mdesc = OwnerNameDesc.getOwnerMethodDescAndCheck(token.substring(colon + 1),ht.op());
+        String handle = token.substring(colon + 1);
+        OwnerNameDesc mdesc = OwnerNameDesc.getOwnerMethodDescAndCheck(handle,ht.op());
         
         String desc = ht.isField()? mdesc.getDesc().substring(2): mdesc.getDesc();   // remove () from getfield etc;
         boolean notInit = ht.isInvoke() && ht != REF_newInvokeSpecial;

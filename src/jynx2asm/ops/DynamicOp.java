@@ -28,8 +28,9 @@ public interface DynamicOp extends JynxOp {
         return DynamicVarArgsOp.getInstance(name, arrayclass, ct, bootclass, bootmethod);
     }
 
-    public static DynamicOp objectArray(String name, String desc, String bootclass,String bootmethod, String bootdescplus) {
-        return DynamicSimpleOp.getInstance(name, desc, bootclass, bootmethod,bootdescplus);
+    public static DynamicOp withBootParms(String name, String desc,
+            String bootclass,String bootmethod, String bootdescplus, String... bootparms) {
+        return DynamicSimpleOp.getInstance(name, desc, bootclass, bootmethod,bootdescplus,bootparms);
     }
 
 }

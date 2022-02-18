@@ -23,10 +23,12 @@ import static jynx.Message.*;
 import static jynx.ReservedWord.*;
 
 import asm.instruction.Instruction;
+import jvm.AccessFlag;
 import jvm.AsmOp;
 import jvm.Context;
 import jvm.FrameType;
 import jvm.TypeRef;
+import jynx.Access;
 import jynx.Directive;
 import jynx.LogIllegalArgumentException;
 import jynx.ReservedWord;
@@ -68,9 +70,9 @@ public class JynxCodeHdr implements ContextDependent {
     private final Map<String, Line> unique_attributes;
     
     private JynxCodeHdr(MethodNode mv, JynxScanner js, ClassChecker checker,
-            OwnerNameDesc cmd, JynxLabelMap labelmap, boolean isStatic) {
+            OwnerNameDesc cmd, JynxLabelMap labelmap, Access access) {
         this.js = js;
-        String clname = isStatic?null:checker.getClassName();
+        String clname = access.is(AccessFlag.acc_static)?null:checker.getClassName();
         this.localStack = FrameType.getInitFrame(clname, cmd); // classname set non null for virtual methods
         this.mnode = mv;
         this.var_indices = new HashSet<>();
@@ -80,7 +82,7 @@ public class JynxCodeHdr implements ContextDependent {
         Type rtype = Type.getReturnType(cmd.getDesc());
         AsmOp returnop = getReturnOp(rtype);
         this.stackLocals = StackLocals.getInstance(localStack,labelmap,returnop);
-        this.s2a = new String2Insn(js, labelmap, checker, returnop);
+        this.s2a = new String2Insn(js, labelmap, checker, returnop, access.getName());
         this.printFlag = 0;
         this.expandMacro = 0;
         this.endif = 0;
@@ -89,9 +91,9 @@ public class JynxCodeHdr implements ContextDependent {
     }
 
     public static JynxCodeHdr getInstance(MethodNode mv, JynxScanner js,
-            OwnerNameDesc cmd, JynxLabelMap labelmap, boolean isStatic,ClassChecker checker) {
+            OwnerNameDesc cmd, JynxLabelMap labelmap, Access access,ClassChecker checker) {
         CHECK_SUPPORTS(Code);
-        return new JynxCodeHdr(mv, js, checker, cmd, labelmap,isStatic);
+        return new JynxCodeHdr(mv, js, checker, cmd, labelmap,access);
     }
 
     private static AsmOp getReturnOp(Type rtype) {
@@ -341,7 +343,9 @@ public class JynxCodeHdr implements ContextDependent {
         Object[] stackarr = frame_stack.toArray();
         Object[] localarr = frame_local.toArray();
         stackLocals.visitFrame(stackarr, localarr,js.getLine());
-        mnode.visitFrame(Opcodes.F_NEW, localarr.length, localarr, stackarr.length, stackarr);
+        if (SUPPORTS(StackMapTable)) {
+            mnode.visitFrame(Opcodes.F_NEW, localarr.length, localarr, stackarr.length, stackarr);
+        }
         localStack = frame_local;
     }
 

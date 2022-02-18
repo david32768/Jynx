@@ -4,7 +4,7 @@ import static jynx.LogMsgType.*;
 
 public enum Message {
 
-    M0(BLANK,"Jynx version 0.96; maximum Java version is %s"),
+    M0(BLANK,"Jynx version 0.9.7; maximum Java version is %s"),
     M1(BLANK,"display help message"),
     M2(BLANK,"display version information"),
     M3(BLANK,"program terminated because of errors"),
@@ -213,7 +213,8 @@ public enum Message {
 
     M212("attempting to load variable %d but current max is %d"),
     M213(WARNING,"label %s defined before use - locals assumed as before last unconditional op"),
-
+    M214(WARNING,"field %s does not exist in this class but may exist in superclass/superinterface"),
+    M215(" %s field %s accessed by %s op %s"),
     M216("frame locals %s incompatible with current locals %s"),
     M217("from label %s is not before to label %s"),
 
@@ -287,6 +288,8 @@ public enum Message {
     M394("END OF CLASS HEADER - SHOULD NOT APPEAR!; %s"),
     
     M400(ENDINFO,"unable to find method %s because of %s"),
+    M401(ENDINFO,"%s is a contextual reserved word"),
+    M402("cannot insert end_token"),
     
     M900("unknown enum constant %s in enum %s"),
     M901("unknown ASM type %s as it starts with '%c'"),
@@ -341,37 +344,4 @@ public enum Message {
         return logtype;
     }
     
-    // find unused message numbers
-    public static void main(String[] args) {
-        boolean[] used = new boolean[512];
-        for (Message msg:values()) {
-            int num = Integer.valueOf(msg.toString().substring(1));
-            used[num] = true;
-        }
-        int start = -1;
-        int end = -1;
-        boolean last = true;
-        for (int i = 0; i < 250; ++i) {
-            boolean current = used[i];
-            if (current) {
-                if (last) {
-                    start = i + 1;
-                } else {
-                    if (end == start) {
-                        System.out.format("%d%n", start);
-                    } else {
-                        System.out.format("%d - %d%n", start,end);
-                    }
-                }
-            } else {
-                if (last) {
-                    start = i;
-                    end = i;
-                } else {
-                    end = i;
-                }
-            }
-            last = current;
-        }
-    }
 }

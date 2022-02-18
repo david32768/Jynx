@@ -110,7 +110,7 @@ public class JynxClassHdr implements ContextDependent {
     }
     
     public static JynxClassHdr getInstance(
-            JvmVersion jvmversion, String source, Line line, ClassType classtype, boolean usestack) {
+            JvmVersion jvmversion, String source, Line line, ClassType classtype) {
         String cname;
         EnumSet<AccessFlag> flags;
         if (classtype == ClassType.MODULE) {
@@ -132,6 +132,7 @@ public class JynxClassHdr implements ContextDependent {
         flags.addAll(classtype.getMustHave(jvmversion,false)); 
         Access accessname = Access.getInstance(flags, jvmversion, cname,classtype);
         accessname.getCheck4Class();
+        boolean usestack = OPTION(GlobalOption.USE_STACK_MAP);
         int cwflags;
         if (jvmversion.supports(StackMapTable)) {
             cwflags = usestack?0:ClassWriter.COMPUTE_FRAMES;

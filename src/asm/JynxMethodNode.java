@@ -127,7 +127,7 @@ public class JynxMethodNode implements ContextDependent {
             LOG(M155); // "code is not allowed as method is abstract or native"
             return null;
         }
-        return JynxCodeHdr.getInstance(mnode, js, cmd, labelmap,accessName.is(acc_static),checker);
+        return JynxCodeHdr.getInstance(mnode, js, cmd, labelmap,accessName,checker);
     }
 
     public OwnerNameDesc getOwnerNameDesc() {

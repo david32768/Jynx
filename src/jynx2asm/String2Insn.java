@@ -71,7 +71,8 @@ public class String2Insn {
     private boolean addDotLine;
     private final boolean generateDotLine;
     
-    public String2Insn(JynxScanner js, JynxLabelMap labmap, ClassChecker checker, AsmOp returnop) {
+    public String2Insn(JynxScanner js, JynxLabelMap labmap,
+            ClassChecker checker, AsmOp returnop, String mname) {
         this.js = js;
         this.labmap = labmap;
         this.labelStack = new LabelStack();
@@ -312,6 +313,7 @@ public class String2Insn {
         }
         String desc = line.nextToken().asString();
         OwnerNameDesc fd = OwnerNameDesc.getFieldDesc(fname, desc,className);
+        checker.checkFieldReference(fd,jvmop);
         return new FieldInstruction(jvmop,fd);
     }
     
@@ -379,12 +381,6 @@ public class String2Insn {
     private Instruction arg_method(JvmOp jvmop) {
         addDotLine = generateDotLine;
         String mspec = line.nextToken().asString();
-        int lbindex = mspec.indexOf('(');
-        int slindex = mspec.indexOf('/');
-        if (slindex < 0 || slindex > lbindex) {
-            LOG(M255,jvmop); // "classname has been added to argument of some %s instruction(s)"
-            mspec = className + '/' + mspec;
-        }
         OwnerNameDesc cmd = OwnerNameDesc.getOwnerMethodDescAndCheck(mspec,jvmop.getBase());
         checker.used(cmd, jvmop, line);
         return new MethodInstruction(jvmop, cmd);

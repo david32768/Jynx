@@ -24,6 +24,7 @@ public enum LineOps implements LineOp {
     lab_pop,
     lab_get,
     tok_skip,
+    tok_swap,
     ;    
     
     private LineOps() {}
@@ -114,6 +115,12 @@ public enum LineOps implements LineOp {
                 break;
             case tok_skip:
                 line.nextToken();
+                break;
+            case tok_swap:
+                Token first = line.nextToken();
+                Token second = line.nextToken();
+                line.insert(first);
+                line.insert(second);
                 break;
             default:
                 throw new LogAssertionError(M900,this); // "unknown enum constant %s in enum %s"

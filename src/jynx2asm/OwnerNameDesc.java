@@ -216,7 +216,18 @@ public class OwnerNameDesc {
             ownerInterface = true;
         }
         ownerInterface = checkInterface(op, ownerInterface);
-        return OwnerNameDesc.getInstanceOfObjectMethod(mspec, ownerInterface);
+        mspec = addClassName(mspec, op);
+        return getInstanceOfObjectMethod(mspec, ownerInterface);
+    }
+    
+    private static String addClassName(String mspec, AsmOp op) {
+        int lb = mspec.indexOf('(');
+        int sl = mspec.indexOf('/');
+        if (sl  < 0 || sl > lb) {
+            LOG(M255,op); // "classname has been added to argument of some %s instruction(s)"
+            mspec = CLASS_NAME() + "/" + mspec;
+        }
+        return mspec;
     }
     
     private static boolean checkInterface(AsmOp op, boolean ownerInterface) {

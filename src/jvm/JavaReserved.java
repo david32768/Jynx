@@ -107,6 +107,10 @@ public enum JavaReserved {
     public Feature feature() {
         return feature;
     }
+
+    public boolean isContextual() {
+        return contextual;
+    }
     
     public static Optional<JavaReserved> of(String str) {
         return Arrays.stream(values())
