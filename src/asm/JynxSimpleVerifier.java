@@ -3,20 +3,25 @@ package asm;
 import java.util.List;
 
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.analysis.BasicValue;
 import org.objectweb.asm.tree.analysis.SimpleVerifier;
 import org.objectweb.asm.Type;
 
 import static jynx.Global.LOG;
 import static jynx.Message.M157;
 import static jynx.Message.M167;
-import static jynx.Message.M87;
+import static jynx.Message.M403;
+import static jynx.Message.M404;
 import static jynx.Message.M91;
 
+import jynx.Global;
+import jynx.GlobalOption;
 import jynx2asm.TypeHints;
 
 public class JynxSimpleVerifier extends SimpleVerifier {
 
     private final TypeHints hints;
+    private final boolean forname;
 
     public JynxSimpleVerifier(
             final Type currentClass,
@@ -26,12 +31,40 @@ public class JynxSimpleVerifier extends SimpleVerifier {
             final TypeHints hints) {
         super(Opcodes.ASM9, currentClass, currentSuperClass, currentClassInterfaces, isInterface);
         this.hints = hints;
+        this.forname = Global.OPTION(GlobalOption.ALLOW_CLASS_FORNAME);
     }
 
     @Override
     protected Class<?> getClass(final Type type) {
-        LOG(M157,this.getClass().getSimpleName()); // "Class.forName() has been used in class %s"
+        String name = type.getInternalName();
+        if (!forname) {
+            throw new TypeNotPresentException(name, null);
+        }
+         // "class %s has used Class.forName(); java.runtime.version = %s"
+        LOG(M157,this.getClass().getSimpleName(),System.getProperty("java.runtime.version"));
         return super.getClass(type);
+    }
+
+    @Override
+    protected boolean isSubTypeOf(BasicValue value, BasicValue expected) {
+        try {
+            return super.isSubTypeOf(value, expected);
+        } catch (TypeNotPresentException ex) {
+            // "add hint on is %s subtype of %s"
+            LOG(M403,value.getType().getInternalName(),expected.getType().getInternalName());
+            throw ex;
+        }
+    }
+
+    @Override
+    public BasicValue merge(BasicValue value1, BasicValue value2) {
+        try {
+            return super.merge(value1, value2);
+        } catch (TypeNotPresentException ex) {
+            //"add hint for type of merger of %s and %s"
+            LOG(M404,value1.getType().getInternalName(),value2.getType().getInternalName());
+            throw ex;
+        }
     }
 
     @Override
@@ -70,13 +103,7 @@ public class JynxSimpleVerifier extends SimpleVerifier {
         try {
             return super.isAssignableFrom(type1, type2);
         } catch (TypeNotPresentException ex) {
-            if (hints.isAssignableFrom(type1, type2)) {
-                return true;
-            } else if (hints.isAssignableFrom(type2, type1)) {
-                return false;
-            }
-            LOG(M87, type1.getInternalName(), type2.getInternalName()); // "add hint if %s is assignable from %s"
-            throw ex;
+            return hints.isAssignableFrom(type1, type2);
         }
     }
 

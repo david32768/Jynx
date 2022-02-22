@@ -18,6 +18,7 @@ public enum GlobalOption {
     WARN_INDENT(M14), // "check indent for structured code"
     BASIC_VERIFIER(M16), // "use ASM BasicVerifier"
     SIMPLE_VERIFIER(M17), // "use ASM SimpleVerifier (default)"
+    ALLOW_CLASS_FORNAME(M11), // "let simple verifier use Class.forName()"
     CHECK_METHOD_REFERENCES(M8), // "check that non-java methods exist (on class path)"
     // DEBUG options - may change
     __EXIT_IF_ERROR(M13), // "exit if error"

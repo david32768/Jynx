@@ -15,7 +15,7 @@ public enum Message {
     M8(BLANK,"check that non-java methods exist (on class path)"),
     M9(BLANK,"generate line numbers"),
     M10(BLANK,"warn if label unreferenced or alias"),
-
+    M11(BLANK,"let simple verifier use Class.forName()"),
     M13(BLANK,"exit if error"),
     M14(BLANK,"check indent for structured code"),
     M15(BLANK,"warn if names non-standard"),
@@ -150,14 +150,12 @@ public enum Message {
 
     M150("expected equal values for index length = %d numind = %d"),
 
-    M179("String length of %d exceeds maximum %d"),
-
     M152("zero length name"),
     M153(WARNING,"as class has a %s method it should have a %s method"),
 
     M155("code is not allowed as method is abstract or native"),
     M156("instance variables with no %s method"),
-    M157(ENDINFO,"Class.forName() has been used in class %s"),
+    M157(ENDINFO,"class %s has used Class.forName(); java.runtime.version = %s"),
     M158(STYLE,"components of package %s are not all lowercase"),
     M159("Invalid type - %s"),
     M160("invalid access flags %s for %s are dropped"),
@@ -178,6 +176,7 @@ public enum Message {
 
     M177(ENDINFO,"classname has been added to argument of incomplete field access instruction(s)"),
     M178("invalid type ref sort - %d"),
+    M179("String length of %d exceeds maximum %d"),
 
     M180("top of stack('%c') and next on stack('%c') are not both 32 bit types"),
     M181("%s directive is invalid for MODULE - value specifued was %s"),
@@ -290,6 +289,8 @@ public enum Message {
     M400(ENDINFO,"unable to find method %s because of %s"),
     M401(ENDINFO,"%s is a contextual reserved word"),
     M402("cannot insert end_token"),
+    M403("add hint on is %s subtype of %s"),
+    M404("add hint for type of merger of %s and %s"),
     
     M900("unknown enum constant %s in enum %s"),
     M901("unknown ASM type %s as it starts with '%c'"),

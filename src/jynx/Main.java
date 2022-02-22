@@ -17,7 +17,7 @@ import jynx2asm.JynxClass;
 
 public class Main {
     
-    private final static String SUFFIX = ".jx";
+    public final static String SUFFIX = ".jx";
      
     private static void version() {
         LOG(M0,JvmVersion.MAX_VERSION); // "Jynx version 0.9.7; maximum Java version is %s"

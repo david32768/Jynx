@@ -44,6 +44,7 @@ public class StackLocals {
 
     private final AsmOp returnOp;
     private boolean returns;
+    private boolean hasThrow;
 
     private boolean frameRequired;
     private boolean frameFound;
@@ -61,6 +62,7 @@ public class StackLocals {
         this.labelmap = labelmap;
         this.returnOp = returnop;
         this.returns = false;
+        this.hasThrow = false;
         this.lastLab = Optional.empty();
         this.lastop = AsmOp.asm_nop;
         this.frameRequired = false;
@@ -211,6 +213,7 @@ public class StackLocals {
                 return false;
             }
         }
+        hasThrow |= asmop == AsmOp.asm_athrow; 
         if (isUnreachable()) {
             if (asmop.isUnconditional()) {
                 LOG(M122,asmop,lastop);  // "Instruction '%s' dropped as unreachable after '%s' without intervening label"
@@ -239,7 +242,7 @@ public class StackLocals {
     
     public void visitEnd() {
         locals.visitEnd();
-        if(!returns) {
+        if(!returns && (returnOp != AsmOp.asm_return || !hasThrow)) {
             LOG(M196,returnOp); // "no %s instruction found"
         }
         switch(completion) {

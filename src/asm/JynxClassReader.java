@@ -44,7 +44,6 @@ public class JynxClassReader {
         }
     }
 
-    
     private static int bypass_attrs(final ClassReader cr, final int start_offset) {
         assert start_offset >= 0;
         int attrs_ct = cr.readUnsignedShort(start_offset);

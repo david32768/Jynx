@@ -5,7 +5,9 @@ import java.util.Map;
 
 import org.objectweb.asm.Type;
 
+import static jynx.Global.LOG;
 import static jynx.Message.M58;
+import static jynx.Message.M87;
 import static jynx.ReservedWord.res_assignable;
 import static jynx.ReservedWord.res_class;
 import static jynx.ReservedWord.res_common;
@@ -112,8 +114,10 @@ public class TypeHints {
         return hint4name(name).isClass();
     }
     
+    private static final Type OBJECT = Type.getObjectType("java/lang/Object");
+    
     public boolean isAssignableFrom(final Type type1, final Type type2) {
-        if (type1.equals(type2)) {
+        if (type1.equals(type2) || type1.equals(OBJECT)) {
             return true;
         }
         String to = type1.getInternalName();
@@ -123,6 +127,8 @@ public class TypeHints {
             Global.LOG(M58, to,from); // "used hint for %s <- %s"
             return true;
         }
+        // "add hint if %s is assignable from %s"
+        LOG(M87, type1.getInternalName(), type2.getInternalName());
         return false;
     }
     

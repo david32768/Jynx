@@ -21,6 +21,7 @@ public class LocalVars {
     private OperandStackFrame lastlocals;
     private final BitSet readVars;
     private final BitSet writeVars;
+    private final int parmsz;
     
     
     public LocalVars(OperandStackFrame parmlocals) {
@@ -32,6 +33,7 @@ public class LocalVars {
         this.writeVars = new BitSet();
         visitFrame(parmlocals, Optional.empty());
         this.startblock = false;
+        this.parmsz = sz;
     }
 
     public OperandStackFrame currentOSF() {
@@ -284,21 +286,25 @@ public class LocalVars {
         }
         BitSet unreadvars = (BitSet)writeVars.clone();
         unreadvars.andNot(readVars);
-        if (!unreadvars.isEmpty()) {
-            LOG(M60,rangeString(unreadvars)); // "local variables [%s ] are written but not read"
+        if (unreadvars.nextSetBit(parmsz) >= 0) {
+            String ranges = rangeString(parmsz,unreadvars);
+             // "local variables [%s ] are written but not read"
+            LOG(M60,ranges);
         }
         BitSet unwrittenvars = (BitSet)readVars.clone();
         unwrittenvars.andNot(writeVars);
         if (!unwrittenvars.isEmpty()) {
-            LOG(M65,rangeString(unwrittenvars)); // "local variables [%s ] are read but not written"
+            String ranges = rangeString(0,unwrittenvars);
+            // "local variables [%s ] are read but not written"
+            LOG(M65,ranges);
         }
     }
     
-    private String rangeString(BitSet bitset) {
+    private String rangeString(int start,BitSet bitset) {
         StringBuilder sb = new StringBuilder();
         int last = -2;
         char spacer = ' ';
-        for (int i = bitset.nextSetBit(0); i >= 0; i = bitset.nextSetBit(i+1)) {
+        for (int i = bitset.nextSetBit(start); i >= 0; i = bitset.nextSetBit(i+1)) {
             if (i == last + 1) {
                 spacer = '-';
             } else {

@@ -54,7 +54,7 @@ public class Global {
     }
 
 
-    static void newGlobal(EnumSet<GlobalOption> options) {
+    public static void newGlobal(EnumSet<GlobalOption> options) {
         global = new Global(options);
     }
     

@@ -126,7 +126,8 @@ public class ClassChecker {
                     ownSpecialMethodsUsed.putIfAbsent(cmd, line);
                     break;
             }
-        } else if (owner.startsWith("java/") || OPTION(GlobalOption.CHECK_METHOD_REFERENCES)) {
+//        } else if (owner.startsWith("java/") || OPTION(GlobalOption.CHECK_METHOD_REFERENCES)) {
+        } else if (OPTION(GlobalOption.CHECK_METHOD_REFERENCES)) {
             checkMethodExists(cmd, base);
         }
     }
