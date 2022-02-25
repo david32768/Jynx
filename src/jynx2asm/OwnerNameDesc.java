@@ -13,9 +13,10 @@ import static jynx2asm.NameDesc.*;
 import jvm.AsmOp;
 import jvm.Constants;
 import jvm.Feature;
+import jvm.HandleType;
 import jynx.LogIllegalArgumentException;
 
-public class OwnerNameDesc {
+public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
 
     private final String owner;
     private final String name;
@@ -98,6 +99,11 @@ public class OwnerNameDesc {
             sb.append(desc);
         }
         return sb.toString();
+    }
+
+    @Override
+    public int compareTo(OwnerNameDesc other) {
+        return this.toJynx().compareTo(other.toJynx());
     }
 
     @Override
@@ -207,6 +213,10 @@ public class OwnerNameDesc {
         }
         CLASS_NAME.validate(mspec);
         return new OwnerNameDesc(mspec, null, null,false);
+    }
+
+    public static OwnerNameDesc getOwnerMethodDescAndCheck(String mspec, HandleType ht) {
+        return getOwnerMethodDescAndCheck(mspec, ht.op());
     }
 
     public static OwnerNameDesc getOwnerMethodDescAndCheck(String mspec, AsmOp op) {

@@ -6,7 +6,6 @@ import static jynx.Message.M206;
 import static jynx.Message.M906;
 
 import jvm.FrameType;
-import jynx.EnumAssertionError;
 import jynx.LogAssertionError;
 import jynx.LogIllegalArgumentException;
 
@@ -174,7 +173,7 @@ public enum FrameElement {
             case ft_Top:
                 return ERROR;
             default:
-                throw new EnumAssertionError(ft);
+                throw new EnumConstantNotPresentException(ft.getClass(), ft.name());
         }
     }
 

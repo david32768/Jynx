@@ -16,6 +16,7 @@ import jynx.LogIllegalArgumentException;
 
 public enum HandleType {
     
+    // jvms 4.4.8
     REF_getField("GF",H_GETFIELD,1,asm_getfield,ConstantPoolType.CONSTANT_Fieldref),
     REF_getStatic("GS",H_GETSTATIC,2,asm_getstatic,ConstantPoolType.CONSTANT_Fieldref),
     REF_putField("PF",H_PUTFIELD,3,asm_putfield,ConstantPoolType.CONSTANT_Fieldref),
@@ -25,7 +26,7 @@ public enum HandleType {
             Feature.invokestatic_interface,ConstantPoolType.CONSTANT_InterfaceMethodref),
     REF_invokeSpecial("SP",H_INVOKESPECIAL,7,asm_invokespecial,ConstantPoolType.CONSTANT_Methodref,
             Feature.invokespecial_interface,ConstantPoolType.CONSTANT_InterfaceMethodref),
-    REF_newInvokeSpecial("NW",H_NEWINVOKESPECIAL,8,asm_new,ConstantPoolType.CONSTANT_Methodref),
+    REF_newInvokeSpecial("NW",H_NEWINVOKESPECIAL,8,asm_invokespecial,ConstantPoolType.CONSTANT_Methodref),
     REF_invokeInterface("IN",H_INVOKEINTERFACE,9,asm_invokeinterface,ConstantPoolType.CONSTANT_InterfaceMethodref),
     ;
     
@@ -45,6 +46,7 @@ public enum HandleType {
         this.mnemonic = mnemonic;
         // "%s: asm value (%d) does not agree with jvm value(%d)"
         assert reftype == refnum:M161.format(name(),reftype,refnum);
+        assert reftype == 1 + this.ordinal();
         this.reftype = reftype;
         this.op = op;
         this.maincpt = maincpt;
@@ -63,10 +65,6 @@ public enum HandleType {
 
     public int reftype() {
         return reftype;
-    }
-
-    public boolean isInvoke() {
-        return op.name().contains("invoke");
     }
 
     public EnumSet<ConstantPoolType>  getValidCPT(JvmVersion jvmversion) {
@@ -116,6 +114,16 @@ public enum HandleType {
                 .filter(ht -> ht.mnemonic.equals(mnemonic))
                 .findFirst()
                 .orElseThrow(()-> new LogIllegalArgumentException(M101,mnemonic)); // "unknown handle mnemonic: %s"
+    }
+
+    public static HandleType fromOp(AsmOp op, boolean init) {
+        if (init && op == asm_invokespecial) {
+            return REF_newInvokeSpecial;
+        }
+        return Stream.of(values())
+                .filter(ht -> ht.op == op)
+                .findFirst()
+                .get();
     }
 
     public final static char SEP = ':';

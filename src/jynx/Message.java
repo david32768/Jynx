@@ -131,7 +131,7 @@ public enum Message {
     M129("invalid typecode - %d"),
     M130("Requires only {%s} specified"),
     M131(BLANK,"class %s assembly completed  unsuccesfully - number of errors is %d"),
-    M132("%s must have a %s method"),
+    M132("%s must have a %s method of type %s"),
     M133("package %s has already appeared in %s"),
 
     M135(ENDINFO,"for consistency add %s prefix to method name for %s"),
@@ -291,6 +291,7 @@ public enum Message {
     M402("cannot insert end_token"),
     M403("add hint on is %s subtype of %s"),
     M404("add hint for type of merger of %s and %s"),
+    M405("%s has different type %s from previous %s at line %d"),
     
     M900("unknown enum constant %s in enum %s"),
     M901("unknown ASM type %s as it starts with '%c'"),

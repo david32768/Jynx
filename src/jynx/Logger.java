@@ -136,7 +136,7 @@ public class Logger {
                 printInfo(msg,objs);
                 break;
             default:
-                throw new EnumAssertionError(logtype);
+                throw new EnumConstantNotPresentException(logtype.getClass(),logtype.name());
         }
         
     }

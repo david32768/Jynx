@@ -195,7 +195,7 @@ public class Access {
                 noneOf(acc_enum);
                 break;
             default:
-                throw new EnumAssertionError(classType);
+                throw new EnumConstantNotPresentException(classType.getClass(),classType.name());
         }
     }
 

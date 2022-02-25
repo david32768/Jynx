@@ -313,7 +313,7 @@ public class String2Insn {
         }
         String desc = line.nextToken().asString();
         OwnerNameDesc fd = OwnerNameDesc.getFieldDesc(fname, desc,className);
-        checker.checkFieldReference(fd,jvmop);
+        checker.usedField(fd,jvmop);
         return new FieldInstruction(jvmop,fd);
     }
     
@@ -382,7 +382,7 @@ public class String2Insn {
         addDotLine = generateDotLine;
         String mspec = line.nextToken().asString();
         OwnerNameDesc cmd = OwnerNameDesc.getOwnerMethodDescAndCheck(mspec,jvmop.getBase());
-        checker.used(cmd, jvmop, line);
+        checker.usedMethod(cmd, jvmop, line);
         return new MethodInstruction(jvmop, cmd);
     }
 
