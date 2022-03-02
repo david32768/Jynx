@@ -57,7 +57,7 @@ public enum Message {
     M55("duplicate %s: %s %s already defined at line %d"),
     M56(WARNING,"gap %d between local variables: %d - %d"),
     M57("Version %s does not support %s (supported %s)"),
-    M58(ENDINFO,"used hint for %s <- %s"),
+    M58(ENDINFO,"used hint: %s %s %s"),
     M59("method %s cannot be abstract in final class"),
     M60(WARNING,"local variables [%s ] are written but not read"),
     M61("invalid stack frame type(%s) - %s assumed"),
@@ -81,16 +81,15 @@ public enum Message {
     M79("Trying to read beyond end of file"),
     M80("Bad octal sequence"),
 
-    M82(ENDINFO,"used hint for %s <- (%s,%s)"),
+    M82(ENDINFO,"used hint: %s %s %s %s"),
     M83("Bad escape sequence"),
     M84(INFO,"assembly terminated because of severe error"),
     M85(INFO,"assembly terminated because of too many errors"),
     M86("invalid op - %s"),
-    M87(WARNING,"add hint if %s is assignable from %s"),
+
     M88(INFO,"  options = %s"),
     M89(INFO,"file = %s version = %s"),
     M90("unused tokens - starting at %s"),
-    M91(WARNING,"not known whether %s is a class or an interface"),
 
     M93(STYLE,"class name (%s) does not start with uppercase letter"),
 
@@ -136,7 +135,7 @@ public enum Message {
 
     M135(ENDINFO,"for consistency add %s prefix to method name for %s"),
     M136("Extraneous directive %s"),
-    M137("number of component methods is %d but number of components is %d"),
+    M137("number of Record components %d disagrees with number of component methods %d"),
     M138("%s cannot be used for constant - %s"),
     M139("%s prefix is invalid for %s"),
     M140("reading next token after reaching last"),
@@ -154,7 +153,7 @@ public enum Message {
     M153(WARNING,"as class has a %s method it should have a %s method"),
 
     M155("code is not allowed as method is abstract or native"),
-    M156("instance variables with no %s method"),
+    M156("instance variables or methods with no %s method"),
     M157(ENDINFO,"class %s has used Class.forName(); java.runtime.version = %s"),
     M158(STYLE,"components of package %s are not all lowercase"),
     M159("Invalid type - %s"),
@@ -165,7 +164,7 @@ public enum Message {
     M164("stack overflow"),
     M165(SEVERE,"Directive in wrong place; Current state = %s%n  Expected state was one of %s"),
     M166("top of stack('%c') is not a 32 bit type"),
-    M167(WARNING,"super class of %s not known"),
+
     M168("unexpected directive(%s) in annotation"),
     M169("package %s used in %s is not in %s"),
     M170("invalid type ref name - %s"),
@@ -239,7 +238,7 @@ public enum Message {
     M238("error reading class file: %s"),
     M239(WARNING,"%s does not override object equals method in %s"),
     M240("%s is for internal use only"),
-    M241("hints or redundant checkcasts needed to obtain common subtype of%n    %s and %s"),
+    M241("ambiguous hint for common supertype of %s and %s%n    %s and %s"),
 
     M243("%s op defined in %s has already been defined in %s"),
 
@@ -289,9 +288,10 @@ public enum Message {
     M400(ENDINFO,"unable to find method %s because of %s"),
     M401(ENDINFO,"%s is a contextual reserved word"),
     M402("cannot insert end_token"),
-    M403("add hint on is %s subtype of %s"),
-    M404("add hint for type of merger of %s and %s"),
+    M403("(redundant?) checkcast or hint needed if %s is subtype of %s"),
+    M404("(redundant?) checkcasts or hint needed to obtain common supertype of%n    %s and %s"),
     M405("%s has different type %s from previous %s at line %d"),
+    M406("method %s in %s class must be %s, not %s and have no parameters"),
     
     M900("unknown enum constant %s in enum %s"),
     M901("unknown ASM type %s as it starts with '%c'"),
@@ -325,24 +325,11 @@ public enum Message {
         return String.format(format,objs);
     }
 
-    public boolean isFormat(String str, boolean describe) {
-        boolean ok = str.equals(msg);
-        if (!ok && describe) {
-            System.err.format("str = \"%s\"%n", str);
-            System.err.format("msg = \"%s\"%n", msg);
-            if (str.length() == msg.length()) {
-                for (int i = 0; i < msg.length();++i) {
-                    if (str.charAt(i) != msg.charAt(i)) {
-                        System.err.format("i = %d str = %c msg = %c%n", i,str.charAt(i),msg.charAt(i));
-                        break;
-                    }
-                }
-            }
-        }
-        return ok;
+    public String getFormat() {
+        return msg;
     }
     
-    public LogMsgType logtype() {
+    public LogMsgType getLogtype() {
         return logtype;
     }
     

@@ -112,7 +112,7 @@ public class Global {
     }
     
     private static LogMsgType msgType(Message msg) {
-        LogMsgType logtype = msg.logtype();
+        LogMsgType logtype = msg.getLogtype();
         if (logtype.compareTo(LogMsgType.STYLE) >= 0 && OPTION(GlobalOption.__TREAT_WARNINGS_AS_ERRORS)) {
             logtype = LogMsgType.ERROR;
         }

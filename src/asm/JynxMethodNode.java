@@ -25,17 +25,16 @@ import jynx2asm.ClassChecker;
 import jynx2asm.JynxLabelMap;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
+import jynx2asm.MethodDesc;
 import jynx2asm.NameDesc;
-import jynx2asm.OwnerNameDesc;
 
 public class JynxMethodNode implements ContextDependent {
 
-    private final JynxClassHdr jclasshdr;
     private MethodNode mnode;
     private final Line methodLine;
     private final int numparms;
     private final Access accessName;
-    private final OwnerNameDesc cmd;
+    private final MethodDesc md;
     private String signature;
     private final List<String> exceptions;
     private final JynxLabelMap labelmap;
@@ -46,9 +45,8 @@ public class JynxMethodNode implements ContextDependent {
 
     private final ClassChecker checker;
     
-    private JynxMethodNode(JynxClassHdr jclasshdr, Line line, Access accessname, OwnerNameDesc cmd,  ClassChecker checker) {
-        this.jclasshdr = jclasshdr;
-        this.cmd = cmd;
+    private JynxMethodNode(Line line, Access accessname, MethodDesc cmd,  ClassChecker checker) {
+        this.md = cmd;
         this.accessName = accessname;
         this.numparms = Type.getArgumentTypes(cmd.getDesc()).length;
         this.methodLine = line;
@@ -61,12 +59,12 @@ public class JynxMethodNode implements ContextDependent {
         this.checker = checker;
     }
 
-    public static JynxMethodNode getInstance(JynxClassHdr jclasshdr, Line line, ClassChecker checker) {
+    public static JynxMethodNode getInstance(Line line, ClassChecker checker) {
         Access accessname = checker.getAccess(METHOD,line);
         line.noMoreTokens();
-        OwnerNameDesc cmd = OwnerNameDesc.getMethodDesc(accessname.getName());
-        accessname.getCheck4Method(cmd.isInit());
-        JynxMethodNode jmn =  new JynxMethodNode(jclasshdr,line,accessname,cmd,checker);
+        MethodDesc md = MethodDesc.getInstance(accessname.getName());
+        accessname.getCheck4Method(md.isInit());
+        JynxMethodNode jmn =  new JynxMethodNode(line,accessname,md,checker);
         checker.checkMethod(jmn);
         return jmn;
     }
@@ -76,11 +74,11 @@ public class JynxMethodNode implements ContextDependent {
     }
     
     public String getName() {
-        return cmd.getName();
+        return md.getName();
     }
     
     public String getDesc() {
-        return cmd.getDesc();
+        return md.getDesc();
     }
     
     public Line getLine() {
@@ -127,11 +125,11 @@ public class JynxMethodNode implements ContextDependent {
             LOG(M155); // "code is not allowed as method is abstract or native"
             return null;
         }
-        return JynxCodeHdr.getInstance(mnode, js, cmd, labelmap,accessName,checker);
+        return JynxCodeHdr.getInstance(mnode, js, md, labelmap,accessName,checker);
     }
 
-    public OwnerNameDesc getOwnerNameDesc() {
-        return cmd;
+    public MethodDesc getMethodDesc() {
+        return md;
     }
     
     public boolean isAbstract() {

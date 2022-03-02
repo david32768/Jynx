@@ -34,11 +34,12 @@ public enum ReservedWord {
     res_lineno,
     res_with,
 
-    res_extends,
-    res_class,
-    res_interface,
+//    res_extends,
+//    res_class,
+//    res_interface,
     res_common,
-    res_assignable,
+//    res_assignable,
+    res_subtypes,
 
     array_at("[@"),
     equals_sign("="),

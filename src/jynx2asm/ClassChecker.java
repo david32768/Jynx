@@ -40,7 +40,7 @@ public class ClassChecker {
     private final Map<String,JynxComponentNode> components = new HashMap<>();
     private final Map<String,JynxComponentNode> componentMethod = new HashMap<>();
 
-    private final Map<OwnerNameDesc,ObjectLine<HandleType>> ownMethods;
+    private final Map<MethodDesc,ObjectLine<HandleType>> ownMethods;
     private final Map<OwnerNameDesc,ObjectLine<HandleType>> ownMethodsUsed;
     
     private int methodComponentCt = 0;
@@ -62,27 +62,28 @@ public class ClassChecker {
         this.ownMethods = new TreeMap<>(); // sorted for reproducibilty
     }
 
-    public final static OwnerNameDesc EQUALS_METHOD = OwnerNameDesc.getMethodDesc(Constants.EQUALS.toString());
-    public final static OwnerNameDesc TOSTRING_METHOD = OwnerNameDesc.getMethodDesc(Constants.TOSTRING.toString());
-    public final static OwnerNameDesc HASHCODE_METHOD = OwnerNameDesc.getMethodDesc(Constants.HASHCODE.toString());
+    public final static MethodDesc EQUALS_METHOD = MethodDesc.getInstance(Constants.EQUALS.toString());
+    public final static MethodDesc TOSTRING_METHOD = MethodDesc.getInstance(Constants.TOSTRING.toString());
+    public final static MethodDesc HASHCODE_METHOD = MethodDesc.getInstance(Constants.HASHCODE.toString());
 
-    public final static OwnerNameDesc FINALIZE_METHOD = OwnerNameDesc.getMethodDesc(Constants.FINALIZE.toString());
+    public final static MethodDesc FINALIZE_METHOD = MethodDesc.getInstance(Constants.FINALIZE.toString());
 
     public static ClassChecker getInstance(String cname, Access classAccess, ClassType classType, JvmVersion jvmversion) {
         ClassChecker checker = new ClassChecker(cname, classAccess, classType, jvmversion);
-        ObjectLine<HandleType> virtual = new ObjectLine<>(REF_invokeVirtual, Line.EMPTY);
-        if (classType == ClassType.ENUM) { // final emthods in java/lang/Enum
+        if (classType == ClassType.ENUM) { // final methods in java/lang/Enum
+            ObjectLine<HandleType> virtual = new ObjectLine<>(REF_invokeVirtual, Line.EMPTY);
             Constants.FINAL_ENUM_METHODS.stream()
                     .map(Constants::toString)
-                    .map(OwnerNameDesc::getMethodDesc)
+                    .map(MethodDesc::getInstance)
                     .forEach(ond -> checker.ownMethods.put(ond,virtual));
-            OwnerNameDesc compare = OwnerNameDesc.getMethodDesc(String.format(Constants.COMPARETO_FORMAT.toString(),cname));
+            MethodDesc compare = MethodDesc.getInstance(String.format(Constants.COMPARETO_FORMAT.toString(),cname));
             checker.ownMethods.put(compare,virtual);
         }
-        if (!Constants.OBJECT_CLASS.equalString(cname)) {
+        if (!Constants.OBJECT_CLASS.equalString(cname) && classType != ClassType.MODULE && classType != ClassType.PACKAGE) {
+            ObjectLine<HandleType> virtual = new ObjectLine<>(REF_invokeVirtual, Line.EMPTY);
             Constants.FINAL_OBJECT_METHODS.stream()
                     .map(Constants::toString)
-                    .map(OwnerNameDesc::getMethodDesc)
+                    .map(MethodDesc::getInstance)
                     .forEach(ond ->checker.ownMethods.put(ond,virtual));
         }
         return checker;
@@ -148,12 +149,10 @@ public class ClassChecker {
                 case REF_invokeStatic:
                     LOOKUP.findStatic(klass, mname, mt);
                     break;
+                case REF_invokeSpecial:
                 case REF_invokeInterface:
                 case REF_invokeVirtual:
-                    LOOKUP.findStatic(klass, mname, mt);
-                    break;
-                case REF_invokeSpecial:
-                    // no check
+                    LOOKUP.findVirtual(klass, mname, mt);
                     break;
                 case REF_newInvokeSpecial:
                     LOOKUP.findConstructor(klass, mt);
@@ -163,10 +162,17 @@ public class ClassChecker {
             }
         } catch (ClassNotFoundException
                 | IllegalArgumentException
-                | NoSuchMethodException
-                | IllegalAccessException ex) {
+                | NoSuchMethodException ex) {
              // "unable to find method %s because of %s"
             LOG(M400,ond.toJynx(),ex.getClass().getSimpleName());
+        } catch (IllegalAccessException iaex) {
+            if (ht == REF_invokeSpecial) { // maybe protected
+                return;
+            } else if (ond.isSamePackage(className)) { // maybe package-private
+                return;
+            }
+             // "unable to find method %s because of %s"
+            LOG(M400,ond.toJynx(),iaex.getClass().getSimpleName());
         } catch (TypeNotPresentException typex) {
             String typename = typex.typeName().replace(".","/");
             if (typename.equals(className))  {
@@ -210,30 +216,35 @@ public class ClassChecker {
         }
     }
 
-    
     public void checkMethod(JynxMethodNode jmn) {
-        if (classType == RECORD && ownMethods.isEmpty() && fieldComponentCt != components.size()) {
-            // "number of Record components %d disagrees with number of instance fields %d"
-            LOG(M48,components.size(),fieldComponentCt);
-        }
-        OwnerNameDesc ond = jmn.getOwnerNameDesc();
+        MethodDesc md = jmn.getMethodDesc();
         HandleType ht;
         if (jmn.isStatic()) {
             ht = REF_invokeStatic;
-        } else if (ond.isInit()){
+        } else if (md.isInit()){
             ht = REF_newInvokeSpecial;
+        } else if (classType == ClassType.INTERFACE) {
+            ht = REF_invokeInterface;
         } else {
             ht = REF_invokeVirtual;
         }
+        switch (classType) {
+            case ANNOTATION:
+                if (jmn.isStatic() || !jmn.isAbstract() || !md.getDesc().contains("()")) {
+                    // "method %s in %s class must be %s, not %s and have no parameters"
+                    LOG(M406,md.toJynx(),classType,AccessFlag.acc_abstract,AccessFlag.acc_static);
+                }
+                break;
+        }
         ObjectLine<HandleType> objline = new ObjectLine<>(ht,jmn.getLine());
-        ObjectLine<HandleType> previous = ownMethods.put(ond, objline);
+        ObjectLine<HandleType> previous = ownMethods.put(md, objline);
         if (previous != null) {
             if (previous.line() == Line.EMPTY) {
                 // "%s cannot be overridden"            
-                LOG(M262,ond);
+                LOG(M262,md);
             } else {
                 // "duplicate %s: %s already defined at line %d"            
-                LOG(M40,Directive.dir_method,ond,previous.line().getLinect());
+                LOG(M40,Directive.dir_method,md,previous.line().getLinect());
             }
         }
         JynxComponentNode jcomp = getComponent4Method(jmn.getName(), jmn.getDesc());
@@ -278,7 +289,7 @@ public class ClassChecker {
         }
     }
 
-    public void usedField(OwnerNameDesc fd, JvmOp jvmop) {
+    public void usedField(FieldDesc fd, JvmOp jvmop) {
         if (fd.getOwner().equals(className)) {
             AsmOp asmop = jvmop.getBase();
             boolean instance = asmop == AsmOp.asm_getfield || asmop == AsmOp.asm_putfield;
@@ -311,66 +322,52 @@ public class ClassChecker {
     }
 
     private boolean isMethodDefined(OwnerNameDesc cnd, HandleType ht) {
-        OwnerNameDesc nd = OwnerNameDesc.getMethodDesc(cnd.getNameDesc());
+        MethodDesc nd = MethodDesc.getInstance(cnd.getNameDesc());
         ObjectLine<HandleType> objline = ownMethods.get(nd);
         return objline != null && objline.object() == ht;
     }
-    
-    public void visitEnd() {
+
+    private void visitRecordEnd() {
+        if (fieldComponentCt != components.size()) {
+            // "number of Record components %d disagrees with number of instance fields %d"
+            LOG(M48,components.size(),fieldComponentCt);
+        }
         if (methodComponentCt != components.size()) {
-            // "number of component methods is %d but number of components is %d"
-            LOG(M137,methodComponentCt,components.size());
+            // "number of Record components %d disagrees with number of component methods %d"
+            LOG(M137,components.size(),methodComponentCt);
         }
-        if (classType == RECORD) {
-            mustHaveVirtualMethod(TOSTRING_METHOD);
-            mustHaveVirtualMethod(HASHCODE_METHOD);
-            mustHaveVirtualMethod(EQUALS_METHOD);
-        } else if (classType == ClassType.CLASS) {
-            boolean init = ownMethods.values().stream()
-                    .filter(ol -> ol.object() == REF_newInvokeSpecial)
-                    .findFirst()
-                    .isPresent();
-            if (!instanceFields.isEmpty() && !init) {
-                LOG(M156,NameDesc.CLASS_INIT_NAME); // "instance variables with no %s method"
-            }
-            boolean equals = ownMethods.keySet().stream()
-                    .filter(ond -> ond.equals(EQUALS_METHOD))
-                    .findFirst()
-                    .isPresent();
-            if (equals) {
-                    shouldHaveVirtualMethod(EQUALS_METHOD, HASHCODE_METHOD);
-            }
-            Optional<OwnerNameDesc> xequals = ownMethods.entrySet().stream()
-                    .filter(me -> me.getValue().object() == REF_invokeVirtual)
-                    .map(me -> me.getKey())
-                    .filter(ond -> ond.getName().equals(EQUALS_METHOD.getName()))
-                    .findFirst();
-            if (xequals.isPresent() && !equals) {
-                //"%s does not override object equals method in %s"
-                LOG(M239,xequals.get().toJynx(),className);
-            }
+        mustHaveVirtualMethod(TOSTRING_METHOD);
+        mustHaveVirtualMethod(HASHCODE_METHOD);
+        mustHaveVirtualMethod(EQUALS_METHOD);
+    }
+    
+    private void visitClassEnd() {
+        boolean init = ownMethods.keySet().stream()
+                .filter(OwnerNameDesc::isInit)
+                .findFirst()
+                .isPresent();
+            long instanceMethodCoumt = ownMethods.values().stream()
+                .filter(ol-> ol.object() == REF_invokeVirtual)
+                .filter(ol->ol.line() != Line.EMPTY)
+                .count();
+        if (!init && (!instanceFields.isEmpty() || instanceMethodCoumt != 0)) {
+            LOG(M156,NameDesc.CLASS_INIT_NAME); // "instance variables or methods with no %s method"
         }
-        ownMethodsUsed.entrySet().stream()
-                .filter(me -> me.getValue().object() == REF_invokeStatic)
-                .forEach(me->{
-                    if (!isMethodDefined(me.getKey(), REF_invokeStatic)) {
-                         // "own static method %s not found"
-                        LOG(me.getValue().line(),M251,me.getKey().getName());
-                    }
-                });
-        ObjectLine<HandleType> virtual = new ObjectLine<>(REF_invokeVirtual, Line.EMPTY); 
-        ownMethods.putIfAbsent(EQUALS_METHOD, virtual);
-        ownMethods.putIfAbsent(HASHCODE_METHOD, virtual);
-        ownMethods.putIfAbsent(TOSTRING_METHOD, virtual);
-        String[] missing = ownMethodsUsed.entrySet().stream()
+        boolean equals = ownMethods.keySet().stream()
+                .filter(ond -> ond.equals(EQUALS_METHOD))
+                .findFirst()
+                .isPresent();
+        if (equals) {
+            shouldHaveVirtualMethod(EQUALS_METHOD, HASHCODE_METHOD);
+        }
+        Optional<MethodDesc> xequals = ownMethods.entrySet().stream()
                 .filter(me -> me.getValue().object() == REF_invokeVirtual)
-                .map(me-> me.getKey())
-                .filter(k->!isMethodDefined(k,REF_invokeVirtual))
-                .map(k->k.getName())
-                .toArray(String[]::new);
-        if (missing.length != 0) {
-            // "the following own virtual method(s) are used but not found in class (but may be in super class or interface)%n    %s"
-           LOG(M250,Arrays.asList(missing));
+                .map(me -> me.getKey())
+                .filter(ond -> ond.getName().equals(EQUALS_METHOD.getName()))
+                .findFirst();
+        if (xequals.isPresent() && !equals) {
+            //"%s does not override object equals method in %s"
+            LOG(M239,xequals.get().toJynx(),className);
         }
         ownMethodsUsed.entrySet().stream()
                 .filter(me -> me.getValue().object() == REF_newInvokeSpecial)
@@ -378,6 +375,56 @@ public class ClassChecker {
                     if (!isMethodDefined(me.getKey(),REF_newInvokeSpecial)) {
                          // "own init method %s not found"
                         LOG(me.getValue().line(),M252,me.getKey().getName());
+                    }
+                });
+        checkMissing(REF_invokeVirtual);
+    }
+
+    private void checkMissing(HandleType ht) {
+        ObjectLine<HandleType> virtual = new ObjectLine<>(ht, Line.EMPTY); 
+        ownMethods.putIfAbsent(EQUALS_METHOD, virtual);
+        ownMethods.putIfAbsent(HASHCODE_METHOD, virtual);
+        ownMethods.putIfAbsent(TOSTRING_METHOD, virtual);
+        String[] missing = ownMethodsUsed.entrySet().stream()
+                .filter(me -> me.getValue().object() == ht)
+                .map(me-> me.getKey())
+                .filter(k->!isMethodDefined(k,ht))
+                .map(k->k.getName())
+                .toArray(String[]::new);
+        if (missing.length != 0) {
+            // "the following own virtual method(s) are used but not found in class (but may be in super class or interface)%n    %s"
+           LOG(M250,Arrays.asList(missing));
+        }
+    }
+    
+    public void visitEnd() {
+        switch (classType) {
+            case RECORD:
+                visitRecordEnd();
+                visitClassEnd();
+                break;
+            case ENUM:
+            case CLASS:
+                visitClassEnd();
+                break;
+            case INTERFACE:
+                checkMissing(REF_invokeInterface);
+                break;
+            case ANNOTATION:
+                break;
+            case MODULE:
+            case PACKAGE:
+                assert ownMethods.isEmpty() && ownMethodsUsed.isEmpty();
+                break;
+            default:
+                throw new EnumConstantNotPresentException(classType.getClass(), classType.name());
+        }
+        ownMethodsUsed.entrySet().stream()
+                .filter(me -> me.getValue().object() == REF_invokeStatic)
+                .forEach(me->{
+                    if (!isMethodDefined(me.getKey(), REF_invokeStatic)) {
+                         // "own static method %s not found"
+                        LOG(me.getValue().line(),M251,me.getKey().getName());
                     }
                 });
         if (ownMethods.containsKey(FINALIZE_METHOD) && classType != ClassType.ENUM ) {

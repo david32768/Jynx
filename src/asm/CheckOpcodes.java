@@ -52,8 +52,10 @@ public class CheckOpcodes {
     }
     
     public static void main(String[] args) {
-        int value = getStaticFieldValue(args[0]);
-        System.out.format("value of %s is %d%n", args[0],value);
+        if (args.length > 0) {
+            int value = getStaticFieldValue(args[0]);
+            System.out.format("value of %s is %d%n", args[0],value);
+        }
         System.out.format("max java = V%d%n", getMaxJavaVersion());
     }
 }

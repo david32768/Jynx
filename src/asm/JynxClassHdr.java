@@ -113,21 +113,24 @@ public class JynxClassHdr implements ContextDependent {
             JvmVersion jvmversion, String source, Line line, ClassType classtype) {
         String cname;
         EnumSet<AccessFlag> flags;
-        if (classtype == ClassType.MODULE) {
-            cname = Constants.MODULE_CLASS_NAME.toString();
-            flags = EnumSet.noneOf(AccessFlag.class);
-        } else if (classtype == ClassType.PACKAGE) {
-            cname = line.nextToken().asName();
-            CLASS_NAME.validate(cname);
-            cname += "/" + Constants.PACKAGE_INFO_NAME.toString();
-            flags = EnumSet.noneOf(AccessFlag.class);
-            jvmversion.checkSupports(Feature.package_info);
-        } else {
-            flags = line.getAccFlags();
-            cname = line.nextToken().asName();
-            if (classtype != ClassType.PACKAGE) {
+        switch (classtype) {
+            case MODULE:
+                cname = Constants.MODULE_CLASS_NAME.toString();
+                flags = EnumSet.noneOf(AccessFlag.class);
+                break;
+            case PACKAGE:
+                cname = line.nextToken().asName();
                 CLASS_NAME.validate(cname);
-            }
+                cname += "/" + Constants.PACKAGE_INFO_NAME.toString();
+                flags = EnumSet.noneOf(AccessFlag.class);
+                jvmversion.checkSupports(Feature.package_info);
+                break;
+            default:
+                flags = line.getAccFlags();
+                cname = line.nextToken().asName();
+                if (classtype != ClassType.PACKAGE) {
+                    CLASS_NAME.validate(cname);
+                }   break;
         }
         flags.addAll(classtype.getMustHave(jvmversion,false)); 
         Access accessname = Access.getInstance(flags, jvmversion, cname,classtype);
@@ -281,8 +284,8 @@ public class JynxClassHdr implements ContextDependent {
     }
 
     private void sameOwnerAsClass(String token) {
-        String classOwner = OwnerNameDesc.getPackageName(cname);
-        String tokenOwner = OwnerNameDesc.getPackageName(token);
+        String classOwner = OwnerNameDesc.packageNameOf(cname);
+        String tokenOwner = OwnerNameDesc.packageNameOf(token);
         if (!classOwner.equals(tokenOwner)) {
             LOG(M306,classOwner,tokenOwner); // "nested class have different owners; class = %s token = %s",
         }
@@ -417,7 +420,7 @@ public class JynxClassHdr implements ContextDependent {
     }
 
     public JynxMethodNode getJynxMethodNode(Line line) {
-        JynxMethodNode jmn =  JynxMethodNode.getInstance(this,line,checker);
+        JynxMethodNode jmn =  JynxMethodNode.getInstance(line,checker);
         return jmn;
     }
 

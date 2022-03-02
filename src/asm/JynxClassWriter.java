@@ -4,8 +4,8 @@ import org.objectweb.asm.ClassWriter;
 
 import static jynx.Global.LOG;
 import static jynx.Message.M157;
-import static jynx.Message.M241;
-import static jynx.Message.M82;
+import static jynx.Message.M404;
+
 
 import jynx.Global;
 import jynx.GlobalOption;
@@ -33,10 +33,9 @@ public class JynxClassWriter extends ClassWriter {
         }
         String common = hints.getCommonSuperClass(type1, type2);
         if (common == null) {
-            // "hints or redundant checkcasts needed to obtain common subtype of%n    %s and %s"
-            throw new LogIllegalArgumentException(M241, type1,type2);
+            // "(redundant?) checkcasts or hint needed to obtain common supertype of%n    %s and %s"
+            throw new LogIllegalArgumentException(M404, type1,type2);
         }
-        Global.LOG(M82,common,type1,type2); // "used hint for %s <- (%s,%s)"
         return common;
     }
 }

@@ -105,11 +105,11 @@ public class JynxOps  {
 
    public static List<Map.Entry<JynxOp,Integer>> expandLevel(JynxOp jop) {
        List<Map.Entry<JynxOp,Integer>>  oplist = new ArrayList<>();
-        JynxOps.expandLevel(oplist,jop,0);
+       JynxOps.expandLevel(oplist,jop,0);
        return oplist;
    }
    
-   private static void  expandLevel(List<Map.Entry<JynxOp,Integer>>  oplist,JynxOp jop, int level) {
+   private static void expandLevel(List<Map.Entry<JynxOp,Integer>> oplist, JynxOp jop, int level) {
         checkLevel(level);
         if (jop instanceof MacroOp) {
             for (JynxOp op:((MacroOp)jop).getJynxOps()) {
@@ -121,6 +121,9 @@ public class JynxOps  {
         }
     }
     
+
+
+
    private static void print(PrintWriter pw, JynxOp jop) {
        print(pw,jop,0);
    } 
@@ -138,31 +141,29 @@ public class JynxOps  {
     }
     
     public static void main(String[] args) {
-        System.out.format("number of Jynxx ops = %d%n",OPMAP.size());
-        if (args.length == 1) {
-            JynxOp jop = getInstance(args[0]);
-            if (jop == null) {
-                System.err.format("%s is an unknown JynxOp", args[0]);
-                System.exit(1);
+        System.out.format("number of Jynx ops = %d%n",OPMAP.size());
+        if (args.length > 1) {
+            System.err.println("Usage: JynxOps [jynxop]");
+            System.exit(1);
+        }
+        if (args.length == 0) {
+            return;
+        }
+        JynxOp jop = getInstance(args[0]);
+        if (jop == null) {
+            System.err.format("%s is an unknown JynxOp", args[0]);
+            System.exit(1);
+        }
+        try (PrintWriter pw = new PrintWriter(System.out)) {
+            pw.format("JynxOp %s: %s, ", jop, jop.getClass());
+            Integer length = jop.length();
+            if (length == null) {
+                pw.println(" length is variable or unknown");
+            } else {
+                pw.format(" length is %d%n", length);
             }
-            try (PrintWriter pw = new PrintWriter(System.out)) {
-                print(pw,jop);
-                pw.format("%s: %s", jop.getClass(),jop);
-                Integer length = jop.length();
-                if (length == null) {
-                    pw.println(" length is variable or unknown");
-                } else {
-                    pw.format(" length is %d%n", length);
-                }
-                pw.println();
-                for (Map.Entry<JynxOp,Integer> oplevel:expandLevel(jop)) {
-                    JynxOp op = oplevel.getKey();
-                    int level = oplevel.getValue();
-                    String spacer = SPACES.substring(0,2*level);
-                    String basic = op instanceof JvmOp?"":" *";
-                    pw.format("%s%s%s%n", spacer, op,basic);
-                }
-            }
+            pw.format("expansion of %s is :%n",jop);
+            print(pw,jop);
         }
     }
 

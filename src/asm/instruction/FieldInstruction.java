@@ -6,36 +6,36 @@ import static jynx.Message.M908;
 
 import jvm.JvmOp;
 import jynx.LogAssertionError;
-import jynx2asm.OwnerNameDesc;
+import jynx2asm.FieldDesc;
 import jynx2asm.StackLocals;
 
 public class FieldInstruction extends Instruction {
 
-    private final OwnerNameDesc cmd;
+    private final FieldDesc fd;
 
-    public FieldInstruction(JvmOp jop, OwnerNameDesc cmd) {
+    public FieldInstruction(JvmOp jop, FieldDesc fd) {
         super(jop);
-        this.cmd = cmd;
+        this.fd = fd;
     }
 
     @Override
     public void accept(MethodVisitor mv) {
-        mv.visitFieldInsn(base.opcode(),cmd.getOwner(), cmd.getName(), cmd.getDesc());
+        mv.visitFieldInsn(base.opcode(),fd.getOwner(), fd.getName(), fd.getDesc());
     }
 
     @Override
     public void adjust(StackLocals stackLocals) {
-        String desc = cmd.getDesc();
+        String desc = fd.getDesc();
         String stackdesc;
         switch (base) {
             case asm_getfield:
-                stackdesc = String.format("(L%s;)%s",cmd.getOwner(),desc);
+                stackdesc = String.format("(L%s;)%s",fd.getOwner(),desc);
                 break;
             case asm_getstatic:
                 stackdesc = "()" + desc;
                 break;
             case asm_putfield:
-                stackdesc = String.format("(L%s;%s)V",cmd.getOwner(),desc);
+                stackdesc = String.format("(L%s;%s)V",fd.getOwner(),desc);
                 break;
             case asm_putstatic:
                 stackdesc = "(" + desc + ")V";
@@ -49,7 +49,7 @@ public class FieldInstruction extends Instruction {
 
     @Override
     public String toString() {
-        return String.format("%s %s",base,cmd.toJynx());
+        return String.format("%s %s",base,fd.toJynx());
     }
 
 }

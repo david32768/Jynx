@@ -23,7 +23,7 @@ public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
     private final String desc;
     private final boolean ownerInterface;
 
-    private OwnerNameDesc(String owner, String name, String desc, boolean ownerInterface) {
+    protected OwnerNameDesc(String owner, String name, String desc, boolean ownerInterface) {
         this.owner = owner;
         this.name = name;
         this.desc = desc;
@@ -70,11 +70,20 @@ public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
     public boolean isStaticInit() {
         return Constants.STATIC_INIT_NAME.equalString(name);
     }
+
+    public String getPackageName() {
+        Objects.nonNull(owner);
+        return packageNameOf(owner);
+    }
+    
+    public boolean isSamePackage(String other) {
+        return getPackageName().equals(packageNameOf(other));
+    }
     
     private static final char INTERFACE_PREFIX = '@';
-    private static final char LEFT_BRACKET = '(';
-    private static final char DOT = '.';
-    private static final char FORWARD_SLASH = '/';
+    protected static final char LEFT_BRACKET = '(';
+    protected static final char DOT = '.';
+    protected static final char FORWARD_SLASH = '/';
 
     private static final String EMPTY_PARM = "()";
 
@@ -150,30 +159,7 @@ public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
         return new OwnerNameDesc(mclass,mname,mdesc,ownerInterface);
     }
     
-    public static OwnerNameDesc getMethodDesc(String mspec) {
-        boolean ok = METHOD_NAME_DESC.validate(mspec);
-        if (!ok) {
-            // "Invalid method description %s"
-            throw new LogIllegalArgumentException(M145,mspec);
-        }
-        int lbindex = mspec.indexOf(LEFT_BRACKET);
-        if (lbindex < 1) {  // must be at least m()
-            // "Invalid method description %s"
-            throw new LogIllegalArgumentException(M145,mspec);
-        }
-        String mname = mspec.substring(0,lbindex);
-        String mdesc = mspec.substring(lbindex);
-        int slindex = mname.lastIndexOf(FORWARD_SLASH);
-        if (slindex >= 0) {
-            // "Invalid method description %s"
-            throw new LogIllegalArgumentException(M145,mspec);
-        } else {
-            METHOD_NAME.validate(mname);
-        }
-        return new OwnerNameDesc(null,mname,mdesc,false);
-    }
-    
-    public static String getPackageName(String classname) {
+    public static String packageNameOf(String classname) {
         int slindex = classname.lastIndexOf(FORWARD_SLASH);
         if (slindex <= 0) {
             return "";
@@ -181,24 +167,6 @@ public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
         String pkgname = classname.substring(0, slindex);
         PACKAGE_NAME.validate(pkgname);
         return pkgname;
-    }
-    
-    public static OwnerNameDesc getFieldDesc(String mname, String desc, String classname) {
-        int slindex = mname.lastIndexOf(FORWARD_SLASH);
-        String owner;
-        String name;
-        if (slindex >= 0) {
-            owner = mname.substring(0,slindex);
-            name = mname.substring(slindex+1);
-        } else {
-            LOG(M177); // "classname has been added to argument of incomplete field access instruction(s)"
-            owner = classname;
-            name = mname;
-        }
-        CLASS_NAME.validate(owner);
-        FIELD_NAME.validate(name);
-        FIELD_DESC.validate(desc);
-        return new OwnerNameDesc(owner,name,desc,false);
     }
     
     public static OwnerNameDesc getClassOrMethodDesc(String mspec) {

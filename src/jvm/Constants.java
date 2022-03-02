@@ -68,7 +68,8 @@ public enum Constants {
     public static final EnumSet<Constants> ARRAY_METHODS = EnumSet.of(CLONE,EQUALS,HASHCODE,TOSTRING,GETCLASS,
             NOTIFY,NOTIFYALL,WAIT,WAITJ,WAITJI);
 
-    public static final EnumSet<Constants> FINAL_OBJECT_METHODS = EnumSet.of(GETCLASS,NOTIFY,NOTIFYALL,WAIT,WAITJ,WAITJI);
+    public static final EnumSet<Constants> FINAL_OBJECT_METHODS = EnumSet.of(GETCLASS,NOTIFY,NOTIFYALL,
+            WAIT,WAITJ,WAITJI);
 
     // excluding COMPARETO which requires class name
     public static final EnumSet<Constants> FINAL_ENUM_METHODS = EnumSet.of(NAME,ORDINAL,EQUALS,HASHCODE,

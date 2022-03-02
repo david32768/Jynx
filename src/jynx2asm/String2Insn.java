@@ -306,13 +306,8 @@ public class String2Insn {
     
     private Instruction arg_field(JvmOp jvmop) {
         String fname = line.nextToken().asString();
-        int slindex = fname.indexOf('/');
-        if (slindex < 0) {
-            LOG(M255,jvmop); // "classname has been added to argument of some %s instruction(s)"
-            fname = className + '/' + fname;
-        }
         String desc = line.nextToken().asString();
-        OwnerNameDesc fd = OwnerNameDesc.getFieldDesc(fname, desc,className);
+        FieldDesc fd = FieldDesc.getInstance(fname, desc);
         checker.usedField(fd,jvmop);
         return new FieldInstruction(jvmop,fd);
     }
