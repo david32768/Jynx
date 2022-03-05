@@ -19,15 +19,15 @@ public class Global {
     
     private Global() {
         this.options = EnumSet.noneOf(GlobalOption.class);
-        this.logger  = new Logger(false);
+        this.logger  = new Logger("",false);
         this.jvmVersion = null;
         this.classname = null;
     }
 
-    private Global(EnumSet<GlobalOption> options) {
+    private Global(EnumSet<GlobalOption> options,String type) {
         this.options = options;
         boolean exiterr = options.contains(GlobalOption.__EXIT_IF_ERROR);
-        this.logger  = new Logger(exiterr);
+        this.logger  = new Logger(type,exiterr);
         this.jvmVersion = null;
     }
     
@@ -54,8 +54,8 @@ public class Global {
     }
 
 
-    public static void newGlobal(EnumSet<GlobalOption> options) {
-        global = new Global(options);
+    public static void newGlobal(String type, EnumSet<GlobalOption> options) {
+        global = new Global(options,type);
     }
     
     public static void setJvmVersion(JvmVersion jvmversion) {

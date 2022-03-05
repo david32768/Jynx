@@ -15,7 +15,6 @@ public class JynxScanner implements Iterator<Line> {
 
     private int linect = 0;
     private Line line = Line.EMPTY;
-    private boolean combine;
     private boolean reread;
 
     private final Iterator<String> lines;
@@ -31,10 +30,6 @@ public class JynxScanner implements Iterator<Line> {
             skipTokens();
         }
         LOGGER().setLine(current.toString());
-    }
-    
-    public void setCombine() {
-        combine = true;
     }
     
     public Line getLine() {
@@ -53,7 +48,7 @@ public class JynxScanner implements Iterator<Line> {
             linestr = lines.next();
             ++linect;
         } while (linestr.trim().length() == 0 || linestr.trim().startsWith(";")); // ignore empty lines and comments
-        line = Line.tokenise(linestr, linect, combine);
+        line = Line.tokenise(linestr, linect);
         LOGGER().setLine(line.toString());
     }
 
@@ -74,7 +69,7 @@ public class JynxScanner implements Iterator<Line> {
         }
         nextLine();
         if (line == null) {
-            return Line.tokenise(".end_class", Integer.MAX_VALUE, true);
+            return Line.tokenise(".end_class", Integer.MAX_VALUE);
         }
         return line;
     }

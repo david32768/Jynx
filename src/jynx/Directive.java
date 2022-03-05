@@ -182,10 +182,10 @@ public enum Directive implements JvmVersioned {
     public String toString() {
         String name = name();
         if (name.startsWith("dir_")) {
-            return "." + name.substring(4);
+            return Line.DIRECTIVE_INICATOR + name.substring(4);
         }
         if (name.startsWith("end")) {
-            return "." + name;
+            return Line.DIRECTIVE_INICATOR + name;
         }
         return name;
     }

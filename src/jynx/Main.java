@@ -75,7 +75,7 @@ public class Main {
     }
     
     
-    private static Optional<String> setOptions(String[] args) {
+    public static Optional<String> setOptions(String[] args) {
         int i = 0;
         String[] remainder = new String[0];
         for (; i < args.length; ++i) {
@@ -126,7 +126,7 @@ public class Main {
             usage();
             return 1;
         }
-        newGlobal(OPTIONS());
+        newGlobal("assembly",OPTIONS());
         String fname = optname.get();
         boolean success = j2a(fname);
         System.err.println();

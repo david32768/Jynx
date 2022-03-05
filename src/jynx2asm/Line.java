@@ -12,6 +12,7 @@ import static jynx.Message.M68;
 import jynx.LogIllegalStateException;
 import jynx.ReservedWord;
 import jynx.StringState;
+import jynx.StringUtil;
 
 public class Line implements TokenDeque {
 
@@ -43,6 +44,9 @@ public class Line implements TokenDeque {
         this.numTokens = tokens.size();
     }
 
+    public final static char DIRECTIVE_INICATOR = '.';
+    public final static char LABEL_INDICATOR = ':';
+    
     public String getLine() {
         return line;
     }
@@ -107,7 +111,7 @@ public class Line implements TokenDeque {
                             }
                             break;
                         case ' ':
-                            c = '\n';   // repcae blanks in quoted string by newline character
+                            c = '\n';   // replace blanks in quoted string by newline character
                             break;
                         case '\\':
                             state = StringState.SLASH;
@@ -152,24 +156,24 @@ public class Line implements TokenDeque {
         return sb.toString();
     }
     
-    public static Line tokenise(String line, int linect, boolean combine) {
-        assert !line.trim().isEmpty() && " ;".indexOf(line.trim().charAt(0)) < 0;
+    public static Line tokenise(String line, int linect) {
         if (line.contains("\n") || line.contains("\r")) {
             LOG(M43); // "line contains newline or carriage return character"
             throw new AssertionError();
         }
+        String str = line.trim();
+        assert !str.isEmpty() && str.charAt(0) != ';';
         int indent = 0;
         while (line.charAt(indent) == ' ') ++indent;
-        String str = prepare(line);
+        LineType linetype = str.charAt(0) == DIRECTIVE_INICATOR?LineType.DIRECTIVE:LineType.CODE;
+        str = StringUtil.unescapeUnicode(str);
+        str = prepare(str);
         // split line then change \n characters back to blanks
         String[] strings = str.split(" ");
-        LineType linetype;
-        if (strings[0].charAt(0) == '.') {
-            linetype = LineType.DIRECTIVE;
-        } else if (strings[0].endsWith(":")) {
+        if (linetype == LineType.CODE
+                && strings[0].length() > 1
+                && strings[0].indexOf(LABEL_INDICATOR) == strings[0].length() - 1) {
             linetype = LineType.LABEL;
-        } else {
-            linetype = LineType.CODE;
         }
         Deque<Token> tokens = new ArrayDeque<>();
         for (int i = 0; i < strings.length; ++i) {

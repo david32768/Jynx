@@ -1,6 +1,7 @@
 package jynx2asm;
 
 import java.util.EnumSet;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.objectweb.asm.Handle;
@@ -21,7 +22,7 @@ import jynx.StringUtil;
 public class Token {
 
     public final static Token END_TOKEN = new Token("\n     END_TOKEN");
-    public final static Token END_CLASS_TOKEN = new Token("." + Directive.end_class.name());
+    public final static Token END_CLASS_TOKEN = new Token(Line.DIRECTIVE_INICATOR + Directive.end_class.name());
     private final static String2Object S2O = new String2Object();
     
     private final static int  MAX_UTF8_STRING = 2*Short.MAX_VALUE + 1;
@@ -29,13 +30,11 @@ public class Token {
     private final String token;
 
     private Token(String token) {
-        if (token == null) {
-            throw new NullPointerException();
-        }
-        // remove '\'' only when contains unicode escape 
-        if (token.contains("\\u") && token.charAt(0) == '\'' && token.charAt(token.length() - 1) == '\'') {
-            token = token.substring(1, token.length() - 1);
-            token = StringUtil.unescapeUnicode(token);
+        Objects.nonNull(token);
+        long len = token.length();
+        if (len > MAX_UTF8_STRING/3 && StringUtil.modifiedUTF8Length(token) > MAX_UTF8_STRING) {
+            // "String length of %d exceeds maximum %d"
+            throw new LogIllegalArgumentException(M179,len,MAX_UTF8_STRING);
         }
         this.token = token;
     }
@@ -49,17 +48,12 @@ public class Token {
     }
 
     public String asString() {
-        long len = token.length();
-        if (len > MAX_UTF8_STRING/3 && StringUtil.modifiedUTF8Length(token) > MAX_UTF8_STRING) {
-            // "String length of %d exceeds maximum %d"
-            throw new LogIllegalArgumentException(M179,len,MAX_UTF8_STRING);
-        }
         return token;
     }
 
     public String asLabel() {
-        int index = token.indexOf(':');
-        if (index !=  token.length() - 1 || token.contains(" ")) {
+        int index = token.indexOf(Line.LABEL_INDICATOR);
+        if (index == 0 || index !=  token.length() - 1 || token.contains(" ")) {
             LOG(M49,token);  // "Invalid label - %s"
         }
         return token.substring(0, index);
@@ -154,14 +148,7 @@ public class Token {
     }
     
     public String asName() {
-        String name = token;
-        char start = name.charAt(0);
-        if (start == '\'' || start == '\"') {
-            int lastind = name.lastIndexOf(start);
-            if (lastind == name.length() - 1) {
-                name = name.substring(1, lastind);
-            }
-        }
+        String name = StringUtil.removeEndQuotes(token);
         if (name.isEmpty()) {
             // "zero length name"
             throw new LogIllegalArgumentException(M152);
@@ -176,7 +163,7 @@ public class Token {
     }
 
     public Directive asDirective() {
-        if (token.startsWith(".")) {
+        if (token.charAt(0) == Line.DIRECTIVE_INICATOR) {
             String dirstr = token.substring(1);
             return  Directive.getDirInstance(dirstr)
                         .orElseThrow(()->new LogIllegalStateException(M245,dirstr)); // "Unknown directive = %s";

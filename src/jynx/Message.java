@@ -12,7 +12,7 @@ public enum Message {
     M5(BLANK,"%nUsage: {options} %s-file"),
 
     M7(BLANK,"%nOptions are:%n"),
-    M8(BLANK,"check that non-java methods exist (on class path)"),
+    M8(BLANK,"check that called methods exist (on class path)"),
     M9(BLANK,"generate line numbers"),
     M10(BLANK,"warn if label unreferenced or alias"),
     M11(BLANK,"let simple verifier use Class.forName()"),
@@ -30,13 +30,15 @@ public enum Message {
     M24(INFO,"ambiguous option %s: %s assumed"),
     M25(BLANK,"treat warnings as errors"),
 
+    M27("cannot set label to generated name - %s"),
+
     M31("%s already set in line%n    %s"),
     M32("%s is not a valid option"),
     M33("%s limit has already been set by line:%n  %s"),
     M34(ENDINFO,"some generated line numbers have been reduced mod %d as exceed unsigned short max"),
     M35("current value(%d) for %s excedes limit(%d)"),
     M36("label already defined in line:%n  %s"),
-
+    M37("invalid stack frame type - %s"),
     M38("%s is not a valid char literal - blank assumed"),
 
     M40("duplicate %s: %s already defined at line %d"),
@@ -66,7 +68,7 @@ public enum Message {
     M64(STYLE,"final static field name (%s) is not in uppercase"),
     M65("local variables [%s ] are read but not written"),
     M66("%s is not a valid %s"),
-
+    M67(ENDINFO,"poolsz = %d"),
     M68("Quoted string followed by '%c' instead of blank"),
     M69("Embedded naked quote"),
     M70("cannot range check floating point numbers"),
@@ -80,17 +82,18 @@ public enum Message {
     M78(WARNING,"%s has different signature %s to component %s"),
     M79("Trying to read beyond end of file"),
     M80("Bad octal sequence"),
-
+    M81("Directive must be first token but line = %s"),
     M82(ENDINFO,"used hint: %s %s %s %s"),
     M83("Bad escape sequence"),
-    M84(INFO,"assembly terminated because of severe error"),
-    M85(INFO,"assembly terminated because of too many errors"),
+    M84(INFO,"%s terminated because of severe error"),
+    M85(INFO,"%s terminated because of too many errors"),
     M86("invalid op - %s"),
 
     M88(INFO,"  options = %s"),
     M89(INFO,"file = %s version = %s"),
     M90("unused tokens - starting at %s"),
 
+    M92("%s count(%d) must be in range [%d,%d]"),
     M93(STYLE,"class name (%s) does not start with uppercase letter"),
 
     M95(ENDINFO,".line directives ignored as %s specified"),
@@ -102,7 +105,7 @@ public enum Message {
     M101("unknown handle mnemonic: %s"),
     M102("method %s invalid for %s"),
     M103("%nNo security manager installed and filename is absolute or contains ..%n filename = %s"),
-    M104(BLANK,"class %s assembly completed successfully"),
+    M104(BLANK,"class %s %s completed successfully"),
     M105("unknown option %s - ignored"),
     M106("labels in %s must not be defined yet"),
     M107("unknown access flag (%#04x) in context %s ignored"),
@@ -129,10 +132,10 @@ public enum Message {
     M128("% directive not allowed for component method %s"),
     M129("invalid typecode - %d"),
     M130("Requires only {%s} specified"),
-    M131(BLANK,"class %s assembly completed  unsuccesfully - number of errors is %d"),
+    M131(BLANK,"class %s %s completed  unsuccesfully - number of errors is %d"),
     M132("%s must have a %s method of type %s"),
     M133("package %s has already appeared in %s"),
-
+    M134("boolean value is neither Boolean or Integer 0/1: value = %s class = %s"),
     M135(ENDINFO,"for consistency add %s prefix to method name for %s"),
     M136("Extraneous directive %s"),
     M137("number of Record components %d disagrees with number of component methods %d"),
@@ -140,9 +143,9 @@ public enum Message {
     M139("%s prefix is invalid for %s"),
     M140("reading next token after reaching last"),
     M141("unknown constant; class = %s"),
-
+    M142(WARNING,"comment contains unprintable characters (replaced by '?'); comment = \'%s\'"),
     M143(INFO,"%s %s assumed"),
-
+    M144("unknown value class = %s"),
     M145("Invalid method description %s"),
     M146("constant type = %s not valid in this context"),
     M147(WARNING,"unknown Java version %s - %s used"),
@@ -151,7 +154,7 @@ public enum Message {
 
     M152("zero length name"),
     M153(WARNING,"as class has a %s method it should have a %s method"),
-
+    M154("%s: key %d has duplicate entries %s and %s"),
     M155("code is not allowed as method is abstract or native"),
     M156("instance variables or methods with no %s method"),
     M157(ENDINFO,"class %s has used Class.forName(); java.runtime.version = %s"),
@@ -159,7 +162,7 @@ public enum Message {
     M159("Invalid type - %s"),
     M160("invalid access flags %s for %s are dropped"),
     M161("%s: asm value (%d) does not agree with jvm value(%d)"),
-
+    M162("some annotation values for %s are null; annotation ignored"),
     M163("stack underflow"),
     M164("stack overflow"),
     M165(SEVERE,"Directive in wrong place; Current state = %s%n  Expected state was one of %s"),
@@ -202,7 +205,7 @@ public enum Message {
     M202("unused field(s) in typeref not zero"),
     M203(WARNING,"potential infinite loop - catch using label equals catch from label"),
     M204("%s has been replaced by %s_xxxxxxx"),
-
+    M205("enum class changed; was %s now %s"),
     M206("Invalid type letter '%c' (%d)"),
 
     M208("code not complete - last %s was %s"),
@@ -234,7 +237,7 @@ public enum Message {
     M234("invalid parameter number %d; bounds are [0 - %d)"),
     M235("%s method appears in an interface"),
     M236(STYLE,"%s (%s) starts with uppercase letter and is not all uppercase"),
-
+    M237("error accepting class file: %s"),
     M238("error reading class file: %s"),
     M239(WARNING,"%s does not override object equals method in %s"),
     M240("%s is for internal use only"),
@@ -266,10 +269,16 @@ public enum Message {
     M266("Label %s not defined; used in%n%s"),
 
     M272(WARNING,"Label %s not used - defined in line:%n  %s"),
+
     M274(SEVERE,"duplicate: %s has the same opcode(%d) as %s"),
+
     M280(BLANK,"program terminated because of severe error(s)"),
+
     M289("A nest member has already been defined"),
+
     M298("assembly of %s failed"),
+    M299("disassembly of %s failed"),
+
     M302("%s is null or has different feature requirement than %s"),
     M304("Nest host already defined%n  %s"),
 
@@ -302,6 +311,8 @@ public enum Message {
     M906("unknown ASM type - %s"),
     M907("unknown directive %s for context %s"),
     M908("unexpected Op %s in this instruction"),
+    M909("unknown ASM Node %s in instruction list"),
+    M910("indent depth is now negative"),
     
     M999("%s"), // for debugging
     ;

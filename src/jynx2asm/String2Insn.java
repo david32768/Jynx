@@ -181,8 +181,7 @@ public class String2Insn {
             case arg_tableswitch:insn = arg_tableswitch(jvmop);break;
             case arg_var:insn = arg_var(jvmop);break;
             default:
-                // "unknown enum constant %s in enum %s"
-                throw new LogAssertionError(M900,oparg);
+                throw new EnumConstantNotPresentException(oparg.getClass(), oparg.name());
         }
         return insn == null?Optional.empty():Optional.of(insn);
     }
@@ -222,7 +221,7 @@ public class String2Insn {
   
     private Instruction simpleConstant(JvmOp jvmop) {
         Token token = line.nextToken();
-        Object value = token.getConst(); // s2o.getConst(con);
+        Object value = token.getConst();
         ConstType ct = ConstType.getFromASM(value,Context.JVMCONSTANT);
         boolean ldc2 = jvmop == Op.opc_ldc2_w;
         switch (ct) {

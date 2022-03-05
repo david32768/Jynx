@@ -187,7 +187,6 @@ public class JynxClass {
         if (classtype == ClassType.MODULE) {
             jmodule = JynxModule.getInstance(js,jvmVersion);
         }
-        js.setCombine();
     }
 
     public void setCommon(Directive dir) {

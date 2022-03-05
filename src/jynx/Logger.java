@@ -17,17 +17,19 @@ public class Logger {
     private final Deque<String> lines;
     private final Set<String> endinfo;
     private final boolean exitOnError;
+    private final String type;
 
     private String currentLine;
     private String lastErrorLine;
     
     private int errct = 0;
 
-    public Logger(boolean exitOnError) {
+    public Logger(String type, boolean exitOnError) {
         this.exitOnError = exitOnError;
         this.contexts = new ArrayDeque<>();
         this.lines = new ArrayDeque<>();
         this.endinfo = new LinkedHashSet<>(); // so order of info messages is reproducible
+        this.type = type;
     }
 
     public int numErrors() {
@@ -93,10 +95,10 @@ public class Logger {
         }
         endinfo.clear();
         if (errct == 0) {
-            printInfo(M104,classname); // "class %s assembly completed successfully"
+            printInfo(M104,classname,type); // "class %s %s completed successfully"
         } else {
-             // "class %s assembly completed  unsuccesfully - number of errors is %d"
-            printInfo(M131,classname,errct);
+             // "class %s %s completed  unsuccesfully - number of errors is %d"
+            printInfo(M131,classname,type,errct);
         }
         currentLine = null;
         return errct == 0;
@@ -106,7 +108,7 @@ public class Logger {
         switch (logtype) {
             case SEVERE:
                 printError(msg,objs);
-                printInfo(M84); // "assembly terminated because of severe error"
+                printInfo(M84,type); // "%s terminated because of severe error"
                 throw new SevereError();
             case STYLE:
                 // fall through to warning
@@ -122,7 +124,7 @@ public class Logger {
                     System.exit(1);
                 }
                 if (errct > MAX_ERRORS) {
-                    printInfo(M85); // "assembly terminated because of too many errors"
+                    printInfo(M85,type); // "%s terminated because of too many errors"
                     throw new SevereError();
                 }
                 break;

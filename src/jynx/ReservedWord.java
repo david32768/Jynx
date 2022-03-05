@@ -5,9 +5,8 @@ import jynx2asm.Token;
 public enum ReservedWord {
     res_method,
     res_signature('q',true),
-    res_outer(true),
-    res_inner(true),
-    res_innername(true),
+    res_outer('n',true),
+    res_innername('n',true),
 
     res_is('n'),
 
@@ -20,7 +19,6 @@ public enum ReservedWord {
     res_use,
     res_reachable,
     res_label,
-//    res_targets,
     
     res_default,
     res_main(true),
@@ -34,11 +32,7 @@ public enum ReservedWord {
     res_lineno,
     res_with,
 
-//    res_extends,
-//    res_class,
-//    res_interface,
     res_common,
-//    res_assignable,
     res_subtypes,
 
     array_at("[@"),
@@ -130,7 +124,7 @@ public enum ReservedWord {
             case 'n':
                 return StringUtil.escapeName(string);
             case 'q':
-                return StringUtil.stringEscape(string);
+                return StringUtil.QuoteEscape(string);
             case 'l':
                 return string;
             default:

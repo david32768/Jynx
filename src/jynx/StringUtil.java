@@ -94,12 +94,20 @@ public class StringUtil {
         return sb.toString();
     }
 
+    public static String removeEndQuotes(String str) {
+        int last = str.length() - 1;
+        char start = str.charAt(0);
+        if ((start == '\'' || start == '\"') && str.charAt(last) == start) {
+            str = str.substring(1, last);
+        }
+        return str;
+    }
+    
     public static String unescapeString(String token) {
-        if (token != null && token.charAt(0) == '\"') {
-            token = token.substring(1, token.length() - 1);
-        } else {
+        if (token == null || token.charAt(0) != '\"') {
             return token;
         }
+        token = removeEndQuotes(token);
         token = unescapeUnicode(token);
         return unescapeSequence(token);
     }
@@ -111,7 +119,7 @@ public class StringUtil {
             sb.append('\\');
             c = ESCAPE_TO.charAt(index);
             sb.append(c);
-        } else if (isPrintable(c)) {
+        } else if (StringUtil.isPrintableAscii(c)) {
             sb.append(c);
         } else {
             String unicode = String.format("\\u%04x",(int)c);
@@ -120,38 +128,40 @@ public class StringUtil {
         return sb.toString();
     }
     
-    public static String stringEscape(String token) {
+    private static String StringEscape(String token) {
         StringBuilder sb = new StringBuilder(token.length());
-        sb.append('"');
         for (int i = 0;i < token.length();i++) {
             char c = token.charAt(i);
             sb.append(escapeChar(c));
         }
-        sb.append('"');
         return sb.toString();
     }
     
-    public static boolean isVisible(int c) {
+    public static String QuoteEscape(String token) {
+        return '\"' + StringEscape(token) + '\"';
+    }
+    
+    public static boolean isVisibleAscii(int c) {
         return c > 0x20 && c <= 0x7f; // disallow blank in non-quoted tokens
     }
     
-    public static boolean isPrintable(int c) {
+    public static boolean isPrintableAscii(int c) {
         return c >= 0x20 && c <= 0x7f;
     }
     
-    private static boolean isVisible(String str) {
+    private static boolean isVisibleAscii(String str) {
         return str.chars()
-                .allMatch(StringUtil::isVisible);
+                .allMatch(StringUtil::isVisibleAscii);
     }
     
-    public static boolean isPrintable(String str) {
+    public static boolean isPrintableAscii(String str) {
         return str.chars()
-                .allMatch(StringUtil::isPrintable);
+                .allMatch(StringUtil::isPrintableAscii);
     }
     
-    public static String highlightUnprintables(String str) {
+    public static String highlightUnprintablesAscii(String str) {
         return str.chars()
-                .map(c->isPrintable(c)? c: '?')
+                .map(c->StringUtil.isPrintableAscii(c)? c: '?')
                 .mapToObj(String::valueOf)
                 .collect(Collectors.joining());
     }
@@ -164,7 +174,7 @@ public class StringUtil {
     public static String unicodeEscape(String str) {
         return str.chars()
                 .sequential()
-                .mapToObj(c->isPrintable(c)?String.valueOf((char)c):String.format("\\u%04x",c))
+                .mapToObj(c->StringUtil.isPrintableAscii(c)?String.valueOf((char)c):String.format("\\u%04x",c))
                 .collect(Collectors.joining());
     }
 
@@ -176,7 +186,7 @@ public class StringUtil {
         if (str == null) {
             return null;
         }
-        if (isVisible(str) && !isLowerCaseAlpha(str)) { // if not unicode nor possible reserved word
+        if (isVisibleAscii(str) && !isLowerCaseAlpha(str)) { // if not unicode nor possible reserved word
             return str;
         }
         return nameEscape(str);
@@ -191,12 +201,12 @@ public class StringUtil {
         }
         if (str.charAt(0) == '\"') {
             str = unescapeString(str);
-            return stringEscape(str);
+            return QuoteEscape(str);
         }
-        if (StringUtil.isVisible(str) && !str.trim().isEmpty()) {
+        if (StringUtil.isVisibleAscii(str) && !str.trim().isEmpty()) {
             return str;
         } else {
-            return nameEscape(str);
+            return unicodeEscape(str);
         }
     }
     
@@ -206,12 +216,12 @@ public class StringUtil {
         }
         if (str.charAt(0) == '\"') {
             str = unescapeString(str);
-            return stringEscape(str);
+            return QuoteEscape(str);
         }
-        if (StringUtil.isPrintable(str)) {
+        if (StringUtil.isPrintableAscii(str)) {
             return str;
         } else {
-            return nameEscape(str);
+            return unicodeEscape(str);
         }
     }
     

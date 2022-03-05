@@ -19,7 +19,7 @@ public enum GlobalOption {
     BASIC_VERIFIER(M16), // "use ASM BasicVerifier"
     SIMPLE_VERIFIER(M17), // "use ASM SimpleVerifier (default)"
     ALLOW_CLASS_FORNAME(M11), // "let simple verifier use Class.forName()"
-    CHECK_METHOD_REFERENCES(M8), // "check that non-java methods exist (on class path)"
+    CHECK_METHOD_REFERENCES(M8), // "check that called methods exist (on class path)"
     // DEBUG options - may change
     __EXIT_IF_ERROR(M13), // "exit if error"
     __TREAT_WARNINGS_AS_ERRORS(M25), // "treat warnings as errors"
