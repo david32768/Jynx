@@ -14,6 +14,7 @@ import jvm.AsmOp;
 import jvm.Constants;
 import jvm.Feature;
 import jvm.HandleType;
+import jynx.GlobalOption;
 import jynx.LogIllegalArgumentException;
 
 public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
@@ -199,6 +200,9 @@ public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
     }
     
     private static String addClassName(String mspec, AsmOp op) {
+        if (OPTION(GlobalOption.DO_NOT_PREPEND_CLASSNAME)) {
+            return mspec;
+        }
         int lb = mspec.indexOf('(');
         int sl = mspec.indexOf('/');
         if (sl  < 0 || sl > lb) {

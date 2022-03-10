@@ -15,6 +15,7 @@ import jynx.LogIllegalStateException;
 import jynx.ReservedWord;
 import jynx.StringUtil;
 import jynx2asm.Line;
+import jynx2asm.String2Insn;
 
 public class LineBuilder {
 
@@ -40,11 +41,11 @@ public class LineBuilder {
         }
     }
     
-    public boolean isEmpty() {
+    private boolean isEmpty() {
         return sb.length() == 0;
     }
     
-    public void clear() {
+    private void clear() {
         sb.setLength(0);
     }
     
@@ -62,18 +63,14 @@ public class LineBuilder {
         }
     }
 
-    public LineBuilder appendBlank() {
-        sb.append(' ');
-        return this;
-    }
-    
     private void addSep() {
         if (isEmpty()) {
-            for (int i = 0; i < depth;++i) {
-                sb.append("  ");
+            int indent = String2Insn.INDENT_LENGTH * depth;
+            for (int i = 0; i < indent;++i) {
+                sb.append(Line.TOKEN_SEPARATOR);
             }
-        } else if (sb.charAt(sb.length() -1) != ' ') {
-            sb.append(' ');
+        } else if (sb.charAt(sb.length() - 1) != Line.TOKEN_SEPARATOR) {
+            sb.append(Line.TOKEN_SEPARATOR);
         }
     }
     
@@ -91,7 +88,8 @@ public class LineBuilder {
     }
     
     public LineBuilder appendRaw(String str) {
-        sb.append(' ').append(StringUtil.printable(str));
+        addSep();
+        append(StringUtil.printable(str));
         return this;
     }
     
@@ -169,10 +167,9 @@ public class LineBuilder {
 
     public LineBuilder append(EnumSet<AccessFlag> result, String name) {
         String[] flagstr = AccessFlag.stringArrayOf(result);
-        appendBlank().append(flagstr)
-                .appendNonNullName(name);   // enclose with '\'' as may be accflag which is not a reserved word
-                                            // parameter name may be null
-
+        sb.append(Line.TOKEN_SEPARATOR);
+        append(flagstr);
+        appendNonNullName(name);   // enclose with '\'' as may be accflag which is not a reserved word
         return this;
     }
 
@@ -184,27 +181,9 @@ public class LineBuilder {
         appendNonNull(dir, obj).nl();
     }
     
-    private String quoted(String str) {
-        if (str == null) {
-            return null;
-        }
-        return StringUtil.QuoteEscape(str);
-    }
-    
-    
-    public final void printline(String line) {
-        String trim = line.trim();
-        if (!trim.isEmpty() && trim.charAt(0) == Line.DIRECTIVE_INICATOR) {
-            pw.println(quoted(line));
-        } else {
-            pw.println(StringUtil.printable(line));
-        }
-    }
-
     @Override
     public String toString() {
         return sb.toString();
     }
 
-    
 }

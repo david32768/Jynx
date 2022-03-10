@@ -11,6 +11,7 @@ public enum GlobalOption {
     HELP(M1,'h'), // "display help message"
     VERSION(M2,'V'), //"display version information"
 
+    SYSIN(M7), // "use SYSIN as input file"
     USE_STACK_MAP(M19), // "use user stack map instead of ASM generated"
     WARN_UNNECESSARY_LABEL(M10), // "warn if label unreferenced or alias"
     WARN_STYLE(M15), // "warn if names non-standard"
@@ -20,6 +21,7 @@ public enum GlobalOption {
     SIMPLE_VERIFIER(M17), // "use ASM SimpleVerifier (default)"
     ALLOW_CLASS_FORNAME(M11), // "let simple verifier use Class.forName()"
     CHECK_METHOD_REFERENCES(M8), // "check that called methods exist (on class path)"
+    DO_NOT_PREPEND_CLASSNAME(M18), // "do not prepend class name if necessary in invokestatic etc."
     // DEBUG options - may change
     __EXIT_IF_ERROR(M13), // "exit if error"
     __TREAT_WARNINGS_AS_ERRORS(M25), // "treat warnings as errors"
@@ -76,7 +78,7 @@ public enum GlobalOption {
     }
     
     public static void print() {
-        Global.LOG(M7); // "%nOptions are:%n"
+        Global.LOG(M6); // "%nOptions are:%n"
         for (GlobalOption opt:values()) {
             if (!opt.name().startsWith("_")) {
                 System.err.println(String.format(" %s %s",opt.argName(),opt.msg));

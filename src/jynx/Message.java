@@ -10,8 +10,8 @@ public enum Message {
     M3(BLANK,"program terminated because of errors"),
 
     M5(BLANK,"%nUsage: {options} %s-file"),
-
-    M7(BLANK,"%nOptions are:%n"),
+    M6(BLANK,"%nOptions are:%n"),
+    M7(BLANK,"use SYSIN as input file"),
     M8(BLANK,"check that called methods exist (on class path)"),
     M9(BLANK,"generate line numbers"),
     M10(BLANK,"warn if label unreferenced or alias"),
@@ -21,7 +21,7 @@ public enum Message {
     M15(BLANK,"warn if names non-standard"),
     M16(BLANK,"use ASM BasicVerifier"),
     M17(BLANK,"use ASM SimpleVerifier (default)"),
-
+    M18(BLANK,"do not prepend class name if necessary in invokestatic etc."),
     M19(BLANK,"use user stack map instead of ASM generated"),
     M20("invalid major version(%d)"),
     M21("invalid minor version(%d) - spec table 4.1A"),
@@ -179,7 +179,6 @@ public enum Message {
     M177(ENDINFO,"classname has been added to argument of incomplete field access instruction(s)"),
     M178("invalid type ref sort - %d"),
     M179("String length of %d exceeds maximum %d"),
-
     M180("top of stack('%c') and next on stack('%c') are not both 32 bit types"),
     M181("%s directive is invalid for MODULE - value specifued was %s"),
     M182("top of stack is %s but required is %s"),
@@ -218,11 +217,11 @@ public enum Message {
     M215(" %s field %s accessed by %s op %s"),
     M216("frame locals %s incompatible with current locals %s"),
     M217("from label %s is not before to label %s"),
-
+    M218(INFO,"SYSIN will be used as input. No file will be produced"),
     M219("wrong number of parameters after options %s"),
     M220(WARNING,"label %s is an alias for label %s"),
     M221("required %s for var %d but found %s"),
-
+    M222("either option %s is specified or file name is present but not both"),
     M223("Annotation for unknown variable  %d"),
     M224(WARNING,"invalid %s as only has %s"),
     M225(WARNING,"empty %s ignored"),
@@ -301,8 +300,11 @@ public enum Message {
     M404("(redundant?) checkcasts or hint needed to obtain common supertype of%n    %s and %s"),
     M405("%s has different type %s from previous %s at line %d"),
     M406("method %s in %s class must be %s, not %s and have no parameters"),
+    M407("cannot %s end_token"),
+    M408("expected %s but found %s"),
+    M409("illegal operation on END_TOKEN"),
+    M410("cannot amend quoted token"),
     
-    M900("unknown enum constant %s in enum %s"),
     M901("unknown ASM type %s as it starts with '%c'"),
     M902("unknown ASM stack frame type (%d)"),
     M903("unknown class %s for ASM frametype"),

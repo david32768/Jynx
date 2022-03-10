@@ -62,15 +62,6 @@ public class WasmMacroLib  extends MacroLib {
     aux_newtable(LineOps.insert(WASM_TABLE,"getInstance","()" + WASM_TABLE_L),asm_invokestatic),
     aux_newmem(LineOps.insert(WASM_STORAGE,"getInstance","(II)" + WASM_STORAGE_L),asm_invokestatic),
 
-    // init functions
-    MEMORY_NEW(asm_ldc,asm_ldc,aux_newmem),
-    MEMORY_CHECK(asm_ldc,asm_ldc,WasmMacroLib.dynStorage("checkIntance", "(II)V")),
-    ADD_SEGMENT(asm_ldc,tok_swap,asm_ldc,WasmMacroLib.dynStorage("putBase64String", "(ILjava/lang/String;)V")),
-    
-    TABLE_NEW(aux_newtable),
-    ADD_ENTRY(DynamicOp.withBootParms("add", "()V",
-            WASM_TABLE, "handleBootstrap",MH + "II" + MH_ARRAY,"GS:TABLE0()" + WASM_TABLE_L)),
-    
         // control operators
         UNREACHABLE(LineOps.insert(WASM_HELPER ,"unreachable","()Ljava/lang/AssertionError;"),asm_invokestatic,asm_athrow),
         IF(ext_IF_NEZ),
@@ -78,7 +69,7 @@ public class WasmMacroLib  extends MacroLib {
         BR_TABLE(asm_tableswitch),
         CALL(asm_invokestatic),
 //        CALL_INDIRECT(DynamicOp.of("table", null, WASM_TABLE, "callIndirectBootstrap")),
-        CALL_INDIRECT(DynamicOp.withBootParms("table", null, WASM_TABLE,
+        CALL_INDIRECT(LineOps.check("0"),DynamicOp.withBootParms("table", null, WASM_TABLE,
                 "callIndirectBootstrap",MH,"GS:TABLE0()" + WASM_TABLE_L)),
         // parametric operators
         NOP(asm_nop),
@@ -365,6 +356,17 @@ public class WasmMacroLib  extends MacroLib {
         F64_BR_IFLE(ext_BR_IF_DCMPLE),
         F64_BR_IFGE(ext_BR_IF_DCMPGE),
 
+    // init functions
+    MEMORY_NEW(asm_ldc,asm_ldc,aux_newmem),
+    MEMORY_CHECK(asm_ldc,asm_ldc,WasmMacroLib.dynStorage("checkIntance", "(II)V")),
+    ADD_SEGMENT(asm_ldc,tok_swap,asm_ldc,WasmMacroLib.dynStorage("putBase64String", "(ILjava/lang/String;)V")),
+    
+    TABLE_NEW(aux_newtable),
+    IMPORT_TABLE(LineOps.insertAfter(WASM_TABLE_L),GLOBAL_GET),
+    ADD_ENTRY(LineOps.prepend("GS:TABLE"),LineOps.append("()" + WASM_TABLE_L),
+        DynamicOp.withBootParms("add", "()V", WASM_TABLE, "handleBootstrap",MH + "I" + MH_ARRAY)),
+    TABLE_SET(LineOps.prepend("TABLE"),LineOps.insertAfter(WASM_TABLE_L),GLOBAL_SET),
+    
         ;
 
         private final JynxOp[] jynxOps;

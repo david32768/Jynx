@@ -1,9 +1,10 @@
 package jynx2asm.ops;
 
 import static jynx.Message.M248;
-import static jynx.Message.M900;
 
-import jynx.LogAssertionError;
+import static jynx.Message.M407;
+import static jynx.Message.M408;
+
 import jynx.LogIllegalStateException;
 import jynx2asm.LabelStack;
 import jynx2asm.Line;
@@ -123,36 +124,94 @@ public enum LineOps implements LineOp {
                 line.insert(second);
                 break;
             default:
-                throw new LogAssertionError(M900,this); // "unknown enum constant %s in enum %s"
+                throw new EnumConstantNotPresentException(this.getClass(),this.name());
         }
     }
 
+    private static enum Adjustment {
+       INSERT,
+       INSERT_AFTER,
+       PREPEND,
+       APPEND,
+       CHECK,
+       ;
+    }
+   
     public static LineOp insert(String str) {
-        return new Insert(str);
+        return new AdjustLine(Adjustment.INSERT, str);
+    }
+    
+    public static LineOp insertAfter(String str) {
+        return new AdjustLine(Adjustment.INSERT_AFTER, str);
     }
     
     public static LineOp insert(String klass, String method, String desc) {
-        return new Insert(klass + '/' + method + desc);
+        return new AdjustLine(Adjustment.INSERT, klass + '/' + method + desc);
     }
     
-    private static class Insert implements LineOp {
+    public static LineOp prepend(String str) {
+        return new AdjustLine(Adjustment.PREPEND,str);
+    }
+    
+    public static LineOp append(String str) {
+        return new AdjustLine(Adjustment.APPEND,str);
+    }
+    
+    public static LineOp check(String str) {
+        return new AdjustLine(Adjustment.CHECK,str);
+    }
+    
+    private static class AdjustLine implements LineOp {
 
-        private final String insert;
+        private final String adjust;
+        private final Adjustment type;
 
-        private Insert(String insert) {
-            this.insert = insert;
+        public AdjustLine(Adjustment type, String adjust) {
+            this.adjust = adjust;
+            this.type = type;
         }
-        
+
         @Override
         public void adjustLine(Line line, int macrolevel, LabelStack labelStack){
-            Token token = Token.getInstance(insert);
-            line.insert(token);
+            switch(type) {
+                case INSERT:
+                    Token token = Token.getInstance(adjust);
+                    line.insert(token);
+                    break;
+                case INSERT_AFTER:
+                    token = line.nextToken();
+                    if (token == Token.END_TOKEN) {
+                        throw new LogIllegalStateException(M407,type);  // "cannot %s end_token"
+                    }
+                    Token inserted = Token.getInstance(adjust);
+                    line.insert(inserted);
+                    line.insert(token);
+                    break;
+                case PREPEND:
+                    token = line.nextToken().prepend(adjust);
+                    line.insert(token);
+                    break;
+                case APPEND:
+                    token = line.nextToken().append(adjust);
+                    line.insert(token);
+                    break;
+                case CHECK:
+                    token = line.nextToken();
+                    if (!token.asString().equals(adjust)) {
+                        // "expected %s but found %s"
+                        throw new LogIllegalStateException(M408,adjust,token.asString());
+                    }
+                    break;
+                default:
+                    throw new EnumConstantNotPresentException(type.getClass(), type.name());
+            }
         }
 
         @Override
         public String toString() {
-            return String.format("*Insert %s", insert);
+            return String.format("*%s %s", type, adjust);
         }
 
     }
+
 }

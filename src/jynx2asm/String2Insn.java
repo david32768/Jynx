@@ -56,6 +56,7 @@ import jynx2asm.ops.StructuredOps;
 public class String2Insn {
 
     private static final int MAX_METHOD_SIZE = 2*Short.MAX_VALUE + 1;
+    public static final int INDENT_LENGTH = 2;
     
     private final JynxScanner js;
     private final JynxLabelMap labmap;
@@ -100,7 +101,7 @@ public class String2Insn {
             return instructions;
         }
         if (OPTION(GlobalOption.WARN_INDENT)) {
-            int expected = 2*labelStack.size() + 2;
+            int expected = INDENT_LENGTH * (labelStack.size() + 1);
             if (jynxop instanceof StructuredOps && ((StructuredOps)jynxop).reduceIndent()) {
                 expected -= 2;
             }
@@ -207,7 +208,7 @@ public class String2Insn {
     private Instruction arg_class(JvmOp jvmop) {
         addDotLine = generateDotLine;
         String type = line.nextToken().asString();
-        if (jvmop.getBase() == AsmOp.asm_new) {
+        if (jvmop.getBase() == AsmOp.asm_new && !OPTION(GlobalOption.DO_NOT_PREPEND_CLASSNAME)) {
             if (type.equals("/")) {
                 type = className;
                 LOG(M255,jvmop); // "classname has been added to argument of some %s instruction(s)"

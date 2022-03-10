@@ -32,8 +32,8 @@ public enum Constants {
 
     NAME("name()L%s;",STRING_CLASS),
     ORDINAL("ordinal()I"),
-    VALUES_FORMAT("values()[L%s;"),
-    VALUEOF_FORMAT("valueOf(Ljava/lang/String;)L%s;"),
+    VALUES_FORMAT("%1$s/values()[L%1$s;"),
+    VALUEOF_FORMAT("%1$s/valueOf(Ljava/lang/String;)L%1$s;"),
     GET_DECLARING_CLASS("getDeclaringClass()L%s;",CLASS_CLASS),
     COMPARETO_FORMAT("compareTo(L%s;)I")
     ;

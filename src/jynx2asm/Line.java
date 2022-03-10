@@ -23,7 +23,12 @@ public class Line implements TokenDeque {
         ;
     }
     
-    public static Line EMPTY = new Line(null, 0, 0, new ArrayDeque<>(),LineType.CODE);
+    public static final Line EMPTY = new Line(null, 0, 0, new ArrayDeque<>(),LineType.CODE);
+    public static final char TOKEN_SEPARATOR = ' ';
+    
+    static {
+        assert Character.isWhitespace(TOKEN_SEPARATOR);
+    }
     
     private final String line;
     private final int linect;
@@ -98,7 +103,6 @@ public class Line implements TokenDeque {
         char quote = '"';
         for (int i = 0; i < line.length(); ++i) {
             char c = line.charAt(i);
-            if (c == '\t') c = ' ';
             switch (state) {
                 case SLASH:
                     state = StringState.QUOTE;
@@ -110,7 +114,7 @@ public class Line implements TokenDeque {
                                 state = StringState.ENDQUOTE;
                             }
                             break;
-                        case ' ':
+                        case TOKEN_SEPARATOR:
                             c = '\n';   // replace blanks in quoted string by newline character
                             break;
                         case '\\':
@@ -119,16 +123,18 @@ public class Line implements TokenDeque {
                     }
                     break;
                 case ENDQUOTE:  // last character was closing quote
-                    if (c != ' ') {
+                    if (!Character.isWhitespace(c)) {
                         LOG(M68,c); // "Quoted string followed by '%c' instead of blank"
                         --i;    // reread character
                     }
+                    c = TOKEN_SEPARATOR;
                     state = StringState.BLANK;
                     break;
                 case BLANK:
+                    if (Character.isWhitespace(c)) {
+                        continue;
+                    }
                     switch(c) {
-                        case ' ':
-                            continue;   // compress blanks to blank
                         case ';':
                             state = StringState.COMMENT;   // ignore characters
                             continue;
@@ -144,8 +150,9 @@ public class Line implements TokenDeque {
                 case COMMENT:  // last token was blank semicolon i.e. comment start
                     continue;
                 case UNQUOTED:  // not in quoted string
-                    if (c == ' ') {
+                    if (Character.isWhitespace(c)) {
                         state = StringState.BLANK;
+                        c = TOKEN_SEPARATOR;
                     }
                     break;
                 default:
@@ -164,7 +171,7 @@ public class Line implements TokenDeque {
         String str = line.trim();
         assert !str.isEmpty() && str.charAt(0) != ';';
         int indent = 0;
-        while (line.charAt(indent) == ' ') ++indent;
+        while (line.charAt(indent) == TOKEN_SEPARATOR) ++indent;
         LineType linetype = str.charAt(0) == DIRECTIVE_INICATOR?LineType.DIRECTIVE:LineType.CODE;
         str = StringUtil.unescapeUnicode(str);
         str = prepare(str);
@@ -177,7 +184,7 @@ public class Line implements TokenDeque {
         }
         Deque<Token> tokens = new ArrayDeque<>();
         for (int i = 0; i < strings.length; ++i) {
-            String tokeni = strings[i].replace('\n', ' ');
+            String tokeni = strings[i].replace('\n', TOKEN_SEPARATOR);
             tokens.addLast(Token.getInstance(tokeni));
         }
         tokens.addLast(Token.END_TOKEN);

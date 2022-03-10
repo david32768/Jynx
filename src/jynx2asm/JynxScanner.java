@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Scanner;
 
 import static jynx.Global.*;
 import static jynx.Message.*;
@@ -17,10 +18,10 @@ public class JynxScanner implements Iterator<Line> {
     private Line line = Line.EMPTY;
     private boolean reread;
 
-    private final Iterator<String> lines;
+    private final Scanner lines;
 
-    public JynxScanner(List<String> lines) {
-        this.lines = lines.listIterator();
+    public JynxScanner(Scanner lines) {
+        this.lines = lines;
     }
 
     public void skipLinesUntil(Directive enddir) {
@@ -41,11 +42,12 @@ public class JynxScanner implements Iterator<Line> {
         line.noMoreTokens();
         String linestr;
         do {
-            if (!lines.hasNext()) {
+            if (!lines.hasNextLine()) {
                 line = null;
+                lines.close();
                 return;
             }
-            linestr = lines.next();
+            linestr = lines.nextLine();
             ++linect;
         } while (linestr.trim().length() == 0 || linestr.trim().startsWith(";")); // ignore empty lines and comments
         line = Line.tokenise(linestr, linect);

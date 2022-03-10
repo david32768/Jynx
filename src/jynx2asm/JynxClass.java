@@ -2,9 +2,9 @@ package jynx2asm;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Scanner;
 
 import static jynx.Global.*;
 import static jynx.GlobalOption.BASIC_VERIFIER;
@@ -59,13 +59,19 @@ public class JynxClass {
         this.unique_directives = new HashMap<>();
     }
 
-    public static JynxClass getInstance(String default_source, List<String> lines) {
-        Global.resolveAmbiguity(SIMPLE_VERIFIER, BASIC_VERIFIER);
-        JynxClass jclass =  new JynxClass(default_source, new JynxScanner(lines));
-        jclass.assemble();
-        return jclass;
+    public static byte[] getBytes(String default_source, Scanner lines) {
+        try {
+            Global.resolveAmbiguity(SIMPLE_VERIFIER, BASIC_VERIFIER);
+            JynxClass jclass =  new JynxClass(default_source, new JynxScanner(lines));
+            jclass.assemble();
+            return jclass.toByteArray();
+        } catch (RuntimeException rtex) {
+            rtex.printStackTrace();
+            LOG(M123,default_source,rtex); // "compilation of %s failed because of %s"
+            return null;
+        }
     }
-
+    
     private boolean assemble() {
         int instct = 0;
         int labct = 0;
