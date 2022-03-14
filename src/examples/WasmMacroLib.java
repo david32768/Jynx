@@ -68,9 +68,9 @@ public class WasmMacroLib  extends MacroLib {
         BR_IF(ext_BR_IFNEZ),
         BR_TABLE(asm_tableswitch),
         CALL(asm_invokestatic),
-//        CALL_INDIRECT(DynamicOp.of("table", null, WASM_TABLE, "callIndirectBootstrap")),
-        CALL_INDIRECT(LineOps.check("0"),DynamicOp.withBootParms("table", null, WASM_TABLE,
-                "callIndirectBootstrap",MH,"GS:TABLE0()" + WASM_TABLE_L)),
+        CALL_INDIRECT(LineOps.prepend("GS:TABLE"),LineOps.append("()" + WASM_TABLE_L),tok_swap,
+                DynamicOp.withBootParms("table", null, WASM_TABLE,
+                "callIndirectBootstrap",MH)),
         // parametric operators
         NOP(asm_nop),
         DROP(opc_popn),
@@ -115,12 +115,6 @@ public class WasmMacroLib  extends MacroLib {
 
 
         // memory number is passed as 'disp' parameter
-//    inv_current(LineOps.insert(WASM_STORAGE ,"current","(I)I"),asm_invokestatic),
-//    inv_grow(LineOps.insert(WASM_STORAGE ,"grow","(II)I"),asm_invokestatic),
-//    
-//        MEMORY_SIZE(opc_ildc,inv_current),
-//        MEMORY_GROW(opc_ildc,inv_grow),
-//
         MEMORY_SIZE(WasmMacroLib.dynStorage("currentPages", "()I")),
         MEMORY_GROW(WasmMacroLib.dynStorage("grow", "(I)I")),
 
@@ -363,9 +357,10 @@ public class WasmMacroLib  extends MacroLib {
     
     TABLE_NEW(aux_newtable),
     IMPORT_TABLE(LineOps.insertAfter(WASM_TABLE_L),GLOBAL_GET),
-    ADD_ENTRY(LineOps.prepend("GS:TABLE"),LineOps.append("()" + WASM_TABLE_L),
-        DynamicOp.withBootParms("add", "()V", WASM_TABLE, "handleBootstrap",MH + "I" + MH_ARRAY)),
+    ADD_ENTRY(DynamicOp.withBootParms("add", "(" + WASM_TABLE_L + ")" + WASM_TABLE_L,
+            WASM_TABLE, "handleBootstrap","I" + MH_ARRAY)),
     TABLE_SET(LineOps.prepend("TABLE"),LineOps.insertAfter(WASM_TABLE_L),GLOBAL_SET),
+    TABLE_TEE(asm_dup,TABLE_SET),
     
         ;
 

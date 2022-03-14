@@ -208,7 +208,7 @@ public class String2Insn {
     private Instruction arg_class(JvmOp jvmop) {
         addDotLine = generateDotLine;
         String type = line.nextToken().asString();
-        if (jvmop.getBase() == AsmOp.asm_new && !OPTION(GlobalOption.DO_NOT_PREPEND_CLASSNAME)) {
+        if (jvmop.getBase() == AsmOp.asm_new && OPTION(GlobalOption.PREPEND_CLASSNAME)) {
             if (type.equals("/")) {
                 type = className;
                 LOG(M255,jvmop); // "classname has been added to argument of some %s instruction(s)"

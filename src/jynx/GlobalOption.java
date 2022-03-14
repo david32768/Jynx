@@ -21,7 +21,7 @@ public enum GlobalOption {
     SIMPLE_VERIFIER(M17), // "use ASM SimpleVerifier (default)"
     ALLOW_CLASS_FORNAME(M11), // "let simple verifier use Class.forName()"
     CHECK_METHOD_REFERENCES(M8), // "check that called methods exist (on class path)"
-    DO_NOT_PREPEND_CLASSNAME(M18), // "do not prepend class name if necessary in invokestatic etc."
+    PREPEND_CLASSNAME(M18), // "prepend class name to methods and fields if neccessary"
     // DEBUG options - may change
     __EXIT_IF_ERROR(M13), // "exit if error"
     __TREAT_WARNINGS_AS_ERRORS(M25), // "treat warnings as errors"

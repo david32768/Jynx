@@ -200,7 +200,7 @@ public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
     }
     
     private static String addClassName(String mspec, AsmOp op) {
-        if (OPTION(GlobalOption.DO_NOT_PREPEND_CLASSNAME)) {
+        if (!OPTION(GlobalOption.PREPEND_CLASSNAME)) {
             return mspec;
         }
         int lb = mspec.indexOf('(');

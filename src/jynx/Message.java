@@ -21,7 +21,7 @@ public enum Message {
     M15(BLANK,"warn if names non-standard"),
     M16(BLANK,"use ASM BasicVerifier"),
     M17(BLANK,"use ASM SimpleVerifier (default)"),
-    M18(BLANK,"do not prepend class name if necessary in invokestatic etc."),
+    M18(BLANK,"prepend class name to methods and fields if neccessary"),
     M19(BLANK,"use user stack map instead of ASM generated"),
     M20("invalid major version(%d)"),
     M21("invalid minor version(%d) - spec table 4.1A"),
