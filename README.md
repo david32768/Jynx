@@ -26,7 +26,7 @@ Options are:
 
 *	--HELP display help message
 *	--VERSION display version information
-*	 --SYSIN use SYSIN as input file
+*	--SYSIN use SYSIN as input file
 *	--USE_STACK_MAP use user stack map instead of ASM generated
 *	--WARN_UNNECESSARY_LABEL warn if label unreferenced or alias
 *	--WARN_STYLE warn if names non-standard
@@ -36,8 +36,7 @@ Options are:
 *	--SIMPLE_VERIFIER use ASM SimpleVerifier (default)
 *	--ALLOW_CLASS_FORNAME let simple verifier use Class.forName()
 *	--CHECK_METHOD_REFERENCES check that called methods exist (on class path)
-*	--DO_NOT_PREPEND_CLASSNAME do not prepend class name if necessary in invokestatic etc.
-*	 --DO_NOT_PREPEND_CLASSNAME do not prepend class name if necessary in invokestatic etc.
+*	--PREPEND_CLASSNAME prepend class name to methods and fields if neccessary
 
 ## Jasmin 1.0
 
@@ -111,12 +110,13 @@ Changes are
 *	.end_annotation_array NOT .end_annotation after .annotation_array at end of line
 
 
-## added
+## Additions
 
 *	type annotations
 *	.nesthost
 *	.nestmember
-*	.record etc.
+*	.record
+*	.component
 *	.module
 *	.hint
 *	.permittedSubclass
