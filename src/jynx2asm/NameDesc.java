@@ -22,6 +22,7 @@ import static jynx.Message.*;
 import jvm.Constants;
 import jvm.JavaReserved;
 import jynx.Access;
+import jynx.LogIllegalArgumentException;
 
 public enum NameDesc {
 
@@ -212,6 +213,9 @@ public enum NameDesc {
     }
     
     public boolean isValid(String str) {
+        if (str == null) {
+            throw new LogIllegalArgumentException(M177, this); // "missing %s"
+        }
         boolean ok = pattern.matcher(str).matches();
         if (ok && checkfn != null) {
             try {

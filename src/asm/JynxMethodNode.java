@@ -12,6 +12,7 @@ import org.objectweb.asm.TypePath;
 
 import static jvm.AccessFlag.acc_abstract;
 import static jvm.AccessFlag.acc_native;
+import static jvm.AccessFlag.acc_private;
 import static jvm.AccessFlag.acc_static;
 import static jvm.AttributeName.*;
 import static jvm.Context.METHOD;
@@ -148,6 +149,10 @@ public class JynxMethodNode implements ContextDependent {
         return isAbstract() || isNative();
     }
 
+    public boolean isPrivate() {
+        return accessName.is(acc_private);
+    }
+    
     @Override
     public Context getContext() {
         return Context.METHOD;

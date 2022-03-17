@@ -59,6 +59,10 @@ public enum HandleType {
         return mnemonic;
     }
 
+    public String getPrefix() {
+        return mnemonic + SEP;
+    }
+    
     public AsmOp op() {
         return op;
     }

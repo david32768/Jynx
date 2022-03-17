@@ -9,6 +9,8 @@ public enum Constants {
     CLASS_CLASS("java/lang/Class"),
     RECORD_SUPER("java/lang/Record"),
     ENUM_SUPER("java/lang/Enum"),
+    OBJECT_INPUT_STREAM("java/io/ObjectInputStream"),
+    OBJECT_OUTPUT_STREAM("java/io/ObjectOutputStream"),
     
     JAVA_BASE_MODULE("java.base"),
     MODULE_CLASS_NAME("module-info"),
@@ -33,9 +35,14 @@ public enum Constants {
     NAME("name()L%s;",STRING_CLASS),
     ORDINAL("ordinal()I"),
     VALUES_FORMAT("%1$s/values()[L%1$s;"),
-    VALUEOF_FORMAT("%1$s/valueOf(Ljava/lang/String;)L%1$s;"),
+    VALUEOF_FORMAT("%%1$s/valueOf(L%s;)L%%1$s;",STRING_CLASS),
     GET_DECLARING_CLASS("getDeclaringClass()L%s;",CLASS_CLASS),
-    COMPARETO_FORMAT("compareTo(L%s;)I")
+    COMPARETO_FORMAT("compareTo(L%s;)I"),
+    
+    READ_OBJECT("readObject(L%s;)V",OBJECT_INPUT_STREAM),
+    WRITE_OBJECT("writeObject(L%s;)V",OBJECT_OUTPUT_STREAM),
+    READ_OBJECT_NODATA("readObjectNoData()V"),
+
     ;
     
     private final String str;
@@ -65,13 +72,16 @@ public enum Constants {
         return str;
     }
 
-    public static final EnumSet<Constants> ARRAY_METHODS = EnumSet.of(CLONE,EQUALS,HASHCODE,TOSTRING,GETCLASS,
-            NOTIFY,NOTIFYALL,WAIT,WAITJ,WAITJI);
+    public static final EnumSet<Constants> ARRAY_METHODS
+            = EnumSet.of(CLONE,EQUALS,HASHCODE,TOSTRING,GETCLASS,NOTIFY,NOTIFYALL,WAIT,WAITJ,WAITJI);
 
-    public static final EnumSet<Constants> FINAL_OBJECT_METHODS = EnumSet.of(GETCLASS,NOTIFY,NOTIFYALL,
-            WAIT,WAITJ,WAITJI);
+    public static final EnumSet<Constants> FINAL_OBJECT_METHODS
+            = EnumSet.of(GETCLASS,NOTIFY,NOTIFYALL,WAIT,WAITJ,WAITJI);
 
     // excluding COMPARETO which requires class name
-    public static final EnumSet<Constants> FINAL_ENUM_METHODS = EnumSet.of(NAME,ORDINAL,EQUALS,HASHCODE,
-            CLONE,GET_DECLARING_CLASS,FINALIZE);
+    public static final EnumSet<Constants> FINAL_ENUM_METHODS
+            = EnumSet.of(NAME,ORDINAL,EQUALS,HASHCODE,CLONE,GET_DECLARING_CLASS,FINALIZE);
+
+    public static final EnumSet<Constants> PRIVATE_SERIALIZATION_METHODS
+            = EnumSet.of(READ_OBJECT,WRITE_OBJECT,READ_OBJECT_NODATA);
 }

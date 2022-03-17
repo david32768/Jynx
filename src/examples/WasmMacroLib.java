@@ -13,6 +13,7 @@ import static jynx2asm.ops.JavaCallOps.*;
 import static jynx2asm.ops.LineOps.*;
 import static jynx2asm.ops.StructuredOps.*;
 
+import jvm.HandleType;
 import jynx2asm.ops.DynamicOp;
 import jynx2asm.ops.JynxOp;
 import jynx2asm.ops.LineOps;
@@ -29,6 +30,10 @@ public class WasmMacroLib  extends MacroLib {
         public final static String WASM_DATA = "wasmrun/Data";
         public final static String MH_ARRAY = Type.getType(MethodHandle[].class).getInternalName();
         public final static String MH = "L" + Type.getType(MethodHandle.class).getInternalName() + ";";
+        public final static String TABLE_PREFIX = "__Table__";
+        public final static String GS_TABLE_PREFIX = HandleType.REF_getStatic.getPrefix() + TABLE_PREFIX;
+        public final static String MEMORY = "__Memory__0";
+        public final static String GS_MEMORY = HandleType.REF_getStatic.getPrefix() + MEMORY;
         
         @Override
         public Stream<MacroOp> streamExternal() {
@@ -39,7 +44,7 @@ public class WasmMacroLib  extends MacroLib {
         
         public static DynamicOp dynStorage(String method, String parms) {
             return DynamicOp.withBootParms(method, parms, WASM_STORAGE,
-                "storageBootstrap",MH + "I","GS:MEMORY0()" + WASM_STORAGE_L);
+                "storageBootstrap",MH + "I",GS_MEMORY + "()" + WASM_STORAGE_L);
         }
         
     private enum WasmOp implements MacroOp {
@@ -68,7 +73,8 @@ public class WasmMacroLib  extends MacroLib {
         BR_IF(ext_BR_IFNEZ),
         BR_TABLE(asm_tableswitch),
         CALL(asm_invokestatic),
-        CALL_INDIRECT(LineOps.prepend("GS:TABLE"),LineOps.append("()" + WASM_TABLE_L),tok_swap,
+        CALL_INDIRECT(LineOps.prepend(GS_TABLE_PREFIX),
+                LineOps.append("()" + WASM_TABLE_L),tok_swap,
                 DynamicOp.withBootParms("table", null, WASM_TABLE,
                 "callIndirectBootstrap",MH)),
         // parametric operators
@@ -354,13 +360,13 @@ public class WasmMacroLib  extends MacroLib {
     MEMORY_NEW(asm_ldc,asm_ldc,aux_newmem),
     MEMORY_CHECK(asm_ldc,asm_ldc,WasmMacroLib.dynStorage("checkIntance", "(II)V")),
     ADD_SEGMENT(asm_ldc,tok_swap,asm_ldc,WasmMacroLib.dynStorage("putBase64String", "(ILjava/lang/String;)V")),
+    COPY_MEMORY(LineOps.insertAfter(WASM_STORAGE_L),GLOBAL_GET,LineOps.insertAfter(WASM_STORAGE_L),GLOBAL_SET),
     
     TABLE_NEW(aux_newtable),
-    IMPORT_TABLE(LineOps.insertAfter(WASM_TABLE_L),GLOBAL_GET),
+    COPY_TABLE(LineOps.insertAfter(WASM_TABLE_L),GLOBAL_GET,LineOps.insertAfter(WASM_TABLE_L),GLOBAL_SET),
     ADD_ENTRY(DynamicOp.withBootParms("add", "(" + WASM_TABLE_L + ")" + WASM_TABLE_L,
             WASM_TABLE, "handleBootstrap","I" + MH_ARRAY)),
-    TABLE_SET(LineOps.prepend("TABLE"),LineOps.insertAfter(WASM_TABLE_L),GLOBAL_SET),
-    TABLE_TEE(asm_dup,TABLE_SET),
+    TABLE_TEE(asm_dup,LineOps.prepend(TABLE_PREFIX),LineOps.insertAfter(WASM_TABLE_L),GLOBAL_SET),
     
         ;
 

@@ -68,6 +68,16 @@ public class ClassChecker {
 
     public final static MethodDesc FINALIZE_METHOD = MethodDesc.getInstance(Constants.FINALIZE.toString());
 
+    public final static Map<String,MethodDesc> SERIAL_METHODS;
+    
+    static {
+        SERIAL_METHODS = new HashMap<>();
+        for (Constants method: Constants.PRIVATE_SERIALIZATION_METHODS) {
+            MethodDesc md = MethodDesc.getInstance(method.toString());
+            SERIAL_METHODS.put(md.getName(),md);
+        }
+    }
+    
     public static ClassChecker getInstance(String cname, Access classAccess, ClassType classType, JvmVersion jvmversion) {
         ClassChecker checker = new ClassChecker(cname, classAccess, classType, jvmversion);
         if (classType == ClassType.ENUM) { // final methods in java/lang/Enum
@@ -79,7 +89,8 @@ public class ClassChecker {
             MethodDesc compare = MethodDesc.getInstance(String.format(Constants.COMPARETO_FORMAT.toString(),cname));
             checker.ownMethods.put(compare,virtual);
         }
-        if (!Constants.OBJECT_CLASS.equalString(cname) && classType != ClassType.MODULE && classType != ClassType.PACKAGE) {
+        if (!Constants.OBJECT_CLASS.equalString(cname)
+                && classType != ClassType.MODULE && classType != ClassType.PACKAGE) {
             ObjectLine<HandleType> virtual = new ObjectLine<>(REF_invokeVirtual, Line.EMPTY);
             Constants.FINAL_OBJECT_METHODS.stream()
                     .map(Constants::toString)
@@ -251,8 +262,18 @@ public class ClassChecker {
         if (jcomp != null) {
             ++methodComponentCt;
         }
-         if (classAccess.is(acc_final) && jmn.isAbstract()) {
+        if (classAccess.is(acc_final) && jmn.isAbstract()) {
             LOG(M59,jmn.getName());  // "method %s cannot be abstract in final class"
+        }
+        MethodDesc sermd = SERIAL_METHODS.get(md.getName());
+        if (sermd != null) {
+            if (sermd.equals(md)) {
+                if (!jmn.isPrivate()) {
+                    LOG(M207,md.getName()); // "possible serialization method %s is not private"
+                }
+            } else if (jmn.isPrivate()) {
+                LOG(M227,md.toJynx(),sermd.toJynx()); // "possible serialization method %s does not match %s"
+            }
         }
    }    
     
@@ -305,7 +326,7 @@ public class ClassChecker {
         }
     }
     
-    private void mustHaveVirtualMethod(OwnerNameDesc namedesc) {
+    private void mustHaveVirtualMethod(MethodDesc namedesc) {
         ObjectLine<HandleType> objline = ownMethods.get(namedesc);
         if (objline == null || objline.object() != REF_invokeVirtual) {
             // "%s must have a %s method of type %s"
@@ -313,7 +334,7 @@ public class ClassChecker {
         }
     }
     
-    private void shouldHaveVirtualMethod(OwnerNameDesc has, OwnerNameDesc should) {
+    private void shouldHaveVirtualMethod(MethodDesc has, MethodDesc should) {
         ObjectLine<HandleType> objline = ownMethods.get(should);
         if (objline == null || objline.object() != REF_invokeVirtual) {
             // "as class has a %s method it should have a %s method"
@@ -343,28 +364,28 @@ public class ClassChecker {
     
     private void visitClassEnd() {
         boolean init = ownMethods.keySet().stream()
-                .filter(OwnerNameDesc::isInit)
-                .findFirst()
-                .isPresent();
-            long instanceMethodCoumt = ownMethods.values().stream()
-                .filter(ol-> ol.object() == REF_invokeVirtual)
-                .filter(ol->ol.line() != Line.EMPTY)
-                .count();
+            .filter(OwnerNameDesc::isInit)
+            .findFirst()
+            .isPresent();
+        long instanceMethodCoumt = ownMethods.values().stream()
+            .filter(ol-> ol.object() == REF_invokeVirtual)
+            .filter(ol->ol.line() != Line.EMPTY)
+            .count();
         if (!init && (!instanceFields.isEmpty() || instanceMethodCoumt != 0)) {
             LOG(M156,NameDesc.CLASS_INIT_NAME); // "instance variables or methods with no %s method"
         }
         boolean equals = ownMethods.keySet().stream()
-                .filter(ond -> ond.equals(EQUALS_METHOD))
-                .findFirst()
-                .isPresent();
+            .filter(ond -> ond.equals(EQUALS_METHOD))
+            .findFirst()
+            .isPresent();
         if (equals) {
             shouldHaveVirtualMethod(EQUALS_METHOD, HASHCODE_METHOD);
         }
         Optional<MethodDesc> xequals = ownMethods.entrySet().stream()
-                .filter(me -> me.getValue().object() == REF_invokeVirtual)
-                .map(me -> me.getKey())
-                .filter(ond -> ond.getName().equals(EQUALS_METHOD.getName()))
-                .findFirst();
+            .filter(me -> me.getValue().object() == REF_invokeVirtual)
+            .map(me -> me.getKey())
+            .filter(ond -> ond.getName().equals(EQUALS_METHOD.getName()))
+            .findFirst();
         if (xequals.isPresent() && !equals) {
             //"%s does not override object equals method in %s"
             LOG(M239,xequals.get().toJynx(),className);

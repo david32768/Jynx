@@ -176,7 +176,7 @@ public enum Message {
 
     M175("unknown Jynx desc = %c"),
 
-    M177(ENDINFO,"classname has been added to argument of incomplete field access instruction(s)"),
+    M177("missing %s"),
     M178("invalid type ref sort - %d"),
     M179("String length of %d exceeds maximum %d"),
     M180("top of stack('%c') and next on stack('%c') are not both 32 bit types"),
@@ -206,7 +206,7 @@ public enum Message {
     M204("%s has been replaced by %s_xxxxxxx"),
     M205("enum class changed; was %s now %s"),
     M206("Invalid type letter '%c' (%d)"),
-
+    M207("possible serialization method %s is not private"),
     M208("code not complete - last %s was %s"),
     M209("code not complete - last was %s"),
     M210(WARNING,"%s instruction ignored as never required"),
@@ -226,7 +226,7 @@ public enum Message {
     M224(WARNING,"invalid %s as only has %s"),
     M225(WARNING,"empty %s ignored"),
     M226("invalid access flags %s for component"),
-
+    M227(WARNING,"possible serialization method %s does not match %s"),
     M228(WARNING,"indent %d found but expected %d"),
     M229("duplicate key %d; previous target = %s, current target = %s"),
     M230(WARNING,"keys must be in ascending order; key = %d; previous key = %s"),

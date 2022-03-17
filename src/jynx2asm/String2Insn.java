@@ -307,7 +307,7 @@ public class String2Insn {
     private Instruction arg_field(JvmOp jvmop) {
         String fname = line.nextToken().asString();
         String desc = line.nextToken().asString();
-        FieldDesc fd = FieldDesc.getInstance(fname, desc);
+        FieldDesc fd = FieldDesc.getInstance(fname, desc,jvmop.getBase());
         checker.usedField(fd,jvmop);
         return new FieldInstruction(jvmop,fd);
     }
