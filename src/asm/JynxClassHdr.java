@@ -44,6 +44,7 @@ import jynx2asm.ClassChecker;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
 import jynx2asm.NameDesc;
+import jynx2asm.ONDRecord;
 import jynx2asm.OwnerNameDesc;
 import jynx2asm.TokenArray;
 import jynx2asm.TypeHints;
@@ -284,8 +285,8 @@ public class JynxClassHdr implements ContextDependent {
     }
 
     private void sameOwnerAsClass(String token) {
-        String classOwner = OwnerNameDesc.packageNameOf(cname);
-        String tokenOwner = OwnerNameDesc.packageNameOf(token);
+        String classOwner = ONDRecord.packageNameOf(cname);
+        String tokenOwner = ONDRecord.packageNameOf(token);
         if (!classOwner.equals(tokenOwner)) {
             LOG(M306,classOwner,tokenOwner); // "nested class have different owners; class = %s token = %s",
         }

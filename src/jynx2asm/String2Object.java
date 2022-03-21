@@ -100,17 +100,17 @@ public class String2Object {
         String htag = token.substring(0,colon);
         HandleType ht = HandleType.fromMnemonic(htag);
         String handle = token.substring(colon + 1);
-        OwnerNameDesc mdesc = OwnerNameDesc.getOwnerMethodDescAndCheck(handle,ht);
+        OwnerNameDesc ond = OwnerNameDesc.getOwnerMethodDescAndCheck(handle,ht);
         
-        String desc = mdesc.getDesc();
+        String desc = ond.getDesc();
         if (ht.isField()) {
             // remove () from getfield etc;
             desc = desc.substring(2);
-        } else if (mdesc.isStaticInit() || (ht == REF_newInvokeSpecial ^ mdesc.isInit())) {
+        } else if (ond.isStaticInit() || (ht == REF_newInvokeSpecial ^ ond.isInit())) {
             // "method %s invalid for %s"
-            throw new LogIllegalArgumentException(M102,mdesc.getName(),ht);
+            throw new LogIllegalArgumentException(M102,ond.getName(),ht);
         }
-        return new Handle(ht.reftype(),mdesc.getOwner(), mdesc.getName(), desc, mdesc.isOwnerInterface());
+        return new Handle(ht.reftype(),ond.getOwner(), ond.getName(), desc, ond.isOwnerInterface());
     }
     
     public Object getConst(Token token) {

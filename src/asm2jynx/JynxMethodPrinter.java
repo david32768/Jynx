@@ -22,6 +22,7 @@ import jvm.AccessFlag;
 import jvm.FrameType;
 import jvm.JvmVersion;
 import jynx2asm.LimitValue;
+import jynx2asm.MethodDesc;
 import jynx2asm.OwnerNameDesc;
 
 public class JynxMethodPrinter {
@@ -104,8 +105,8 @@ public class JynxMethodPrinter {
     
     private void printCode(MethodNode mn, String classname) {
         jvmVersion.checkSupports(Code);
-        OwnerNameDesc ond = OwnerNameDesc.of(mn);
-        Object[] initstack = FrameType.getInitFrame(classname, ond).toArray(new Object[0]);
+        MethodDesc md = MethodDesc.of(mn);
+        Object[] initstack = FrameType.getInitFrame(classname, md).toArray(new Object[0]);
         Insn2Jynx i2s = new Insn2Jynx(jp,jvmVersion,o2s,initstack);
         printCatchBlocks(mn, i2s);
         printInstructions(mn.instructions, i2s);

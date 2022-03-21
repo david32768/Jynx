@@ -40,7 +40,6 @@ import jvm.Op;
 import jvm.OpArg;
 
 import jynx.GlobalOption;
-import jynx.LogAssertionError;
 import jynx.LogIllegalArgumentException;
 import jynx.ReservedWord;
 

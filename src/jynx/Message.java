@@ -241,7 +241,7 @@ public enum Message {
     M239(WARNING,"%s does not override object equals method in %s"),
     M240("%s is for internal use only"),
     M241("ambiguous hint for common supertype of %s and %s%n    %s and %s"),
-
+    M242("either init method %s is static or op  is not %s"),
     M243("%s op defined in %s has already been defined in %s"),
 
     M245("Unknown directive = %s"),

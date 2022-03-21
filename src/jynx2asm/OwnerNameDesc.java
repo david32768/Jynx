@@ -4,14 +4,12 @@ import java.util.Objects;
 
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.MethodNode;
 
 import static jynx.Global.*;
 import static jynx.Message.*;
 import static jynx2asm.NameDesc.*;
 
 import jvm.AsmOp;
-import jvm.Constants;
 import jvm.Feature;
 import jvm.HandleType;
 import jynx.GlobalOption;
@@ -19,96 +17,58 @@ import jynx.LogIllegalArgumentException;
 
 public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
 
-    private final String owner;
-    private final String name;
-    private final String desc;
-    private final boolean ownerInterface;
+    private final ONDRecord ond;
 
-    protected OwnerNameDesc(String owner, String name, String desc, boolean ownerInterface) {
-        this.owner = owner;
-        this.name = name;
-        this.desc = desc;
-        this.ownerInterface = ownerInterface;
+    protected OwnerNameDesc(ONDRecord ond) {
+        this.ond = ond;
     }
 
     public static OwnerNameDesc of(Handle handle) {
-        return new  OwnerNameDesc(handle.getOwner(),handle.getName(),handle.getDesc(),handle.isInterface());
+        return new OwnerNameDesc(ONDRecord.of(handle));
     }
     
     public static OwnerNameDesc of(MethodInsnNode min) {
-        return new OwnerNameDesc(min.owner,min.name,min.desc,min.itf);
-    }
-    
-    public static OwnerNameDesc of(MethodNode mn) {
-        return new OwnerNameDesc(null,mn.name,mn.desc,false);
+        return new OwnerNameDesc(ONDRecord.of(min));
     }
     
     public String getOwner() {
-        return owner;
+        return ond.owner();
     }
 
     public String getDesc() {
-        return desc;
+        return ond.desc();
     }
 
     public String getName() {
-        return name;
+        return ond.name();
     }
-
     
     public String getNameDesc() {
-        return name + desc;
+        return ond.nameDesc();
     }
     
     public boolean isOwnerInterface() {
-        return ownerInterface;
+        return ond.isInterface();
     }
 
     public boolean isInit() {
-        return Constants.CLASS_INIT_NAME.equalString(name);
+        return ond.isInit();
     }
     
     public boolean isStaticInit() {
-        return Constants.STATIC_INIT_NAME.equalString(name);
+        return ond.isStaticInit();
     }
 
     public String getPackageName() {
-        Objects.nonNull(owner);
-        return packageNameOf(owner);
+        return ond.packageName();
     }
     
     public boolean isSamePackage(String other) {
-        return getPackageName().equals(packageNameOf(other));
+        return ond.isSamePackage(other);
     }
     
-    private static final char INTERFACE_PREFIX = '@';
-    protected static final char LEFT_BRACKET = '(';
-    protected static final char DOT = '.';
-    protected static final char FORWARD_SLASH = '/';
-
-    private static final String EMPTY_PARM = "()";
-
     public String toJynx() {
-        StringBuilder sb = new StringBuilder();
-        if (owner != null) {
-            if (ownerInterface) {
-                sb.append(INTERFACE_PREFIX);
-            }
-            sb.append(owner);
-        }
-        if (name != null) {
-            if (owner != null) {
-                sb.append(FORWARD_SLASH);
-            }
-            sb.append(name);
-        }
-        if (desc != null) {
-            if (desc.charAt(0) != LEFT_BRACKET) {    // handle for field access
-                sb.append(EMPTY_PARM);
-            }
-            sb.append(desc);
-        }
-        return sb.toString();
+        return ond.toJynx();
     }
 
     @Override
@@ -118,70 +78,40 @@ public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
 
     @Override
     public String toString() {
-        return String.format("owner = %s name = %s desc = %s",owner,name,desc);
+        return ond.toString();
     }
 
-    private static OwnerNameDesc getInstanceOfObjectMethod(String mspec, boolean ownerInterface) {
-        boolean ok = OBJECT_METHOD_DESC.validate(mspec);
-        if (!ok) {
+    private static OwnerNameDesc getInstanceOfObjectMethod(ONDRecord ond) {
+        if (ond.desc() == null || ond.owner() == null) {
             // "Invalid method description %s"
-            throw new LogIllegalArgumentException(M145,mspec);
+            throw new LogIllegalArgumentException(M145,ond.toJynx());
         }
-        int lbindex = mspec.indexOf(LEFT_BRACKET);
-        if (lbindex < 0) {
-            // "Invalid method description %s"
-            throw new LogIllegalArgumentException(M145,mspec);
-        }
-        String mname = mspec.substring(0,lbindex);
-        String mdesc = mspec.substring(lbindex);
-        int slindex = mname.lastIndexOf(FORWARD_SLASH);
-        if (slindex < 0) {
-            // "Invalid method description %s"
-            throw new LogIllegalArgumentException(M145,mspec);
-        }
-        String mclass = mname.substring(0,slindex);
-        mname = mname.substring(slindex+1);
-        if (mclass.charAt(0) == '[') {
-            if (ownerInterface) {
+        if (ond.isArray()) {
+            if (ond.isInterface()) {
                 // "Invalid method description %s"
-                throw new LogIllegalArgumentException(M145,mspec);
+                throw new LogIllegalArgumentException(M145,ond.toJynx());
             }
-            ARRAY_METHOD_NAME_DESC.validate(mname + mdesc);
+            ARRAY_METHOD_NAME_DESC.validate(ond.nameDesc());
         } else {
-            CLASS_NAME.validate(mclass);
-            if (ownerInterface) {
-                INTERFACE_METHOD_NAME.validate(mname);
-                INTERFACE_METHOD_NAME_DESC.validate(mname + mdesc);
+            CLASS_NAME.validate(ond.owner());
+            if (ond.isInterface()) {
+                INTERFACE_METHOD_NAME.validate(ond.name());
+                INTERFACE_METHOD_NAME_DESC.validate(ond.nameDesc());
             } else {
-                METHOD_NAME.validate(mname);
-                METHOD_NAME_DESC.validate(mname + mdesc);
+                METHOD_NAME.validate(ond.name());
+                METHOD_NAME_DESC.validate(ond.nameDesc());
             }
         }
-        return new OwnerNameDesc(mclass,mname,mdesc,ownerInterface);
-    }
-    
-    public static String packageNameOf(String classname) {
-        int slindex = classname.lastIndexOf(FORWARD_SLASH);
-        if (slindex <= 0) {
-            return "";
-        }
-        String pkgname = classname.substring(0, slindex);
-        PACKAGE_NAME.validate(pkgname);
-        return pkgname;
+        return new OwnerNameDesc(ond);
     }
     
     public static OwnerNameDesc getClassOrMethodDesc(String mspec) {
-        int lbindex = mspec.indexOf(LEFT_BRACKET);
-        if (lbindex >= 0) {
-            boolean ownerInterface = false;
-            if (mspec.charAt(0) == INTERFACE_PREFIX) {
-                mspec = mspec.substring(1);
-                ownerInterface = true;
-            }
-            return getInstanceOfObjectMethod(mspec, ownerInterface);
+        ONDRecord ond = ONDRecord.getInstance(mspec);
+        if (ond.desc() != null) {
+            return getInstanceOfObjectMethod(ond);
         }
         CLASS_NAME.validate(mspec);
-        return new OwnerNameDesc(mspec, null, null,false);
+        return new OwnerNameDesc(ONDRecord.classInstance(mspec));
     }
 
     public static OwnerNameDesc getOwnerMethodDescAndCheck(String mspec, HandleType ht) {
@@ -189,40 +119,39 @@ public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
     }
 
     public static OwnerNameDesc getOwnerMethodDescAndCheck(String mspec, AsmOp op) {
-        boolean ownerInterface = false;
-        if (mspec.charAt(0) == INTERFACE_PREFIX) {
-            mspec = mspec.substring(1);
-            ownerInterface = true;
+        ONDRecord ond = ONDRecord.getInstance(mspec);
+        ond = checkInterface(op, ond);
+        ond = addClassName(ond, op);
+        if (ond.isStaticInit() || ond.isInit() && op != AsmOp.asm_invokespecial) {
+            // "either init method %s is static or op  is not %s"
+            throw new LogIllegalArgumentException(M242,ond.toJynx(),AsmOp.asm_invokespecial);
         }
-        ownerInterface = checkInterface(op, ownerInterface);
-        mspec = addClassName(mspec, op);
-        return getInstanceOfObjectMethod(mspec, ownerInterface);
+        return getInstanceOfObjectMethod(ond);
     }
     
-    private static String addClassName(String mspec, AsmOp op) {
+    private static ONDRecord addClassName(ONDRecord ond, AsmOp op) {
         if (!OPTION(GlobalOption.PREPEND_CLASSNAME)) {
-            return mspec;
+            return ond;
         }
-        int lb = mspec.indexOf('(');
-        int sl = mspec.indexOf('/');
-        if (sl  < 0 || sl > lb) {
+        if (ond.owner() == null) {
             LOG(M255,op); // "classname has been added to argument of some %s instruction(s)"
-            mspec = CLASS_NAME() + "/" + mspec;
+            ond.changeOwner(CLASS_NAME());
         }
-        return mspec;
+        return ond;
     }
     
-    private static boolean checkInterface(AsmOp op, boolean ownerInterface) {
+    private static ONDRecord checkInterface(AsmOp op, ONDRecord ond) {
+        boolean ownerInterface = ond.isInterface();
         switch(op) {
             case asm_invokeinterface:
                 if (!ownerInterface){
-                    LOG(M135,INTERFACE_PREFIX,op);   // "for consistency add %s prefix to method name for %s"
+                    LOG(M135,ONDRecord.INTERFACE_PREFIX,op);   // "for consistency add %s prefix to method name for %s"
                 }
                 ownerInterface = true;
                 break;
             case asm_invokevirtual:
                 if (ownerInterface) {
-                    LOG(M139,INTERFACE_PREFIX,op);   // "%s prefix is invalid for %s"
+                    LOG(M139,ONDRecord.INTERFACE_PREFIX,op);   // "%s prefix is invalid for %s"
                 }
                 ownerInterface = false;
                 break;
@@ -238,29 +167,26 @@ public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
                 break;
             default:
                 if (ownerInterface) {
-                    LOG(M139,INTERFACE_PREFIX,op);   // "%s prefix is invalid for %s"
+                    LOG(M139,ONDRecord.INTERFACE_PREFIX,op);   // "%s prefix is invalid for %s"
                 }
                 ownerInterface = false;
                 break;
         }
-        return ownerInterface;
+        return ond.setInterface(ownerInterface);
     }
     
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof OwnerNameDesc) {
             OwnerNameDesc other = (OwnerNameDesc)obj;
-            return Objects.equals(owner,other.owner)
-                    && Objects.equals(name,other.name)
-                    && Objects.equals(desc,other.desc)
-                    && ownerInterface == other.ownerInterface;
+            return Objects.equals(ond,other.ond);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(owner,name,desc,ownerInterface);
+        return ond.hashCode();
     }
 
 }
