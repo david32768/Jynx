@@ -99,7 +99,7 @@ public enum JvmVersion {
     }
 
     public final static JvmVersion MIN_VERSION = V1_0_2;
-    public final static JvmVersion DEFAULT_VERSION = V1_8;
+    public final static JvmVersion DEFAULT_VERSION = V18;
     public final static JvmVersion MAX_VERSION = V18_PREVIEW;
 
     public static JvmVersion getVersionInstance(String verstr) {

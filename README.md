@@ -1,7 +1,7 @@
 # Jynx
 
 This is a rewritten version of Jasmin using [ASM](https://asm.ow2.io) as a back end. It is written
-in Java V1_8 and supports all features of V17 except user attributes. More checking is done before
+in Java V1_8 and supports all features of V18 except user attributes. More checking is done before
  using ASM. For example stack and local variables are checked but
  all objects are treated as Object.
 
