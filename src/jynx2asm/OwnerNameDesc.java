@@ -135,7 +135,7 @@ public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
         }
         if (ond.owner() == null) {
             LOG(M255,op); // "classname has been added to argument of some %s instruction(s)"
-            ond.changeOwner(CLASS_NAME());
+            ond = ond.changeOwner(CLASS_NAME());
         }
         return ond;
     }
