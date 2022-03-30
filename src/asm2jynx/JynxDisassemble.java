@@ -34,6 +34,7 @@ import jvm.JvmVersion;
 import jynx.ClassType;
 import jynx.Directive;
 import jynx.Global;
+import jynx.GlobalOption;
 
 public class JynxDisassemble {
 
@@ -65,6 +66,9 @@ public class JynxDisassemble {
         ClassNode cn = new ClassNode();
         cr.accept(cn, ClassReader.EXPAND_FRAMES);
         JvmVersion jvmversion = JvmVersion.getInstance(cn.version);
+        if (jvmversion == JvmVersion.V1_6JSR && OPTION(GlobalOption.USE_STACK_MAP)) {
+            jvmversion = JvmVersion.V1_6;
+        }
         Global.setJvmVersion(jvmversion);
         return new JynxDisassemble(cn, pw, jvmversion);
     }

@@ -94,7 +94,7 @@ public class JynxFieldNode implements ContextDependent {
             CHECK_SUPPORTS(Signature);
             FIELD_SIGNATURE.validate(signature);
         }
-        accessname.getCheck4Field();
+        accessname.check4Field();
         JynxFieldNode jfn = new JynxFieldNode(jclasshdr, line, accessname, name, desc, signature, value, checker);
         checker.checkField(jfn);
         return jfn;

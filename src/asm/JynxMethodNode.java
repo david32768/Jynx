@@ -64,7 +64,11 @@ public class JynxMethodNode implements ContextDependent {
         Access accessname = checker.getAccess(METHOD,line);
         line.noMoreTokens();
         MethodDesc md = MethodDesc.getInstance(accessname.getName());
-        accessname.getCheck4Method(md.isInit());
+        if (md.isInit()) {
+            accessname.check4InitMethod();
+        } else {
+            accessname.check4Method();
+        }
         JynxMethodNode jmn =  new JynxMethodNode(line,accessname,md,checker);
         checker.checkMethod(jmn);
         return jmn;
@@ -179,7 +183,7 @@ public class JynxMethodNode implements ContextDependent {
         Access accessname = checker.getAccess(Context.PARAMETER, line);
         line.noMoreTokens();
         String pname = accessname.getName();
-        accessname.getCheck4Parameter();
+        accessname.check4Parameter();
         int pflags = accessname.getAccess();
         annotationLists.visitParameter(pname, pflags);
     }

@@ -53,6 +53,7 @@ public enum HandleType {
         this.altfeature = altfeature;
         this.altcpt = altcpt;
         assert ordinal() == reftype - 1;
+        assert maincpt != null;
     }
 
     private String getMnemonic() {

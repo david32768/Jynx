@@ -16,12 +16,13 @@ public enum ClassType {
     // directive, determinator, must_have, must_not ...
         // mustnot == empty means only must_have allowed
     
-            // ANNOTATION must come before interface
+            // ANNOTATION must come before INTERFACE
     ANNOTATION(dir_define_annotation,acc_annotation, EnumSet.of(acc_annotation, acc_interface, acc_abstract),
             acc_final, acc_super, acc_enum,acc_module,acc_record),
-            // INTERFACE must be after annotation
+            // INTERFACE must be after ANNOTATION
     INTERFACE(dir_interface, acc_interface, EnumSet.of(acc_interface, acc_abstract),
             acc_final, acc_super, acc_enum,acc_module,acc_annotation,acc_record),
+            // PACKAGE must be after INTERFACE
     PACKAGE(dir_package, null, EnumSet.of(acc_interface)),
     ENUM(dir_enum, acc_enum, EnumSet.of(acc_enum, acc_super),
             acc_annotation,acc_module,acc_interface,acc_record),
@@ -59,7 +60,7 @@ public enum ClassType {
         return Stream.of(values())
                 .filter(ct->ct.isMe(accflags))
                 .findAny()
-                .orElse(CLASS);
+                .orElse(CLASS); // super flag may not be present
     }
 
     public static ClassType of(Context context) {

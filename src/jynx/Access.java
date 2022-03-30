@@ -12,7 +12,6 @@ import static jynx.Global.LOG;
 import static jynx.Message.*;
 
 import jvm.AccessFlag;
-import jvm.AttributeName;
 import jvm.Constants;
 import jvm.Context;
 import jvm.Feature;
@@ -100,6 +99,10 @@ public class Access {
         }
     }
 
+    private void allOf(EnumSet<AccessFlag> flags) {
+        allOf(flags.toArray(new AccessFlag[0]));
+    }
+    
     private void noneOf(AccessFlag... flags) {
         boolean valid = checkCount(ct -> ct == 0, flags);
         if (!valid) {
@@ -107,25 +110,9 @@ public class Access {
         }
     }
 
-    private void only(AccessFlag... flags) {
-        accflags.addAll(Arrays.asList(flags));
-        boolean valid = checkCount(ct -> ct == flags.length, flags);
-        if (!valid) {
-            LOG(M130,access2string(flags));  // "Requires only {%s} specified"
-            accflags.clear();
-            accflags.addAll(Arrays.asList(flags));
-        }
-    }
-
     private void checkValid(Context state) {
         mostOneOf(acc_public, acc_protected, acc_private);
         mostOneOf(acc_final, acc_abstract);
-        if (accflags.contains(acc_synthetic)) {
-            jvmVersion.checkSupports(AttributeName.Synthetic);
-        }
-        if (accflags.contains(acc_deprecated)) {
-            jvmVersion.checkSupports(AttributeName.Deprecated);
-        }
         EnumSet<AccessFlag> unknown = EnumSet.noneOf(AccessFlag.class);
         accflags.stream()
                 .filter(flag -> !flag.isValid(state))
@@ -144,32 +131,29 @@ public class Access {
         }
     }
 
-    private void check4Class(Context major) {
-        if (major == INNER_CLASS && !NameDesc.isInnerClass(name)) {
-            LOG(M195,name); // "inner class name (%s) does not contain '$'"
-        }
-        checkValid(major);
-        allOf(classType.getMustHave(jvmVersion,major == INNER_CLASS).toArray(new AccessFlag[0]));
+    // Class - Table 4.1B
+    public void check4Class() {
+        checkValid(CLASS);
+        allOf(classType.getMustHave(jvmVersion,false));
         noneOf(classType.getMustNot());
     }
 
-    // Class - Table 4.1B
-    public int getCheck4Class() {
-        check4Class(CLASS);
-        return getAccess();
-    }
-
     // nested class - Table 4.7.6A
-    public void getCheck4InnerClass() {
+    public void check4InnerClass() {
         if (classType == ClassType.MODULE) {
             // "inner class cannot be module"
             throw new LogIllegalArgumentException(M197);
         }
-        check4Class(INNER_CLASS);
+        if (!NameDesc.isInnerClass(name)) {
+            LOG(M195,name); // "inner class name (%s) does not contain '$'"
+        }
+        checkValid(INNER_CLASS);
+        allOf(classType.getMustHave(jvmVersion,true));
+        noneOf(classType.getMustNot());
     }
 
     // Field - Table 4.5A
-    public void getCheck4Field() {
+    public void check4Field() {
         checkValid(FIELD);
         switch (classType) {
             case ANNOTATION:
@@ -199,8 +183,15 @@ public class Access {
         }
     }
 
+    public void check4InitMethod() {
+        checkValid(INIT_METHOD);
+        if (classType == ClassType.INTERFACE || classType == ClassType.ANNOTATION) {
+            LOG(M235,NameDesc.CLASS_INIT_NAME); // "%s method appears in an interface"
+        }
+    }
+
     // Method - Table 4.6A
-    public void getCheck4Method(boolean isinit) {
+    public void check4Method() {
         checkValid(METHOD);
         if (classType == ClassType.RECORD) {
             if (isComponent()) {
@@ -210,12 +201,7 @@ public class Access {
             }
             noneOf(acc_native,acc_abstract);
         }
-        if (isinit) {
-            if (classType == ClassType.INTERFACE || classType == ClassType.ANNOTATION) {
-                LOG(M235,NameDesc.CLASS_INIT_NAME); // "%s method appears in an interface"
-            }
-            noneOf(acc_static, acc_final, acc_synchronized, acc_bridge, acc_native, acc_abstract);
-        } else if (name.equals(Constants.STATIC_INIT.toString())) {
+        if (name.equals(Constants.STATIC_INIT.toString())) {
             if (jvmVersion.compareTo(JvmVersion.V1_7) >= 0) {
                 allOf(acc_static);
             }
@@ -234,17 +220,17 @@ public class Access {
         }
     }
 
-    public void getCheck4Parameter() {
+    public void check4Parameter() {
         checkValid(PARAMETER);
         mostOneOf(acc_synthetic, acc_mandated);
     }
 
-    public void getCheck4Module() {
+    public void check4Module() {
         checkValid(MODULE);
         mostOneOf(acc_synthetic, acc_mandated);
     }
 
-    public void getCheck4Require() {
+    public void check4Require() {
         checkValid(REQUIRE);
         mostOneOf(acc_synthetic, acc_mandated);
         if (!jvmVersion.supports(Feature.static_phase_transitive) && !NameDesc.isJavaBase(name)) {

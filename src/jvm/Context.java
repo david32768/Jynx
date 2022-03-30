@@ -21,6 +21,9 @@ public enum Context {
     
     RECORD,
     ATTRIBUTE,
+    
+    INIT_METHOD,    // used in AccessFlag and Access
+    
     ;
 
     private final static EnumSet<Context> basic = 

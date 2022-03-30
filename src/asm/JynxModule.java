@@ -64,7 +64,7 @@ public class JynxModule {
         String main = line.optAfter(ReservedWord.res_main);
         Token token = line.nextToken();
         String version = token == Token.END_TOKEN?null:token.asString();
-        accessname.getCheck4Module();
+        accessname.check4Module();
         int access = accessname.getAccess();
         ModuleNode mnode = new ModuleNode(name, access, version);
         if (main != null) {
@@ -169,7 +169,7 @@ public class JynxModule {
         String packaze = accessname.getName();
         checkPackage(packaze, Directive.dir_exports);
         PACKAGE_NAME.validate(packaze);
-        accessname.getCheck4Module();
+        accessname.check4Module();
         int access = accessname.getAccess();
         String[] modarr = new String[0];
         Token to = line.nextToken();
@@ -185,7 +185,7 @@ public class JynxModule {
         String packaze = accessname.getName();
         checkPackage(packaze, Directive.dir_opens);
         PACKAGE_NAME.validate(packaze);
-        accessname.getCheck4Module();
+        accessname.check4Module();
         int access = accessname.getAccess();
         String[] modarr = new String[0];
         Token to = line.nextToken();
@@ -202,7 +202,7 @@ public class JynxModule {
         String mod = accessname.getName();
         MODULE_NAME.validate(mod);
         javaBase |= Constants.JAVA_BASE_MODULE.equalString(mod);
-        accessname.getCheck4Require();
+        accessname.check4Require();
         int access = accessname.getAccess();
         Token token = line.nextToken();
         String version = token == Token.END_TOKEN?null:token.asString();

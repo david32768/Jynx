@@ -10,13 +10,11 @@ import java.util.ServiceLoader;
 
 import static jynx.Global.LOG;
 import static jynx.Message.M243;
-import static jynx.Message.M62;
 
 import jvm.Feature;
 import jvm.JvmOp;
 import jvm.JvmVersionRange;
 import jvm.Op;
-import jynx.LogAssertionError;
 
 public class JynxOps  {
 
@@ -43,7 +41,8 @@ public class JynxOps  {
                 .forEach(JynxOps::addOp);
         StructuredOps.streamExternal()
                 .forEach(JynxOps::addOp);
-
+        
+        
         ServiceLoader<MacroLib> libloader = ServiceLoader.load(MacroLib.class);
         for (MacroLib lib: libloader) {
             lib.streamExternal()
@@ -55,23 +54,12 @@ public class JynxOps  {
         return OPMAP.get(name);
     }
 
-    private static final int MAXIMUM_LEVEL = 16;
-    public static final String SPACES;
-    
-    static {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < MAXIMUM_LEVEL; ++i) {
-            sb.append("  ");
-        }
-        SPACES = sb.toString();
-    }
-    
     public static Integer length(MacroOp macop) {
         return length(0,macop);
     }
     
     private static Integer length(int level, MacroOp macop) {
-        checkLevel(level);
+        JvmVersionRange.checkLevel(level);
         int sz = 0;
         for (JynxOp op:macop.getJynxOps()) {
             Integer oplen;
@@ -96,13 +84,6 @@ public class JynxOps  {
         return range;
     }
     
-   public static void checkLevel(int level) {
-        if (level > MAXIMUM_LEVEL) {
-           // "macro nest level exceeds %d"
-            throw new LogAssertionError(M62,MAXIMUM_LEVEL);
-        }
-   }
-
    public static List<Map.Entry<JynxOp,Integer>> expandLevel(JynxOp jop) {
        List<Map.Entry<JynxOp,Integer>>  oplist = new ArrayList<>();
        JynxOps.expandLevel(oplist,jop,0);
@@ -110,7 +91,7 @@ public class JynxOps  {
    }
    
    private static void expandLevel(List<Map.Entry<JynxOp,Integer>> oplist, JynxOp jop, int level) {
-        checkLevel(level);
+        JvmVersionRange.checkLevel(level);
         if (jop instanceof MacroOp) {
             for (JynxOp op:((MacroOp)jop).getJynxOps()) {
                 JynxOps.expandLevel(oplist,op,level + 1);
@@ -121,16 +102,17 @@ public class JynxOps  {
         }
     }
     
-
-
-
-   private static void print(PrintWriter pw, JynxOp jop) {
+    private static void print(PrintWriter pw, JynxOp jop) {
        print(pw,jop,0);
-   } 
-   
+    } 
+
    private static void print(PrintWriter pw,JynxOp jop, int level) {
-        checkLevel(level);
-        String spacer = SPACES.substring(0,2*level);
+        JvmVersionRange.checkLevel(level);
+        StringBuilder sb = new StringBuilder(2*level);
+        for (int i = 0; i < level; ++i) {
+            sb.append("  ");
+        }
+        String spacer = sb.toString();
         String basic = jop instanceof JvmOp?"":" *";
         pw.format("%s%s%s%n", spacer, jop,basic);
         if (jop instanceof MacroOp) {

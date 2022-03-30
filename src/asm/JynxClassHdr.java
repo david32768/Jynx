@@ -135,7 +135,7 @@ public class JynxClassHdr implements ContextDependent {
         }
         flags.addAll(classtype.getMustHave(jvmversion,false)); 
         Access accessname = Access.getInstance(flags, jvmversion, cname,classtype);
-        accessname.getCheck4Class();
+        accessname.check4Class();
         boolean usestack = OPTION(GlobalOption.USE_STACK_MAP);
         int cwflags;
         if (jvmversion.supports(StackMapTable)) {
@@ -263,12 +263,17 @@ public class JynxClassHdr implements ContextDependent {
         innername = line.optAfter(res_innername);
         accflags.addAll(classtype.getMustHave(jvmVersion,true));
         Access accessname = Access.getInstance(accflags, jvmVersion, innerclass,classtype);
-        accessname.getCheck4InnerClass();
+        accessname.check4InnerClass();
         int flags = accessname.getAccess();
         String outerclass = line.optAfter(res_outer);
         line.noMoreTokens();
         CLASS_NAME.validate(innerclass);
-        if (innername != null) INNER_CLASS_NAME.validate(innername);
+        if (innername != null) {
+            INNER_CLASS_NAME.validate(innername);
+            if (innerclass.equals(innername)) {
+                LOG(M247,innerclass,res_innername,innername); // "inner class %s must be different from %s %s"
+            }
+        }
         if (outerclass != null) CLASS_NAME.validate(outerclass);
         InnerClassNode in = new InnerClassNode(innerclass, outerclass,innername, flags);
         innerClasses.add(in);

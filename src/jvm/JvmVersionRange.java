@@ -4,8 +4,9 @@ import java.util.Objects;
 
 import static jvm.JvmVersion.MIN_VERSION;
 import static jvm.JvmVersion.NEVER;
+import static jynx.Message.M62;
 
-import jynx2asm.ops.JynxOps;
+import jynx.LogAssertionError;
 
 public class JvmVersionRange {
 
@@ -34,9 +35,18 @@ public class JvmVersionRange {
         this.deprecate = deprecate;
         this.end = end;
         this.level = level;
-        JynxOps.checkLevel(level);
+        checkLevel(level);
     }
     
+    private static final int MAXIMUM_LEVEL = 16;
+
+    public static void checkLevel(int level) {
+        if (level > MAXIMUM_LEVEL) {
+           // "macro nest level exceeds %d"
+            throw new LogAssertionError(M62,MAXIMUM_LEVEL);
+        }
+   }
+
     public boolean isSupportedBy(JvmVersion jvmversion) {
         return jvmversion.compareTo(start) >= 0 && jvmversion.compareTo(end) < 0
                 || jvmversion.isPreview() && jvmversion.compareTo(preview) >= 0;

@@ -15,9 +15,9 @@ import static jynx.Message.*;
 // Method - Table 4.6A
 // nested class - Table 4.7.6A
 public enum AccessFlag implements JvmVersioned {
-        acc_public(ACC_PUBLIC,0x0001,CLASS,INNER_CLASS,FIELD,METHOD),
-        acc_private(ACC_PRIVATE, 0x0002,INNER_CLASS,FIELD,METHOD),
-        acc_protected(ACC_PROTECTED,0x0004,INNER_CLASS,FIELD,METHOD),
+        acc_public(ACC_PUBLIC,0x0001,CLASS,INNER_CLASS,FIELD,METHOD,INIT_METHOD),
+        acc_private(ACC_PRIVATE, 0x0002,INNER_CLASS,FIELD,METHOD,INIT_METHOD),
+        acc_protected(ACC_PROTECTED,0x0004,INNER_CLASS,FIELD,METHOD,INIT_METHOD),
         acc_static(ACC_STATIC,0x0008,INNER_CLASS,FIELD,METHOD),
         acc_final(ACC_FINAL,0x0010,CLASS,INNER_CLASS,FIELD,METHOD,PARAMETER),
         acc_super(Feature.superflag,ACC_SUPER,0x0020,CLASS),
@@ -28,19 +28,20 @@ public enum AccessFlag implements JvmVersioned {
         acc_bridge(Feature.bridge,ACC_BRIDGE,0x0040,METHOD),
         acc_static_phase(Feature.modules,ACC_STATIC_PHASE,0x0040,REQUIRE),
         acc_transient(ACC_TRANSIENT,0x0080,FIELD),
-        acc_varargs(Feature.varargs,ACC_VARARGS,0x0080,METHOD),
+        acc_varargs(Feature.varargs,ACC_VARARGS,0x0080,METHOD,INIT_METHOD),
         acc_native(ACC_NATIVE,0x0100,METHOD),
         acc_interface(ACC_INTERFACE,0x0200,CLASS,INNER_CLASS),
         acc_abstract(ACC_ABSTRACT,0x0400,CLASS,INNER_CLASS,METHOD),
-        acc_fpstrict(Feature.fpstrict,ACC_STRICT,0x0800,METHOD),
-        acc_synthetic(Feature.synthetic,ACC_SYNTHETIC,0x1000,CLASS,INNER_CLASS,FIELD,METHOD,PARAMETER,MODULE,REQUIRE),
+        acc_fpstrict(Feature.fpstrict,ACC_STRICT,0x0800,METHOD,INIT_METHOD),
+        acc_synthetic(Feature.synthetic,ACC_SYNTHETIC,0x1000,CLASS,INNER_CLASS,FIELD,METHOD,INIT_METHOD,
+                PARAMETER,MODULE,REQUIRE),
         acc_annotation(Feature.annotations,ACC_ANNOTATION,0x2000,CLASS,INNER_CLASS),
         acc_enum(Feature.enums,ACC_ENUM,0x4000,CLASS,INNER_CLASS,FIELD),
         acc_module(Feature.modules,ACC_MODULE,0x8000,CLASS,INNER_CLASS),
         acc_mandated(Feature.mandated,ACC_MANDATED,0x8000,PARAMETER,MODULE,REQUIRE),
     // ASM specific pseudo access flags - not written to class file
         acc_record(Feature.record,ACC_RECORD,0x10000,CLASS,INNER_CLASS),
-        acc_deprecated(Feature.deprecated,ACC_DEPRECATED, 0x20000,CLASS,INNER_CLASS, FIELD, METHOD),
+        acc_deprecated(Feature.deprecated,ACC_DEPRECATED, 0x20000,CLASS,INNER_CLASS, FIELD, METHOD, INIT_METHOD),
     // flag for internal use - xxx_ prefix and 0x0
         xxx_component(Feature.record,0,0,FIELD,METHOD),
     ;
