@@ -5,5 +5,6 @@ import java.util.stream.Stream;
 public abstract class MacroLib {
     
     public abstract Stream<MacroOp> streamExternal();
+    public abstract String name();
     
 }

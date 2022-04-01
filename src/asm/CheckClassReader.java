@@ -71,6 +71,7 @@ public class CheckClassReader extends ClassReader {
          * (e.g. new FileInputStream("/proc/a_file"))
          * Also in some pathological cases a very small number might be returned,
          * and in this case we use default size
+         * Reference ASM ClassReader 9.2   
              */
             if (expectedLength < INPUT_STREAM_DATA_CHUNK_SIZE) {
                 expectedLength = INPUT_STREAM_DATA_CHUNK_SIZE;

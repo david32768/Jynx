@@ -21,7 +21,8 @@ import jynx2asm.ops.MacroLib;
 import jynx2asm.ops.MacroOp;
 
 public class WasmMacroLib  extends MacroLib {
-    
+
+        private final static String NAME = "wasm32MVP";
         public final static String WASM_STORAGE = "wasmrun/Storage";
         public final static String WASM_STORAGE_L = "L" + WASM_STORAGE + ";";
         public final static String WASM_HELPER = "wasmrun/Helper";
@@ -41,8 +42,13 @@ public class WasmMacroLib  extends MacroLib {
                 .filter(m-> Character.isUpperCase(m.toString().codePointAt(0)))
                 .map(m->(MacroOp)m);
         }
+
+        @Override
+        public String name() {
+            return NAME;
+        }
         
-        public static DynamicOp dynStorage(String method, String parms) {
+        private static DynamicOp dynStorage(String method, String parms) {
             return DynamicOp.withBootParms(method, parms, WASM_STORAGE,
                 "storageBootstrap",MH + "I",GS_MEMORY + "()" + WASM_STORAGE_L);
         }
