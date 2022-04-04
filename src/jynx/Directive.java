@@ -21,6 +21,7 @@ public enum Directive implements JvmVersioned {
     dir_version(START_BLOCK, EnumSet.of(START)),
     dir_bytecode(REMOVED, EnumSet.of(START)),
     dir_source(START_BLOCK, EnumSet.of(START_BLOCK, END_START), SourceFile),
+    dir_macrolib(START_BLOCK, EnumSet.of(START_BLOCK, END_START)),
     
     dir_class(CLASSHDR, EnumSet.of(START_BLOCK, END_START)),
     dir_interface(CLASSHDR, EnumSet.of(START_BLOCK, END_START)),

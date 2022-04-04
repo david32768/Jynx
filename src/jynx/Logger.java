@@ -119,7 +119,7 @@ public class Logger {
                 printError(msg,objs);
                 if (exitOnError) {
                     if (OPTION(GlobalOption.__EXIT_IF_ERROR)) {
-                        (new Exception()).printStackTrace();
+                        Thread.dumpStack();
                     }
                     System.exit(1);
                 }

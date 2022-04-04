@@ -72,7 +72,7 @@ public enum Op implements JvmOp {
     opc_ret_w(asm_ret, 169, 4),
 
     opc_labelweak(xxx_label,-1,0),
-    // not required - use _w suffix
+    // not required for assembly - use _w suffix
     opc_wide(asm_nop, 196, null,Feature.unlimited), // feature specified to avoid assert in constructor
 
     ;
@@ -98,14 +98,15 @@ public enum Op implements JvmOp {
     }
     
     private static final Map<String,JvmOp> OPMAP = new HashMap<>();
-
+    private static final JvmOp[] CODEMAP;
+    
     static {
-        JvmOp[] codemap = new JvmOp[256];
+        CODEMAP = new JvmOp[256];
         for (AsmOp op : AsmOp.values()) {
             if (op.opcode() < 0) {
                 continue;
             }
-            codemap[op.opcode()] = op;
+            CODEMAP[op.opcode()] = op;
             OPMAP.putIfAbsent(op.toString(), op);
         }
         boolean ok = true;
@@ -115,9 +116,9 @@ public enum Op implements JvmOp {
             if (opcode < 0) {
                 continue;
             }
-            JvmOp mapop = codemap[opcode];
+            JvmOp mapop = CODEMAP[opcode];
             if (mapop == null) {
-                codemap[opcode] = op;
+                CODEMAP[opcode] = op;
                 if (!Objects.equals(op.feature(), op.base.feature())) {
                     // "%s is null or has different feature requirement than %s"
                     throw new LogIllegalArgumentException(M302,op,op.base);
@@ -172,6 +173,19 @@ public enum Op implements JvmOp {
     @Override
     public String toString() {
         return name().substring(4);
+    }
+    
+    public static JvmOp getOp(int code) {
+        JvmOp result = code >= 0 && code < CODEMAP.length?CODEMAP[code]:null;
+        Objects.nonNull(result);
+        return result;
+    }
+    
+    public static JvmOp getWideOp(int code) {
+        JvmOp jop = getOp(code);
+        JvmOp result = OPMAP.get(jop.toString() + "_w");
+        Objects.nonNull(result);
+        return result;
     }
     
     private static JvmOp getOp(AsmOp jop, Object suffix, JvmVersion jvmversion) {

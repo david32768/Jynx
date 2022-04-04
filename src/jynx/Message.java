@@ -175,7 +175,7 @@ public enum Message {
     M172("Invalid class type - %s"),
 
     M175("unknown Jynx desc = %c"),
-
+    M176("%s not found as a macro library service"),
     M177("missing %s"),
     M178("invalid type ref sort - %d"),
     M179("String length of %d exceeds maximum %d"),
@@ -266,6 +266,7 @@ public enum Message {
     M264("structured op mismatch: index %d in label stack is not in  range [0,%d]"),
     M265("structured op mismatch: label stack is empty"),
     M266("Label %s not defined; used in%n%s"),
+    M267("%s has %d simple ops which exceeds maximum of %d"),
 
     M272(WARNING,"Label %s not used - defined in line:%n  %s"),
 

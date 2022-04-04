@@ -27,6 +27,8 @@ import jynx.GlobalOption;
 import jynx.LogAssertionError;
 import jynx.SevereError;
 import jynx.State;
+import jynx2asm.ops.JynxOp;
+import jynx2asm.ops.JynxOps;
 
 public class JynxClass {
 
@@ -49,7 +51,8 @@ public class JynxClass {
     private ContextDependent sd;
     
     private final Map<Directive,Line> unique_directives;
-
+    private final Map<String,JynxOp> opmap;
+    
     private JynxClass(String file_source, JynxScanner js) {
         this.js = js;
         this.file_source = file_source;
@@ -57,6 +60,7 @@ public class JynxClass {
         this.default_source = file_source.substring(index + 1);
         this.source = null;
         this.unique_directives = new HashMap<>();
+        this.opmap = new HashMap<>(JynxOps.getOpMap());
     }
 
     public static byte[] getBytes(String default_source, Scanner lines) {
@@ -162,6 +166,12 @@ public class JynxClass {
         this.source = line.lastToken().asString();
     }
 
+    private void setMacroLib(Line line) {
+        String libname = line.nextToken().asString();
+        line.noMoreTokens();
+        JynxOps.addMacroLib(opmap, libname);
+    }
+    
     public void setStart(Directive dir) {
         Line line = js.getLine();
         dir.checkUnique(unique_directives, line);
@@ -171,6 +181,9 @@ public class JynxClass {
                 break;
             case dir_source:
                 setSource(line);
+                break;
+            case dir_macrolib:
+                setMacroLib(line);
                 break;
             default:
                 // "unknown directive %s for context %s"
@@ -303,7 +316,7 @@ public class JynxClass {
 
     public void setCode(Directive dir) {
         if (jcodehdr == null) {
-            jcodehdr = jmethodnode.getJynxCodeHdr(js);
+            jcodehdr = jmethodnode.getJynxCodeHdr(js,opmap);
             if (jcodehdr == null) {
                 js.skipTokens();
                 return;

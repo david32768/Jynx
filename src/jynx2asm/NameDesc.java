@@ -111,12 +111,10 @@ public enum NameDesc {
         Optional<JavaReserved> javaid = JavaReserved.of(str);
         if (javaid.isPresent()) {
             JavaReserved jres = javaid.get();
-            if (SUPPORTS(jres.feature())) {
-                if (jres.isContextual()) {
-                    LOG(M401,jres); // "%s is a contextual reserved word"
-                } else {
-                    LOG(M258,str); // "%s is a reserved word and cannot be a Java Id"
-                }
+            if (jres.isContextual()) {
+                LOG(M401,jres); // "%s is a contextual reserved word"
+            } else if (SUPPORTS(jres.feature())) {
+                LOG(M258,str); // "%s is a reserved word and cannot be a Java Id"
             }
         }
     }
@@ -139,7 +137,7 @@ public enum NameDesc {
     
     // incomplete test
     public static boolean isJavaBase(String str) {
-        return str.startsWith("java/") || str.startsWith("javax/");
+        return isJava(str);
     }
     
     private static boolean isJava(String str) {

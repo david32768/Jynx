@@ -39,6 +39,7 @@ import jynx2asm.JynxLabelMap;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
 import jynx2asm.LinesIterator;
+import jynx2asm.ops.JynxOp;
 import jynx2asm.OwnerNameDesc;
 import jynx2asm.StackLocals;
 import jynx2asm.String2Insn;
@@ -70,7 +71,7 @@ public class JynxCodeHdr implements ContextDependent {
     private final Map<String, Line> unique_attributes;
     
     private JynxCodeHdr(MethodNode mv, JynxScanner js, ClassChecker checker,
-            OwnerNameDesc cmd, JynxLabelMap labelmap, Access access) {
+            OwnerNameDesc cmd, JynxLabelMap labelmap, Access access, Map<String,JynxOp> opmap) {
         this.js = js;
         String clname = access.is(AccessFlag.acc_static)?null:checker.getClassName();
         this.localStack = FrameType.getInitFrame(clname, cmd); // classname set non null for virtual methods
@@ -82,7 +83,7 @@ public class JynxCodeHdr implements ContextDependent {
         Type rtype = Type.getReturnType(cmd.getDesc());
         AsmOp returnop = getReturnOp(rtype);
         this.stackLocals = StackLocals.getInstance(localStack,labelmap,returnop);
-        this.s2a = new String2Insn(js, labelmap, checker, returnop, access.getName());
+        this.s2a = new String2Insn(js, labelmap, checker, returnop,opmap);
         this.printFlag = 0;
         this.expandMacro = 0;
         this.endif = 0;
@@ -90,10 +91,10 @@ public class JynxCodeHdr implements ContextDependent {
         this.unique_attributes = new HashMap<>();
     }
 
-    public static JynxCodeHdr getInstance(MethodNode mv, JynxScanner js,
-            OwnerNameDesc cmd, JynxLabelMap labelmap, Access access,ClassChecker checker) {
+    public static JynxCodeHdr getInstance(MethodNode mv, JynxScanner js, OwnerNameDesc cmd,
+            JynxLabelMap labelmap, Access access,ClassChecker checker, Map<String,JynxOp> opmap) {
         CHECK_SUPPORTS(Code);
-        return new JynxCodeHdr(mv, js, checker, cmd, labelmap,access);
+        return new JynxCodeHdr(mv, js, checker, cmd, labelmap,access,opmap);
     }
 
     private static AsmOp getReturnOp(Type rtype) {

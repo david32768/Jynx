@@ -28,6 +28,8 @@ import jynx2asm.JynxScanner;
 import jynx2asm.Line;
 import jynx2asm.MethodDesc;
 import jynx2asm.NameDesc;
+import jynx2asm.ops.JynxOp;
+import jynx2asm.ops.JynxOps;
 
 public class JynxMethodNode implements ContextDependent {
 
@@ -124,13 +126,13 @@ public class JynxMethodNode implements ContextDependent {
       annotationLists.accept(mnode);
     }
     
-    public JynxCodeHdr getJynxCodeHdr(JynxScanner js) {
+    public JynxCodeHdr getJynxCodeHdr(JynxScanner js, Map<String,JynxOp> opmap) {
         endHeader();
         if (isAbstractOrNative()) {
             LOG(M155); // "code is not allowed as method is abstract or native"
             return null;
         }
-        return JynxCodeHdr.getInstance(mnode, js, md, labelmap,accessName,checker);
+        return JynxCodeHdr.getInstance(mnode, js, md, labelmap,accessName,checker,opmap);
     }
 
     public MethodDesc getMethodDesc() {

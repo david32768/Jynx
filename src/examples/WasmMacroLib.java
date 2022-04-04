@@ -23,6 +23,7 @@ import jynx2asm.ops.MacroOp;
 public class WasmMacroLib  extends MacroLib {
 
         private final static String NAME = "wasm32MVP";
+        
         public final static String WASM_STORAGE = "wasmrun/Storage";
         public final static String WASM_STORAGE_L = "L" + WASM_STORAGE + ";";
         public final static String WASM_HELPER = "wasmrun/Helper";

@@ -46,7 +46,6 @@ import jynx.ReservedWord;
 import jynx2asm.ops.AliasOp;
 import jynx2asm.ops.DynamicOp;
 import jynx2asm.ops.JynxOp;
-import jynx2asm.ops.JynxOps;
 import jynx2asm.ops.LineOp;
 import jynx2asm.ops.LineOps;
 import jynx2asm.ops.MacroOp;
@@ -63,6 +62,7 @@ public class String2Insn {
     private final ClassChecker checker;
     private final AsmOp returnop;
     private final String className;
+    private final Map<String,JynxOp> opmap;
     
     private List<Instruction> instructions;
     private Line line;
@@ -72,7 +72,7 @@ public class String2Insn {
     private final boolean generateDotLine;
     
     public String2Insn(JynxScanner js, JynxLabelMap labmap,
-            ClassChecker checker, AsmOp returnop, String mname) {
+            ClassChecker checker, AsmOp returnop, Map<String,JynxOp> opmap) {
         this.js = js;
         this.labmap = labmap;
         this.labelStack = new LabelStack();
@@ -80,6 +80,7 @@ public class String2Insn {
         this.returnop = returnop;
         this.className = checker.getClassName();
         this.generateDotLine = OPTION(GlobalOption.GENERATE_LINE_NUMBERS);
+        this.opmap = opmap;
     }
 
     public List<Instruction> getInsts(Line linex) {
@@ -93,7 +94,7 @@ public class String2Insn {
             return instructions;
         }
         String tokenstr = line.firstToken().asString();
-        JynxOp jynxop = JynxOps.getInstance(tokenstr);
+        JynxOp jynxop = opmap.get(tokenstr);
         if (jynxop == null) {
             LOG(M86,tokenstr); // "invalid op - %s"
             line.skipTokens();
