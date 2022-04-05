@@ -4,6 +4,7 @@ import java.util.EnumSet;
 import java.util.Objects;
 
 import static jynx.Message.M24;
+import static jynx.Message.M4;
 
 import jvm.ConstantPoolType;
 import jvm.JvmVersion;
@@ -12,6 +13,14 @@ import jynx2asm.Line;
 
 public class Global {
 
+    private final static int JYNX_VERSION = 0;
+    private final static int JYNX_RELEASE = 9;
+    private final static int JYNX_BUILD = 8;
+    
+    public static String version() {
+        return String.format("%d+%d-%d",JYNX_VERSION,JYNX_RELEASE,JYNX_BUILD);
+    }
+    
     private final Logger logger;
     private final EnumSet<GlobalOption> options;
     private JvmVersion jvmVersion;
@@ -56,6 +65,8 @@ public class Global {
 
     public static void newGlobal(String type, EnumSet<GlobalOption> options) {
         global = new Global(options,type);
+        // "%nJynx version %s; Java runtime version %s"
+        LOG(M4,version(),System.getProperty("java.runtime.version"));
     }
     
     public static void setJvmVersion(JvmVersion jvmversion) {

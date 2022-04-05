@@ -12,7 +12,6 @@ import static jynx.Message.*;
 import jvm.ConstType;
 import jvm.HandleType;
 import jvm.NumType;
-import jynx.Global;
 import jynx.LogIllegalArgumentException;
 import jynx.StringUtil;
 

@@ -90,9 +90,6 @@ public class Logger {
         for (String msg:endinfo) {
             System.err.println(msg);
         }
-        if (!endinfo.isEmpty()) {
-            System.err.println();
-        }
         endinfo.clear();
         if (errct == 0) {
             printInfo(M104,classname,type); // "class %s %s completed successfully"

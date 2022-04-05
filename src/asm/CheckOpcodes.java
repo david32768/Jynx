@@ -40,7 +40,19 @@ public class CheckOpcodes {
         }
     }
 
-    public static int getMaxJavaVersion() {
+    private static int getMaxJvmVersion() {
+        int jvm = 44; 
+        for (int i = 9;i < 32768; ++i) {
+            try {
+                jvm = getStatic("V" + i);
+            } catch (NoSuchFieldException ex) {
+                return jvm;
+            }
+        }
+        throw new AssertionError();
+    }
+    
+    private static int getMaxJavaVersion() {
         for (int i = 9;i < 32768; ++i) {
             try {
                 getStatic("V" + i);
@@ -56,6 +68,6 @@ public class CheckOpcodes {
             int value = getStaticFieldValue(args[0]);
             System.out.format("value of %s is %d%n", args[0],value);
         }
-        System.out.format("max java = V%d%n", getMaxJavaVersion());
+        System.out.format("max java = V%d max jvm = %d%n", getMaxJavaVersion(),getMaxJvmVersion());
     }
 }

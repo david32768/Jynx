@@ -83,6 +83,10 @@ public enum JvmVersion {
 
     private static final Map<String,JvmVersion> PARSE_MAP;
     
+    public final static JvmVersion MIN_VERSION = V1_0_2;
+    public final static JvmVersion DEFAULT_VERSION = V18;
+    public final static JvmVersion MAX_VERSION = V18_PREVIEW;
+
     static {
         PARSE_MAP = new HashMap<>();
         JvmVersion last = null;
@@ -97,10 +101,6 @@ public enum JvmVersion {
         }
         assert PREVIEW == Opcodes.V_PREVIEW >>> 16;
     }
-
-    public final static JvmVersion MIN_VERSION = V1_0_2;
-    public final static JvmVersion DEFAULT_VERSION = V18;
-    public final static JvmVersion MAX_VERSION = V18_PREVIEW;
 
     public static JvmVersion getVersionInstance(String verstr) {
         JvmVersion version = PARSE_MAP.get(verstr.toUpperCase());

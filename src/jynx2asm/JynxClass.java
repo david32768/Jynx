@@ -128,7 +128,7 @@ public class JynxClass {
         this.jvmVersion = jvmversion;
         Global.setJvmVersion(jvmversion);
         if (!OPTIONS().isEmpty()) {
-            LOG(M88, OPTIONS());  // "  options = %s"
+            LOG(M88, OPTIONS());  // "options = %s"
         }
     }
     

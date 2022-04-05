@@ -17,10 +17,9 @@ import jynx2asm.JynxClass;
 
 public class Main {
     
-    public final static String SUFFIX = ".jx";
-     
-    private static void version() {
-        LOG(M0,JvmVersion.MAX_VERSION); // "Jynx version 0.9.7; maximum Java version is %s"
+    private final static String SUFFIX = ".jx";
+    private static void outputVersion() {
+        LOG(M0,version(),JvmVersion.MAX_VERSION); // "Jynx version %s; maximum Java version is %s"
     }
     
     private static void usage() {
@@ -112,7 +111,7 @@ public class Main {
         if (args.length == 1) {
             String option = args[0];
             if (VERSION.isArg(option)) {
-                version();
+                outputVersion();
                 return true;
             }
             if (HELP.isArg(option)) {

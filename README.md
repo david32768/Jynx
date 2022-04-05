@@ -1,9 +1,11 @@
 # Jynx
 
-This is a rewritten version of Jasmin using [ASM](https://asm.ow2.io) as a back end. It is written
-in Java V1_8 and supports all features of V18 except user attributes. More checking is done before
- using ASM. For example stack and local variables are checked but
- all objects are treated as Object.
+This is a rewritten version of Jasmin using [ASM](https://asm.ow2.io) version 9.2 as a back end.
+It is written in Java V1_8 and supports all features up to V18 except user attributes.
+
+More checking is done before using ASM. For example
+ stack and local variables types are checked assuming
+ all objects are Object.
 
 ASM is used to generate stack maps where required. However a stack map
 must be provided if any label after an unconditional branch is
@@ -11,7 +13,7 @@ not previously branched to or is not an exception handler.
 
 The opportunity has beeen taken to change the syntax of some statements.
 
-It supports "macros" as a service with WebAssembly instructions as an example.
+It supports "macros" as a service with WebAssembly MVP instructions as an example.
 
 ## WARNING
 
@@ -62,14 +64,14 @@ Changes are:
 		.end_array
 ```
 *	invokeinterface ; omit number as will be calculated
-*	.limit default is calculated rather than 1
+*	default for .limit is calculated rather than 1
 *	labels are constrained to be a Java Id or if generated start with an @
 *	.interface must be used to declare an interface rather than .class interface
 *	labels in .catch must not be previously defined (ASM)
 *	if .var labels are omitted then from :start_method to :end_method is assumed
 *	float constants must be suffixed by 'F' and long constants by 'L'.
 *	hexadecimal constants are supported.
-*	default version is V17(61.0)
+*	default version is V18(62.0)
   
 ## Jasmin 2.4
 
@@ -82,8 +84,8 @@ Changes are
 *	.inner
 ```
 		; swap "name" x and "inner" y as "name" may be omitted
-		; .inner class x inner y ; change to
-		.inner class y innername x
+		; .inner class x inner y ... ; change to
+		.inner class y innername x ...
 ```
 *	.enum instead of .class enum
 *	.define_annotation instead of .class annotation
@@ -112,7 +114,7 @@ Changes are
 
 ## Additions
 
-*	type annotations
+*	type annotations; .visible_type_annotation , .invisible_type_annotation
 *	.nesthost
 *	.nestmember
 *	.record
@@ -125,4 +127,15 @@ Changes are
 		; (a boot method parameter may be dynamic) 
 		ldc { name desc boot_method_and_parameters } 
 ```
-*	structured "macros"
+*	alias ops e.g. ildc 3 ; load integer 3
+*	extended ops e.g. if_fcmpge label 
+*	structured ops e.g. BEGIN, LOOP. END
+*	.macrolib
+
+## Disassembly
+
+Usage: jynx.Disassemble {options} class|.class-file > .jx-file
+
+Options are:
+
+*	--USE_STACK_MAP output stackmap if present

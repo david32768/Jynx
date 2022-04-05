@@ -90,27 +90,8 @@ public class JynxOps {
             sz += oplen;
         }
         return sz;
-//        return length(0, macop);
     }
 
-//    private static Integer length(int level, MacroOp macop) {
-//        JvmVersionRange.checkLevel(level);
-//        int sz = 0;
-//        for (JynxOp op : macop.getJynxOps()) {
-//            Integer oplen;
-//            if (op instanceof MacroOp) {
-//                oplen = length(level + 1, (MacroOp) op);
-//            } else {
-//                oplen = op.length();
-//            }
-//            if (oplen == null) {
-//                return null;
-//            }
-//            sz += oplen;
-//        }
-//        return sz;
-//    }
-//
     public static JvmVersionRange range(MacroOp macop) {
         JvmVersionRange range = Feature.unlimited.range();
         for (JynxOp op : macop.getJynxOps()) {

@@ -4,11 +4,11 @@ import static jynx.LogMsgType.*;
 
 public enum Message {
 
-    M0(BLANK,"Jynx version 0.9.7; maximum Java version is %s"),
+    M0(BLANK,"Jynx version %s; maximum Java version is %s"),
     M1(BLANK,"display help message"),
     M2(BLANK,"display version information"),
     M3(BLANK,"program terminated because of errors"),
-
+    M4(BLANK,"%nJynx version %s; Java runtime version %s"),
     M5(BLANK,"%nUsage: {options} %s-file"),
     M6(BLANK,"%nOptions are:%n"),
     M7(BLANK,"use SYSIN as input file"),
@@ -89,7 +89,7 @@ public enum Message {
     M85(INFO,"%s terminated because of too many errors"),
     M86("invalid op - %s"),
 
-    M88(INFO,"  options = %s"),
+    M88(INFO,"options = %s"),
     M89(INFO,"file = %s version = %s"),
     M90("unused tokens - starting at %s"),
 
