@@ -23,7 +23,8 @@ public enum ClassType {
     INTERFACE(dir_interface, acc_interface, EnumSet.of(acc_interface, acc_abstract),
             acc_final, acc_super, acc_enum,acc_module,acc_annotation,acc_record),
             // PACKAGE must be after INTERFACE
-    PACKAGE(dir_package, null, EnumSet.of(acc_interface)),
+    PACKAGE(dir_package, null, EnumSet.of(acc_interface,acc_abstract),
+            acc_final, acc_super, acc_enum,acc_module,acc_annotation,acc_record),
     ENUM(dir_enum, acc_enum, EnumSet.of(acc_enum, acc_super),
             acc_annotation,acc_module,acc_interface,acc_record),
     MODULE(dir_module,acc_module, EnumSet.of(acc_module)),
