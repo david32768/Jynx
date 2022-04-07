@@ -1,6 +1,7 @@
 # Jynx
 
-This is a rewritten version of Jasmin using [ASM](https://asm.ow2.io) version 9.2 as a back end.
+This is a rewritten version of [Jasmin](https://github.com/davidar/jasmin)
+ using [ASM](https://asm.ow2.io) version 9.2 as a back end.
 It is written in Java V1_8 and supports all features up to V18 except user attributes.
 
 More checking is done before using ASM. For example
