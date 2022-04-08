@@ -85,7 +85,7 @@ public enum HandleType {
     
     @Override
     public String toString() {
-        return name().replace("REF_","") + "(" + mnemonic + ")";
+        return String.format("%s: (=%s)",mnemonic,name().replace("REF_",""));
     }
 
     public static ConstantPoolType constantpool(Handle handle) {

@@ -311,10 +311,8 @@ public class JynxDisassemble {
             jp.appendDirective(dir_packages);
             printArray(module.packages);
         }
-        if (module.uses != null) {
-            for (String use:module.uses) {
-                jp.appendDirective(dir_uses).append(use).nl();
-            }
+        for (String use:nonNullList(module.uses)) {
+            jp.appendDirective(dir_uses).append(use).nl();
         }
         for (ModuleExportNode men: nonNullList(module.exports)) {
             accflags = AccessFlag.getEnumSet(men.access, MODULE,jvmVersion);
@@ -368,14 +366,13 @@ public class JynxDisassemble {
     public static boolean a2jpw(PrintWriter pw, String fname) {
         Optional<ClassReader> optrdr = JynxClassReader.getClassReader(fname);
         if (optrdr.isPresent()) {
-            JynxDisassemble a2j;
             try {
-                a2j = JynxDisassemble.getInstance(optrdr.get(),pw);
+                JynxDisassemble a2j = JynxDisassemble.getInstance(optrdr.get(),pw);
+                return a2j.print();
             } catch (Exception ex) {
                 LOG(M237,ex); // "error accepting class file: %s"
                 return false;
             }
-            return a2j.print();
         }
         return false;
     }
