@@ -17,37 +17,44 @@ public enum ClassType {
         // mustnot == empty means only must_have allowed
     
             // ANNOTATION must come before INTERFACE
-    ANNOTATION(dir_define_annotation,acc_annotation, EnumSet.of(acc_annotation, acc_interface, acc_abstract),
-            acc_final, acc_super, acc_enum,acc_module,acc_record),
+    ANNOTATION(dir_define_annotation,acc_annotation,
+            EnumSet.of(acc_annotation, acc_interface, acc_abstract),
+            EnumSet.of(acc_final, acc_super, acc_enum,acc_module,acc_record)),
             // INTERFACE must be after ANNOTATION
-    INTERFACE(dir_interface, acc_interface, EnumSet.of(acc_interface, acc_abstract),
-            acc_final, acc_super, acc_enum,acc_module,acc_annotation,acc_record),
+    INTERFACE(dir_interface, acc_interface,
+            EnumSet.of(acc_interface, acc_abstract),
+            EnumSet.of(acc_final, acc_super, acc_enum,acc_module,acc_annotation,acc_record)),
             // PACKAGE must be after INTERFACE
-    PACKAGE(dir_package, null, EnumSet.of(acc_interface,acc_abstract),
-            acc_final, acc_super, acc_enum,acc_module,acc_annotation,acc_record),
-    ENUM(dir_enum, acc_enum, EnumSet.of(acc_enum, acc_super),
-            acc_annotation,acc_module,acc_interface,acc_record),
-    MODULE(dir_module,acc_module, EnumSet.of(acc_module)),
-    RECORD(dir_record,acc_record, EnumSet.of(acc_record, acc_super),
-            acc_annotation,acc_enum,acc_module,acc_interface),
-    CLASS(dir_class,acc_super, EnumSet.of(acc_super),
-            acc_annotation,acc_module,acc_enum,acc_interface,acc_record),
+    PACKAGE(dir_package, null,
+            EnumSet.of(acc_interface,acc_abstract),
+            EnumSet.of(acc_final, acc_super, acc_enum,acc_module,acc_annotation,acc_record)),
+    ENUM(dir_enum, acc_enum,
+            EnumSet.of(acc_enum, acc_super),
+            EnumSet.of(acc_annotation,acc_module,acc_interface,acc_record)),
+    MODULE(dir_module,acc_module, EnumSet.of(acc_module),null),
+    RECORD(dir_record,acc_record,
+            EnumSet.of(acc_record, acc_super),
+            EnumSet.of(acc_annotation,acc_enum,acc_module,acc_interface)),
+    CLASS(dir_class,acc_super,
+            EnumSet.of(acc_super),
+            EnumSet.of(acc_annotation,acc_module,acc_enum,acc_interface,acc_record)),
     ;
 
     private final Directive dir;
     private final AccessFlag determinator;
     private final EnumSet<AccessFlag> must;
-    private final AccessFlag[] mustnot;
+    private final EnumSet<AccessFlag> mustnot;
 
-    private ClassType(Directive dir, AccessFlag determinator, EnumSet<AccessFlag>  must, AccessFlag...  mustnot) {
+    private ClassType(Directive dir, AccessFlag determinator,
+            EnumSet<AccessFlag>  must, EnumSet<AccessFlag>  mustnot) {
         assert determinator == null || must.contains(determinator);
         this.dir = dir;
         this.determinator = determinator;
         this.must = must.clone();
-        if (mustnot.length == 0) {
+        if (mustnot== null) {
             EnumSet<AccessFlag> notflags = EnumSet.allOf(AccessFlag.class);
             notflags.removeAll(this.must);
-            this.mustnot = notflags.toArray(new AccessFlag[0]);
+            this.mustnot = notflags;
         } else {
             this.mustnot = mustnot.clone();
         }
@@ -91,7 +98,7 @@ public enum ClassType {
     }
 
     public AccessFlag[] getMustNot() {
-        return mustnot.clone();
+        return mustnot.toArray(new AccessFlag[0]);
     }
     
     public static Optional<ClassType> getInnerClassType(String str) {

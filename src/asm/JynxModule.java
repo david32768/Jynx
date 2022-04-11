@@ -169,7 +169,7 @@ public class JynxModule {
         String packaze = accessname.getName();
         checkPackage(packaze, Directive.dir_exports);
         PACKAGE_NAME.validate(packaze);
-        accessname.check4Module();
+        accessname.check4Export();
         int access = accessname.getAccess();
         String[] modarr = new String[0];
         Token to = line.nextToken();
@@ -185,7 +185,7 @@ public class JynxModule {
         String packaze = accessname.getName();
         checkPackage(packaze, Directive.dir_opens);
         PACKAGE_NAME.validate(packaze);
-        accessname.check4Module();
+        accessname.check4Open();
         int access = accessname.getAccess();
         String[] modarr = new String[0];
         Token to = line.nextToken();
@@ -238,18 +238,17 @@ public class JynxModule {
             modNode.visitRequire(Constants.JAVA_BASE_MODULE.toString(), AccessFlag.acc_mandated.getAccessFlag(), null);
         }
         CHECK_SUPPORTS(Feature.modules);
-        boolean ok = true;
         for (Map.Entry<String,EnumSet<Directive>> me:packageUse.entrySet()) {
             String pkg = me.getKey();
             EnumSet<Directive> dirs = me.getValue();
             if (!dirs.contains(Directive.dir_packages)) {
-                ok = false;
-                LOG(M169,pkg,dirs,Directive.dir_packages); // "package %s used in %s is not in %s"
+                for (Directive dir:dirs) {
+                    LOG(M169,dir,Directive.dir_packages); // "package(s) used in %s are not in %s"
+                }
+                modNode.visitPackage(pkg);
             }
         }
-        if (ok) { // to prevent further errors
-            modNode.visitEnd();
-        }
+        modNode.visitEnd();
     }
     
 }

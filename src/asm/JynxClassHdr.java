@@ -113,18 +113,21 @@ public class JynxClassHdr implements ContextDependent {
     public static JynxClassHdr getInstance(
             JvmVersion jvmversion, String source, Line line, ClassType classtype) {
         String cname;
-        EnumSet<AccessFlag> flags = line.getAccFlags();
+        EnumSet<AccessFlag> flags;
         switch (classtype) {
             case MODULE:
+                flags = EnumSet.noneOf(AccessFlag.class);
                 cname = Constants.MODULE_CLASS_NAME.toString();
                 break;
             case PACKAGE:
+                flags = line.getAccFlags();
                 cname = line.nextToken().asName();
                 CLASS_NAME.validate(cname);
                 cname += "/" + Constants.PACKAGE_INFO_NAME.toString();
                 jvmversion.checkSupports(Feature.package_info);
                 break;
             default:
+                flags = line.getAccFlags();
                 cname = line.nextToken().asName();
                 CLASS_NAME.validate(cname);
                 break;

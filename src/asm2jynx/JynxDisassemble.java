@@ -182,9 +182,8 @@ public class JynxDisassemble {
     private void printComponents() {
         List<RecordComponentNode> components = nonNullList(cn.recordComponents);
         for (RecordComponentNode rcn :components) {
-            EnumSet<AccessFlag> accflags = AccessFlag.getEnumSet(0, COMPONENT,jvmVersion);
             jp.append(dir_component)
-                    .append(accflags, rcn.name)
+                    .append(rcn.name)
                     .append(rcn.descriptor)
                     .append(res_signature,rcn.signature)
                     .nl();

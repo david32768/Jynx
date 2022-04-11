@@ -169,7 +169,7 @@ public enum Message {
     M166("top of stack('%c') is not a 32 bit type"),
 
     M168("unexpected directive(%s) in annotation"),
-    M169("package %s used in %s is not in %s"),
+    M169(ENDINFO,"package(s) used in %s are not in %s"),
     M170("invalid type ref name - %s"),
     M171(WARNING,"version %s outside range [%s,%s] - %s used"),
     M172("Invalid class type - %s"),

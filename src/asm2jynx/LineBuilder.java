@@ -167,7 +167,6 @@ public class LineBuilder {
 
     public LineBuilder append(EnumSet<AccessFlag> result, String name) {
         String[] flagstr = AccessFlag.stringArrayOf(result);
-        sb.append(Line.TOKEN_SEPARATOR);
         append(flagstr);
         appendNonNullName(name);   // enclose with '\'' as may be accflag which is not a reserved word
         return this;

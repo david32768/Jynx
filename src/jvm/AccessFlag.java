@@ -15,50 +15,77 @@ import static jynx.Message.*;
 // Method - Table 4.6A
 // nested class - Table 4.7.6A
 public enum AccessFlag implements JvmVersioned {
-        acc_public(ACC_PUBLIC,0x0001,CLASS,INNER_CLASS,FIELD,METHOD,INIT_METHOD),
-        acc_private(ACC_PRIVATE, 0x0002,INNER_CLASS,FIELD,METHOD,INIT_METHOD),
-        acc_protected(ACC_PROTECTED,0x0004,INNER_CLASS,FIELD,METHOD,INIT_METHOD),
-        acc_static(ACC_STATIC,0x0008,INNER_CLASS,FIELD,METHOD),
-        acc_final(ACC_FINAL,0x0010,CLASS,INNER_CLASS,FIELD,METHOD,PARAMETER),
-        acc_super(Feature.superflag,ACC_SUPER,0x0020,CLASS),
-        acc_synchronized(ACC_SYNCHRONIZED,0x0020,METHOD),
-        acc_open(Feature.modules,ACC_OPEN,0x0020,MODULE),
-        acc_transitive(Feature.modules,ACC_TRANSITIVE,0x0020,REQUIRE),
-        acc_volatile(ACC_VOLATILE,0x0040,FIELD),
-        acc_bridge(Feature.bridge,ACC_BRIDGE,0x0040,METHOD),
-        acc_static_phase(Feature.modules,ACC_STATIC_PHASE,0x0040,REQUIRE),
-        acc_transient(ACC_TRANSIENT,0x0080,FIELD),
-        acc_varargs(Feature.varargs,ACC_VARARGS,0x0080,METHOD,INIT_METHOD),
-        acc_native(ACC_NATIVE,0x0100,METHOD),
-        acc_interface(ACC_INTERFACE,0x0200,CLASS,INNER_CLASS),
-        acc_abstract(ACC_ABSTRACT,0x0400,CLASS,INNER_CLASS,METHOD),
-        acc_fpstrict(Feature.fpstrict,ACC_STRICT,0x0800,METHOD,INIT_METHOD),
-        acc_synthetic(Feature.synthetic,ACC_SYNTHETIC,0x1000,CLASS,INNER_CLASS,FIELD,METHOD,INIT_METHOD,
-                PARAMETER,MODULE,REQUIRE),
-        acc_annotation(Feature.annotations,ACC_ANNOTATION,0x2000,CLASS,INNER_CLASS),
-        acc_enum(Feature.enums,ACC_ENUM,0x4000,CLASS,INNER_CLASS,FIELD),
-        acc_module(Feature.modules,ACC_MODULE,0x8000,CLASS,INNER_CLASS),
-        acc_mandated(Feature.mandated,ACC_MANDATED,0x8000,PARAMETER,MODULE,REQUIRE),
+        acc_public(ACC_PUBLIC,0x0001,
+                EnumSet.of(CLASS,INNER_CLASS,FIELD,METHOD,INIT_METHOD)),
+        acc_private(ACC_PRIVATE, 0x0002,
+                EnumSet.of(INNER_CLASS,FIELD,METHOD,INIT_METHOD)),
+        acc_protected(ACC_PROTECTED,0x0004,
+                EnumSet.of(INNER_CLASS,FIELD,METHOD,INIT_METHOD)),
+        acc_static(ACC_STATIC,0x0008,
+                EnumSet.of(INNER_CLASS,FIELD,METHOD)),
+        acc_final(ACC_FINAL,0x0010,
+                EnumSet.of(CLASS,INNER_CLASS,FIELD,METHOD,PARAMETER)),
+        acc_super(Feature.superflag,ACC_SUPER,0x0020,
+                EnumSet.of(CLASS)),
+        acc_synchronized(ACC_SYNCHRONIZED,0x0020,
+                EnumSet.of(METHOD)),
+        acc_open(Feature.modules,ACC_OPEN,0x0020,
+                EnumSet.of(MODULE)),
+        acc_transitive(Feature.modules,ACC_TRANSITIVE,0x0020,
+                EnumSet.of(REQUIRE)),
+        acc_volatile(ACC_VOLATILE,0x0040,
+                EnumSet.of(FIELD)),
+        acc_bridge(Feature.bridge,ACC_BRIDGE,0x0040,
+                EnumSet.of(METHOD)),
+        acc_static_phase(Feature.modules,ACC_STATIC_PHASE,0x0040,
+                EnumSet.of(REQUIRE)),
+        acc_transient(ACC_TRANSIENT,0x0080,
+                EnumSet.of(FIELD)),
+        acc_varargs(Feature.varargs,ACC_VARARGS,0x0080,
+                EnumSet.of(METHOD,INIT_METHOD)),
+        acc_native(ACC_NATIVE,0x0100,
+                EnumSet.of(METHOD)),
+        acc_interface(ACC_INTERFACE,0x0200,
+                EnumSet.of(CLASS,INNER_CLASS)),
+        acc_abstract(ACC_ABSTRACT,0x0400,
+                EnumSet.of(CLASS,INNER_CLASS,METHOD)),
+        acc_fpstrict(Feature.fpstrict,ACC_STRICT,0x0800,
+                EnumSet.of(METHOD,INIT_METHOD)),
+        acc_synthetic(Feature.synthetic,ACC_SYNTHETIC,0x1000,
+                EnumSet.of(CLASS,INNER_CLASS,FIELD,METHOD,INIT_METHOD,PARAMETER,EXPORT,OPEN,REQUIRE)),
+        acc_annotation(Feature.annotations,ACC_ANNOTATION,0x2000,
+                EnumSet.of(CLASS,INNER_CLASS)),
+        acc_enum(Feature.enums,ACC_ENUM,0x4000,
+                EnumSet.of(CLASS,INNER_CLASS,FIELD)),
+        acc_module(Feature.modules,ACC_MODULE,0x8000,
+                EnumSet.of(CLASS)),
+        acc_mandated(Feature.mandated,ACC_MANDATED,0x8000,
+                EnumSet.of(PARAMETER,EXPORT,OPEN,REQUIRE)),
     // ASM specific pseudo access flags - not written to class file
-        acc_record(Feature.record,ACC_RECORD,0x10000,CLASS,INNER_CLASS),
-        acc_deprecated(Feature.deprecated,ACC_DEPRECATED, 0x20000,CLASS,INNER_CLASS, FIELD, METHOD, INIT_METHOD),
+        acc_record(Feature.record,ACC_RECORD,0x10000,
+                EnumSet.of(CLASS,INNER_CLASS)),
+        acc_deprecated(Feature.deprecated,ACC_DEPRECATED, 0x20000,
+                EnumSet.of(CLASS,INNER_CLASS, FIELD, METHOD, INIT_METHOD)),
     // flag for internal use - xxx_ prefix and 0x0
-        xxx_component(Feature.record,0,0,FIELD,METHOD),
+        xxx_component(Feature.record,0,0,
+                EnumSet.of(FIELD,METHOD)),
     ;
 
     private final int access_flag;
     private final EnumSet<Context> where;
     private final Feature feature;
 
-    private AccessFlag(Feature feature, int access, int hex,  Context state1, Context... states) {
-        assert access == hex:M161.format(name(),access,hex); // "%s: asm value (%d) does not agree with jvm value(%d)"
+    private AccessFlag(Feature feature, int access, int hex, EnumSet<Context> states) {
+        // "%s: asm value (%d) does not agree with jvm value(%d)"
+        assert access == hex:M161.format(name(),access,hex);
         this.access_flag = access;
-        this.where = EnumSet.of(state1, states);
+        this.where = states;
         this.feature = feature;
     }
 
-    private AccessFlag(int access, int hex, Context state1, Context... states) {
-        this(Feature.unlimited,access, hex, state1, states);
+
+    private AccessFlag(int access, int hex, EnumSet<Context> states) {
+        this(Feature.unlimited,access, hex, states);
     }
 
     public int getAccessFlag() {
@@ -100,7 +127,7 @@ public enum AccessFlag implements JvmVersioned {
 
     // basic check and disambiguate
     public static EnumSet<AccessFlag> getEnumSet(final int access,final Context acctype, final JvmVersion jvmversion) {
-        assert acctype.isBasic(): "" + acctype.toString();
+        assert acctype.usesAccessFlags(): "" + acctype.toString();
         EnumSet<AccessFlag> flags = Stream.of(values())
                 .filter(flag->flag.isPresent(access,acctype,jvmversion))
                 .collect(()->EnumSet.noneOf(AccessFlag.class),EnumSet::add,EnumSet::addAll);

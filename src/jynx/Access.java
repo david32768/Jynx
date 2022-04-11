@@ -230,10 +230,21 @@ public class Access {
         mostOneOf(acc_synthetic, acc_mandated);
     }
 
+    public void check4Export() {
+        checkValid(EXPORT);
+        mostOneOf(acc_synthetic, acc_mandated);
+    }
+
+    public void check4Open() {
+        checkValid(OPEN);
+        mostOneOf(acc_synthetic, acc_mandated);
+    }
+
     public void check4Require() {
         checkValid(REQUIRE);
         mostOneOf(acc_synthetic, acc_mandated);
-        if (!jvmVersion.supports(Feature.static_phase_transitive) && !NameDesc.isJavaBase(name)) {
+        if (!jvmVersion.supports(Feature.static_phase_transitive)
+                && !NameDesc.isJavaBase(name.replace('.','/'))) {
             noneOf(acc_transitive, acc_static_phase);
         }
     }

@@ -15,7 +15,7 @@ public class Global {
 
     private final static int JYNX_VERSION = 0;
     private final static int JYNX_RELEASE = 9;
-    private final static int JYNX_BUILD = 9;
+    private final static int JYNX_BUILD = 10;
     
     public static String version() {
         return String.format("%d+%d-%d",JYNX_VERSION,JYNX_RELEASE,JYNX_BUILD);
