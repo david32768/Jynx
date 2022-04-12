@@ -83,7 +83,7 @@ public enum State {
 
     public static State getState(ClassType classtype) {
         switch(classtype) {
-            case MODULE:
+            case MODULE_CLASS:
                 return MODULEHDR;
             case PACKAGE:
                 return PACKAGEHDR;

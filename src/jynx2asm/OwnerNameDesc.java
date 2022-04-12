@@ -105,13 +105,14 @@ public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
         return new OwnerNameDesc(ond);
     }
     
-    public static OwnerNameDesc getClassOrMethodDesc(String mspec) {
-        ONDRecord ond = ONDRecord.getInstance(mspec);
-        if (ond.desc() != null) {
-            return getInstanceOfObjectMethod(ond);
-        }
+    public static OwnerNameDesc getClass(String mspec) {
         CLASS_NAME.validate(mspec);
         return new OwnerNameDesc(ONDRecord.classInstance(mspec));
+    }
+
+    public static OwnerNameDesc getOwnerMethodDesc(String mspec) {
+        ONDRecord ond = ONDRecord.getInstance(mspec);
+        return getInstanceOfObjectMethod(ond);
     }
 
     public static OwnerNameDesc getOwnerMethodDescAndCheck(String mspec, HandleType ht) {

@@ -38,11 +38,17 @@ public enum Directive implements JvmVersioned {
     dir_signature(COMMON, EnumSet.of(CLASSHDR, FIELD_BLOCK, METHOD_BLOCK, COMPONENT_BLOCK), Signature),
     dir_deprecated(REMOVED, EnumSet.of(CLASSHDR, FIELD_BLOCK, METHOD_BLOCK), Deprecated),
     
-    dir_inner(HEADER, EnumSet.of(CLASSHDR,MODULEHDR),InnerClasses),
+    dir_inner_class(HEADER, EnumSet.of(CLASSHDR,MODULEHDR),InnerClasses),
+    dir_inner_interface(HEADER, EnumSet.of(CLASSHDR,MODULEHDR),InnerClasses),
+    dir_inner_enum(HEADER, EnumSet.of(CLASSHDR,MODULEHDR),InnerClasses),
+    dir_inner_record(HEADER, EnumSet.of(CLASSHDR,MODULEHDR),InnerClasses),
+    dir_inner_define_annotation(HEADER, EnumSet.of(CLASSHDR,MODULEHDR),InnerClasses),
+
     dir_nesthost(HEADER, EnumSet.of(CLASSHDR), NestHost),
     dir_nestmember(HEADER, EnumSet.of(CLASSHDR), NestMembers),
     dir_permittedSubclass(HEADER, EnumSet.of(CLASSHDR), PermittedSubclasses),
-    dir_enclosing(HEADER, EnumSet.of(CLASSHDR), EnclosingMethod),
+    dir_enclosing_method(HEADER, EnumSet.of(CLASSHDR), EnclosingMethod),
+    dir_enclosing_class(HEADER, EnumSet.of(CLASSHDR), EnclosingMethod),
     dir_hints(HEADER, EnumSet.of(CLASSHDR)),
     
     dir_visible_annotation(COMMON, EnumSet.of(CLASSHDR,FIELD_BLOCK, METHOD_BLOCK, MODULEHDR,COMPONENT_BLOCK,PACKAGEHDR),
@@ -136,7 +142,8 @@ public enum Directive implements JvmVersioned {
             case dir_super:
             case dir_signature:
             case dir_nesthost:
-            case dir_enclosing:
+            case dir_enclosing_method:
+            case dir_enclosing_class:
             case dir_default_annotation:
             case dir_packages:
                 return true;

@@ -44,6 +44,7 @@ import jynx2asm.ClassChecker;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
 import jynx2asm.NameDesc;
+import jynx2asm.ObjectLine;
 import jynx2asm.ONDRecord;
 import jynx2asm.OwnerNameDesc;
 import jynx2asm.TokenArray;
@@ -68,7 +69,7 @@ public class JynxClassHdr implements ContextDependent {
 
     private String csignature;
     private String csuper;
-    private OwnerNameDesc outer;
+    private ObjectLine<OwnerNameDesc> outer;
     private String host;
 
     private final List<String> cimplements;
@@ -115,7 +116,7 @@ public class JynxClassHdr implements ContextDependent {
         String cname;
         EnumSet<AccessFlag> flags;
         switch (classtype) {
-            case MODULE:
+            case MODULE_CLASS:
                 flags = EnumSet.noneOf(AccessFlag.class);
                 cname = Constants.MODULE_CLASS_NAME.toString();
                 break;
@@ -159,11 +160,16 @@ public class JynxClassHdr implements ContextDependent {
             case dir_implements:
                 setImplements(line);
                 break;
-            case dir_inner:
-                setInnerClass(line);
+            case dir_inner_class:
+            case dir_inner_enum:
+            case dir_inner_interface:
+            case dir_inner_define_annotation:
+            case dir_inner_record:
+                setInnerClass(dir,line);
                 break;
-            case dir_enclosing:
-                setOuterClass(line);
+            case dir_enclosing_method:
+            case dir_enclosing_class:
+                setOuterClass(dir,line);
                 break;
             case dir_nesthost:
                 setHostClass(line);
@@ -226,7 +232,7 @@ public class JynxClassHdr implements ContextDependent {
         String csuperx = line.lastToken().asString();
         CLASS_NAME.validate(csuperx);
         switch(classType) {
-            case MODULE:
+            case MODULE_CLASS:
                 LOG(M181,Directive.dir_super,csuperx);   // "%s directive is invalid for MODULE - value specifued was %s"
                 break;
             case PACKAGE:
@@ -253,8 +259,27 @@ public class JynxClassHdr implements ContextDependent {
         this.cimplements.add(token);
     }
 
-    private void setInnerClass(Line line) {
-        ClassType classtype = line.nextToken().asInnerClassType();
+    private void setInnerClass(Directive dir,Line line) {
+        ClassType classtype;
+        switch (dir) {
+            case dir_inner_class:
+                classtype = ClassType.BASIC;
+                break;
+            case dir_inner_enum:
+                classtype = ClassType.ENUM;
+                break;
+            case dir_inner_record:
+                classtype = ClassType.RECORD;
+                break;
+            case dir_inner_interface:
+                classtype = ClassType.INTERFACE;
+                break;
+            case dir_inner_define_annotation:
+                classtype = ClassType.ANNOTATION_CLASS;
+                break;
+            default:
+                throw new EnumConstantNotPresentException(dir.getClass(), dir.name());
+        }
         EnumSet<AccessFlag> accflags = line.getAccFlags();
         String innerclass;
         String innername;
@@ -278,14 +303,30 @@ public class JynxClassHdr implements ContextDependent {
         innerClasses.add(in);
     }
 
-    private void setOuterClass(Line line) {
-        String mspec = line.after(res_method);
+    private void setOuterClass(Directive dir, Line line) {
+        String mspec = line.nextToken().asString();
         line.noMoreTokens();
-        OwnerNameDesc cmd = OwnerNameDesc.getClassOrMethodDesc(mspec);
-        if (cmd.getDesc() == null && !cname.startsWith(mspec)) {    // jls 13.1
-            LOG(M261,cmd.getName(),cname);   // "enclosing class name(%s) is not a prefix of class name(%s)"
+        OwnerNameDesc cmd;
+        switch(dir) {
+            case dir_enclosing_class:
+                if (!cname.startsWith(mspec)) {    // jls 13.1
+                    // "enclosing class name(%s) is not a prefix of class name(%s)"
+                    LOG(M261,mspec,cname);
+                }
+                cmd = OwnerNameDesc.getClass(mspec);
+                break;
+            case dir_enclosing_method:
+                cmd = OwnerNameDesc.getOwnerMethodDesc(mspec);
+                break;
+            default:
+                throw new EnumConstantNotPresentException(dir.getClass(), dir.name());
         }
-        outer = cmd;
+        if (outer == null) {
+            outer = new ObjectLine<>(cmd,line);
+        } else {
+            // "enclosing instance has already been defined"
+            LOG(M268);
+        }
     }
 
     private void sameOwnerAsClass(String token) {
@@ -342,7 +383,7 @@ public class JynxClassHdr implements ContextDependent {
 
     @Override
     public AnnotationVisitor visitTypeAnnotation(int typeref, TypePath tp, String desc, boolean visible) {
-        if (classType == ClassType.MODULE) {
+        if (classType == ClassType.MODULE_CLASS) {
             throw new LogIllegalStateException(M370); // "Type annotations not allowed for Module"
         }
         JynxTypeAnnotationNode tan = JynxTypeAnnotationNode.getInstance(typeref, tp, desc,visible);
@@ -356,7 +397,7 @@ public class JynxClassHdr implements ContextDependent {
         }
         if (csuper == null && !Constants.OBJECT_CLASS.equalString(cname)) {
             switch(classType) {
-                case MODULE:
+                case MODULE_CLASS:
                     break;
                 case RECORD:
                     csuper = Constants.RECORD_SUPER.toString();
@@ -399,7 +440,7 @@ public class JynxClassHdr implements ContextDependent {
             inner = true;
         }
         if (outer != null) {
-            OwnerNameDesc ond = outer;
+            OwnerNameDesc ond = outer.object();
             cv.visitOuterClass(ond.getOwner(),ond.getName(),ond.getDesc());
             inner = true;
         }

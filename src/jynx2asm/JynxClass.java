@@ -203,7 +203,7 @@ public class JynxClass {
         Global.setClassName(jclasshdr.getClassName());
         state = State.getState(classtype);
         sd = jclasshdr;
-        if (classtype == ClassType.MODULE) {
+        if (classtype == ClassType.MODULE_CLASS) {
             jmodule = JynxModule.getInstance(js,jvmVersion);
         }
     }

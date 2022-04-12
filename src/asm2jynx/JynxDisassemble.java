@@ -132,19 +132,18 @@ public class JynxDisassemble {
     }
     
     private void printEnclosing(String outerClass, String outerMethod, String outerMethodDesc) {
-        String cmdesc = null;
-        if (outerMethod == null && outerClass != null){
-            cmdesc = outerClass;
-        } else if (outerMethod != null) {
-            cmdesc = outerMethodDesc == null?outerMethod:outerMethod + outerMethodDesc;
+        if (outerMethod != null || outerMethodDesc != null) {
+            String cmdesc = outerMethodDesc == null?outerMethod:outerMethod + outerMethodDesc;
             if (outerClass != null) {
                 cmdesc = outerClass + "/" + cmdesc;
             }
-        }
-        if (cmdesc != null) {
-            jp.appendDirective(dir_enclosing)
-                    .append(res_method)
+            jp.appendDirective(dir_enclosing_method)
                     .append(cmdesc)
+                    .nl();
+            
+        } else if (outerClass != null) {
+            jp.appendDirective(dir_enclosing_class)
+                    .append(outerClass)
                     .nl();
         }
     }
@@ -208,9 +207,8 @@ public class JynxDisassemble {
             EnumSet<AccessFlag> inneraccflags = AccessFlag.getEnumSet(icn.access,INNER_CLASS,jvmVersion);
             ClassType classtype = ClassType.from(inneraccflags);
             inneraccflags.removeAll(classtype.getMustHave(jvmVersion,true));
-            String resword = classtype.getTokenStr();
-            jp.appendDirective(dir_inner)
-                    .append(resword)
+            Directive inner = classtype.getInnerDir();
+            jp.appendDirective(inner)
                     .append(inneraccflags, icn.name)
                     .append(res_innername, icn.innerName)
                     .append(res_outer, icn.outerName)
@@ -226,7 +224,11 @@ public class JynxDisassemble {
         if (isPresent(cn.fields)) result.add(dir_field);
         
         if (cn.signature != null) result.add(dir_signature);
-        if (cn.outerMethod != null || cn.outerClass != null || cn.outerMethodDesc != null) result.add(dir_enclosing);
+        if (cn.outerMethod != null || cn.outerMethodDesc != null) {
+            result.add(dir_enclosing_method);
+        } else if (cn.outerClass != null) {
+            result.add(dir_enclosing_class);
+        }
         if (cn.nestHostClass != null) result.add(dir_nesthost);
         if (isPresent(cn.nestMembers)) result.add(dir_nestmember);
         if (isPresent(cn.permittedSubclasses)) result.add(dir_permittedSubclass);

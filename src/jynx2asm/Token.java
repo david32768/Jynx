@@ -12,7 +12,6 @@ import static jynx.Message.*;
 
 import jvm.ConstType;
 import jvm.NumType;
-import jynx.ClassType;
 import jynx.Directive;
 import jynx.LogIllegalArgumentException;
 import jynx.LogIllegalStateException;
@@ -216,11 +215,6 @@ public class Token {
         return null;
     }
 
-    public ClassType asInnerClassType() {
-        checkNotEnd();
-        return ClassType.getInnerClassType(token).orElseThrow(() -> new LogIllegalArgumentException(M172, token)); // "Invalid class type - %s"
-    }
-    
     public ReservedWord mayBe(ReservedWord res1,ReservedWord... res) {
         if (this == END_TOKEN) {
             return null;

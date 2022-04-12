@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 
 import static jvm.AccessFlag.*;
 import static jvm.Context.*;
+import static jynx.Directive.*;
 import static jynx.Global.LOG;
 import static jynx.Message.*;
 
@@ -110,12 +111,12 @@ public class Access {
         }
     }
 
-    private void checkValid(Context state) {
+    private void checkValid(Context state, Directive dir) {
         mostOneOf(acc_public, acc_protected, acc_private);
         mostOneOf(acc_final, acc_abstract);
         EnumSet<AccessFlag> unknown = EnumSet.noneOf(AccessFlag.class);
         accflags.stream()
-                .filter(flag -> !flag.isValid(state))
+                .filter(flag -> !flag.isValid(state,dir))
                 .forEach(unknown::add);
         if (!unknown.isEmpty()) {
             LOG(M160,unknown,state);  // "invalid access flags %s for %s are dropped"
@@ -133,30 +134,28 @@ public class Access {
 
     // Class - Table 4.1B
     public void check4Class() {
-        checkValid(CLASS);
+        checkValid(CLASS,classType.getDir());
         allOf(classType.getMustHave(jvmVersion,false));
-        noneOf(classType.getMustNot());
     }
 
     // nested class - Table 4.7.6A
     public void check4InnerClass() {
-        if (classType == ClassType.MODULE) {
+        if (classType == ClassType.MODULE_CLASS) {
             // "inner class cannot be module"
             throw new LogIllegalArgumentException(M197);
         }
         if (!NameDesc.isInnerClass(name)) {
             LOG(M195,name); // "inner class name (%s) does not contain '$'"
         }
-        checkValid(INNER_CLASS);
+        checkValid(INNER_CLASS,classType.getInnerDir());
         allOf(classType.getMustHave(jvmVersion,true));
-        noneOf(classType.getMustNot());
     }
 
     // Field - Table 4.5A
     public void check4Field() {
-        checkValid(FIELD);
+        checkValid(FIELD,dir_field);
         switch (classType) {
-            case ANNOTATION:
+            case ANNOTATION_CLASS:
             case INTERFACE:
                 allOf(acc_public, acc_static, acc_final);
                 noneOf(acc_volatile, acc_transient, acc_enum, acc_mandated);
@@ -174,7 +173,7 @@ public class Access {
             case ENUM:
                 mostOneOf(acc_final, acc_volatile);
                 break;
-            case CLASS:
+            case BASIC:
                 mostOneOf(acc_final, acc_volatile);
                 noneOf(acc_enum);
                 break;
@@ -184,15 +183,15 @@ public class Access {
     }
 
     public void check4InitMethod() {
-        checkValid(INIT_METHOD);
-        if (classType == ClassType.INTERFACE || classType == ClassType.ANNOTATION) {
+        checkValid(INIT_METHOD,dir_method);
+        if (classType == ClassType.INTERFACE || classType == ClassType.ANNOTATION_CLASS) {
             LOG(M235,NameDesc.CLASS_INIT_NAME); // "%s method appears in an interface"
         }
     }
 
     // Method - Table 4.6A
     public void check4Method() {
-        checkValid(METHOD);
+        checkValid(METHOD,dir_method);
         if (classType == ClassType.RECORD) {
             if (isComponent()) {
                 if (is(acc_static) || !is(acc_public)) {
@@ -209,7 +208,7 @@ public class Access {
             if (accflags.contains(acc_abstract)) {
                 noneOf(acc_private, acc_static, acc_final, acc_synchronized, acc_native, acc_fpstrict);
             }
-            if (classType == ClassType.INTERFACE || classType == ClassType.ANNOTATION) {
+            if (classType == ClassType.INTERFACE || classType == ClassType.ANNOTATION_CLASS) {
                 noneOf(acc_protected, acc_final, acc_synchronized, acc_native);
                 if (jvmVersion.compareTo(JvmVersion.V1_8) < 0) {
                     allOf(acc_public, acc_abstract);
@@ -221,27 +220,27 @@ public class Access {
     }
 
     public void check4Parameter() {
-        checkValid(PARAMETER);
+        checkValid(PARAMETER,dir_parameter);
         mostOneOf(acc_synthetic, acc_mandated);
     }
 
     public void check4Module() {
-        checkValid(MODULE);
+        checkValid(MODULE,dir_module);
         mostOneOf(acc_synthetic, acc_mandated);
     }
 
     public void check4Export() {
-        checkValid(EXPORT);
+        checkValid(EXPORT,dir_exports);
         mostOneOf(acc_synthetic, acc_mandated);
     }
 
     public void check4Open() {
-        checkValid(OPEN);
+        checkValid(OPEN,dir_opens);
         mostOneOf(acc_synthetic, acc_mandated);
     }
 
     public void check4Require() {
-        checkValid(REQUIRE);
+        checkValid(REQUIRE,dir_requires);
         mostOneOf(acc_synthetic, acc_mandated);
         if (!jvmVersion.supports(Feature.static_phase_transitive)
                 && !NameDesc.isJavaBase(name.replace('.','/'))) {

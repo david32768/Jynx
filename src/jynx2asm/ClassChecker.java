@@ -90,7 +90,7 @@ public class ClassChecker {
             checker.ownMethods.put(compare,virtual);
         }
         if (!Constants.OBJECT_CLASS.equalString(cname)
-                && classType != ClassType.MODULE && classType != ClassType.PACKAGE) {
+                && classType != ClassType.MODULE_CLASS && classType != ClassType.PACKAGE) {
             ObjectLine<HandleType> virtual = new ObjectLine<>(REF_invokeVirtual, Line.EMPTY);
             Constants.FINAL_OBJECT_METHODS.stream()
                     .map(Constants::toString)
@@ -240,7 +240,7 @@ public class ClassChecker {
             ht = REF_invokeVirtual;
         }
         switch (classType) {
-            case ANNOTATION:
+            case ANNOTATION_CLASS:
                 if (jmn.isStatic() || !jmn.isAbstract() || !md.getDesc().contains("()")) {
                     // "method %s in %s class must be %s, not %s and have no parameters"
                     LOG(M406,md.toJynx(),classType,AccessFlag.acc_abstract,AccessFlag.acc_static);
@@ -425,15 +425,15 @@ public class ClassChecker {
                 visitClassEnd();
                 break;
             case ENUM:
-            case CLASS:
+            case BASIC:
                 visitClassEnd();
                 break;
             case INTERFACE:
                 checkMissing(REF_invokeInterface);
                 break;
-            case ANNOTATION:
+            case ANNOTATION_CLASS:
                 break;
-            case MODULE:
+            case MODULE_CLASS:
             case PACKAGE:
                 assert ownMethods.isEmpty() && ownMethodsUsed.isEmpty();
                 break;

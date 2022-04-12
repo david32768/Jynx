@@ -17,47 +17,35 @@ public enum ClassType {
         // mustnot == empty means only must_have allowed
     
             // ANNOTATION must come before INTERFACE
-    ANNOTATION(dir_define_annotation,acc_annotation,
-            EnumSet.of(acc_annotation, acc_interface, acc_abstract),
-            EnumSet.of(acc_final, acc_super, acc_enum,acc_module,acc_record)),
+    ANNOTATION_CLASS(dir_define_annotation, dir_inner_define_annotation, acc_annotation,
+            EnumSet.of(acc_annotation, acc_interface, acc_abstract)),
             // INTERFACE must be after ANNOTATION
-    INTERFACE(dir_interface, acc_interface,
-            EnumSet.of(acc_interface, acc_abstract),
-            EnumSet.of(acc_final, acc_super, acc_enum,acc_module,acc_annotation,acc_record)),
+    INTERFACE(dir_interface, dir_inner_interface, acc_interface,
+            EnumSet.of(acc_interface, acc_abstract)),
             // PACKAGE must be after INTERFACE
-    PACKAGE(dir_package, null,
-            EnumSet.of(acc_interface,acc_abstract),
-            EnumSet.of(acc_final, acc_super, acc_enum,acc_module,acc_annotation,acc_record)),
-    ENUM(dir_enum, acc_enum,
-            EnumSet.of(acc_enum, acc_super),
-            EnumSet.of(acc_annotation,acc_module,acc_interface,acc_record)),
-    MODULE(dir_module,acc_module, EnumSet.of(acc_module),null),
-    RECORD(dir_record,acc_record,
-            EnumSet.of(acc_record, acc_super),
-            EnumSet.of(acc_annotation,acc_enum,acc_module,acc_interface)),
-    CLASS(dir_class,acc_super,
-            EnumSet.of(acc_super),
-            EnumSet.of(acc_annotation,acc_module,acc_enum,acc_interface,acc_record)),
+    PACKAGE(dir_package, null, null,
+            EnumSet.of(acc_interface,acc_abstract)),
+    ENUM(dir_enum, dir_inner_enum, acc_enum,
+            EnumSet.of(acc_enum, acc_super)),
+    MODULE_CLASS(dir_module, null, acc_module, EnumSet.of(acc_module)),
+    RECORD(dir_record, dir_inner_record, acc_record,
+            EnumSet.of(acc_record, acc_super)),
+    BASIC(dir_class, dir_inner_class, acc_super,
+            EnumSet.of(acc_super)),
     ;
 
     private final Directive dir;
+    private final Directive innerDir;
     private final AccessFlag determinator;
     private final EnumSet<AccessFlag> must;
-    private final EnumSet<AccessFlag> mustnot;
 
-    private ClassType(Directive dir, AccessFlag determinator,
-            EnumSet<AccessFlag>  must, EnumSet<AccessFlag>  mustnot) {
+    private ClassType(Directive dir, Directive innerdir, AccessFlag determinator,
+            EnumSet<AccessFlag>  must) {
         assert determinator == null || must.contains(determinator);
         this.dir = dir;
+        this.innerDir = innerdir;
         this.determinator = determinator;
-        this.must = must.clone();
-        if (mustnot== null) {
-            EnumSet<AccessFlag> notflags = EnumSet.allOf(AccessFlag.class);
-            notflags.removeAll(this.must);
-            this.mustnot = notflags;
-        } else {
-            this.mustnot = mustnot.clone();
-        }
+        this.must = must;
     }
 
     private boolean isMe(EnumSet<AccessFlag> accflags) {
@@ -68,7 +56,7 @@ public enum ClassType {
         return Stream.of(values())
                 .filter(ct->ct.isMe(accflags))
                 .findAny()
-                .orElse(CLASS); // super flag may not be present
+                .orElse(BASIC); // super flag may not be present
     }
 
     public static ClassType of(Context context) {
@@ -79,7 +67,7 @@ public enum ClassType {
         return Stream.of(values())
                 .filter(ct->ct.dir == dir)
                 .findAny()
-                .orElse(CLASS);
+                .orElse(BASIC);
     }
     
     public AccessFlag getDeterminator() {
@@ -90,6 +78,10 @@ public enum ClassType {
         return dir;
     }
 
+    public Directive getInnerDir() {
+        return innerDir;
+    }
+
     public EnumSet<AccessFlag> getMustHave(JvmVersion jvmversion, boolean inner) {
         return must.stream()
                 .filter(flag->jvmversion.supports(flag))
@@ -97,10 +89,6 @@ public enum ClassType {
                 .collect(()->EnumSet.noneOf(AccessFlag.class),EnumSet::add,EnumSet::addAll);
     }
 
-    public AccessFlag[] getMustNot() {
-        return mustnot.toArray(new AccessFlag[0]);
-    }
-    
     public static Optional<ClassType> getInnerClassType(String str) {
         if (str.equalsIgnoreCase(PACKAGE.name())) {
             return Optional.empty();
@@ -110,7 +98,4 @@ public enum ClassType {
                 .findAny();
     }
 
-    public String getTokenStr() {
-        return toString().toLowerCase();
-    }
 }

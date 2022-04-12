@@ -267,7 +267,8 @@ public enum Message {
     M265("structured op mismatch: label stack is empty"),
     M266("Label %s not defined; used in%n%s"),
     M267("%s has %d simple ops which exceeds maximum of %d"),
-
+    M268("enclosing instance has already been defined"),
+    
     M272(WARNING,"Label %s not used - defined in line:%n  %s"),
 
     M274(SEVERE,"duplicate: %s has the same opcode(%d) as %s"),

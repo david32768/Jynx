@@ -7,8 +7,11 @@ import java.util.stream.Stream;
 import static org.objectweb.asm.Opcodes.*;
 
 import static jvm.Context.*;
+import static jynx.Directive.*;
 import static jynx.Global.LOG;
 import static jynx.Message.*;
+
+import jynx.Directive;
 
 // Class - Table 4.1B
 // Field - Table 4.5A
@@ -16,77 +19,149 @@ import static jynx.Message.*;
 // nested class - Table 4.7.6A
 public enum AccessFlag implements JvmVersioned {
         acc_public(ACC_PUBLIC,0x0001,
-                EnumSet.of(CLASS,INNER_CLASS,FIELD,METHOD,INIT_METHOD)),
+                EnumSet.of(CLASS,INNER_CLASS,FIELD,METHOD,INIT_METHOD),
+                EnumSet.of(dir_define_annotation, dir_inner_define_annotation,
+                        dir_interface, dir_inner_interface,
+                        dir_package,
+                        dir_enum, dir_inner_enum,
+                        dir_record, dir_inner_record,
+                        dir_class, dir_inner_class,
+                        dir_field, dir_method)),
         acc_private(ACC_PRIVATE, 0x0002,
-                EnumSet.of(INNER_CLASS,FIELD,METHOD,INIT_METHOD)),
+                EnumSet.of(INNER_CLASS,FIELD,METHOD,INIT_METHOD),
+                EnumSet.of(dir_inner_define_annotation,
+                        dir_inner_interface,
+                        dir_inner_enum,
+                        dir_inner_record,
+                        dir_inner_class,
+                        dir_field, dir_method)),
         acc_protected(ACC_PROTECTED,0x0004,
-                EnumSet.of(INNER_CLASS,FIELD,METHOD,INIT_METHOD)),
+                EnumSet.of(INNER_CLASS,FIELD,METHOD,INIT_METHOD),
+                EnumSet.of(dir_inner_define_annotation,
+                        dir_inner_interface,
+                        dir_inner_enum,
+                        dir_inner_record,
+                        dir_inner_class,
+                        dir_field, dir_method)),
         acc_static(ACC_STATIC,0x0008,
-                EnumSet.of(INNER_CLASS,FIELD,METHOD)),
+                EnumSet.of(INNER_CLASS,FIELD,METHOD),
+                EnumSet.of(dir_inner_define_annotation,
+                        dir_inner_interface,
+                        dir_inner_enum,
+                        dir_inner_record,
+                        dir_inner_class,
+                        dir_field, dir_method)),
         acc_final(ACC_FINAL,0x0010,
-                EnumSet.of(CLASS,INNER_CLASS,FIELD,METHOD,PARAMETER)),
+                EnumSet.of(CLASS,INNER_CLASS,FIELD,METHOD,PARAMETER),
+                EnumSet.of(dir_enum, dir_inner_enum,
+                        dir_record, dir_inner_record,
+                        dir_class, dir_inner_class,
+                        dir_field, dir_method,dir_parameter)),
         acc_super(Feature.superflag,ACC_SUPER,0x0020,
-                EnumSet.of(CLASS)),
+                EnumSet.of(CLASS),
+                EnumSet.of(dir_class, dir_enum, dir_record)),
         acc_synchronized(ACC_SYNCHRONIZED,0x0020,
-                EnumSet.of(METHOD)),
+                EnumSet.of(METHOD),
+                EnumSet.of(dir_method)),
         acc_open(Feature.modules,ACC_OPEN,0x0020,
-                EnumSet.of(MODULE)),
+                EnumSet.of(MODULE),
+                EnumSet.of(dir_module)),
         acc_transitive(Feature.modules,ACC_TRANSITIVE,0x0020,
-                EnumSet.of(REQUIRE)),
+                EnumSet.of(REQUIRE),
+                EnumSet.of(dir_requires)),
         acc_volatile(ACC_VOLATILE,0x0040,
-                EnumSet.of(FIELD)),
+                EnumSet.of(FIELD),
+                EnumSet.of(dir_field)),
         acc_bridge(Feature.bridge,ACC_BRIDGE,0x0040,
-                EnumSet.of(METHOD)),
+                EnumSet.of(METHOD),
+                EnumSet.of(dir_method)),
         acc_static_phase(Feature.modules,ACC_STATIC_PHASE,0x0040,
-                EnumSet.of(REQUIRE)),
+                EnumSet.of(REQUIRE),
+                EnumSet.of(dir_requires)),
         acc_transient(ACC_TRANSIENT,0x0080,
-                EnumSet.of(FIELD)),
+                EnumSet.of(FIELD),
+                EnumSet.of(dir_field)),
         acc_varargs(Feature.varargs,ACC_VARARGS,0x0080,
-                EnumSet.of(METHOD,INIT_METHOD)),
+                EnumSet.of(METHOD,INIT_METHOD),
+                EnumSet.of(dir_method)),
         acc_native(ACC_NATIVE,0x0100,
-                EnumSet.of(METHOD)),
-        acc_interface(ACC_INTERFACE,0x0200,
-                EnumSet.of(CLASS,INNER_CLASS)),
+                EnumSet.of(METHOD),
+                EnumSet.of(dir_method)),
+        acc_interface(ACC_INTERFACE, 0x0200,
+                EnumSet.of(CLASS,INNER_CLASS),
+                EnumSet.of(dir_define_annotation, dir_inner_define_annotation,
+                        dir_interface, dir_inner_interface,
+                        dir_package)),
         acc_abstract(ACC_ABSTRACT,0x0400,
-                EnumSet.of(CLASS,INNER_CLASS,METHOD)),
+                EnumSet.of(CLASS,INNER_CLASS,METHOD),
+                EnumSet.of(dir_define_annotation, dir_inner_define_annotation,
+                        dir_interface, dir_inner_interface,
+                        dir_package,
+                        dir_enum, dir_inner_enum,
+                        dir_record, dir_inner_record,
+                        dir_class, dir_inner_class,
+                        dir_method)),
         acc_fpstrict(Feature.fpstrict,ACC_STRICT,0x0800,
-                EnumSet.of(METHOD,INIT_METHOD)),
+                EnumSet.of(METHOD,INIT_METHOD),
+                EnumSet.of(dir_method)),
         acc_synthetic(Feature.synthetic,ACC_SYNTHETIC,0x1000,
-                EnumSet.of(CLASS,INNER_CLASS,FIELD,METHOD,INIT_METHOD,PARAMETER,EXPORT,OPEN,REQUIRE)),
+                EnumSet.of(CLASS,INNER_CLASS,FIELD,METHOD,INIT_METHOD,PARAMETER,EXPORT,OPEN,REQUIRE),
+                EnumSet.of(dir_define_annotation, dir_inner_define_annotation,
+                        dir_interface, dir_inner_interface,
+                        dir_package,
+                        dir_enum, dir_inner_enum,
+                        dir_record, dir_inner_record,
+                        dir_class, dir_inner_class,
+                        dir_field,dir_method,dir_parameter,dir_exports,dir_opens,dir_requires)),
         acc_annotation(Feature.annotations,ACC_ANNOTATION,0x2000,
-                EnumSet.of(CLASS,INNER_CLASS)),
-        acc_enum(Feature.enums,ACC_ENUM,0x4000,
-                EnumSet.of(CLASS,INNER_CLASS,FIELD)),
+                EnumSet.of(CLASS,INNER_CLASS),
+                EnumSet.of(dir_define_annotation, dir_inner_define_annotation)),
+        acc_enum(Feature.enums,ACC_ENUM, 0x4000,
+                EnumSet.of(CLASS,INNER_CLASS,FIELD),
+                EnumSet.of(dir_enum, dir_inner_enum, dir_field)),
         acc_module(Feature.modules,ACC_MODULE,0x8000,
-                EnumSet.of(CLASS)),
+                EnumSet.of(CLASS),
+                EnumSet.of(dir_module)),
         acc_mandated(Feature.mandated,ACC_MANDATED,0x8000,
-                EnumSet.of(PARAMETER,EXPORT,OPEN,REQUIRE)),
+                EnumSet.of(PARAMETER,EXPORT,OPEN,REQUIRE),
+                EnumSet.of(dir_parameter,dir_exports,dir_opens,dir_requires)),
     // ASM specific pseudo access flags - not written to class file
-        acc_record(Feature.record,ACC_RECORD,0x10000,
-                EnumSet.of(CLASS,INNER_CLASS)),
+        acc_record(Feature.record, ACC_RECORD, 0x10000,
+                EnumSet.of(CLASS,INNER_CLASS),
+                EnumSet.of(dir_record, dir_inner_record)),
         acc_deprecated(Feature.deprecated,ACC_DEPRECATED, 0x20000,
-                EnumSet.of(CLASS,INNER_CLASS, FIELD, METHOD, INIT_METHOD)),
+                EnumSet.of(CLASS,INNER_CLASS, FIELD, METHOD, INIT_METHOD),
+                EnumSet.of(dir_define_annotation, dir_inner_define_annotation,
+                        dir_interface, dir_inner_interface,
+                        dir_package,
+                        dir_enum, dir_inner_enum,
+                        dir_record, dir_inner_record,
+                        dir_class, dir_inner_class,
+                        dir_field, dir_method)),
     // flag for internal use - xxx_ prefix and 0x0
         xxx_component(Feature.record,0,0,
-                EnumSet.of(FIELD,METHOD)),
+                EnumSet.of(FIELD,METHOD),
+                EnumSet.of(dir_field,dir_method)),
     ;
 
+    private final Feature feature;
     private final int access_flag;
     private final EnumSet<Context> where;
-    private final Feature feature;
+    private final EnumSet<Directive> dirs;
+    
+    private AccessFlag(int access, int hex, EnumSet<Context> states, EnumSet<Directive> dirs) {
+        this(Feature.unlimited,access, hex, states, dirs);
+    }
 
-    private AccessFlag(Feature feature, int access, int hex, EnumSet<Context> states) {
+    private AccessFlag(Feature feature, int access, int hex, EnumSet<Context> states, EnumSet<Directive> dirs) {
         // "%s: asm value (%d) does not agree with jvm value(%d)"
         assert access == hex:M161.format(name(),access,hex);
         this.access_flag = access;
         this.where = states;
         this.feature = feature;
+        this.dirs = dirs;
     }
 
-
-    private AccessFlag(int access, int hex, EnumSet<Context> states) {
-        this(Feature.unlimited,access, hex, states);
-    }
 
     public int getAccessFlag() {
         return access_flag;
@@ -104,6 +179,10 @@ public enum AccessFlag implements JvmVersioned {
 
     public boolean isValid(Context state) {
         return where.contains(state);
+    }
+
+    public boolean isValid(Context state, Directive dir) {
+        return where.contains(state) && dirs.contains(dir);
     }
 
     @Override

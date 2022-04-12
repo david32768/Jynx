@@ -9,7 +9,7 @@ import java.util.Set;
 
 import org.objectweb.asm.tree.ModuleNode;
 
-import static jynx.ClassType.MODULE;
+import static jynx.ClassType.MODULE_CLASS;
 import static jynx.Global.*;
 import static jynx.Message.*;
 import static jynx2asm.NameDesc.*;
@@ -59,7 +59,7 @@ public class JynxModule {
         Line line = js.getLine();
         EnumSet<AccessFlag> flags = line.getAccFlags();
         String name = line.nextToken().asName();
-        Access accessname = Access.getInstance(flags, jvmversion, name,MODULE);
+        Access accessname = Access.getInstance(flags, jvmversion, name,MODULE_CLASS);
         MODULE_NAME.validate(name);
         String main = line.optAfter(ReservedWord.res_main);
         Token token = line.nextToken();
@@ -161,7 +161,7 @@ public class JynxModule {
     private Access getAccess(Line line) {
         EnumSet<AccessFlag> flags = line.getAccFlags();
         String name = line.nextToken().asName();
-        return Access.getInstance(flags, jvmVersion, name, MODULE);
+        return Access.getInstance(flags, jvmVersion, name, MODULE_CLASS);
     }
     
     private void visitExports(Line line) {
