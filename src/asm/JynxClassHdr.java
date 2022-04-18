@@ -133,7 +133,7 @@ public class JynxClassHdr implements ContextDependent {
                 CLASS_NAME.validate(cname);
                 break;
         }
-        flags.addAll(classtype.getMustHave(jvmversion,false)); 
+        flags.addAll(classtype.getMustHave4Class(jvmversion)); 
         Access accessname = Access.getInstance(flags, jvmversion, cname,classtype);
         accessname.check4Class();
         boolean usestack = OPTION(GlobalOption.USE_STACK_MAP);
@@ -285,7 +285,7 @@ public class JynxClassHdr implements ContextDependent {
         String innername;
         innerclass = line.nextToken().asName();
         innername = line.optAfter(res_innername);
-        accflags.addAll(classtype.getMustHave(jvmVersion,true));
+        accflags.addAll(classtype.getMustHave4Inner(jvmVersion));
         Access accessname = Access.getInstance(accflags, jvmVersion, innerclass,classtype);
         accessname.check4InnerClass();
         int flags = accessname.getAccess();

@@ -1,76 +1,128 @@
 package jynx;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.function.Predicate;
 import java.util.Optional;
 import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static jynx.Global.*;
 import static jynx.GlobalOption.*;
 import static jynx.Message.*;
 
+import asm2jynx.JynxDisassemble;
 import jvm.JvmVersion;
 import jynx2asm.JynxClass;
 
 public class Main {
     
     private final static String SUFFIX = ".jx";
+
+    private final static int JYNX_VERSION = 0;
+    private final static int JYNX_RELEASE = 10;
+    private final static int JYNX_BUILD = 12;
+    
+    private static String version() {
+        return String.format("%d+%d-%d",JYNX_VERSION,JYNX_RELEASE,JYNX_BUILD);
+    }
+
     private static void outputVersion() {
         LOG(M0,version(),JvmVersion.MAX_VERSION); // "Jynx version %s; maximum Java version is %s"
     }
-    
-    private static void usage() {
-        LOG(M5,SUFFIX); // "%nUsage: {options} %s-file"
-        GlobalOption.print();
+
+    public enum MainOption {
+        
+        ASSEMBLY(Main::j2a,"jynx",
+                " {options} " + SUFFIX + "_file",
+                "produces a class file from a " + SUFFIX + " file"),
+        DISASSEMBLY(Main::a2j,"2jynx",
+                String.format(" [%s]? class-name|class_file > %s_file",USE_STACK_MAP.argName(),SUFFIX),
+                "produces a " + SUFFIX + " file from a class"),
+        ;
+
+        private final Predicate<Optional<String>> fn;
+        private final String extname;
+        private final String usage;
+        private final String longdesc;
+
+        private MainOption(Predicate<Optional<String>> fn, String extname, String usage, String longdesc) {
+            this.fn = fn;
+            this.extname = extname;
+            this.usage = " " + extname.toLowerCase() + usage;
+            this.longdesc = longdesc;
+        }
+
+        public String usage() {
+            return usage;
+        }
+
+        public String extname() {
+            return extname;
+        }
+
+        public String longdesc() {
+            return longdesc;
+        }
+        
+        public String version() {
+            return String.format("Jynx %s %s",this.name(),Main.version());
+        }
+        
+        private static Optional<MainOption> getInstance(String str) {
+            return Arrays.stream(values())
+                    .filter(mo->mo.extname.equalsIgnoreCase(str))
+                    .findAny();
+        }
+        
     }
 
-    private static Scanner getScanner(String fname) throws IOException{
-        Path pathj = Paths.get(fname);
-        if (System.getSecurityManager() == null && (pathj.isAbsolute() || fname.contains(".."))) {
-            // "%nNo security manager installed and filename is absolute or contains ..%n filename = %s"
-            throw new SecurityException(M103.format(fname));
-        }
-        return new Scanner(pathj);
-    }
-    
-    private static boolean j2aSysin() {
-        byte[] ba = JynxClass.getBytes("SYSIN", new Scanner(System.in));
-        return ba != null;
-    }
-    
-    private static boolean j2a(String fname) {
-        if (!fname.endsWith(SUFFIX)) {
-            LOG(M97,fname,SUFFIX); // "file(%s) does not have %s suffix"
+
+    private static boolean j2a(Optional<String> optfname) {
+        if (!(optfname.isPresent() ^ OPTION(SYSIN))) {
+            LOG(M222,SYSIN); // "either option %s is specified or file name is present but not both"
             return false;
         }
-        Path pathc = Paths.get(fname.replace(SUFFIX,".class"));
-        boolean success;
+        String fname = optfname.orElse("SYSIN");
         try {
-            byte[] ba = JynxClass.getBytes(fname,  getScanner(fname));
-            if (ba == null) {
-                return false;
+            Scanner scanner;
+            if (optfname.isPresent()) {
+                if (!fname.endsWith(SUFFIX)) {
+                    LOG(M97,fname,SUFFIX); // "file(%s) does not have %s suffix"
+                    return false;
+                }
+                Path pathj = Paths.get(fname);
+                scanner = new Scanner(pathj);
+            } else {
+                scanner = new Scanner(System.in);
             }
-            String cname = CLASS_NAME();
-            int index = cname.lastIndexOf('/');
-            String cfname = cname.substring(index + 1);
-            cfname += ".class";
-            String pathcname = pathc.getFileName().toString();
-            if (!cfname.equals(pathcname)) {
-                LOG(M112,pathcname,cfname); // "output file(%s) is not %s"
-            }
-            Files.write(pathc, ba);
-            LOG(M116,pathc,ba.length); // "%s created - size %d bytes"
-            success = true;
+            return assemble(fname, scanner);
         } catch (IOException ex) {
             LOG(ex);
-            success = false;
+            return false;
         }
-        return success;
     }
 
+    private static boolean assemble(String fname, Scanner scanner) throws IOException {
+        byte[] ba = JynxClass.getBytes(fname,  scanner);
+        if (ba == null) {
+            return false;
+        }
+        String cname = CLASS_NAME();
+        int index = cname.lastIndexOf('/');
+        String cfname = cname.substring(index + 1);
+        cfname += ".class";
+        Path pathc = Paths.get(cfname);
+        Files.write(pathc, ba);
+        LOG(M116,pathc,ba.length); // "%s created - size %d bytes"
+        return true;
+    }
+    
     public static Optional<String> setOptions(String[] args) {
         int i = 0;
         String[] remainder = new String[0];
@@ -96,53 +148,72 @@ public class Main {
             }
         }
         if (remainder.length == 0) {
-            LOG(M218); //"SYSIN will be used as input. No file will be produced"
+            LOG(M218); //"SYSIN will be used as input"
         } else {
             LOG(M219,Arrays.asList(remainder)); // "wrong number of parameters after options %s"
         }
         return Optional.empty();
     }
 
-    private static boolean mainx(String[] args) {
+    private static boolean a2j(Optional<String> optfname) {
+        String fname = optfname.get();
+        PrintWriter pw = new PrintWriter(System.out);
+        return JynxDisassemble.a2jpw(pw,fname);
+    }
+    
+    private static void appUsage() {
+        LOG(M12); // "%nUsage:%n"
+        for (MainOption mo:MainOption.values()) {
+            System.err.println(mo.usage());
+            System.err.format("   (%s)%n%n",mo.longdesc());
+        }
+        GlobalOption.print();
+    }
+
+    private static boolean mainz(String[] args) {
         if (args.length == 0) {
-            usage();
+            appUsage();
             return false;
         }
+        String option = args[0];
         if (args.length == 1) {
-            String option = args[0];
             if (VERSION.isArg(option)) {
                 outputVersion();
-                return true;
+                return false;
             }
             if (HELP.isArg(option)) {
-                usage();
-                return true;
+                appUsage();
+                return false;
             }
         }
-        Optional<String> optname = setOptions(args);
-        if (!(optname.isPresent() ^ OPTION(SYSIN))) {
-            LOG(M222,SYSIN); // "either option %s is specified or file name is present but not both"
-        }
-        if (LOGGER().numErrors() != 0) {
-            LOG(M3); // "program terminated because of errors"
-            usage();
+        Optional<MainOption> mainopt = MainOption.getInstance(option);
+        if (!mainopt.isPresent()) {
+            LOG(M26,option); // "invalid main-option name - %s"
             return false;
         }
-        newGlobal("assembly",OPTIONS());
-        boolean success;
-        if (optname.isPresent()) {
-            success = j2a(optname.get());
-        } else {
-            success = j2aSysin();
+        MainOption main = mainopt.get();
+        args = Arrays.copyOfRange(args, 1, args.length);
+        if (args.length == 0) {
+            // "no args have been specified for main option %s"
+            LOG(M28,main.extname());
+            return false;
         }
+        Optional<String> optname = setOptions(args);
+        if (LOGGER().numErrors() != 0) {
+            LOG(M3); // "program terminated because of errors"
+            appUsage();
+            return false;
+        }
+        newGlobal(main,OPTIONS());
+        boolean success = main.fn.test(optname);
         if (!success) {
-            LOG(M298,CLASS_NAME()); // "assembly of %s failed"
+            LOG(M298,main.name(),CLASS_NAME()); // "%s of %s failed"
         }
         return success;
     }
     
     public static void main(String[] args) {
-        boolean success = mainx(args);
+        boolean success = mainz(args);
         if (!success) {
             System.exit(1);
         }

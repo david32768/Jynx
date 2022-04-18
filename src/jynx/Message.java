@@ -8,14 +8,15 @@ public enum Message {
     M1(BLANK,"display help message"),
     M2(BLANK,"display version information"),
     M3(BLANK,"program terminated because of errors"),
-    M4(BLANK,"%nJynx version %s; Java runtime version %s"),
-    M5(BLANK,"%nUsage: {options} %s-file"),
-    M6(BLANK,"%nOptions are:%n"),
+    M4(BLANK,"%n%s; Java runtime version %s"),
+    
+    M6(BLANK,"Options are:%n"),
     M7(BLANK,"use SYSIN as input file"),
     M8(BLANK,"check that called methods exist (on class path)"),
     M9(BLANK,"generate line numbers"),
     M10(BLANK,"warn if label unreferenced or alias"),
     M11(BLANK,"let simple verifier use Class.forName()"),
+    M12(BLANK,"%nUsage:%n"),
     M13(BLANK,"exit if error"),
     M14(BLANK,"check indent for structured code"),
     M15(BLANK,"warn if names non-standard"),
@@ -29,9 +30,10 @@ public enum Message {
     M23(BLANK,"print stack trace of exceptions"),
     M24(INFO,"ambiguous option %s: %s assumed"),
     M25(BLANK,"treat warnings as errors"),
-
+    M26(BLANK,"invalid main-option name - %s"),
     M27("cannot set label to generated name - %s"),
-
+    M28("no args have been specified for main option %s"),
+    
     M31("%s already set in line%n    %s"),
     M32("%s is not a valid option"),
     M33("%s limit has already been set by line:%n  %s"),
@@ -104,7 +106,7 @@ public enum Message {
 
     M101("unknown handle mnemonic: %s"),
     M102("method %s invalid for %s"),
-    M103("%nNo security manager installed and filename is absolute or contains ..%n filename = %s"),
+
     M104(BLANK,"class %s %s completed successfully"),
     M105("unknown option %s - ignored"),
     M106("labels in %s must not be defined yet"),
@@ -113,7 +115,7 @@ public enum Message {
     M109("reserved word %s expected but found %s"),
     M110("access flag(s) %s not valid for version %s"),
     M111(ENDINFO,"instct = %d labct = %d dirct = %d"),
-    M112(WARNING,"output file(%s) is not %s"),
+
     M113("%s must be used for long constant - %s"),
     M114("Requires at most one of {%s} specified"),
     M115("Not first token - token = %s"),
@@ -172,7 +174,6 @@ public enum Message {
     M169(ENDINFO,"package(s) used in %s are not in %s"),
     M170("invalid type ref name - %s"),
     M171(WARNING,"version %s outside range [%s,%s] - %s used"),
-    M172("Invalid class type - %s"),
 
     M175("unknown Jynx desc = %c"),
     M176("%s not found as a macro library service"),
@@ -217,7 +218,7 @@ public enum Message {
     M215(" %s field %s accessed by %s op %s"),
     M216("frame locals %s incompatible with current locals %s"),
     M217("from label %s is not before to label %s"),
-    M218(INFO,"SYSIN will be used as input. No file will be produced"),
+    M218(INFO,"SYSIN will be used as input"),
     M219("wrong number of parameters after options %s"),
     M220(WARNING,"label %s is an alias for label %s"),
     M221("required %s for var %d but found %s"),
@@ -277,8 +278,7 @@ public enum Message {
 
     M289("A nest member has already been defined"),
 
-    M298("assembly of %s failed"),
-    M299("disassembly of %s failed"),
+    M298("%s of %s failed"),
 
     M302("%s is null or has different feature requirement than %s"),
     M304("Nest host already defined%n  %s"),

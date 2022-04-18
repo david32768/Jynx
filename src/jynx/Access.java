@@ -135,7 +135,7 @@ public class Access {
     // Class - Table 4.1B
     public void check4Class() {
         checkValid(CLASS,classType.getDir());
-        allOf(classType.getMustHave(jvmVersion,false));
+        allOf(classType.getMustHave4Class(jvmVersion));
     }
 
     // nested class - Table 4.7.6A
@@ -148,7 +148,7 @@ public class Access {
             LOG(M195,name); // "inner class name (%s) does not contain '$'"
         }
         checkValid(INNER_CLASS,classType.getInnerDir());
-        allOf(classType.getMustHave(jvmVersion,true));
+        allOf(classType.getMustHave4Inner(jvmVersion));
     }
 
     // Field - Table 4.5A

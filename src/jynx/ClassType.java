@@ -82,20 +82,19 @@ public enum ClassType {
         return innerDir;
     }
 
-    public EnumSet<AccessFlag> getMustHave(JvmVersion jvmversion, boolean inner) {
+    private EnumSet<AccessFlag> getMustHave(JvmVersion jvmversion, boolean inner) {
         return must.stream()
                 .filter(flag->jvmversion.supports(flag))
                 .filter(flag->!(inner && flag == acc_super))
                 .collect(()->EnumSet.noneOf(AccessFlag.class),EnumSet::add,EnumSet::addAll);
     }
 
-    public static Optional<ClassType> getInnerClassType(String str) {
-        if (str.equalsIgnoreCase(PACKAGE.name())) {
-            return Optional.empty();
-        }
-        return Stream.of(values())
-                .filter(c->c.name().equalsIgnoreCase(str))
-                .findAny();
+    public EnumSet<AccessFlag> getMustHave4Class(JvmVersion jvmversion) {
+        return getMustHave(jvmversion, false);
+    }
+
+    public EnumSet<AccessFlag> getMustHave4Inner(JvmVersion jvmversion) {
+        return getMustHave(jvmversion, true);
     }
 
 }

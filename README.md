@@ -23,7 +23,13 @@ It supports "macros" as a service with WebAssembly MVP instructions as an exampl
 
 ## Usage
 
-Usage: jynx.Main {options} .jx-file
+Usage:
+
+ jynx {options} .jx_file
+   (produces a class file (class_name.class) from a .jx file)
+
+ 2jynx [--USE_STACK_MAP]? class-name|class_file > .jx_file
+   (produces a .jx file from a class)
 
 Options are:
 
@@ -68,6 +74,10 @@ Changes are:
 *	default for .limit is calculated rather than 1
 *	labels are constrained to be a Java Id or if generated start with an @
 *	.interface must be used to declare an interface rather than .class interface
+```
+		; .class interface abstract anInterface ; change to
+		.interface anInterface
+```
 *	labels in .catch must not be previously defined (ASM)
 *	if .var labels are omitted then from :start_method to :end_method is assumed
 *	float constants must be suffixed by 'F' and long constants by 'L'.
@@ -80,21 +90,43 @@ Changes are
 
 *	offsets instead of labels are NOT supported
 *	user attributes are NOT supported
-*	.bytecode -> .version e.g. .version V17 instead of .bytecode 61.0
+*	.bytecode -> .version
+```
+		; .bytecoode 61.0 ; change to
+		.version V17
+```
+*	options (without -- prefix) can be on .version directive
+```
+		.version V17 GENERATE_LINE_NUMBERS PREPEND_CLASSNAME
+```
 *	.deprecated removed; use deprecated pseudo-access_flag
+*	.enum instead of .class enum
+```
+		; .class enum anEnum ; change to
+		.enum anEnum
+```
+*	.define_annotation instead of .class annotation
+```
+		; .class annotation interface abstract anAnnotationClass ; change to
+		.define_annotation anAnnotationClass
+```
 *	.inner
 ```
 		; swap "name" x and "inner" y as "name" may be omitted
 		; .inner class x inner y ... ; change to
-		.inner class y innername x ...
+		.inner_class y innername x ...
+		; also .inner_interface etc.
 ```
-*	.enum instead of .class enum
-*	.define_annotation instead of .class annotation
+*	.enclosing method -> .enclosing_method or .enclosing_class
 *	.package
+```
+		; .class interface abstract aPackage/package-info ; change to
+		.package aPackage
+```
 *	invokedynamic boot method and parameters must be specified
 ```
 		; (a boot method parameter may be dynamic) 
-		invokedynamic { name desc  boot_method_and_parameters }
+		; invokedynamic { name desc  boot_method_and_parameters }
 ```
 ### ANNOTATIONS
 
@@ -115,7 +147,8 @@ Changes are
 
 ## Additions
 
-*	type annotations; .visible_type_annotation , .invisible_type_annotation
+*	.visible_type_annotation
+*	.invisible_type_annotation
 *	.nesthost
 *	.nestmember
 *	.record
@@ -126,17 +159,10 @@ Changes are
 *	dynamic ldc
 ```
 		; (a boot method parameter may be dynamic) 
-		ldc { name desc boot_method_and_parameters } 
+		; ldc { name desc boot_method_and_parameters } 
 ```
 *	alias ops e.g. ildc 3 ; load integer 3
-*	extended ops e.g. if_fcmpge label 
-*	structured ops e.g. BEGIN, LOOP. END
+*	extended ops e.g. if_fcmpge label
+*	call common java methods e.g. iabs instead of invokestatic java/lang/Math/iabs(I)I
+*	structured ops e.g. BLOCK, LOOP, END
 *	.macrolib
-
-## Disassembly
-
-Usage: jynx.Disassemble {options} class|.class-file > .jx-file
-
-Options are:
-
-*	--USE_STACK_MAP output stackmap if present

@@ -100,6 +100,7 @@ public enum Directive implements JvmVersioned {
 
     end_array(READ_END, EnumSet.noneOf(State.class)),
 
+    dir_main(MODULE, EnumSet.of(MODULE,END_MODULEHDR), ModulePackages),
     dir_packages(MODULE, EnumSet.of(MODULE,END_MODULEHDR), ModulePackages),
     dir_uses(MODULE, EnumSet.of(MODULE,END_MODULEHDR), Module),
     dir_exports(MODULE, EnumSet.of(MODULE,END_MODULEHDR), Module),
@@ -146,6 +147,7 @@ public enum Directive implements JvmVersioned {
             case dir_enclosing_class:
             case dir_default_annotation:
             case dir_packages:
+            case dir_main:
                 return true;
             default:
                 return false;

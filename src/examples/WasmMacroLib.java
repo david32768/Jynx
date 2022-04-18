@@ -13,11 +13,11 @@ import static jynx2asm.ops.JavaCallOps.*;
 import static jynx2asm.ops.LineOps.*;
 import static jynx2asm.ops.StructuredOps.*;
 
+import com.github.david32768.jynx.MacroLib;
 import jvm.HandleType;
 import jynx2asm.ops.DynamicOp;
 import jynx2asm.ops.JynxOp;
 import jynx2asm.ops.LineOps;
-import jynx2asm.ops.MacroLib;
 import jynx2asm.ops.MacroOp;
 
 public class WasmMacroLib  extends MacroLib {

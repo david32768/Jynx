@@ -13,31 +13,26 @@ import jynx2asm.Line;
 
 public class Global {
 
-    private final static int JYNX_VERSION = 0;
-    private final static int JYNX_RELEASE = 10;
-    private final static int JYNX_BUILD = 11;
-    
-    public static String version() {
-        return String.format("%d+%d-%d",JYNX_VERSION,JYNX_RELEASE,JYNX_BUILD);
-    }
-    
     private final Logger logger;
     private final EnumSet<GlobalOption> options;
     private JvmVersion jvmVersion;
     private String classname;
+    private Main.MainOption main;
     
     private Global() {
         this.options = EnumSet.noneOf(GlobalOption.class);
         this.logger  = new Logger("",false);
         this.jvmVersion = null;
         this.classname = null;
+        this.main = null;
     }
 
-    private Global(EnumSet<GlobalOption> options,String type) {
+    private Global(EnumSet<GlobalOption> options,Main.MainOption type) {
         this.options = options;
         boolean exiterr = options.contains(GlobalOption.__EXIT_IF_ERROR);
-        this.logger  = new Logger(type,exiterr);
+        this.logger  = new Logger(type.name().toLowerCase(),exiterr);
         this.jvmVersion = null;
+        this.main = type;
     }
     
     private static Global global = new Global();
@@ -63,10 +58,10 @@ public class Global {
     }
 
 
-    public static void newGlobal(String type, EnumSet<GlobalOption> options) {
+    public static void newGlobal(Main.MainOption type, EnumSet<GlobalOption> options) {
         global = new Global(options,type);
-        // "%nJynx version %s; Java runtime version %s"
-        LOG(M4,version(),System.getProperty("java.runtime.version"));
+        // "%n%s; Java runtime version %s"
+        LOG(M4,type.version(),System.getProperty("java.runtime.version"));
     }
     
     public static void setJvmVersion(JvmVersion jvmversion) {
@@ -155,4 +150,7 @@ public class Global {
         return global.logger.printEndInfo(classname);
     }
     
+    public static Main.MainOption MAIN_OPTION() {
+        return global.main;
+    }
 }

@@ -35,6 +35,7 @@ import jynx.ClassType;
 import jynx.Directive;
 import jynx.Global;
 import jynx.GlobalOption;
+import jynx.Main;
 
 public class JynxDisassemble {
 
@@ -95,7 +96,7 @@ public class JynxDisassemble {
         ClassType classtype = ClassType.PACKAGE;
         int index = cname.lastIndexOf('/');
         cname = cname.substring(0, index);
-        accflags.removeAll(classtype.getMustHave(jvmVersion,false));
+        accflags.removeAll(classtype.getMustHave4Class(jvmVersion));
         Directive dir = classtype.getDir();
         jp.append(dir)
                 .append(accflags,cname).nl();
@@ -152,7 +153,7 @@ public class JynxDisassemble {
         String cname = cn.name;
         EnumSet<AccessFlag> accflags = AccessFlag.getEnumSet(cn.access,CLASS,jvmVersion);
         ClassType classtype = ClassType.from(accflags);
-        accflags.removeAll(classtype.getMustHave(jvmVersion,false));
+        accflags.removeAll(classtype.getMustHave4Class(jvmVersion));
         Directive dir = classtype.getDir();
         jp.append(dir)
                 .append(accflags,cname).nl();
@@ -206,7 +207,7 @@ public class JynxDisassemble {
         for (InnerClassNode icn : nonNullList(cn.innerClasses)) {
             EnumSet<AccessFlag> inneraccflags = AccessFlag.getEnumSet(icn.access,INNER_CLASS,jvmVersion);
             ClassType classtype = ClassType.from(inneraccflags);
-            inneraccflags.removeAll(classtype.getMustHave(jvmVersion,true));
+            inneraccflags.removeAll(classtype.getMustHave4Inner(jvmVersion));
             Directive inner = classtype.getInnerDir();
             jp.appendDirective(inner)
                     .append(inneraccflags, icn.name)
@@ -248,7 +249,6 @@ public class JynxDisassemble {
         accflags = AccessFlag.getEnumSet(module.access, MODULE,jvmVersion);
         jp.appendDirective(dir_module)
                 .append(accflags,module.name)
-                .append(res_main,module.mainClass)
                 .append(module.version)
                 .nl();
 
@@ -307,6 +307,7 @@ public class JynxDisassemble {
     }
     
     private void printModuleInfo(ModuleNode module) {
+        jp.printDirective(dir_main,module.mainClass);
         EnumSet<AccessFlag> accflags;
         if (module.packages != null) {
             jp.appendDirective(dir_packages);
@@ -360,6 +361,7 @@ public class JynxDisassemble {
     
     private void printVersionSource() {
         jp.appendComment("options = " + OPTIONS().toString()).nl();
+        jp.appendComment(Main.MainOption.DISASSEMBLY.version()).nl();
         printDotVersion();
         jp.printDirective(dir_source, cn.sourceFile);
     }

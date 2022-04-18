@@ -45,7 +45,7 @@ public enum GlobalOption {
     private final static String OPTION_PREFIX = "--";
     private final static String ABBREV_PREFIX = "-";
 
-    private String argName() {
+    public String argName() {
         return OPTION_PREFIX + name();
     }
     
@@ -78,7 +78,7 @@ public enum GlobalOption {
     }
     
     public static void print() {
-        Global.LOG(M6); // "%nOptions are:%n"
+        Global.LOG(M6); // "Options are:%n"
         for (GlobalOption opt:values()) {
             if (!opt.name().startsWith("_")) {
                 System.err.println(String.format(" %s %s",opt.argName(),opt.msg));

@@ -28,6 +28,7 @@ import jynx.ReservedWord;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
 import jynx2asm.NameDesc;
+import jynx2asm.ONDRecord;
 import jynx2asm.Token;
 import jynx2asm.TokenArray;
 
@@ -61,17 +62,12 @@ public class JynxModule {
         String name = line.nextToken().asName();
         Access accessname = Access.getInstance(flags, jvmversion, name,MODULE_CLASS);
         MODULE_NAME.validate(name);
-        String main = line.optAfter(ReservedWord.res_main);
         Token token = line.nextToken();
         String version = token == Token.END_TOKEN?null:token.asString();
+        line.noMoreTokens();
         accessname.check4Module();
         int access = accessname.getAccess();
         ModuleNode mnode = new ModuleNode(name, access, version);
-        if (main != null) {
-            CHECK_SUPPORTS(AttributeName.ModuleMainClass);
-            CLASS_NAME_IN_MODULE.validate(main);
-            mnode.visitMainClass(main);
-        }
         return new JynxModule(mnode, js, jvmversion);
     }
 
@@ -92,6 +88,9 @@ public class JynxModule {
         Line line = js.getLine();
         dir.checkUnique(unique_directives, line);
         switch(dir) {
+            case dir_main:
+                visitMain(line);
+                break;
             case dir_packages:
                 visitPackages(line);
                 break;
@@ -135,6 +134,14 @@ public class JynxModule {
             array.noMoreTokens();
         }
         return modlist.toArray(new String[0]);
+    }
+
+    private void visitMain(Line line) {
+        String main = line.nextToken().asString();
+        CHECK_SUPPORTS(AttributeName.ModuleMainClass);
+        CLASS_NAME_IN_MODULE.validate(main);
+        modNode.visitMainClass(main);
+        checkPackage(ONDRecord.packageNameOf(main), Directive.dir_main);
     }
     
     private void visitPackages(Line line) {
