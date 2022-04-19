@@ -114,7 +114,7 @@ public enum Message {
     M108("type index (%d) outside range [0 - %d]"),
     M109("reserved word %s expected but found %s"),
     M110("access flag(s) %s not valid for version %s"),
-    M111(ENDINFO,"instct = %d labct = %d dirct = %d"),
+    M111(ENDINFO,"instructions = %d labels = %d directives = %d pre_comments = %d"),
 
     M113("%s must be used for long constant - %s"),
     M114("Requires at most one of {%s} specified"),

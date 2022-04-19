@@ -6,6 +6,7 @@ import java.util.Objects;
 import static jynx.Message.M24;
 import static jynx.Message.M4;
 
+import com.github.david32768.jynx.Main;
 import jvm.ConstantPoolType;
 import jvm.JvmVersion;
 import jvm.JvmVersioned;
@@ -17,7 +18,7 @@ public class Global {
     private final EnumSet<GlobalOption> options;
     private JvmVersion jvmVersion;
     private String classname;
-    private Main.MainOption main;
+    private final Main.MainOption main;
     
     private Global() {
         this.options = EnumSet.noneOf(GlobalOption.class);

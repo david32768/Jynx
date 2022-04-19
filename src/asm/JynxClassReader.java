@@ -17,7 +17,7 @@ import static jynx.Message.M238;
 
 public class JynxClassReader extends ClassReader {
 
-    public JynxClassReader​(final java.lang.String className) throws IOException {
+    public JynxClassReader(final java.lang.String className) throws IOException {
         this(path4Class(className.replace('.', '/') + ".class"));
     }
 
@@ -25,12 +25,12 @@ public class JynxClassReader extends ClassReader {
         this(Files.readAllBytes(path));
     }
 
-    public JynxClassReader​(final byte[] classFileBuffer, final int classFileOffset, final int classFileLength) {
+    public JynxClassReader(final byte[] classFileBuffer, final int classFileOffset, final int classFileLength) {
         this(Arrays.copyOfRange(classFileBuffer, classFileOffset, classFileOffset + classFileLength));
     }
 
     // main constructor
-    JynxClassReader​(final byte[] classFile) {
+    JynxClassReader(final byte[] classFile) {
         super(classFile, 0, classFile.length);
         int expectedLength = classFile.length;
         int actualLength;

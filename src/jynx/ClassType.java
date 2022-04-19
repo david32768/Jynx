@@ -1,7 +1,6 @@
 package jynx;
 
 import java.util.EnumSet;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import static jvm.AccessFlag.*;
@@ -13,8 +12,7 @@ import jvm.JvmVersion;
 
 public enum ClassType {
     
-    // directive, determinator, must_have, must_not ...
-        // mustnot == empty means only must_have allowed
+    // directive, determinator, must_have
     
             // ANNOTATION must come before INTERFACE
     ANNOTATION_CLASS(dir_define_annotation, dir_inner_define_annotation, acc_annotation,

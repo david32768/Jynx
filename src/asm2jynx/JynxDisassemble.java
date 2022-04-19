@@ -27,6 +27,7 @@ import static jynx.Message.*;
 import static jynx.ReservedWord.*;
 
 import asm.JynxClassReader;
+import com.github.david32768.jynx.Main;
 import jvm.AccessFlag;
 import jvm.Constants;
 import jvm.ConstType;
@@ -35,7 +36,6 @@ import jynx.ClassType;
 import jynx.Directive;
 import jynx.Global;
 import jynx.GlobalOption;
-import jynx.Main;
 
 public class JynxDisassemble {
 
