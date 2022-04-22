@@ -26,15 +26,10 @@ It supports "macros" as a service with WebAssembly MVP instructions as an exampl
 Usage:
 
  jynx {options} .jx_file
-   (produces a class file (class_name.class) from a .jx file)
-
- 2jynx [--USE_STACK_MAP]? class-name|class_file > .jx_file
-   (produces a .jx file from a class)
+   (produces a class file from a .jx file)
 
 Options are:
 
-*	--HELP display help message
-*	--VERSION display version information
 *	--SYSIN use SYSIN as input file
 *	--USE_STACK_MAP use user stack map instead of ASM generated
 *	--WARN_UNNECESSARY_LABEL warn if label unreferenced or alias
@@ -46,6 +41,16 @@ Options are:
 *	--ALLOW_CLASS_FORNAME let simple verifier use Class.forName()
 *	--CHECK_METHOD_REFERENCES check that called methods exist (on class path)
 *	--PREPEND_CLASSNAME prepend class name to methods and fields if neccessary
+*	--VALIDATE_ONLY do not output class file
+
+ 2jynx {options}  class-name|class_file > .jx_file
+   (produces a .jx file from a class)
+
+Options are:
+
+*	--SKIP_CODE do not produce code
+*	--SKIP_DEBUG do not produce debug info
+*	--SKIP_FRAMES do not produce stack map
 
 ## Jasmin 1.0
 
@@ -70,7 +75,7 @@ Changes are:
 			10 : Label2
 		.end_array
 ```
-*	invokeinterface ; omit number as will be calculated
+*	invokeinterface n -> invvokeinterface ; omit number as will be calculated
 *	default for .limit is calculated rather than 1
 *	labels are constrained to be a Java Id or if generated start with an @
 *	.interface must be used to declare an interface rather than .class interface
@@ -79,7 +84,7 @@ Changes are:
 		.interface anInterface
 ```
 *	labels in .catch must not be previously defined (ASM)
-*	if .var labels are omitted then from :start_method to :end_method is assumed
+*	if .var labels are omitted then from start_method to end_method is assumed
 *	float constants must be suffixed by 'F' and long constants by 'L'.
 *	hexadecimal constants are supported.
 *	default version is V18(62.0)
@@ -100,6 +105,12 @@ Changes are
 		.version V17 GENERATE_LINE_NUMBERS PREPEND_CLASSNAME
 ```
 *	.deprecated removed; use deprecated pseudo-access_flag
+```
+		; .class public aClass
+		; .deprecated
+		.class public deprecated aClass
+		; etc.
+```
 *	.enum instead of .class enum
 ```
 		; .class enum anEnum ; change to
