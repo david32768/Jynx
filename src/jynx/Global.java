@@ -134,6 +134,10 @@ public class Global {
         global.logger.log(line.toString(),msgType(msg),msg, objs);
     }
 
+    public static void LOG(String linestr, Message msg, Object... objs) {
+        global.logger.log(linestr,msgType(msg),msg, objs);
+    }
+
     public static void LOG(Exception ex) {
         if (OPTION(GlobalOption.__PRINT_STACK_TRACES)) {
             ex.printStackTrace();;

@@ -48,11 +48,11 @@ public class JynxSimpleVerifier extends SimpleVerifier {
         try {
             return super.isSubTypeOf(value, expected);
         } catch (TypeNotPresentException ex) {
-            Type type = value.getType();
-            Type base = expected.getType();
-            if (hints.isSubTypeOf(type, base)) {
+            if (hints.isSubTypeOf(value, expected)) {
                 return true;
             }
+            Type type = value.getType();
+            Type base = expected.getType();
             // "(redundant?) checkcast or hint needed if %s is subtype of %s"
             LOG(M403,type.getInternalName(),base.getInternalName());
             return false;

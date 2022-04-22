@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.objectweb.asm.tree.analysis.BasicValue;
 import org.objectweb.asm.Type;
 
 import static jynx.Message.M241;
@@ -87,9 +88,23 @@ public class TypeHints {
 
     private static final Type OBJECT = Type.getObjectType("java/lang/Object");
     
-    public boolean isSubTypeOf(final Type subtype, final Type basetype) {
-        if (subtype.equals(basetype) || basetype.equals(OBJECT)) {
+    public boolean isSubTypeOf(final BasicValue value, final BasicValue  expected) {
+        Type subtype = value.getType();
+        Type basetype = expected.getType();
+        if (subtype.equals(basetype)) {
             return true;
+        }
+        if (value.isReference() && expected.isReference()) {
+            if (basetype.equals(OBJECT)) {
+                return true;
+            }
+            if (subtype.getSort() == Type.ARRAY && basetype.getSort() == Type.ARRAY) {
+                Type subelement = subtype.getElementType();
+                Type baseelement = basetype.getElementType();
+                if (baseelement.equals(OBJECT) && subelement.getSort() == Type.OBJECT) {
+                    return subtype.getDimensions() >= basetype.getDimensions();
+                }
+            }
         }
         String sub = subtype.getInternalName();
         String base = basetype.getInternalName();

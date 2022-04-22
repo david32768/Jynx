@@ -65,9 +65,19 @@ public class JynxDisassemble {
             LOG(M67,poolsz); // "poolsz = %d"
         }
         ClassNode cn = new ClassNode();
-        cr.accept(cn, ClassReader.EXPAND_FRAMES);
+        int crflag = ClassReader.EXPAND_FRAMES;
+        if (OPTION(GlobalOption.SKIP_CODE)) {
+            crflag |= ClassReader.SKIP_CODE;
+        }
+        if (OPTION(GlobalOption.SKIP_DEBUG)) {
+            crflag |= ClassReader.SKIP_DEBUG;
+        }
+        if (OPTION(GlobalOption.SKIP_FRAMES)) {
+            crflag |= ClassReader.SKIP_FRAMES;
+        }
+        cr.accept(cn, crflag);
         JvmVersion jvmversion = JvmVersion.getInstance(cn.version);
-        if (jvmversion == JvmVersion.V1_6JSR && OPTION(GlobalOption.USE_STACK_MAP)) {
+        if (jvmversion == JvmVersion.V1_6JSR && !OPTION(GlobalOption.SKIP_FRAMES)) {
             jvmversion = JvmVersion.V1_6;
         }
         Global.setJvmVersion(jvmversion);

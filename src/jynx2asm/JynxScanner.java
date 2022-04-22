@@ -14,16 +14,40 @@ import jynx.Directive;
 
 public class JynxScanner implements Iterator<Line> {
 
-    private int linect = 0;
-    private Line line = Line.EMPTY;
+    private int linect;
+    private Line line;
     private boolean reread;
+    private final int precomments;
 
     private final Scanner lines;
 
     public JynxScanner(Scanner lines) {
         this.lines = lines;
+        skipPreComments();
+        this.precomments = Math.max(0,linect - 1);
     }
 
+    public int getPreCommentsCount() {
+        return precomments;
+    }
+
+    private void  skipPreComments() {
+        linect = 0;
+        line = null;
+        String linestr;
+        do {
+            if (!lines.hasNextLine()) {
+                lines.close();
+                return;
+            }
+            linestr = lines.nextLine();
+            ++linect;
+        } while (!linestr.trim().startsWith(".")); // ignore lines until directive
+        line = Line.tokenise(linestr, linect);
+        LOGGER().setLine(line.toString());
+        reread = true;
+    }
+    
     public void skipLinesUntil(Directive enddir) {
         assert enddir.isEndDirective();
         Line current = line;

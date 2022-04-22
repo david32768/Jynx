@@ -80,7 +80,6 @@ public class JynxClass {
         int instct = 0;
         int labct = 0;
         int dirct = 0;
-        int precommentct = 0;
         while (js.hasNext()) {
             try {
                 Line line = js.next();
@@ -89,10 +88,6 @@ public class JynxClass {
                     Token token = line.firstToken();
                     dir = token.asDirective();
                     dirct++;
-                } else if (dirct == 0) {
-                    js.skipTokens();
-                    ++precommentct;
-                    continue;
                 } else {
                     dir = Directive.state_opcode;
                     if (line.isLabel()) {
@@ -116,7 +111,7 @@ public class JynxClass {
             }
         }
         // "instructions = %d labels = %d directives = %d pre_comments = %d"
-        LOG(M111, instct, labct, dirct - 1,precommentct);
+        LOG(M111, instct, labct, dirct - 1,js.getPreCommentsCount());
         // dirct - 1 as .end class is internal
         assert state == State.END_CLASS;
         boolean success = END_MESSAGES(getClassName());

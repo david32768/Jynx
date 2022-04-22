@@ -41,7 +41,7 @@ public class Main {
                 " {options} " + SUFFIX + "_file",
                 "produces a class file from a " + SUFFIX + " file"),
         DISASSEMBLY(Main::a2j,"2jynx",
-                String.format(" [%s]? class-name|class_file > %s_file",USE_STACK_MAP.argName(),SUFFIX),
+                " {options}  class-name|class_file > " + SUFFIX + "_file",
                 "produces a " + SUFFIX + " file from a class"),
         ;
 
@@ -112,6 +112,9 @@ public class Main {
         if (ba == null) {
             return false;
         }
+        if (OPTION(VALIDATE_ONLY)) {
+            return true;
+        }
         String cname = CLASS_NAME();
         int index = cname.lastIndexOf('/');
         String cfname = cname.substring(index + 1);
@@ -122,7 +125,7 @@ public class Main {
         return true;
     }
     
-    public static Optional<String> setOptions(String[] args) {
+    private static Optional<String> setOptions(String[] args, Main.MainOption main) {
         int i = 0;
         String[] remainder = new String[0];
         for (; i < args.length; ++i) {
@@ -134,7 +137,11 @@ public class Main {
                 Optional<GlobalOption> opt = GlobalOption.optArgInstance(argi);
                 if (opt.isPresent()) {
                     GlobalOption option = opt.get();
-                    ADD_OPTION(option);
+                    if (option.isRelevent(main)) {
+                        ADD_OPTION(option);
+                    } else {
+                        LOG(M44,option,main); // "option %s is not relevent for %s"
+                    }
                 } else {
                     LOG(M32,argi); // "%s is not a valid option"
                 }
@@ -165,8 +172,8 @@ public class Main {
         for (MainOption mo:MainOption.values()) {
             System.err.println(mo.usage());
             System.err.format("   (%s)%n%n",mo.longdesc());
+            GlobalOption.print(mo);
         }
-        GlobalOption.print();
     }
 
     private static boolean mainz(String[] args) {
@@ -197,7 +204,7 @@ public class Main {
             LOG(M28,main.extname());
             return false;
         }
-        Optional<String> optname = setOptions(args);
+        Optional<String> optname = setOptions(args,main);
         if (LOGGER().numErrors() != 0) {
             LOG(M3); // "program terminated because of errors"
             appUsage();

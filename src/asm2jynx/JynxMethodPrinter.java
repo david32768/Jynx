@@ -21,9 +21,8 @@ import static jynx.ReservedWord.*;
 import jvm.AccessFlag;
 import jvm.FrameType;
 import jvm.JvmVersion;
-import jynx2asm.LimitValue;
+import jynx.GlobalOption;
 import jynx2asm.MethodDesc;
-import jynx2asm.OwnerNameDesc;
 
 public class JynxMethodPrinter {
 
@@ -105,22 +104,22 @@ public class JynxMethodPrinter {
     
     private void printCode(MethodNode mn, String classname) {
         jvmVersion.checkSupports(Code);
+        if (OPTION(GlobalOption.SKIP_CODE)) {
+            jp.appendComment(GlobalOption.SKIP_CODE).nl();
+            return;
+        }
         MethodDesc md = MethodDesc.of(mn);
         Object[] initstack = FrameType.getInitFrame(classname, md).toArray(new Object[0]);
         Insn2Jynx i2s = new Insn2Jynx(jp,jvmVersion,o2s,initstack);
         printCatchBlocks(mn, i2s);
         printInstructions(mn.instructions, i2s);
         printLocalVariables(mn, i2s);
-        if (mn.maxLocals != LimitValue.Type.locals.defvalue()) {
-            jp.append(dir_limit)
-                .append(res_locals, mn.maxLocals)
-                .nl();
-        }
-        if (mn.maxStack != LimitValue.Type.stack.defvalue()) {
-            jp.append(dir_limit)
-                .append(res_stack, mn.maxStack)
-                .nl();
-        }
+        jp.append(dir_limit)
+            .append(res_locals, mn.maxLocals)
+            .nl();
+        jp.append(dir_limit)
+            .append(res_stack, mn.maxStack)
+            .nl();
     }
     
     public void printMethod(MethodNode mn) {

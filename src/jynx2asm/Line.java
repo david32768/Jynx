@@ -124,7 +124,8 @@ public class Line implements TokenDeque {
                     break;
                 case ENDQUOTE:  // last character was closing quote
                     if (!Character.isWhitespace(c)) {
-                        LOG(M68,c); // "Quoted string followed by '%c' instead of blank"
+                        // "Quoted string followed by '%1$c' instead of blank; blank inserted before '%1$c'"
+                        LOG(line,M68,c);
                         --i;    // reread character
                     }
                     c = TOKEN_SEPARATOR;
@@ -165,7 +166,7 @@ public class Line implements TokenDeque {
     
     public static Line tokenise(String line, int linect) {
         if (line.contains("\n") || line.contains("\r")) {
-            LOG(M43); // "line contains newline or carriage return character"
+            LOG(line,M43); // "line contains newline or carriage return character"
             throw new AssertionError();
         }
         String str = line.trim();

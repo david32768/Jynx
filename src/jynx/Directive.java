@@ -135,7 +135,6 @@ public enum Directive implements JvmVersioned {
     public JvmVersionRange range() {
         return attribute == null?JvmVersionRange.UNLIMITED:attribute.range();
     }
-
     
     private boolean isUniqueWithin() {
         switch(this) {

@@ -444,7 +444,7 @@ public class ClassChecker {
                 .filter(me -> me.getValue().object() == REF_invokeStatic)
                 .forEach(me->{
                     if (!isMethodDefined(me.getKey(), REF_invokeStatic)) {
-                         // "own static method %s not found"
+                         // "own static method %s not found (but may be in super class)"
                         LOG(me.getValue().line(),M251,me.getKey().getName());
                     }
                 });

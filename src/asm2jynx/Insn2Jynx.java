@@ -38,7 +38,6 @@ import jvm.NumType;
 import jvm.Op;
 import jvm.OpArg;
 import jynx.Directive;
-import jynx.GlobalOption;
 import jynx.LogAssertionError;
 import jynx.ReservedWord;
 import jynx2asm.Line;
@@ -299,9 +298,6 @@ public class Insn2Jynx {
             if (!jvmVersion.supports(AttributeName.StackMapTable)) {
                  // "Version %s does not support %s (supported %s)"
                 LOG(M57,jvmVersion,AttributeName.StackMapTable,AttributeName.StackMapTable.range());
-                return;
-            }
-            if (!OPTION(GlobalOption.USE_STACK_MAP)) {
                 return;
             }
             FrameNode fn = (FrameNode) in;
