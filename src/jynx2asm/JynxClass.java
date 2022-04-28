@@ -66,7 +66,7 @@ public class JynxClass {
     public static byte[] getBytes(String default_source, Scanner lines) {
         try {
             Global.resolveAmbiguity(SIMPLE_VERIFIER, BASIC_VERIFIER);
-            JynxClass jclass =  new JynxClass(default_source, new JynxScanner(lines));
+            JynxClass jclass =  new JynxClass(default_source, JynxScanner.getInstance(lines));
             jclass.assemble();
             return jclass.toByteArray();
         } catch (RuntimeException rtex) {
@@ -275,7 +275,7 @@ public class JynxClass {
         if (jcompnode == null) {
             throw new IllegalStateException();
         }
-        jcompnode.visitEnd();
+        jcompnode.visitEnd(jclasshdr);
         jcompnode = null;
         sd = null;
         LOGGER().popContext();

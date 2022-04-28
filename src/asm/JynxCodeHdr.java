@@ -68,7 +68,6 @@ public class JynxCodeHdr implements ContextDependent {
     private int endif;
     
     private final Map<Directive,Line> unique_directives;
-    private final Map<String, Line> unique_attributes;
     
     private JynxCodeHdr(MethodNode mv, JynxScanner js, ClassChecker checker,
             OwnerNameDesc cmd, JynxLabelMap labelmap, Access access, Map<String,JynxOp> opmap) {
@@ -88,7 +87,6 @@ public class JynxCodeHdr implements ContextDependent {
         this.expandMacro = 0;
         this.endif = 0;
         this.unique_directives = new HashMap<>();
-        this.unique_attributes = new HashMap<>();
     }
 
     public static JynxCodeHdr getInstance(MethodNode mv, JynxScanner js, OwnerNameDesc cmd,
@@ -159,7 +157,7 @@ public class JynxCodeHdr implements ContextDependent {
                 visitEndIf();
                 break;
             default:
-                visitCommonDirective(dir, line, js, unique_attributes);
+                visitCommonDirective(dir, line, js);
                 break;
         }
     }

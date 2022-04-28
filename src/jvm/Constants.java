@@ -1,6 +1,7 @@
 package jvm;
 
 import java.util.EnumSet;
+import jynx2asm.MethodDesc;
 
 public enum Constants {
     
@@ -66,6 +67,11 @@ public enum Constants {
     public boolean equalString(String other) {
         return toString().equals(other);
     }
+
+    public MethodDesc methodDesc() {
+        assert str.contains("(");
+        return MethodDesc.getInstance(str);
+    }
     
     @Override
     public String toString() {
@@ -84,4 +90,11 @@ public enum Constants {
 
     public static final EnumSet<Constants> PRIVATE_SERIALIZATION_METHODS
             = EnumSet.of(READ_OBJECT,WRITE_OBJECT,READ_OBJECT_NODATA);
+
+    public static final EnumSet<Constants>  INVALID_COMPONENTS // ()V object methods
+            = EnumSet.of(CLONE,FINALIZE,GETCLASS,HASHCODE,NOTIFY,NOTIFYALL,TOSTRING,WAIT);
+
+    public static boolean isNameIn(String str, EnumSet<Constants> set) {
+        return set.stream().anyMatch(cnst->cnst.name().toLowerCase().equals(str));
+    }
 }

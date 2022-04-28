@@ -82,7 +82,7 @@ public enum Message {
     M75("Method %s failed %s check:%n    %s"),
     M76("unknown handle tag: %d"),
     M77("%s value %d is not in range [%d,%d]"),
-    M78(WARNING,"%s has different signature %s to component %s"),
+    M78("%s has different signature %s to component %s"),
     M79("Trying to read beyond end of file"),
     M80("Bad octal sequence"),
     M81("Directive must be first token but line = %s"),
@@ -141,7 +141,7 @@ public enum Message {
     M134("boolean value is neither Boolean or Integer 0/1: value = %s class = %s"),
     M135(ENDINFO,"for consistency add %s prefix to method name for %s"),
     M136("Extraneous directive %s"),
-    M137("number of Record components %d disagrees with number of component methods %d"),
+    M137("invalid %s description %s %s"),
     M138("%s cannot be used for constant - %s"),
     M139("%s prefix is invalid for %s"),
     M140("reading next token after reaching last"),
@@ -152,7 +152,7 @@ public enum Message {
     M145("Invalid method description %s"),
     M146("constant type = %s not valid in this context"),
     M147(WARNING,"unknown Java version %s - %s used"),
-
+    
     M150("expected equal values for index length = %d numind = %d"),
 
     M152("zero length name"),
@@ -215,7 +215,7 @@ public enum Message {
 
     M212("attempting to load variable %d but current max is %d"),
     M213(WARNING,"label %s defined before use - locals assumed as before last unconditional op"),
-    M214(WARNING,"field %s does not exist in this class but may exist in superclass/superinterface"),
+    M214(WARNING,"field %s %s does not exist in this class but may exist in superclass/superinterface"),
     M215(" %s field %s accessed by %s op %s"),
     M216("frame locals %s incompatible with current locals %s"),
     M217("from label %s is not before to label %s"),
@@ -270,6 +270,7 @@ public enum Message {
     M266("Label %s not defined; used in%n%s"),
     M267("%s has %d simple ops which exceeds maximum of %d"),
     M268("enclosing instance has already been defined"),
+    M269("component %s description %s differs from field description %s"),
     
     M272(WARNING,"Label %s not used - defined in line:%n  %s"),
 

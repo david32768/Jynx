@@ -10,15 +10,12 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.TypePath;
 
-import static jvm.AccessFlag.acc_abstract;
-import static jvm.AccessFlag.acc_native;
-import static jvm.AccessFlag.acc_private;
-import static jvm.AccessFlag.acc_static;
 import static jvm.AttributeName.*;
 import static jvm.Context.METHOD;
 import static jynx.Global.*;
 import static jynx.Message.*;
 
+import jvm.AccessFlag;
 import jvm.Context;
 import jynx.Access;
 import jynx.Directive;
@@ -29,9 +26,8 @@ import jynx2asm.Line;
 import jynx2asm.MethodDesc;
 import jynx2asm.NameDesc;
 import jynx2asm.ops.JynxOp;
-import jynx2asm.ops.JynxOps;
 
-public class JynxMethodNode implements ContextDependent {
+public class JynxMethodNode implements ContextDependent, HasAccessFlags {
 
     private MethodNode mnode;
     private final Line methodLine;
@@ -44,7 +40,6 @@ public class JynxMethodNode implements ContextDependent {
 
     private final MethodAnnotationLists annotationLists;
     private final Map<Directive,Line> unique_directives;
-    private final Map<String, Line> unique_attributes;
 
     private final ClassChecker checker;
     
@@ -58,7 +53,6 @@ public class JynxMethodNode implements ContextDependent {
         this.signature = null;
         this.labelmap = new JynxLabelMap();
         this.unique_directives = new HashMap<>();
-        this.unique_attributes = new HashMap<>();
         this.checker = checker;
     }
 
@@ -115,7 +109,7 @@ public class JynxMethodNode implements ContextDependent {
                 JynxAnnotation.setAnnotation(dir, this, js);
                 break;
             default:
-                visitCommonDirective(dir, line, js,unique_attributes);
+                visitCommonDirective(dir, line, js);
                 break;
         }
     }
@@ -139,33 +133,19 @@ public class JynxMethodNode implements ContextDependent {
         return md;
     }
     
-    public boolean isAbstract() {
-        return accessName.is(acc_abstract);
+    @Override
+    public boolean is(AccessFlag flag) {
+        assert flag.isValid(METHOD);
+        return accessName.is(flag);
     }
 
-    public boolean isNative() {
-        return accessName.is(acc_native);
-    }
-
-    public boolean isStatic() {
-        return accessName.is(acc_static);
-    }
-    
-    public boolean isAbstractOrNative() {
-        return isAbstract() || isNative();
-    }
-
-    public boolean isPrivate() {
-        return accessName.is(acc_private);
-    }
-    
     @Override
     public Context getContext() {
         return Context.METHOD;
     }
 
     private void setThrow(Line line) {
-        if (accessName.isComponent()) {
+        if (isComponent()) {
             LOG(M128,Directive.dir_throws,getName());   // "% directive not allowed for component method %s"
             return;
         }
@@ -176,9 +156,11 @@ public class JynxMethodNode implements ContextDependent {
     @Override
     public void setSignature(Line line) {
         CHECK_SUPPORTS(Signature);
-        String signaturex = line.lastToken().asQuoted();
-        NameDesc.METHOD_SIGNATURE.validate(signaturex);
-        signature = signaturex;
+        signature = line.lastToken().asQuoted();
+        NameDesc.METHOD_SIGNATURE.validate(signature);
+        if (isComponent()) {
+            checker.checkSignature4Method(signature, getName(), getDesc());
+        }
     }
 
     private void visitParameter(Line line) {
@@ -221,9 +203,8 @@ public class JynxMethodNode implements ContextDependent {
         if (mnode == null) {
             endHeader();
         }
-        JynxComponentNode jcn = checker.getComponent4Method(getName(),getDesc());
-        if (jcn != null) {
-            jcn.checkSignature(signature, METHOD);
+        if (signature == null && isComponent()) {
+            checker.checkSignature4Method(signature, getName(), getDesc());
         }
         try {
             mnode.visitEnd();

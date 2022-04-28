@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.TypePath;
 
 import static jvm.AccessFlag.acc_final;
-import static jvm.AccessFlag.acc_private;
 import static jvm.AccessFlag.acc_static;
 import static jvm.AttributeName.*;
 import static jvm.Context.FIELD;
@@ -19,6 +19,7 @@ import static jynx.Message.*;
 import static jynx.ReservedWord.*;
 import static jynx2asm.NameDesc.*;
 
+import jvm.AccessFlag;
 import jvm.ConstType;
 import jvm.Context;
 import jynx.Access;
@@ -28,37 +29,31 @@ import jynx2asm.JynxScanner;
 import jynx2asm.Line;
 import jynx2asm.Token;
 
-public class JynxFieldNode implements ContextDependent {
+public class JynxFieldNode implements ContextDependent, HasAccessFlags {
 
     private final JynxClassHdr jclasshdr;
     private final String name;
     private final String desc;
     private String signature;
-    private final Object value;
+    private final Optional<Object> value;
     private final List<AcceptsVisitor> annotations;
     private final Line line;
     private final Access accessName;
     private final ClassChecker checker;
     
     private final Map<Directive,Line> unique_directives;
-    private final Map<String, Line> unique_attributes;
 
     private JynxFieldNode(JynxClassHdr jclasshdr, Line line, Access accessname,
-            String name, String desc, String signature, Object value,ClassChecker checker) {
+            String name, String desc, Optional<Object> value,ClassChecker checker) {
         this.jclasshdr = jclasshdr;
         this.checker = checker;
         this.accessName = accessname;
         this.line = line;
         this.name = name;
         this.desc = desc;
-        this.signature = signature;
         this.value = value;
         this.annotations = new ArrayList<>();
         this.unique_directives = new HashMap<>();
-        this.unique_attributes = new HashMap<>();
-        if (this.signature != null) {
-            unique_directives.put(Directive.dir_signature, this.line);
-        }
     }
 
     public static JynxFieldNode getInstance(JynxClassHdr jclasshdr, Line line, ClassChecker checker) {
@@ -66,7 +61,6 @@ public class JynxFieldNode implements ContextDependent {
         String name = accessname.getName();
         String desc = line.nextToken().asString();
         FIELD_DESC.validate(desc);
-        String signature = line.optAfter(res_signature);
         Token token = line.nextToken();
         Object value = null;
         if (token != Token.END_TOKEN) {
@@ -90,12 +84,9 @@ public class JynxFieldNode implements ContextDependent {
         } else {
             FIELD_NAME.validate(accessname.getName());
         }
-        if (signature != null) {
-            CHECK_SUPPORTS(Signature);
-            FIELD_SIGNATURE.validate(signature);
-        }
         accessname.check4Field();
-        JynxFieldNode jfn = new JynxFieldNode(jclasshdr, line, accessname, name, desc, signature, value, checker);
+        Optional<Object> optvalue = value==null?Optional.empty():Optional.of(value);
+        JynxFieldNode jfn = new JynxFieldNode(jclasshdr, line, accessname, name, desc, optvalue, checker);
         checker.checkField(jfn);
         return jfn;
     }
@@ -112,12 +103,10 @@ public class JynxFieldNode implements ContextDependent {
         return desc;
     }
     
-    public boolean isInstanceField() {
-        return !accessName.is(acc_static);
-    }
-
-    public boolean isPrivate() {
-        return accessName.is(acc_private);
+    @Override
+    public boolean is(AccessFlag flag) {
+        assert flag.isValid(FIELD);
+        return accessName.is(flag);
     }
 
     @Override
@@ -131,16 +120,18 @@ public class JynxFieldNode implements ContextDependent {
         dir.checkUnique(unique_directives, linex);
         switch (dir) {
             default:
-                visitCommonDirective(dir, linex, js,unique_attributes);
+                visitCommonDirective(dir, linex, js);
                 break;
         }
     }
     
     @Override
     public void setSignature(Line line) {
-        String signaturex = line.nextToken().asQuoted();
-        FIELD_SIGNATURE.validate(signaturex);
-        this.signature = signaturex;
+        signature = line.nextToken().asQuoted();
+        FIELD_SIGNATURE.validate(signature);
+        if (isComponent()) {
+            checker.checkSignature4Field(signature, name);
+        }
     }
 
     @Override
@@ -158,12 +149,11 @@ public class JynxFieldNode implements ContextDependent {
     }
 
     public void visitEnd() {
-        JynxComponentNode jcn = checker.getComponent4Field(name);
-        if (jcn != null) {
-            jcn.checkSignature(signature, FIELD);
+        if (signature == null && isComponent()) {
+            checker.checkSignature4Field(signature, name);
         }
         int access = accessName.getAccess();
-        FieldVisitor fv = jclasshdr.visitField(access, name, desc, signature, value);
+        FieldVisitor fv = jclasshdr.visitField(access, name, desc, signature, value.orElse(null));
         annotations.stream()
                 .forEach(jan -> jan.accept(fv));
     }

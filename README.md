@@ -129,16 +129,23 @@ Changes are
 		; also .inner_interface etc.
 ```
 *	.enclosing method -> .enclosing_method or .enclosing_class
-*	.package
-```
-		; .class interface abstract aPackage/package-info ; change to
-		.package aPackage
-```
 *	invokedynamic boot method and parameters must be specified
 ```
 		; (a boot method parameter may be dynamic) 
 		; invokedynamic { name desc  boot_method_and_parameters }
 ```
+*	An interface method name should be preceded with a '@' in invoke ops and handles
+'''
+		; invokestatic anInterfaceMethod
+		invokestatic @anInterfaceMethod
+'''
+*	if signature of a field is present must use .signature directive (NOT appear in .field directive) 
+*	.package
+```
+		; .class interface abstract aPackage/package-info ; change to
+		.package aPackage
+```
+
 ### ANNOTATIONS
 
 *	.X_annotation instead of .annotation X e.g. .annotation visible -> .visible_annotation

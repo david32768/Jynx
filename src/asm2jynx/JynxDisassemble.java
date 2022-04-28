@@ -195,20 +195,18 @@ public class JynxDisassemble {
             jp.append(dir_component)
                     .append(rcn.name)
                     .append(rcn.descriptor)
-                    .append(res_signature,rcn.signature)
                     .nl();
-            jp.incrDepth();
             if(isPresent(rcn.invisibleAnnotations)
                     || isPresent(rcn.visibleAnnotations)
                     || isPresent(rcn.visibleTypeAnnotations)
                     || isPresent(rcn.invisibleTypeAnnotations)
-                    || isPresent(rcn.attrs)
                     ) {
                 jp.incrDepth();
-                annotator.printAnnotations(rcn.visibleAnnotations,rcn.invisibleAnnotations);
-                annotator.printTypeAnnotations(rcn.visibleTypeAnnotations, rcn.invisibleTypeAnnotations);
-                jp.appendDirective(end_component).nl();
+                    jp.printDirective(dir_signature, rcn.signature);
+                    annotator.printAnnotations(rcn.visibleAnnotations,rcn.invisibleAnnotations);
+                    annotator.printTypeAnnotations(rcn.visibleTypeAnnotations, rcn.invisibleTypeAnnotations);
                 jp.decrDepth();
+                jp.appendDirective(end_component).nl();
             }
         }
     }
@@ -273,18 +271,14 @@ public class JynxDisassemble {
     private void printField(FieldNode fn) {
         jp.blankline();
         LOGGER().setLine("field " + fn.name);
+        boolean annotated = isPresent(fn.visibleAnnotations) || isPresent(fn.invisibleAnnotations)
+                || isPresent(fn.visibleTypeAnnotations) || isPresent(fn.invisibleTypeAnnotations);
+        boolean endrequired = annotated || fn.signature != null;
+
         EnumSet<AccessFlag> accflags = AccessFlag.getEnumSet(fn.access, FIELD,jvmVersion);
         jp.appendDirective(dir_field)
                 .append(accflags, fn.name)
                 .appendNonNull(fn.desc);
-        boolean annotated = fn.visibleAnnotations != null || fn.invisibleAnnotations != null
-                || fn.visibleTypeAnnotations != null || fn.invisibleTypeAnnotations != null;
-        boolean endrequired = annotated;
-        if (endrequired) {
-            jp.incrDepth();
-        } else {
-            jp.append(res_signature, fn.signature);
-        }
         if (fn.value != null) {
             jvmVersion.checkSupports(ConstantValue);
             ConstType ct = ConstType.getFromDesc(fn.desc,FIELD);
@@ -292,17 +286,17 @@ public class JynxDisassemble {
         }
         String line = jp.nlstr();
         LOGGER().setLine(line);
-        LOGGER().pushContext();
-        if (annotated) {
-            jp.printDirective(dir_signature,fn.signature);
-        }
-        annotator.printAnnotations(fn.visibleAnnotations, fn.invisibleAnnotations);
-        annotator.printTypeAnnotations(fn.visibleTypeAnnotations, fn.invisibleTypeAnnotations);
+
         if (endrequired) {
+            LOGGER().pushContext();
+            jp.incrDepth();
+                jp.printDirective(dir_signature,fn.signature);
+                annotator.printAnnotations(fn.visibleAnnotations, fn.invisibleAnnotations);
+                annotator.printTypeAnnotations(fn.visibleTypeAnnotations, fn.invisibleTypeAnnotations);
             jp.decrDepth();
             jp.appendDirective(end_field).nl();
+            LOGGER().popContext();
         }
-        LOGGER().popContext();
     }
 
     private void printArray(List<String> strings) {

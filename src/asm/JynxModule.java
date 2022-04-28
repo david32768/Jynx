@@ -42,6 +42,7 @@ public class JynxModule {
     private final Set<String> services;
 
     private boolean javaBase;
+    private boolean packagesVisited;
     private final Map<Directive,Line> unique_directives;
 
 
@@ -53,6 +54,7 @@ public class JynxModule {
         this.providerUse = new HashMap<>();
         this.services = new HashSet<>();
         this.javaBase = false;
+        this.packagesVisited = false;
         this.unique_directives = new HashMap<>();
     }
     
@@ -145,6 +147,7 @@ public class JynxModule {
     }
     
     private void visitPackages(Line line) {
+        packagesVisited = true;
         String[] packages = arrayString(Directive.dir_packages,line, PACKAGE_NAME);
         for (String pkg:packages) {
             checkPackage(pkg, Directive.dir_packages);
@@ -245,14 +248,16 @@ public class JynxModule {
             modNode.visitRequire(Constants.JAVA_BASE_MODULE.toString(), AccessFlag.acc_mandated.getAccessFlag(), null);
         }
         CHECK_SUPPORTS(Feature.modules);
-        for (Map.Entry<String,EnumSet<Directive>> me:packageUse.entrySet()) {
-            String pkg = me.getKey();
-            EnumSet<Directive> dirs = me.getValue();
-            if (!dirs.contains(Directive.dir_packages)) {
-                for (Directive dir:dirs) {
-                    LOG(M169,dir,Directive.dir_packages); // "package(s) used in %s are not in %s"
+        if (packagesVisited) {
+            for (Map.Entry<String,EnumSet<Directive>> me:packageUse.entrySet()) {
+                String pkg = me.getKey();
+                EnumSet<Directive> dirs = me.getValue();
+                if (!dirs.contains(Directive.dir_packages)) {
+                    for (Directive dir:dirs) {
+                        LOG(M169,dir,Directive.dir_packages); // "package(s) used in %s are not in %s"
+                    }
+                    modNode.visitPackage(pkg);
                 }
-                modNode.visitPackage(pkg);
             }
         }
         modNode.visitEnd();

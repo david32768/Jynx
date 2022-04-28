@@ -5,15 +5,15 @@ import java.lang.invoke.MethodType;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.TreeMap;
 
 import org.objectweb.asm.Handle;
 
 import static jvm.AccessFlag.acc_final;
+import static jvm.Context.FIELD;
+import static jvm.Context.METHOD;
 import static jvm.HandleType.*;
 import static jynx.ClassType.RECORD;
 import static jynx.Global.*;
@@ -38,14 +38,12 @@ import jynx.GlobalOption;
 public class ClassChecker {
     
     private final Map<String,JynxComponentNode> components = new HashMap<>();
-    private final Map<String,JynxComponentNode> componentMethod = new HashMap<>();
 
     private final Map<MethodDesc,ObjectLine<HandleType>> ownMethods;
     private final Map<OwnerNameDesc,ObjectLine<HandleType>> ownMethodsUsed;
     
-    private int methodComponentCt = 0;
     private int fieldComponentCt = 0;
-    private final Set<JynxFieldNode> instanceFields = new HashSet<>();
+    private int instanceFieldCt = 0;
     private final Map<String,JynxFieldNode> fields = new HashMap<>();
 
     private final String className;
@@ -62,23 +60,24 @@ public class ClassChecker {
         this.ownMethods = new TreeMap<>(); // sorted for reproducibilty
     }
 
-    public final static MethodDesc EQUALS_METHOD = MethodDesc.getInstance(Constants.EQUALS.toString());
-    public final static MethodDesc TOSTRING_METHOD = MethodDesc.getInstance(Constants.TOSTRING.toString());
-    public final static MethodDesc HASHCODE_METHOD = MethodDesc.getInstance(Constants.HASHCODE.toString());
+    public final static MethodDesc EQUALS_METHOD = Constants.EQUALS.methodDesc();
+    public final static MethodDesc TOSTRING_METHOD = Constants.TOSTRING.methodDesc();
+    public final static MethodDesc HASHCODE_METHOD = Constants.HASHCODE.methodDesc();
 
-    public final static MethodDesc FINALIZE_METHOD = MethodDesc.getInstance(Constants.FINALIZE.toString());
+    public final static MethodDesc FINALIZE_METHOD = Constants.FINALIZE.methodDesc();
 
     public final static Map<String,MethodDesc> SERIAL_METHODS;
     
     static {
         SERIAL_METHODS = new HashMap<>();
         for (Constants method: Constants.PRIVATE_SERIALIZATION_METHODS) {
-            MethodDesc md = MethodDesc.getInstance(method.toString());
+            MethodDesc md = method.methodDesc();
             SERIAL_METHODS.put(md.getName(),md);
         }
     }
     
-    public static ClassChecker getInstance(String cname, Access classAccess, ClassType classType, JvmVersion jvmversion) {
+    public static ClassChecker getInstance(String cname, Access classAccess,
+            ClassType classType, JvmVersion jvmversion) {
         ClassChecker checker = new ClassChecker(cname, classAccess, classType, jvmversion);
         if (classType == ClassType.ENUM) { // final methods in java/lang/Enum
             ObjectLine<HandleType> virtual = new ObjectLine<>(REF_invokeVirtual, Line.EMPTY);
@@ -101,7 +100,7 @@ public class ClassChecker {
     }
     
     public void setSuper(String csuper) {
-        if (classType == ClassType.ENUM && csuper.equals(Constants.ENUM_SUPER.toString())) {
+        if (classType == ClassType.ENUM && Constants.ENUM_SUPER.equalString(csuper)) {
             ObjectLine<HandleType> objline = new ObjectLine<>(REF_invokeStatic,Line.EMPTY);
             String str = String.format(Constants.VALUES_FORMAT.toString(),className);
             OwnerNameDesc values = OwnerNameDesc.getOwnerMethodDescAndCheck(str,REF_invokeStatic);
@@ -219,9 +218,7 @@ public class ClassChecker {
     public void checkComponent(JynxComponentNode jcn) {
         String compname = jcn.getName();
         JynxComponentNode previous = components.put(compname,jcn);
-        if (previous == null) {
-            componentMethod.put(jcn.getMethodName(), jcn);
-        } else {
+        if (previous != null) {
             // "duplicate %s: %s already defined at line %d"
             LOG(M40,Directive.dir_component,compname,previous.getLine().getLinect());
         }
@@ -258,10 +255,6 @@ public class ClassChecker {
                 LOG(M40,Directive.dir_method,md,previous.line().getLinect());
             }
         }
-        JynxComponentNode jcomp = getComponent4Method(jmn.getName(), jmn.getDesc());
-        if (jcomp != null) {
-            ++methodComponentCt;
-        }
         if (classAccess.is(acc_final) && jmn.isAbstract()) {
             LOG(M59,jmn.getName());  // "method %s cannot be abstract in final class"
         }
@@ -277,34 +270,44 @@ public class ClassChecker {
         }
    }    
     
-    public JynxComponentNode getComponent4Method(String mname, String mdesc) {
-        return componentMethod.get(mname + mdesc);
+    private JynxComponentNode getComponent4Method(String mname, String mdesc) {
+        JynxComponentNode jcn = components.get(mname);
+        if (jcn != null && jcn.getDesc().equals(mdesc)) {
+            return jcn;
+        }
+        return null;
     }
     
     public boolean isComponent(String name,Context context) {
         if (context == Context.METHOD) {
-            return componentMethod.containsKey(name);
+            MethodDesc md = MethodDesc.getInstance(name);
+            JynxComponentNode jcn = getComponent4Method(md.getName(), md.getDesc());
+            return jcn != null;
         } else if (context == Context.FIELD) {
             return components.containsKey(name);
         }
         return false;
     }
     
-    public JynxComponentNode getComponent4Field(String mname) {
+    private JynxComponentNode getComponent4Field(String mname) {
         return components.get(mname);
     }
     
-    
     public void checkField(JynxFieldNode jfn) {
-        String namedesc = jfn.getName() + jfn.getDesc();
-        JynxFieldNode previous = fields.put(namedesc,jfn);
+        String name = jfn.getName();
+        JynxFieldNode previous = fields.put(name,jfn);
         if (previous != null) {
             // "duplicate %s: %s %s already defined at line %d"
-            LOG(M55,Directive.dir_field,jfn.getName(),jfn.getDesc(),previous.getLine().getLinect());
+            LOG(M55,Directive.dir_field,jfn.getName(),"",previous.getLine().getLinect());
         }
-        if (jfn.isInstanceField()) {
-            instanceFields.add(jfn);
+        if (!jfn.isStatic()) {
+            ++instanceFieldCt;
             if (classType == RECORD) {
+                JynxComponentNode jcn = components.get(name);
+                if (jcn != null && !jcn.getDesc().equals(jfn.getDesc())) {
+                    // "component %s description %s differs from field description %s"
+                    LOG(M269,name,jcn.getDesc(),jfn.getDesc());
+                }
                 ++fieldComponentCt;
             }
         }
@@ -314,16 +317,26 @@ public class ClassChecker {
         if (fd.getOwner().equals(className)) {
             AsmOp asmop = jvmop.getBase();
             boolean instance = asmop == AsmOp.asm_getfield || asmop == AsmOp.asm_putfield;
-            JynxFieldNode jfn = fields.get(fd.getNameDesc());
-            if (jfn == null) {
-                // "field %s does not exist in this class but may exist in superclass/superinterface"
-                LOG(M214,fd.getName());
-            } else if (jfn.isInstanceField() ^ instance) {
-                String fieldtype = jfn.isInstanceField()?"instance":"static";
+            JynxFieldNode jfn = fields.get(fd.getName());
+            if (jfn == null || !fd.getDesc().equals(jfn.getDesc())) {
+                // "field %s %s does not exist in this class but may exist in superclass/superinterface"
+                LOG(M214,fd.getName(), fd.getDesc());
+            } else if (jfn.isStatic() == instance) {
+                String fieldtype = jfn.isStatic()?"static":"instance";
                 String optype = instance?"instance":"static";
                 LOG(M215,fieldtype,fd.getName(),optype,jvmop); // " %s field %s accessed by %s op %s"
             }
         }
+    }
+    
+    public void checkSignature4Method(String signature, String name, String desc) {
+        JynxComponentNode jcn = getComponent4Method(name,desc);
+        jcn.checkSignature(signature, METHOD);
+    }
+    
+    public void checkSignature4Field(String signature, String name) {
+        JynxComponentNode jcn = getComponent4Field(name);
+        jcn.checkSignature(signature, FIELD);
     }
     
     private void mustHaveVirtualMethod(MethodDesc namedesc) {
@@ -353,9 +366,8 @@ public class ClassChecker {
             // "number of Record components %d disagrees with number of instance fields %d"
             LOG(M48,components.size(),fieldComponentCt);
         }
-        if (methodComponentCt != components.size()) {
-            // "number of Record components %d disagrees with number of component methods %d"
-            LOG(M137,components.size(),methodComponentCt);
+        for (JynxComponentNode jcn : components.values()) {
+            mustHaveVirtualMethod(jcn.getMethodDesc());
         }
         mustHaveVirtualMethod(TOSTRING_METHOD);
         mustHaveVirtualMethod(HASHCODE_METHOD);
@@ -371,7 +383,7 @@ public class ClassChecker {
             .filter(ol-> ol.object() == REF_invokeVirtual)
             .filter(ol->ol.line() != Line.EMPTY)
             .count();
-        if (!init && (!instanceFields.isEmpty() || instanceMethodCoumt != 0)) {
+        if (!init && (instanceFieldCt != 0 || instanceMethodCoumt != 0)) {
             LOG(M156,NameDesc.CLASS_INIT_NAME); // "instance variables or methods with no %s method"
         }
         boolean equals = ownMethods.keySet().stream()

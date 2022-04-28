@@ -17,23 +17,30 @@ public class JynxScanner implements Iterator<Line> {
     private int linect;
     private Line line;
     private boolean reread;
-    private final int precomments;
+    private int precomments;
 
     private final Scanner lines;
 
-    public JynxScanner(Scanner lines) {
+    private JynxScanner(Scanner lines) {
         this.lines = lines;
-        skipPreComments();
-        this.precomments = Math.max(0,linect - 1);
+
+        this.linect = 0;
+        this.line = null;
+        this.reread = false;
+        this.precomments = 0;
     }
 
     public int getPreCommentsCount() {
         return precomments;
     }
 
+    public static JynxScanner getInstance(Scanner lines) {
+        JynxScanner js = new JynxScanner(lines);
+        js.skipPreComments();
+        return js;
+    }
+    
     private void  skipPreComments() {
-        linect = 0;
-        line = null;
         String linestr;
         do {
             if (!lines.hasNextLine()) {
@@ -42,19 +49,12 @@ public class JynxScanner implements Iterator<Line> {
             }
             linestr = lines.nextLine();
             ++linect;
+            ++precomments;
         } while (!linestr.trim().startsWith(".")); // ignore lines until directive
+        --precomments;
         line = Line.tokenise(linestr, linect);
         LOGGER().setLine(line.toString());
         reread = true;
-    }
-    
-    public void skipLinesUntil(Directive enddir) {
-        assert enddir.isEndDirective();
-        Line current = line;
-        while(nextLineNotEnd(enddir) != null) {
-            skipTokens();
-        }
-        LOGGER().setLine(current.toString());
     }
     
     public Line getLine() {

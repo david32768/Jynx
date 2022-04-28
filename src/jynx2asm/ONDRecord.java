@@ -93,8 +93,9 @@ public class ONDRecord {
     public boolean hasParameters() {
         return desc != null && !desc.isEmpty() && desc.charAt(0) == LEFT_BRACKET;
     }
+    
     public String nameDesc() {
-        assert desc != null;
+        assert desc != null && desc.charAt(0) == '(';
         return name + desc;
     }
     

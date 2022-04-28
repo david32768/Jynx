@@ -208,8 +208,8 @@ public enum AsmOp implements JvmOp {
         boolean ok = true;
         String last = "";
         for (AsmOp op:values()) {
-            assert op.type == STACK ^ op.ctype != 'S';
-            assert op.type == OPERAND ^ op.ctype != 'O';
+            assert (op.type == STACK) == (op.ctype == 'S');
+            assert (op.type == OPERAND) == (op.ctype == 'O');
             assert op.type != STORE || op.args == arg_var;
             assert op.name().compareTo(last) > 0:String.format("%s %s",op,last);
             int opcode = op.opcode;

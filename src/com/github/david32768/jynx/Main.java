@@ -24,8 +24,8 @@ public class Main {
     private final static String SUFFIX = ".jx";
 
     private final static int JYNX_VERSION = 0;
-    private final static int JYNX_RELEASE = 10;
-    private final static int JYNX_BUILD = 12;
+    private final static int JYNX_RELEASE = 11;
+    private final static int JYNX_BUILD = 14;
     
     private static String version() {
         return String.format("%d+%d-%d",JYNX_VERSION,JYNX_RELEASE,JYNX_BUILD);
@@ -83,7 +83,7 @@ public class Main {
 
 
     private static boolean j2a(Optional<String> optfname) {
-        if (!(optfname.isPresent() ^ OPTION(SYSIN))) {
+        if (optfname.isPresent() == OPTION(SYSIN)) {
             LOG(M222,SYSIN); // "either option %s is specified or file name is present but not both"
             return false;
         }

@@ -45,8 +45,8 @@ public class Access {
         return accflags.contains(af);
     }
     
-    public boolean isComponent() {
-        return accflags.contains(xxx_component);
+    private boolean isComponent() {
+        return is(xxx_component);
     }
 
     public int getAccess() {
@@ -89,6 +89,7 @@ public class Access {
         boolean valid = checkCount(ct -> ct <= 1, flags);
         if (!valid) {
             LOG(M114,access2string(flags));  // "Requires at most one of {%s} specified"
+            accflags.add(flags[0]);
         }
     }
 
@@ -154,27 +155,25 @@ public class Access {
     // Field - Table 4.5A
     public void check4Field() {
         checkValid(FIELD,dir_field);
+        mostOneOf(acc_final, acc_volatile);
         switch (classType) {
             case ANNOTATION_CLASS:
             case INTERFACE:
                 allOf(acc_public, acc_static, acc_final);
-                noneOf(acc_volatile, acc_transient, acc_enum, acc_mandated);
+                noneOf(acc_volatile, acc_transient, acc_enum);
                 break;
             case RECORD:
                 if (isComponent()) {
                     allOf(acc_private, acc_final);
-                    noneOf(acc_static);
+                    noneOf(acc_static,acc_volatile,acc_transient,acc_enum);
                 } else {
-                    mostOneOf(acc_final, acc_volatile);
                     allOf(acc_static);
                     noneOf(acc_enum);
                 }
                 break;
             case ENUM:
-                mostOneOf(acc_final, acc_volatile);
                 break;
             case BASIC:
-                mostOneOf(acc_final, acc_volatile);
                 noneOf(acc_enum);
                 break;
             default:

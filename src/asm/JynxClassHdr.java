@@ -50,7 +50,7 @@ import jynx2asm.OwnerNameDesc;
 import jynx2asm.TokenArray;
 import jynx2asm.TypeHints;
 
-public class JynxClassHdr implements ContextDependent {
+public class JynxClassHdr implements ContextDependent, HasAccessFlags {
 
     private final ClassVisitor cv;
     private final JynxClassWriter cw;
@@ -83,7 +83,6 @@ public class JynxClassHdr implements ContextDependent {
     private VerifierFactory verifierFactory;
     
     private final Map<Directive,Line> unique_directives;
-    private final Map<String, Line> unique_attributes;
     private final TypeHints hints;
 
     private JynxClassHdr(int cwflags, JvmVersion version, String source,
@@ -107,7 +106,6 @@ public class JynxClassHdr implements ContextDependent {
         this.outer = null;
         this.host = null;
         this.unique_directives = new HashMap<>();
-        this.unique_attributes = new HashMap<>();
         LOGGER().pushContext();
     }
     
@@ -184,7 +182,7 @@ public class JynxClassHdr implements ContextDependent {
                 setHints(js,line);
                 break;
             default:
-                visitCommonDirective(dir, line, js,unique_attributes);
+                visitCommonDirective(dir, line, js);
                 break;
         }
     }
@@ -199,8 +197,10 @@ public class JynxClassHdr implements ContextDependent {
         return ba;
     }
 
-    public boolean isFinal() {
-        return accessName.is(acc_final);
+    @Override
+    public boolean is(AccessFlag flag) {
+        assert flag.isValid(Context.CLASS);
+        return accessName.is(flag);
     }    
 
     @Override
@@ -476,7 +476,7 @@ public class JynxClassHdr implements ContextDependent {
     }
     
     public JynxComponentNode getJynxComponentNode(Line line) {
-        JynxComponentNode jcn = JynxComponentNode.getInstance(this,line,checker);
+        JynxComponentNode jcn = JynxComponentNode.getInstance(line,checker);
         return jcn;
     }
     

@@ -1,7 +1,6 @@
 package asm;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,65 +13,51 @@ import org.objectweb.asm.TypePath;
 import static jynx.ClassType.RECORD;
 import static jynx.Global.*;
 import static jynx.Message.*;
-import static jynx.ReservedWord.*;
 import static jynx2asm.NameDesc.*;
 
+import jvm.Constants;
 import jvm.Context;
 import jynx.ClassType;
 import jynx.Directive;
 import jynx2asm.ClassChecker;
+import jynx2asm.FieldDesc;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
+import jynx2asm.MethodDesc;
 
 public class JynxComponentNode implements ContextDependent {
 
-    private final JynxClassHdr jclasshdr;
     private final Line line;
     private final List<AcceptsVisitor> annotations;
-    private final String name;
-    private final String desc;
+    private final FieldDesc compfd;
+    private final MethodDesc compmd;
     private String signature;
     private boolean endVisited;
    
     private final Map<Directive,Line> unique_directives;
-    private final Map<String, Line> unique_attributes;
 
-    private JynxComponentNode(JynxClassHdr jclasshdr, Line line,
-            String name, String desc, String signature) {
-        this.jclasshdr = jclasshdr;
+    private JynxComponentNode(Line line, FieldDesc compfd, MethodDesc compmd) {
         this.annotations = new ArrayList<>();
-        this.name = name;
-        this.desc = desc;
+        this.compfd = compfd;
+        this.compmd = compmd;
         this.line = line;
-        this.signature = signature;
         this.endVisited = false;
         this.unique_directives = new HashMap<>();
-        this.unique_attributes = new HashMap<>();
-        if (this.signature != null) {
-            unique_directives.put(Directive.dir_signature, this.line);
-        }
     }
-    
-    private static final List<String> INVALID_NAMES = Arrays.asList(
-            new String[]{"clone","finalize","getClass","hashCode","notify","notifAll","toString","wait"});
-    
-    public static JynxComponentNode getInstance(JynxClassHdr jclasshdr, Line line, ClassChecker checker) {
+
+    public static JynxComponentNode getInstance(Line line, ClassChecker checker) {
         ClassType classtype = checker.getClassType();
         if (classtype != RECORD) {
             LOG(M41);    // "component can only appear in a record"
         }
         String name = line.nextToken().asName();
         String descriptor = line.nextToken().asString();
-        FIELD_NAME.validate(name);
-        if (INVALID_NAMES.contains(name)) {
-            LOG(M47,name);   // "Invalid component name - %s"
+        FieldDesc compfd = FieldDesc.getInstance(name, descriptor);
+        MethodDesc compmd = MethodDesc.getInstance(compfd.getName() + "()" + compfd.getDesc());
+        if (Constants.isNameIn(compmd.getName(),Constants.INVALID_COMPONENTS)) {
+            LOG(M47,compfd.getName());   // "Invalid component name - %s"
         }
-        FIELD_DESC.validate(descriptor);
-        String signature = line.optAfter(res_signature);
-        if (signature != null) {
-            FIELD_SIGNATURE.validate(signature);
-        }
-        JynxComponentNode jcn = new JynxComponentNode(jclasshdr,line,name, descriptor, signature);
+        JynxComponentNode jcn = new JynxComponentNode(line, compfd, compmd);
         checker.checkComponent(jcn);
         return jcn;
     }
@@ -87,7 +72,7 @@ public class JynxComponentNode implements ContextDependent {
         dir.checkUnique(unique_directives, linex);
         switch (dir) {
             default:
-                visitCommonDirective(dir, linex, js,unique_attributes);
+                visitCommonDirective(dir, linex, js);
                 break;
         }
     }
@@ -105,13 +90,21 @@ public class JynxComponentNode implements ContextDependent {
     }
     
     public String getName() {
-        return name;
-    }
-    
-    public String getMethodName() {
-        return name + "()" + desc;
+        return compfd.getName();
     }
 
+    public String getDesc() {
+        return compfd.getDesc();
+    }
+    
+    public FieldDesc getFieldDesc() {
+        return compfd;
+    }
+
+    public MethodDesc getMethodDesc() {
+        return compmd;
+    }
+    
     public void checkSignature(String fsignature, Context context) {
         String signaturex = getSignature(context);
         if (!Objects.equals(fsignature, signaturex)) {
@@ -149,8 +142,9 @@ public class JynxComponentNode implements ContextDependent {
         return tan;
     }
 
-    public void visitEnd() {
-        RecordComponentVisitor rcv = jclasshdr.visitRecordComponent(name, desc, signature);
+    public void visitEnd(JynxClassHdr jclasshdr) {
+        RecordComponentVisitor rcv;
+        rcv = jclasshdr.visitRecordComponent(compfd.getName(), compfd.getDesc(), signature);
         annotations.stream()
                 .forEach(jan -> jan.accept(rcv));
         rcv.visitEnd();
@@ -159,7 +153,7 @@ public class JynxComponentNode implements ContextDependent {
     
     @Override
     public String toString() {
-        return String.format("[%s %s %s]",name,desc,signature);
+        return String.format("[%s %s %s]",compfd.getName(), compfd.getDesc(),signature);
     }
     
 }

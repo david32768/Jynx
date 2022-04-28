@@ -42,7 +42,7 @@ public interface ContextDependent {
         throw new LogIllegalStateException(M42,Directive.dir_parameter);  // "%s invalid in context"
     }
     
-    public default void visitCommonDirective(Directive dir, Line line, JynxScanner js, Map<String, Line> unique_attributes) {
+    public default void visitCommonDirective(Directive dir, Line line, JynxScanner js) {
         switch(dir) {
             case dir_signature:
                 setSignature(line);

@@ -59,7 +59,7 @@ public enum AttributeName implements JvmVersioned {
         this.where = where;
         this.type = type;
         this.entries = entries;
-        assert type == VARIABLE ^ entries != null;
+        assert (type == VARIABLE) == (entries == null);
     }
 
 
