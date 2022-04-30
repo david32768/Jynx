@@ -8,25 +8,31 @@ import jynx2asm.JynxClass;
 
 public enum State {
     
+    // if one state refers to another, the method associated with other must support a null directive
+    
+    END_METHOD(JynxClass::endMethod),
+    CODE(JynxClass::setCode,END_METHOD),
+
     END_CLASS(JynxClass::endClass),
     END_CLASSHDR(JynxClass::endHeader),
     END_COMPONENT(JynxClass::endComponent),
     END_FIELD(JynxClass::endField),
-    END_METHOD(JynxClass::endMethod),
     END_MODULEHDR(JynxClass::endHeader),
-    END_START(JynxClass::defaultVersion),
+    END_START(JynxClass::defaultVersion), 
     END_PACKAGEHDR(JynxClass::endHeader),
+    END_CATCH(JynxClass::endCatch, CODE),
 
     COMPONENT_BLOCK(null,END_COMPONENT),
     FIELD_BLOCK(null,END_FIELD),
-    METHOD_BLOCK(JynxClass::setMethod),
+    METHOD_BLOCK(JynxClass::setMethod,END_METHOD),
     START_BLOCK(JynxClass::setStart),
+    CATCH_BLOCK(JynxClass::setCatch,END_CATCH),
 
     START(null,END_START),
     CLASSHDR(JynxClass::setClass, END_CLASSHDR),
     COMPONENT(JynxClass::setComponent,COMPONENT_BLOCK),
     FIELD(JynxClass::setField,FIELD_BLOCK),
-    CODE(JynxClass::setCode),
+    CATCH(JynxClass::setCode,CODE),
     MODULEHDR(JynxClass::setClass, END_MODULEHDR),
     MODULE(JynxClass::setModule),
     PACKAGEHDR(JynxClass::setClass, END_PACKAGEHDR),
@@ -49,11 +55,10 @@ public enum State {
     }
 
     
-    private State changeStateTo(JynxClass jc, Directive dir) {
+    private void changeStateTo(JynxClass jc, Directive dir) {
         if (dirfn != null) {
             dirfn.accept(jc,dir);
         }
-        return this;
     }
 
     public State changeToValidState(JynxClass jc, EnumSet<State> before) {
@@ -63,10 +68,11 @@ public enum State {
         }
         // as enum always goes towards top so cannot loop
         assert next.ordinal() < this.ordinal();
+        next.changeStateTo(jc,null);
         if (before.contains(next)) {
-            return next.changeStateTo(jc,null);
+            return next;
         }
-        return next.changeToValidState(jc, before);
+        return next.changeToValidState(jc, before); // recurse up chain of next
     }
     
     public boolean changeToThisState(JynxClass jc,Directive dir) {

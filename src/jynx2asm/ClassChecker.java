@@ -272,13 +272,13 @@ public class ClassChecker {
     
     private JynxComponentNode getComponent4Method(String mname, String mdesc) {
         JynxComponentNode jcn = components.get(mname);
-        if (jcn != null && jcn.getDesc().equals(mdesc)) {
+        if (jcn != null && jcn.getMethodDesc().getDesc().equals(mdesc)) {
             return jcn;
         }
         return null;
     }
     
-    public boolean isComponent(String name,Context context) {
+    private boolean isComponent(String name,Context context) {
         if (context == Context.METHOD) {
             MethodDesc md = MethodDesc.getInstance(name);
             JynxComponentNode jcn = getComponent4Method(md.getName(), md.getDesc());

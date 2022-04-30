@@ -1,7 +1,5 @@
 package asm;
 
-import java.util.Map;
-
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.TypePath;
 
@@ -34,12 +32,16 @@ public interface ContextDependent {
         throw new LogIllegalStateException(M42,Directive.dir_annotation); // "%s invalid in context"
     }
     
+    public default AnnotationVisitor visitTryCatchAnnotation(int typeref, TypePath tp, String desc, boolean visible) {
+        throw new LogIllegalStateException(M42,Directive.dir_annotation); // "%s invalid in context"
+    }
+    
     public default AnnotationVisitor visitAnnotationDefault() {
         throw new LogIllegalStateException(M42,Directive.dir_annotation); // "%s invalid in context"
     }
     
     public default AnnotationVisitor visitParameterAnnotation(String desc, int parameter, boolean visible) {
-        throw new LogIllegalStateException(M42,Directive.dir_parameter);  // "%s invalid in context"
+        throw new LogIllegalStateException(M42,Directive.dir_annotation);  // "%s invalid in context"
     }
     
     public default void visitCommonDirective(Directive dir, Line line, JynxScanner js) {

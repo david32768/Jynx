@@ -24,7 +24,7 @@ public enum TypeRef {
     trm_throws(Context.METHOD, THROWS, 2),
     tro_var(Context.CODE, LOCAL_VARIABLE),
     tro_resource(Context.CODE, RESOURCE_VARIABLE),
-    tro_except(Context.CODE, EXCEPTION_PARAMETER, 2),
+    trt_except(Context.CATCH, EXCEPTION_PARAMETER, 2),
     tro_instanceof(Context.CODE, INSTANCEOF),
     tro_new(Context.CODE, NEW),
     tro_new_ref(Context.CODE, CONSTRUCTOR_REFERENCE),
@@ -60,6 +60,9 @@ public enum TypeRef {
                 break;
             case 'o':
                 this.context = Context.CODE;
+                break;
+            case 't':
+                this.context = Context.CATCH;
                 break;
             default:
                 throw new AssertionError("unknown type " + type);

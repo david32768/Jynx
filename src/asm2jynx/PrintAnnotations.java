@@ -269,6 +269,11 @@ public class PrintAnnotations {
         printTypeAnnotations(invisible, dir_invisible_type_annotation);
     }   
     
+    public final void printExceptAnnotations(List<TypeAnnotationNode> visible,List<TypeAnnotationNode> invisible) {
+        printTypeAnnotations(visible, dir_visible_except_annotation);
+        printTypeAnnotations(invisible, dir_invisible_except_annotation);
+    }   
+    
     private void printInsnTypeAnnotations(List<TypeAnnotationNode> anlist, Directive dir) {
         for (TypeAnnotationNode tan : nonNullList(anlist,dir)) {
             printTypeAnnotationDirective(tan.typeRef, tan.typePath, tan.desc,dir);
@@ -294,22 +299,24 @@ public class PrintAnnotations {
                     .append(ReservedWord.dot_array)
                     .nl();
             lb.incrDepth();
-            int entries = lvan.index.size();
-            assert entries == lvan.start.size() && entries == lvan.start.size();
-            Iterator<Integer> indexiter = lvan.index.iterator();
-            Iterator<LabelNode> enditer = lvan.end.iterator();
-            for (LabelNode start:lvan.start) {
-                int index = indexiter.next();
-                LabelNode end = enditer.next();
-                String startname = lab2strfn.apply(start);
-                String endname = lab2strfn.apply(end);
-                lb.append(index)
-                        .append(startname)
-                        .append(endname)
-                        .nl();
-            }
-            lb.decrDepth();
+                lb.incrDepth();
+                int entries = lvan.index.size();
+                assert entries == lvan.start.size() && entries == lvan.start.size();
+                Iterator<Integer> indexiter = lvan.index.iterator();
+                Iterator<LabelNode> enditer = lvan.end.iterator();
+                for (LabelNode start:lvan.start) {
+                    int index = indexiter.next();
+                    LabelNode end = enditer.next();
+                    String startname = lab2strfn.apply(start);
+                    String endname = lab2strfn.apply(end);
+                    lb.append(index)
+                            .append(startname)
+                            .append(endname)
+                            .nl();
+                }
+                lb.decrDepth();
             lb.appendDirective(Directive.end_array).nl();
+            lb.decrDepth();
             printAnnotation(lvan);
             lb.appendDirective(Directive.end_annotation).nl();
         }

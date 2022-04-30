@@ -148,12 +148,15 @@ public class JynxFieldNode implements ContextDependent, HasAccessFlags {
         return tan;
     }
 
-    public void visitEnd() {
+    public void visitEnd(Directive dir) {
         if (signature == null && isComponent()) {
             checker.checkSignature4Field(signature, name);
         }
         int access = accessName.getAccess();
         FieldVisitor fv = jclasshdr.visitField(access, name, desc, signature, value.orElse(null));
+        if (dir ==  null && !annotations.isEmpty()) {
+            LOG(M270, Directive.end_field); // "%s directive missing but assumed"
+        }
         annotations.stream()
                 .forEach(jan -> jan.accept(fv));
     }

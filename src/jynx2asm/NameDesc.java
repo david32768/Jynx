@@ -112,7 +112,7 @@ public enum NameDesc {
         if (javaid.isPresent()) {
             JavaReserved jres = javaid.get();
             if (jres.isContextual()) {
-                LOG(M401,jres); // "%s is a contextual reserved word"
+                LOG(M401,str); // "%s is a contextual reserved word"
             } else if (SUPPORTS(jres.feature())) {
                 LOG(M258,str); // "%s is a reserved word and cannot be a Java Id"
             }

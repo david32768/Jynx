@@ -421,10 +421,7 @@ public class JynxCodeHdr implements ContextDependent {
             Line line = js.getLine();
             AnnotationVisitor av;
             TypeRef tr = TypeRef.getInstance(typeref);
-            switch (tr) {
-            case tro_except:
-                av = visitTryCatchAnnotation(typeref, typepath, desc, visible);
-                break;
+           switch (tr) {
             case tro_var:
             case tro_resource:
                 av = visitLocalVariableAnnotation(line,typeref, typepath, desc, visible);
@@ -436,16 +433,13 @@ public class JynxCodeHdr implements ContextDependent {
         line.noMoreTokens();
         return av;
     }
-    
-    
-    private AnnotationVisitor visitTryCatchAnnotation(int typeref, TypePath tp, String desc, boolean visible) {
+
+    @Override
+    public AnnotationVisitor visitTryCatchAnnotation(int typeref, TypePath tp, String desc, boolean visible) {
         int index = TypeRef.getIndexFrom(typeref);
-        if (index >= tryct) {
-            // ".catch (index = %d) has not been defined; current max defined index is %d"
-            throw new LogIllegalArgumentException(M335,index,tryct - 1);
-        }
         if (index != tryct - 1) {
-            LOG(M344,tryct - 1); //  "annotation does not refer to last .catch (index = %d)"
+            // "index (%d) does not refer to last %s directive (%d)"
+            throw new LogIllegalArgumentException(M335,index,Directive.dir_catch,tryct - 1);
         }
         return mnode.visitTryCatchAnnotation(typeref, tp, desc, visible);
     }

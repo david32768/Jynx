@@ -80,8 +80,14 @@ public enum Directive implements JvmVersioned {
     dir_visible_parameter_count(METHOD_BLOCK,EnumSet.of(METHOD_BLOCK), RuntimeVisibleParameterAnnotations),
     dir_invisible_parameter_count(METHOD_BLOCK,EnumSet.of(METHOD_BLOCK), RuntimeInvisibleParameterAnnotations),
     
+    dir_catch(CATCH, EnumSet.of(METHOD_BLOCK, CODE), Exceptions),
+    dir_visible_except_annotation(CATCH_BLOCK, EnumSet.of(CATCH, CATCH_BLOCK),
+            RuntimeVisibleTypeAnnotations),
+    dir_invisible_except_annotation(CATCH_BLOCK, EnumSet.of(CATCH, CATCH_BLOCK),
+            RuntimeInvisibleTypeAnnotations),
+    end_catch(END_CATCH,EnumSet.of(CATCH_BLOCK)),
+
     dir_limit(CODE, EnumSet.of(METHOD_BLOCK, CODE)),
-    dir_catch(CODE, EnumSet.of(METHOD_BLOCK, CODE), Exceptions),
     dir_line(CODE, EnumSet.of(METHOD_BLOCK, CODE), LineNumberTable),
     dir_print(CODE, EnumSet.of(METHOD_BLOCK, CODE)),
     state_opcode(CODE, EnumSet.of(METHOD_BLOCK, CODE)),
@@ -110,7 +116,7 @@ public enum Directive implements JvmVersioned {
 
     end(REMOVED,EnumSet.of(COMPONENT_BLOCK,FIELD_BLOCK,METHOD_BLOCK,CODE)),
     
-    // also used internally
+    // also used internally; do NOT remove
     dir_annotation(REMOVED, EnumSet.of(CLASSHDR,FIELD_BLOCK, METHOD_BLOCK, CODE, MODULEHDR,COMPONENT_BLOCK,PACKAGEHDR)),
     
     // used internally to end class, module etc.

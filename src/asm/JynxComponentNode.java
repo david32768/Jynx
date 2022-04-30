@@ -79,14 +79,10 @@ public class JynxComponentNode implements ContextDependent {
     
     private String getSignature(Context context) {
         assert endVisited;
-        if (signature == null) {
-            return null;
+        if (signature != null && context == Context.METHOD) {
+            return "()" + signature;
         }
-        String signaturex = signature;
-        if (context == Context.METHOD) {
-            signaturex = "()" + signaturex;
-        }
-        return signaturex;
+        return signature;
     }
     
     public String getName() {
@@ -142,9 +138,12 @@ public class JynxComponentNode implements ContextDependent {
         return tan;
     }
 
-    public void visitEnd(JynxClassHdr jclasshdr) {
+    public void visitEnd(JynxClassHdr jclasshdr, Directive dir) {
         RecordComponentVisitor rcv;
         rcv = jclasshdr.visitRecordComponent(compfd.getName(), compfd.getDesc(), signature);
+        if (dir ==  null && !annotations.isEmpty()) {
+            LOG(M270, Directive.end_component); // "%s directive missing but assumed"
+        }
         annotations.stream()
                 .forEach(jan -> jan.accept(rcv));
         rcv.visitEnd();

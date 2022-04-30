@@ -94,6 +94,21 @@ public class JynxAnnotation {
                 String desc = line.nextToken().asString();
                 av = sd.visitTypeAnnotation(typeref, typepath, desc, visible);
                 break;
+            case dir_visible_except_annotation:case dir_invisible_except_annotation:
+                acctype = Context.CATCH;
+                tokenstr = line.nextToken().asString();
+                tr = TypeRef.getInstance(tokenstr, acctype);
+                numind = tr.getNumberIndices();
+                indices = new int[numind];
+                for (int i = 0; i < numind; ++i) {
+                    indices[i] = line.nextToken().asInt();
+                }
+                typeref = tr.getTypeRef(indices);
+                typepathstr = line.optAfter(res_typepath);
+                typepath = TypePath.fromString(typepathstr);
+                desc = line.nextToken().asString();
+                av = sd.visitTryCatchAnnotation(typeref, typepath, desc, visible);
+                break;
             default:
                 // "unknown directive %s for context %s"
                 throw new LogAssertionError(M907,dir,Context.ANNOTATION);

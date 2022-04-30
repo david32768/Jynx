@@ -194,7 +194,7 @@ public enum Message {
     M190("mismatched local %d: required %s but found %s"),
     M191("method requires %s but found %s"),
     M192("%s directive is deprecated and removed! Use %s pseudo-access flag"),
-    M193("this %s directive has been replaced by %s"),
+    M193(SEVERE,"this %s directive has been replaced by %s"),
     M194("annotation parameter count already been set"),
     M195(WARNING,"inner class name (%s) does not contain '$'"),
     M196(WARNING,"no %s instruction found"),
@@ -271,6 +271,7 @@ public enum Message {
     M267("%s has %d simple ops which exceeds maximum of %d"),
     M268("enclosing instance has already been defined"),
     M269("component %s description %s differs from field description %s"),
+    M270(WARNING,"%s directive missing but assumed"),
     
     M272(WARNING,"Label %s not used - defined in line:%n  %s"),
 
@@ -289,9 +290,8 @@ public enum Message {
     M313("final class cannot have %s"),
 
     M327(INFO,"added: %s %s"),
-    M335(".catch (index = %d) has not been defined; current max defined index is %d"),
+    M335("index (%d) does not refer to last %s directive (%d)"),
 
-    M344(WARNING,"annotation does not refer to last .catch (index = %d)"),
     M362("expected arg %s but was %s"),
 
     M370("Type annotations not allowed for Module"),

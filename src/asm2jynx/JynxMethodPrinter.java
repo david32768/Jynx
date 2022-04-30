@@ -78,9 +78,12 @@ public class JynxMethodPrinter {
                     .append(res_to, toname)
                     .append(res_using, usingname)
                     .nl();
-            jp.incrDepth();
-            annotator.printTypeAnnotations(tcbn.visibleTypeAnnotations, tcbn.invisibleTypeAnnotations);
-            jp.decrDepth();
+            if (isPresent(tcbn.visibleTypeAnnotations) || isPresent(tcbn.invisibleTypeAnnotations)) {
+                jp.incrDepth();
+                annotator.printExceptAnnotations(tcbn.visibleTypeAnnotations, tcbn.invisibleTypeAnnotations);
+                jp.decrDepth();
+                jp.appendDirective(end_catch).nl();
+            }
         }
     }
 

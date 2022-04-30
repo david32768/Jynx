@@ -184,3 +184,4 @@ Changes are
 *	call common java methods e.g. iabs instead of invokestatic java/lang/Math/iabs(I)I
 *	structured ops e.g. BLOCK, LOOP, END
 *	.macrolib
+*	.catch block with (in)visible_except_annotation

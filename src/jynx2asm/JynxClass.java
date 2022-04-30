@@ -12,6 +12,7 @@ import static jynx.GlobalOption.SIMPLE_VERIFIER;
 import static jynx.Message.*;
 
 import asm.ContextDependent;
+import asm.JynxAnnotation;
 import asm.JynxClassHdr;
 import asm.JynxCodeHdr;
 import asm.JynxComponentNode;
@@ -260,6 +261,7 @@ public class JynxClass {
     }
     
     public void endHeader(Directive dir) {
+        assert dir == null;
         jclasshdr.endHeader();
         sd = null;
     }
@@ -275,7 +277,7 @@ public class JynxClass {
         if (jcompnode == null) {
             throw new IllegalStateException();
         }
-        jcompnode.visitEnd(jclasshdr);
+        jcompnode.visitEnd(jclasshdr,dir);
         jcompnode = null;
         sd = null;
         LOGGER().popContext();
@@ -292,7 +294,7 @@ public class JynxClass {
         if (jfieldnode == null) {
             throw new IllegalStateException();
         }
-        jfieldnode.visitEnd();
+        jfieldnode.visitEnd(dir);
         jfieldnode = null;
         sd = null;
         LOGGER().popContext();
@@ -325,11 +327,33 @@ public class JynxClass {
             jcodehdr.visitCode();
             sd = jcodehdr;
         }
+        if (dir == null) {
+            return;
+        }
         jcodehdr.visitDirective(dir, js);
     }
     
+    public void setCatch(Directive dir) {
+        switch (dir) {
+            case dir_visible_except_annotation:
+            case dir_invisible_except_annotation:
+                JynxAnnotation.setAnnotation(dir,jcodehdr,js);
+                break;
+            default:
+                throw new EnumConstantNotPresentException(dir.getClass(), dir.name());
+        }
+    }
+    
+    public void endCatch(Directive dir) {
+        if (dir == null) {
+            LOG(M270, Directive.end_catch); // "%s directive missing but assumed"
+        }
+    }
+    
     public void endMethod(Directive dir) {
-        assert dir == Directive.end_method;
+        if (dir == null) {
+            LOG(M270, Directive.end_method); // "%s directive missing but assumed"
+        }
         boolean ok;
         if (jmethodnode.isAbstractOrNative()) {
             ok = true;

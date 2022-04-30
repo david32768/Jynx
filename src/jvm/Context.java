@@ -22,6 +22,7 @@ public enum Context {
     COMPONENT,
 
     CODE,
+    CATCH,
     
     ANNOTATION,
     JVMCONSTANT,
