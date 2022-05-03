@@ -37,7 +37,6 @@ public enum State {
     MODULE(JynxClass::setModule),
     PACKAGEHDR(JynxClass::setClass, END_PACKAGEHDR),
     COMMON(JynxClass::setCommon), // state unchanged
-    REMOVED(JynxClass::removed),
     HEADER(JynxClass::setHeader), // state unchanged
     READ_END(null),    // END directive is read by previous directive in stream
     ;
@@ -80,7 +79,6 @@ public enum State {
         switch(this) {
             case HEADER:
             case COMMON:
-            case REMOVED:
                 return false;
             default:
                 return true;

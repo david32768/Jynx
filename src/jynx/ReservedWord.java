@@ -37,6 +37,8 @@ public enum ReservedWord {
 
     array_at("[@"),
     equals_sign("="),
+    res_visible,
+    res_invisible,
     dot_annotation(".annotation"),
     dot_annotation_array(".annotation_array"),
     colon(":",'l'),

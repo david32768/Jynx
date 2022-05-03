@@ -32,10 +32,6 @@ public interface ContextDependent {
         throw new LogIllegalStateException(M42,Directive.dir_annotation); // "%s invalid in context"
     }
     
-    public default AnnotationVisitor visitTryCatchAnnotation(int typeref, TypePath tp, String desc, boolean visible) {
-        throw new LogIllegalStateException(M42,Directive.dir_annotation); // "%s invalid in context"
-    }
-    
     public default AnnotationVisitor visitAnnotationDefault() {
         throw new LogIllegalStateException(M42,Directive.dir_annotation); // "%s invalid in context"
     }
@@ -49,14 +45,31 @@ public interface ContextDependent {
             case dir_signature:
                 setSignature(line);
                 break;
-            case dir_invisible_annotation:
-            case dir_visible_annotation:
-            case dir_invisible_type_annotation:
-            case dir_visible_type_annotation:
+            case dir_annotation:
+            case dir_argmethod_type_annotation:
+            case dir_argmethodref_type_annotation:
+            case dir_argnew_type_annotation:
+            case dir_argnewref_type_annotation:
+            case dir_cast_type_annotation:
+            case dir_except_type_annotation:
+            case dir_extends_type_annotation:
+            case dir_field_type_annotation:
+            case dir_formal_type_annotation:
+            case dir_instanceof_type_annotation:
+            case dir_methodref_type_annotation:
+            case dir_new_type_annotation:
+            case dir_newref_type_annotation:
+            case dir_param_bound_type_annotation:
+            case dir_param_type_annotation:
+            case dir_receiver_type_annotation:
+            case dir_resource_type_annotation:
+            case dir_return_type_annotation:
+            case dir_throws_type_annotation:
+            case dir_var_type_annotation:
                 JynxAnnotation.setAnnotation(dir,this,js);
                 break;
             default:
-                throw new AssertionError();
+                throw new EnumConstantNotPresentException(dir.getClass(), dir.name());
         }
     }
     

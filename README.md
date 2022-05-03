@@ -148,7 +148,6 @@ Changes are
 
 ### ANNOTATIONS
 
-*	.X_annotation instead of .annotation X e.g. .annotation visible -> .visible_annotation
 *	.end_annotation instead of .end annotation
 *	parameter annotations start at zero instead of 1
 *	default maxparms annotation is numparms(ASM)
@@ -165,8 +164,7 @@ Changes are
 
 ## Additions
 
-*	.visible_type_annotation
-*	.invisible_type_annotation
+*	type_annotations
 *	.nesthost
 *	.nestmember
 *	.record
@@ -184,4 +182,4 @@ Changes are
 *	call common java methods e.g. iabs instead of invokestatic java/lang/Math/iabs(I)I
 *	structured ops e.g. BLOCK, LOOP, END
 *	.macrolib
-*	.catch block with (in)visible_except_annotation
+*	.catch block if it has .except_type_annotation

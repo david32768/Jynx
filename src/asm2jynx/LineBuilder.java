@@ -19,6 +19,13 @@ import jynx2asm.String2Insn;
 
 public class LineBuilder {
 
+    public static final char TOKEN_SEPARATOR = ' ';
+    
+    static {
+        assert Character.isWhitespace(TOKEN_SEPARATOR);
+    }
+    
+
     private final StringBuilder sb;
     private final PrintWriter pw;
 
@@ -67,10 +74,10 @@ public class LineBuilder {
         if (isEmpty()) {
             int indent = String2Insn.INDENT_LENGTH * depth;
             for (int i = 0; i < indent;++i) {
-                sb.append(Line.TOKEN_SEPARATOR);
+                sb.append(TOKEN_SEPARATOR);
             }
-        } else if (sb.charAt(sb.length() - 1) != Line.TOKEN_SEPARATOR) {
-            sb.append(Line.TOKEN_SEPARATOR);
+        } else if (sb.charAt(sb.length() - 1) != TOKEN_SEPARATOR) {
+            sb.append(TOKEN_SEPARATOR);
         }
     }
     

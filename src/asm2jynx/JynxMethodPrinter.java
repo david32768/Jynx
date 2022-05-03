@@ -1,7 +1,6 @@
 package asm2jynx;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -11,6 +10,7 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.ParameterNode;
 import org.objectweb.asm.tree.TryCatchBlockNode;
 
+import static asm2jynx.Util.*;
 import static jvm.AccessFlag.*;
 import static jvm.AttributeName.*;
 import static jvm.Context.*;
@@ -46,23 +46,11 @@ public class JynxMethodPrinter {
         return new JynxMethodPrinter(cname,jvmversion,jp,jasAnnotator);
     }
     
-    private final <E> Iterable<E> nonNullList(Iterable<E> list) {
-        return list == null ? Collections.emptyList() : list;
-    }
-
-    private <E> boolean isAbsent(Iterable<E> list) {
-        return list == null || !list.iterator().hasNext();
-    }
-    
-    private <E> boolean isPresent(Iterable<E> list) {
-        return !isAbsent(list); // list != null && list.iterator().hasNext();
-    }
-    
     private void printInstructions(Iterable<AbstractInsnNode> instructions,Insn2Jynx i2s) {
-        for (AbstractInsnNode in:nonNullList(instructions)) {
+        for (AbstractInsnNode in:nonNullIterable(instructions)) {
             i2s.printInsn(in);
-            jp.incrDepth();
-            annotator.printInsnTypeAnnotations(in.visibleTypeAnnotations, in.invisibleTypeAnnotations);
+                jp.incrDepth();
+                annotator.printInsnTypeAnnotations(in.visibleTypeAnnotations, in.invisibleTypeAnnotations);
             jp.decrDepth();
         }
     }
@@ -78,9 +66,9 @@ public class JynxMethodPrinter {
                     .append(res_to, toname)
                     .append(res_using, usingname)
                     .nl();
-            if (isPresent(tcbn.visibleTypeAnnotations) || isPresent(tcbn.invisibleTypeAnnotations)) {
+            if (isAnyPresent(tcbn.visibleTypeAnnotations,tcbn.invisibleTypeAnnotations)) {
                 jp.incrDepth();
-                annotator.printExceptAnnotations(tcbn.visibleTypeAnnotations, tcbn.invisibleTypeAnnotations);
+                annotator.printTypeAnnotations(tcbn.visibleTypeAnnotations, tcbn.invisibleTypeAnnotations);
                 jp.decrDepth();
                 jp.appendDirective(end_catch).nl();
             }

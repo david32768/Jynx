@@ -1,7 +1,6 @@
 package asm2jynx;
 
 import java.io.PrintWriter;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -18,6 +17,7 @@ import org.objectweb.asm.tree.ModuleProvideNode;
 import org.objectweb.asm.tree.ModuleRequireNode;
 import org.objectweb.asm.tree.RecordComponentNode;
 
+import static asm2jynx.Util.*;
 import static jvm.AccessFlag.*;
 import static jvm.AttributeName.*;
 import static jvm.Context.*;
@@ -84,20 +84,8 @@ public class JynxDisassemble {
         return new JynxDisassemble(cn, pw, jvmversion);
     }
 
-   public static <E> List<E> nonNullList(List<E> list) {
-        return list == null ? Collections.emptyList() : list;
-    }
-
     public void close() {
         pw.close();
-    }
-
-    private  static <E> boolean isAbsent(Iterable<E> list) {
-        return list == null || !list.iterator().hasNext();
-    }
-    
-    private  static <E> boolean isPresent(Iterable<E> list) {
-        return !isAbsent(list);
     }
 
     private void printPackage() {
@@ -196,11 +184,12 @@ public class JynxDisassemble {
                     .append(rcn.name)
                     .append(rcn.descriptor)
                     .nl();
-            if(isPresent(rcn.invisibleAnnotations)
-                    || isPresent(rcn.visibleAnnotations)
-                    || isPresent(rcn.visibleTypeAnnotations)
-                    || isPresent(rcn.invisibleTypeAnnotations)
-                    ) {
+            if (isAnyPresent(
+                    rcn.invisibleAnnotations,
+                    rcn.visibleAnnotations,
+                    rcn.visibleTypeAnnotations,
+                    rcn.invisibleTypeAnnotations
+                    )) {
                 jp.incrDepth();
                     jp.printDirective(dir_signature, rcn.signature);
                     annotator.printAnnotations(rcn.visibleAnnotations,rcn.invisibleAnnotations);
@@ -271,8 +260,11 @@ public class JynxDisassemble {
     private void printField(FieldNode fn) {
         jp.blankline();
         LOGGER().setLine("field " + fn.name);
-        boolean annotated = isPresent(fn.visibleAnnotations) || isPresent(fn.invisibleAnnotations)
-                || isPresent(fn.visibleTypeAnnotations) || isPresent(fn.invisibleTypeAnnotations);
+        boolean annotated = isAnyPresent(
+                fn.visibleAnnotations,
+                fn.invisibleAnnotations,
+                fn.visibleTypeAnnotations,
+                fn.invisibleTypeAnnotations);
         boolean endrequired = annotated || fn.signature != null;
 
         EnumSet<AccessFlag> accflags = AccessFlag.getEnumSet(fn.access, FIELD,jvmVersion);

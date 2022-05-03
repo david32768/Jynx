@@ -9,7 +9,7 @@ import static jynx.Global.*;
 import static jynx.Message.*;
 import static jynx.State.*;
 
-import jvm.AttributeName;
+import jvm.Feature;
 import jvm.JvmVersioned;
 import jvm.JvmVersionRange;
 import jynx2asm.JynxClass;
@@ -19,7 +19,6 @@ public enum Directive implements JvmVersioned {
     //  dir_x(after_state,before_states[,feature])
 
     dir_version(START_BLOCK, EnumSet.of(START)),
-    dir_bytecode(REMOVED, EnumSet.of(START)),
     dir_source(START_BLOCK, EnumSet.of(START_BLOCK, END_START), SourceFile),
     dir_macrolib(START_BLOCK, EnumSet.of(START_BLOCK, END_START)),
     
@@ -36,7 +35,6 @@ public enum Directive implements JvmVersioned {
     dir_debug(HEADER, EnumSet.of(CLASSHDR,MODULEHDR), SourceDebugExtension),
     
     dir_signature(COMMON, EnumSet.of(CLASSHDR, FIELD_BLOCK, METHOD_BLOCK, COMPONENT_BLOCK), Signature),
-    dir_deprecated(REMOVED, EnumSet.of(CLASSHDR, FIELD_BLOCK, METHOD_BLOCK), Deprecated),
     
     dir_inner_class(HEADER, EnumSet.of(CLASSHDR,MODULEHDR),InnerClasses),
     dir_inner_interface(HEADER, EnumSet.of(CLASSHDR,MODULEHDR),InnerClasses),
@@ -51,18 +49,50 @@ public enum Directive implements JvmVersioned {
     dir_enclosing_class(HEADER, EnumSet.of(CLASSHDR), EnclosingMethod),
     dir_hints(HEADER, EnumSet.of(CLASSHDR)),
     
-    dir_visible_annotation(COMMON, EnumSet.of(CLASSHDR,FIELD_BLOCK, METHOD_BLOCK, MODULEHDR,COMPONENT_BLOCK,PACKAGEHDR),
-            RuntimeVisibleAnnotations),
-    dir_invisible_annotation(COMMON, EnumSet.of(CLASSHDR,FIELD_BLOCK, METHOD_BLOCK, MODULEHDR,COMPONENT_BLOCK,PACKAGEHDR),
+    dir_annotation(COMMON, EnumSet.of(CLASSHDR,FIELD_BLOCK, METHOD_BLOCK, MODULEHDR,COMPONENT_BLOCK,PACKAGEHDR),
             RuntimeInvisibleAnnotations),
-    dir_visible_type_annotation(COMMON, EnumSet.of(CLASSHDR,FIELD_BLOCK, METHOD_BLOCK, CODE,MODULEHDR,COMPONENT_BLOCK,PACKAGEHDR),
-            RuntimeVisibleTypeAnnotations),
-    dir_invisible_type_annotation(COMMON, EnumSet.of(CLASSHDR,FIELD_BLOCK, METHOD_BLOCK, CODE,MODULEHDR,COMPONENT_BLOCK,PACKAGEHDR),
-            RuntimeInvisibleTypeAnnotations),
+
+    dir_param_type_annotation(COMMON, EnumSet.of(CLASSHDR, METHOD_BLOCK, MODULEHDR, PACKAGEHDR),
+            Feature.type_annotations),
+    dir_extends_type_annotation(COMMON, EnumSet.of(CLASSHDR, MODULEHDR, PACKAGEHDR),
+            Feature.type_annotations),
+    dir_param_bound_type_annotation(COMMON, EnumSet.of(CLASSHDR, METHOD_BLOCK, MODULEHDR, PACKAGEHDR),
+            Feature.type_annotations),
+    dir_field_type_annotation(COMMON, EnumSet.of(FIELD_BLOCK, COMPONENT_BLOCK),
+            Feature.type_annotations),
+    dir_return_type_annotation(COMMON, EnumSet.of(METHOD_BLOCK),
+            Feature.type_annotations),
+    dir_receiver_type_annotation(COMMON, EnumSet.of(METHOD_BLOCK),
+            Feature.type_annotations),
+    dir_formal_type_annotation(COMMON, EnumSet.of(METHOD_BLOCK),
+            Feature.type_annotations),
+    dir_throws_type_annotation(COMMON, EnumSet.of(METHOD_BLOCK),
+            Feature.type_annotations),
+    dir_var_type_annotation(COMMON, EnumSet.of(CODE),
+            Feature.type_annotations),
+    dir_resource_type_annotation(COMMON, EnumSet.of(CODE),
+            Feature.type_annotations),
+    dir_instanceof_type_annotation(COMMON, EnumSet.of(CODE),
+            Feature.type_annotations),
+    dir_new_type_annotation(COMMON, EnumSet.of(CODE),
+            Feature.type_annotations),
+    dir_newref_type_annotation(COMMON, EnumSet.of(CODE),
+            Feature.type_annotations),
+    dir_methodref_type_annotation(COMMON, EnumSet.of(CODE),
+            Feature.type_annotations),
+    dir_cast_type_annotation(COMMON, EnumSet.of(CODE),
+            Feature.type_annotations),
+    dir_argnew_type_annotation(COMMON, EnumSet.of(CODE),
+            Feature.type_annotations),
+    dir_argmethod_type_annotation(COMMON, EnumSet.of(CODE),
+            Feature.type_annotations),
+    dir_argnewref_type_annotation(COMMON, EnumSet.of(CODE),
+            Feature.type_annotations),
+    dir_argmethodref_type_annotation(COMMON, EnumSet.of(CODE),
+            Feature.type_annotations),
     
     dir_default_annotation(METHOD_BLOCK, EnumSet.of(METHOD_BLOCK), AnnotationDefault),
-    dir_visible_parameter_annotation(METHOD_BLOCK, EnumSet.of(METHOD_BLOCK), RuntimeVisibleParameterAnnotations),
-    dir_invisible_parameter_annotation(METHOD_BLOCK, EnumSet.of(METHOD_BLOCK), RuntimeInvisibleParameterAnnotations),
+    dir_parameter_annotation(METHOD_BLOCK, EnumSet.of(METHOD_BLOCK), Feature.annotations),
 
     end_annotation(READ_END, EnumSet.noneOf(State.class)),
     end_annotation_array(READ_END, EnumSet.noneOf(State.class)),
@@ -81,10 +111,8 @@ public enum Directive implements JvmVersioned {
     dir_invisible_parameter_count(METHOD_BLOCK,EnumSet.of(METHOD_BLOCK), RuntimeInvisibleParameterAnnotations),
     
     dir_catch(CATCH, EnumSet.of(METHOD_BLOCK, CODE), Exceptions),
-    dir_visible_except_annotation(CATCH_BLOCK, EnumSet.of(CATCH, CATCH_BLOCK),
+    dir_except_type_annotation(CATCH_BLOCK, EnumSet.of(CATCH, CATCH_BLOCK),
             RuntimeVisibleTypeAnnotations),
-    dir_invisible_except_annotation(CATCH_BLOCK, EnumSet.of(CATCH, CATCH_BLOCK),
-            RuntimeInvisibleTypeAnnotations),
     end_catch(END_CATCH,EnumSet.of(CATCH_BLOCK)),
 
     dir_limit(CODE, EnumSet.of(METHOD_BLOCK, CODE)),
@@ -114,32 +142,27 @@ public enum Directive implements JvmVersioned {
     dir_requires(MODULE, EnumSet.of(MODULE,END_MODULEHDR), Module),
     dir_provides(MODULE, EnumSet.of(MODULE,END_MODULEHDR), Module),
 
-    end(REMOVED,EnumSet.of(COMPONENT_BLOCK,FIELD_BLOCK,METHOD_BLOCK,CODE)),
-    
-    // also used internally; do NOT remove
-    dir_annotation(REMOVED, EnumSet.of(CLASSHDR,FIELD_BLOCK, METHOD_BLOCK, CODE, MODULEHDR,COMPONENT_BLOCK,PACKAGEHDR)),
-    
     // used internally to end class, module etc.
     end_class(END_CLASS, EnumSet.of(END_CLASSHDR, END_FIELD, END_METHOD,MODULE,END_MODULEHDR, END_PACKAGEHDR)),
     ;
 
     private final State after;
     private final EnumSet<State> before;
-    private final AttributeName attribute;
-
-    private Directive(State after, EnumSet<State> before, AttributeName attribute) {
-        this.after = after;
-        this.before = before;
-        this.attribute = attribute;
-    }
+    private final JvmVersionRange range;
 
     private Directive(State after, EnumSet<State> before) {
-        this(after,before,null);
+        this(after,before,Feature.unlimited);
+    }
+
+    private Directive(State after, EnumSet<State> before, JvmVersioned range) {
+        this.after = after;
+        this.before = before;
+        this.range = range.range();
     }
 
     @Override
     public JvmVersionRange range() {
-        return attribute == null?JvmVersionRange.UNLIMITED:attribute.range();
+        return range;
     }
     
     private boolean isUniqueWithin() {
@@ -153,6 +176,8 @@ public enum Directive implements JvmVersioned {
             case dir_default_annotation:
             case dir_packages:
             case dir_main:
+            case dir_visible_parameter_count:
+            case dir_invisible_parameter_count:
                 return true;
             default:
                 return false;

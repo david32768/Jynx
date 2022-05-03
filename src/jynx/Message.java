@@ -173,7 +173,7 @@ public enum Message {
 
     M168("unexpected directive(%s) in annotation"),
     M169(ENDINFO,"package(s) used in %s are not in %s"),
-    M170("invalid type ref name - %s"),
+    M170("invalid type annotation directive - %s"),
     M171(WARNING,"version %s outside range [%s,%s] - %s used"),
 
     M175("unknown Jynx desc = %c"),
@@ -190,11 +190,10 @@ public enum Message {
     M186("%s directive for %s must be %s but is %s"),
     M187("annotation parameter count(%d) not in range[1,%d]"),
     M188("n (%d) is greater than current local size(%d)"),
-    M189("%s has been replaced by .xxxxxxx_%s"),
+
     M190("mismatched local %d: required %s but found %s"),
     M191("method requires %s but found %s"),
-    M192("%s directive is deprecated and removed! Use %s pseudo-access flag"),
-    M193(SEVERE,"this %s directive has been replaced by %s"),
+
     M194("annotation parameter count already been set"),
     M195(WARNING,"inner class name (%s) does not contain '$'"),
     M196(WARNING,"no %s instruction found"),
@@ -205,7 +204,7 @@ public enum Message {
     M201("%s can only occur in locals"),
     M202("unused field(s) in typeref not zero"),
     M203(WARNING,"potential infinite loop - catch using label equals catch from label"),
-    M204("%s has been replaced by %s_xxxxxxx"),
+
     M205("enum class changed; was %s now %s"),
     M206("Invalid type letter '%c' (%d)"),
     M207("possible serialization method %s is not private"),
@@ -272,7 +271,7 @@ public enum Message {
     M268("enclosing instance has already been defined"),
     M269("component %s description %s differs from field description %s"),
     M270(WARNING,"%s directive missing but assumed"),
-    
+    M271("incomplete quoted string %s"),
     M272(WARNING,"Label %s not used - defined in line:%n  %s"),
 
     M274(SEVERE,"duplicate: %s has the same opcode(%d) as %s"),
@@ -290,7 +289,7 @@ public enum Message {
     M313("final class cannot have %s"),
 
     M327(INFO,"added: %s %s"),
-    M335("index (%d) does not refer to last %s directive (%d)"),
+    M335("index (%d) is not zero and does not refer to last %s directive (%d)"),
 
     M362("expected arg %s but was %s"),
 

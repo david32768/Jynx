@@ -214,48 +214,6 @@ public class JynxClass {
         sd.visitDirective(dir, js);
     }
     
-    public void removed(Directive dir) {
-        Line line = js.getLine();
-        switch(dir) {
-            case dir_deprecated:
-                // "%s directive is deprecated and removed! Use %s pseudo-access flag"
-                LOG(M192,dir,AccessFlag.acc_deprecated);
-                break;
-            case dir_bytecode:
-                // "this %s directive has been replaced by %s"
-                LOG(M193,Directive.dir_bytecode,Directive.dir_version);
-                line.nextToken();
-                break;
-            case end:
-                String endof = line.nextToken().asString();
-                String dirstr = dir.toString().substring(1) + "_" +endof;
-                Optional<Directive> newdir = Directive.getDirInstance(dirstr);
-                if (newdir.isPresent()) {
-                    // "this %s directive has been replaced by %s"
-                    LOG(M193,dir,newdir.get());
-                } else {
-                    LOG(M204,dir,dir);    // "%s has been replaced by %s_xxxxxxx"
-                }
-                break;
-            case dir_annotation:
-                endof = line.nextToken().asString();
-                dirstr = endof + "_" + dir.toString().substring(1);
-                newdir = Directive.getDirInstance(dirstr);
-                // "this %s directive has been replaced by %s"
-                if (newdir.isPresent()) {
-                    // "this %s directive has been replaced by %s"
-                    LOG(M193,dir,newdir.get());
-                } else {
-                    LOG(M189,dir,dir.toString().substring(1));    // "%s has been replaced by .xxxxxxx_%s"
-                }
-                line.skipTokens();
-                break;
-            default:
-                // "unknown directive %s for context %s"
-                throw new LogAssertionError(M907,dir,State.REMOVED);
-        }
-    }
-    
     public void setHeader(Directive dir) {
         jclasshdr.visitDirective(dir, js);
     }
@@ -335,8 +293,7 @@ public class JynxClass {
     
     public void setCatch(Directive dir) {
         switch (dir) {
-            case dir_visible_except_annotation:
-            case dir_invisible_except_annotation:
+            case dir_except_type_annotation:
                 JynxAnnotation.setAnnotation(dir,jcodehdr,js);
                 break;
             default:

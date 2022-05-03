@@ -17,6 +17,7 @@ import jynx.Directive;
 import jynx.LogAssertionError;
 import jynx.LogIllegalArgumentException;
 import jynx.LogIllegalStateException;
+import jynx.ReservedWord;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
 import jynx2asm.LinesIterator;
@@ -29,13 +30,11 @@ public class JynxAnnotation {
     private final ContextDependent sd;
     private final JynxScanner js;
     private final Directive dir;
-    private final boolean visible;
     
     private JynxAnnotation(ContextDependent sd, JynxScanner js, Directive dir) {
         this.sd = sd;
         this.js = js;
         this.dir = dir;
-        this.visible = !dir.toString().contains("invisible");
     }
 
     public static void setAnnotation(Directive dir, ContextDependent sd, JynxScanner js) {
@@ -60,29 +59,52 @@ public class JynxAnnotation {
         AnnotationVisitor av;
         int paramStart = 0;
         Line line = js.getLine();
+        Context acctype = sd.getContext();
         switch (dir) {
-            case dir_visible_annotation: case dir_invisible_annotation:
+            case dir_annotation:
+                ReservedWord visibility = line.nextToken().expectOneOf(res_visible, res_invisible);
                 String classdesc = line.nextToken().asString();
                 NameDesc.CLASS_PARM.validate(classdesc);
                 line.noMoreTokens();
-                av = sd.visitAnnotation(classdesc, visible);
+                av = sd.visitAnnotation(classdesc, visibility == res_visible);
                 break;
             case dir_default_annotation:
                 av = sd.visitAnnotationDefault();
                 line.noMoreTokens();
                 break;
-            case dir_invisible_parameter_annotation: case dir_visible_parameter_annotation:
+            case dir_parameter_annotation:
+                visibility = line.nextToken().expectOneOf(res_visible, res_invisible);
                 int parameter = line.nextToken().asInt();
                 parameter -= paramStart;
                 classdesc = line.nextToken().asString();
                 NameDesc.CLASS_PARM.validate(classdesc);
                 line.noMoreTokens();
-                av = sd.visitParameterAnnotation(classdesc, parameter, visible);
+                av = sd.visitParameterAnnotation(classdesc, parameter, visibility == res_visible);
                 break;
-            case dir_invisible_type_annotation:case dir_visible_type_annotation:
-                Context acctype = sd.getContext();
-                String tokenstr = line.nextToken().asString();
-                TypeRef tr = TypeRef.getInstance(tokenstr, acctype);
+            case dir_except_type_annotation:
+                acctype = Context.CATCH;
+                // fallthrough
+            case dir_argmethod_type_annotation:
+            case dir_argmethodref_type_annotation:
+            case dir_argnew_type_annotation:
+            case dir_argnewref_type_annotation:
+            case dir_cast_type_annotation:
+            case dir_extends_type_annotation:
+            case dir_field_type_annotation:
+            case dir_formal_type_annotation:
+            case dir_instanceof_type_annotation:
+            case dir_methodref_type_annotation:
+            case dir_new_type_annotation:
+            case dir_newref_type_annotation:
+            case dir_param_bound_type_annotation:
+            case dir_param_type_annotation:
+            case dir_receiver_type_annotation:
+            case dir_resource_type_annotation:
+            case dir_return_type_annotation:
+            case dir_throws_type_annotation:
+            case dir_var_type_annotation:
+                visibility = line.nextToken().expectOneOf(res_visible, res_invisible);
+                TypeRef tr = TypeRef.getInstance(dir,acctype);
                 int numind = tr.getNumberIndices();
                 int[] indices = new int[numind];
                 for (int i = 0; i < numind; ++i) {
@@ -92,22 +114,7 @@ public class JynxAnnotation {
                 String typepathstr = line.optAfter(res_typepath);
                 TypePath typepath = TypePath.fromString(typepathstr);
                 String desc = line.nextToken().asString();
-                av = sd.visitTypeAnnotation(typeref, typepath, desc, visible);
-                break;
-            case dir_visible_except_annotation:case dir_invisible_except_annotation:
-                acctype = Context.CATCH;
-                tokenstr = line.nextToken().asString();
-                tr = TypeRef.getInstance(tokenstr, acctype);
-                numind = tr.getNumberIndices();
-                indices = new int[numind];
-                for (int i = 0; i < numind; ++i) {
-                    indices[i] = line.nextToken().asInt();
-                }
-                typeref = tr.getTypeRef(indices);
-                typepathstr = line.optAfter(res_typepath);
-                typepath = TypePath.fromString(typepathstr);
-                desc = line.nextToken().asString();
-                av = sd.visitTryCatchAnnotation(typeref, typepath, desc, visible);
+                av = sd.visitTypeAnnotation(typeref, typepath, desc, visibility == res_visible);
                 break;
             default:
                 // "unknown directive %s for context %s"

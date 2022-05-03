@@ -1,7 +1,6 @@
 package asm2jynx;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.function.Function;
 import java.util.Iterator;
 import java.util.List;
@@ -13,6 +12,7 @@ import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.TypeAnnotationNode;
 import org.objectweb.asm.TypePath;
 
+import static asm2jynx.Util.*;
 import static jvm.Context.ANNOTATION;
 import static jynx.Directive.*;
 import static jynx.Global.*;
@@ -35,32 +35,26 @@ public class PrintAnnotations {
         this.o2s = new Object2String();
     }
 
-    private <E> List<E> nonNullList(List<E> list) {
-        return list == null ? Collections.emptyList() : list;
-    }
-
-    private <E> List<E> nonNullList(List<E> list, Directive dir) {
-        if (list != null && list.iterator().hasNext() && CHECK_SUPPORTS(dir)) {
-            return list;
-        } else {
-            return Collections.emptyList();
-        }
-    }
-    
-    private void printTypeAnnotationDirective(int typeref, TypePath tp, String desc, Directive dir) {
+    private void printTypeAnnotation(boolean visible,int typeref, TypePath tp, String desc) {
+        TypeRef tr = TypeRef.getInstance(typeref);
+        Directive dir = tr.getDirective();
+        CHECK_SUPPORTS(dir);
         String typepath = tp == null?null:tp.toString();
-        String trstr = TypeRef.getString(typeref);
+        String trstr = tr.getTyperef(typeref);
+        ReservedWord visibility = visible?ReservedWord.res_visible:ReservedWord.res_invisible;
         lb.appendDirective(dir)
-                .append(trstr.split(" "))
-                .append(res_typepath, typepath)
-                .append(desc)
-                .nl();
+                .append(visibility);
+        if (!trstr.isEmpty()) {
+            lb.append(trstr.split(" "));
+        }
+        lb.append(res_typepath, typepath)
+            .append(desc)
+            .nl();
     }
-
     
     public final void printAnnotations(List<AnnotationNode> visible,List<AnnotationNode> invisible) {
-        printAnnotations(visible, dir_visible_annotation);
-        printAnnotations(invisible, dir_invisible_annotation);
+        printAnnotations(true,visible);
+        printAnnotations(false,invisible);
     }
     
     public final void printDefaultAnnotation(Object obj, String mdesc) {
@@ -69,26 +63,29 @@ public class PrintAnnotations {
         }
         lb.appendDirective(Directive.dir_default_annotation).nl();
         lb.incrDepth();
-        int retind = mdesc.lastIndexOf(')');
-        String desc = mdesc.substring(retind + 1);
-        printAnnotationValue(null,obj,desc);
+            int retind = mdesc.lastIndexOf(')');
+            String desc = mdesc.substring(retind + 1);
+            printAnnotationValue(null,obj,desc);
         lb.decrDepth();
         lb.appendDirective(Directive.end_annotation).nl();
     }
 
-    private void printAnnotations(List<AnnotationNode> anlist, Directive dir) {
-        for (AnnotationNode an : JynxDisassemble.nonNullList(anlist)) {
-            lb.appendDirective(dir).append(an.desc).nl();
+    private void printAnnotations(boolean visible, List<AnnotationNode> anlist) {
+        ReservedWord visibility = visible?ReservedWord.res_visible:ReservedWord.res_invisible;
+        for (AnnotationNode an : nonNullList(anlist)) {
+            lb.appendDirective(dir_annotation)
+                    .append(visibility)
+                    .append(an.desc)
+                    .nl();
             printAnnotation(an);
             lb.appendDirective(Directive.end_annotation).nl();
         }
     }
 
-    private void printLength(int count,int min, int max, Directive dir) {
-        boolean visible = !dir.toString().contains("invisible");
+    private void printLength(boolean visible, int count,int min, int max) {
         Directive dirx = visible?dir_visible_parameter_count:dir_invisible_parameter_count;
         if (count < min || count > max) {
-            LOG(M92,dir,count,min,max);  // "%s count(%d) must be in range [%d,%d]"
+            LOG(M92,dirx,count,min,max);  // "%s count(%d) must be in range [%d,%d]"
             count = max;
         }
         boolean notdefault = count < max;
@@ -108,21 +105,25 @@ public class PrintAnnotations {
     
     public final void printParamAnnotations(List<AnnotationNode>[] visible,int visibleparms,
             List<AnnotationNode>[] invisible, int invisibleparms) {
-            printParamAnnotations(visible, visibleparms, dir_visible_parameter_annotation,0);
-            printParamAnnotations(invisible, invisibleparms, dir_invisible_parameter_annotation,0);
+            printParamAnnotations(true, visible, visibleparms, 0);
+            printParamAnnotations(false, invisible, invisibleparms, 0);
     }
     
-    private void printParamAnnotations(List<AnnotationNode>[] anlistarr, int parms,Directive dir, int index) {
+    private void printParamAnnotations(boolean visible, List<AnnotationNode>[] anlistarr, int parms, int index) {
         if (anlistarr == null) {
             return;
         }
         int min = maxnonnulls(anlistarr);
         int max = anlistarr.length;
-        printLength(parms,min,max,dir);
-
+        printLength(visible,parms,min,max);
+        ReservedWord visibility = visible?ReservedWord.res_visible:ReservedWord.res_invisible;
         for (List<AnnotationNode> anlist:anlistarr) {
             for (AnnotationNode an : nonNullList(anlist)) {
-                lb.appendDirective(dir).append(index).append(an.desc).nl();
+                lb.appendDirective(dir_parameter_annotation)
+                        .append(visibility)
+                        .append(index)
+                        .append(an.desc)
+                        .nl();
                 printAnnotation(an);
                 lb.appendDirective(Directive.end_annotation).nl();
             }
@@ -256,48 +257,51 @@ public class PrintAnnotations {
         }
     }
     
-    private void printTypeAnnotations(List<TypeAnnotationNode> anlist, Directive dir) {
-        for (TypeAnnotationNode tan : nonNullList(anlist,dir)) {
-            printTypeAnnotationDirective(tan.typeRef, tan.typePath, tan.desc,dir);
+    public final void printTypeAnnotations(List<TypeAnnotationNode> visible,List<TypeAnnotationNode> invisible) {
+        printTypeAnnotations(true,visible);
+        printTypeAnnotations(false,invisible);
+    }   
+    
+    private void printTypeAnnotations(boolean visible, List<TypeAnnotationNode> anlist) {
+        for (TypeAnnotationNode tan : nonNullList(anlist)) {
+            printTypeAnnotation(visible,tan.typeRef, tan.typePath, tan.desc);
             printAnnotation(tan);
             lb.appendDirective(Directive.end_annotation).nl();
         }
     }
 
-    public final void printTypeAnnotations(List<TypeAnnotationNode> visible,List<TypeAnnotationNode> invisible) {
-        printTypeAnnotations(visible, dir_visible_type_annotation);
-        printTypeAnnotations(invisible, dir_invisible_type_annotation);
-    }   
-    
-    public final void printExceptAnnotations(List<TypeAnnotationNode> visible,List<TypeAnnotationNode> invisible) {
-        printTypeAnnotations(visible, dir_visible_except_annotation);
-        printTypeAnnotations(invisible, dir_invisible_except_annotation);
-    }   
-    
-    private void printInsnTypeAnnotations(List<TypeAnnotationNode> anlist, Directive dir) {
-        for (TypeAnnotationNode tan : nonNullList(anlist,dir)) {
-            printTypeAnnotationDirective(tan.typeRef, tan.typePath, tan.desc,dir);
+    private void printInsnTypeAnnotations(boolean visibility, List<TypeAnnotationNode> anlist) {
+        for (TypeAnnotationNode tan : nonNullList(anlist)) {
+            printTypeAnnotation(visibility,tan.typeRef, tan.typePath, tan.desc);
             printAnnotation(tan);
             lb.appendDirective(Directive.end_annotation).nl();
         }
     }
 
     public final void printInsnTypeAnnotations(List<TypeAnnotationNode> visible,List<TypeAnnotationNode> invisible) {
-        printInsnTypeAnnotations(visible, dir_visible_type_annotation);
-        printInsnTypeAnnotations(invisible, dir_invisible_type_annotation);
+        printInsnTypeAnnotations(true,visible);
+        printInsnTypeAnnotations(false,invisible);
     }   
     
-    private void printLocalVarAnnotations(List<LocalVariableAnnotationNode> anlist, Directive dir,
+    private void printLocalVarAnnotations(boolean visible, List<LocalVariableAnnotationNode> anlist,
                 Function<LabelNode,String> lab2strfn,List<LocalVariableNode> lvnlist) {
-        for (LocalVariableAnnotationNode lvan:nonNullList(anlist,dir)) {
+        for (LocalVariableAnnotationNode lvan:nonNullList(anlist)) {
+            int typeref = lvan.typeRef;
+            TypeRef tr = TypeRef.getInstance(typeref);
+            Directive dir = tr.getDirective();
+            CHECK_SUPPORTS(dir);
             String typepath = lvan.typePath == null?null:lvan.typePath.toString();
-            String trstr = TypeRef.getString(lvan.typeRef);
+            String trstr = tr.getTyperef(typeref);
+            ReservedWord visibility = visible?ReservedWord.res_visible:ReservedWord.res_invisible;
             lb.appendDirective(dir)
-                    .append(trstr.split(" "))
-                    .append(res_typepath, typepath)
-                    .append(lvan.desc)
-                    .append(ReservedWord.dot_array)
-                    .nl();
+                    .append(visibility);
+            if (!trstr.isEmpty()) {
+                lb.append(trstr.split(" "));
+            }
+            lb.append(res_typepath, typepath)
+                .append(lvan.desc)
+                .append(ReservedWord.dot_array)
+                .nl();
             lb.incrDepth();
                 lb.incrDepth();
                 int entries = lvan.index.size();
@@ -325,8 +329,8 @@ public class PrintAnnotations {
     public final void printLocalVarAnnotations(List<LocalVariableAnnotationNode> visible,
             List<LocalVariableAnnotationNode> invisible,
             Function<LabelNode,String> lab2strfn,List<LocalVariableNode> lvnlist) {
-        printLocalVarAnnotations(visible, dir_visible_type_annotation, lab2strfn, lvnlist);
-        printLocalVarAnnotations(invisible, dir_invisible_type_annotation, lab2strfn, lvnlist);
+        printLocalVarAnnotations(true,visible, lab2strfn, lvnlist);
+        printLocalVarAnnotations(false, invisible, lab2strfn, lvnlist);
     }
     
 }

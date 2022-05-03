@@ -2,39 +2,44 @@ package jvm;
 
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.objectweb.asm.TypeReference.*;
 
+import static jynx.Directive.*;
 import static jynx.Global.LOG;
 import static jynx.Message.*;
 
+import jynx.Directive;
 import jynx.LogIllegalArgumentException;
 
 public enum TypeRef {
 
-    trc_param(Context.CLASS, CLASS_TYPE_PARAMETER, 1),
-    trm_param(Context.METHOD, METHOD_TYPE_PARAMETER, 1),
-    trc_extends(Context.CLASS, CLASS_EXTENDS, 2),
-    trc_param_bound(Context.CLASS, CLASS_TYPE_PARAMETER_BOUND, 1, 1),
-    trm_param_bound(Context.METHOD, METHOD_TYPE_PARAMETER_BOUND, 1, 1),
-    trf_field(Context.FIELD, org.objectweb.asm.TypeReference.FIELD),
-    trm_return(Context.METHOD, METHOD_RETURN),
-    trm_receiver(Context.METHOD, METHOD_RECEIVER),
-    trm_formal(Context.METHOD, METHOD_FORMAL_PARAMETER, 1),
-    trm_throws(Context.METHOD, THROWS, 2),
-    tro_var(Context.CODE, LOCAL_VARIABLE),
-    tro_resource(Context.CODE, RESOURCE_VARIABLE),
-    trt_except(Context.CATCH, EXCEPTION_PARAMETER, 2),
-    tro_instanceof(Context.CODE, INSTANCEOF),
-    tro_new(Context.CODE, NEW),
-    tro_new_ref(Context.CODE, CONSTRUCTOR_REFERENCE),
-    tro_method_ref(Context.CODE, METHOD_REFERENCE),
-    tro_cast(Context.CODE, CAST, -2, 1),
-    tro_arg_new(Context.CODE, CONSTRUCTOR_INVOCATION_TYPE_ARGUMENT, -2, 1),
-    tro_arg_method(Context.CODE, METHOD_INVOCATION_TYPE_ARGUMENT, -2, 1),
-    tro_arg_new_ref(Context.CODE, CONSTRUCTOR_REFERENCE_TYPE_ARGUMENT, -2, 1),
-    tro_arg_method_ref(Context.CODE, METHOD_REFERENCE_TYPE_ARGUMENT, -2, 1),;
+    trc_param(dir_param_type_annotation, Context.CLASS, CLASS_TYPE_PARAMETER, 1),
+    trm_param(dir_param_type_annotation, Context.METHOD, METHOD_TYPE_PARAMETER, 1),
+    trc_extends(dir_extends_type_annotation, Context.CLASS, CLASS_EXTENDS, 2),
+    trc_param_bound(dir_param_bound_type_annotation, Context.CLASS, CLASS_TYPE_PARAMETER_BOUND, 1, 1),
+    trm_param_bound(dir_param_bound_type_annotation, Context.METHOD, METHOD_TYPE_PARAMETER_BOUND, 1, 1),
+    trf_field(dir_field_type_annotation, Context.FIELD, org.objectweb.asm.TypeReference.FIELD),
+    trm_return(dir_return_type_annotation, Context.METHOD, METHOD_RETURN),
+    trm_receiver(dir_receiver_type_annotation, Context.METHOD, METHOD_RECEIVER),
+    trm_formal(dir_formal_type_annotation, Context.METHOD, METHOD_FORMAL_PARAMETER, 1),
+    trm_throws(dir_throws_type_annotation, Context.METHOD, THROWS, 2),
+    tro_var(dir_var_type_annotation, Context.CODE, LOCAL_VARIABLE),
+    tro_resource(dir_resource_type_annotation, Context.CODE, RESOURCE_VARIABLE),
+    trt_except(dir_except_type_annotation, Context.CATCH, EXCEPTION_PARAMETER, 2),
+    tro_instanceof(dir_instanceof_type_annotation, Context.CODE, INSTANCEOF),
+    tro_new(dir_new_type_annotation, Context.CODE, NEW),
+    tro_newref(dir_newref_type_annotation, Context.CODE, CONSTRUCTOR_REFERENCE),
+    tro_methodref(dir_methodref_type_annotation, Context.CODE, METHOD_REFERENCE),
+    tro_cast(dir_cast_type_annotation, Context.CODE, CAST, -2, 1),
+    tro_argnew(dir_argnew_type_annotation, Context.CODE, CONSTRUCTOR_INVOCATION_TYPE_ARGUMENT, -2, 1),
+    tro_argmethod(dir_argmethod_type_annotation, Context.CODE, METHOD_INVOCATION_TYPE_ARGUMENT, -2, 1),
+    tro_argnewref(dir_argnewref_type_annotation, Context.CODE, CONSTRUCTOR_REFERENCE_TYPE_ARGUMENT, -2, 1),
+    tro_argmethodref(dir_argmethodref_type_annotation, Context.CODE, METHOD_REFERENCE_TYPE_ARGUMENT, -2, 1),;
 
+    private final Directive dir;
     private final Context context;
     private final int sort;
     private final int shiftamt;
@@ -46,7 +51,12 @@ public enum TypeRef {
     private final int len1;
     private final int len2;
 
-    private TypeRef(Context context, int sort, int... len) {
+    private TypeRef(Directive dir, Context context, int sort, int... len) {
+        this.dir = dir;
+        String dirstr = dir.toString();
+        int index = dirstr.indexOf("_type_annotation");
+        assert name().substring(4).equals(dirstr.substring(1,index)):
+                String.format("%s %s",name().substring(4),dirstr.substring(1,index));
         char type = name().charAt(2);
         switch (type) {
             case 'c':
@@ -97,6 +107,10 @@ public enum TypeRef {
             numind = 2;
         }
         this.unusedmask = ~((-1 << 24) | (mask << shiftamt) | (mask2 << shiftamt2));
+    }
+
+    public Directive getDirective() {
+        return dir;
     }
 
     public int getNumberIndices() {
@@ -169,22 +183,41 @@ public enum TypeRef {
                     sort,shiftamt,mask,shiftamt2,mask2, unusedmask,numind,this);
     }
     
+    public String getTyperef(int typeref) {
+        StringBuilder sb = new StringBuilder();
+        if ((typeref & unusedmask) != 0) {
+            // "unused field(s) in typeref not zero"
+            throw new LogIllegalArgumentException(M202);
+        }
+        if (numind > 0) {
+            if (sb.length() != 0) {
+                sb.append(' ');
+            }
+            sb.append(getIndex(typeref));
+        }
+        if (numind > 1) {
+            if (sb.length() != 0) {
+                sb.append(' ');
+            }
+            sb.append(getBound(typeref));
+        }
+        return sb.toString();
+    }
+
     @Override
     public String toString() {
         return name().substring(4);
     }
 
-    public static TypeRef getInstance(String token, Context acctype) {
-        if (acctype == Context.COMPONENT) acctype = Context.FIELD;
-        for (TypeRef tr : values()) {
-            if (tr.context == acctype && (tr.toString().equals(token))) {
-                return tr;
-            }
-        }
-        // "invalid type ref name - %s"
-        throw new LogIllegalArgumentException(M170,token);
+    public static TypeRef getInstance(Directive dir, Context context) {
+        Context acctype = context == Context.COMPONENT? Context.FIELD:context;
+        Optional<TypeRef> opttr = Stream.of(values())
+                .filter(tr->tr.dir == dir && tr.context == acctype)
+                .findAny();
+        // "invalid type annotation directive - %s"
+        return opttr.orElseThrow(()->new LogIllegalArgumentException(M170,dir));
     }
-
+    
     public static TypeRef getInstance(int typeref) {
         int sort = typeref >> 24;
         for (TypeRef tr : values()) {
@@ -201,25 +234,6 @@ public enum TypeRef {
         return tr.getIndex(typeref);
     }
 
-    public static String getString(int typeref) {
-        StringBuilder sb = new StringBuilder();
-        TypeRef tr = getInstance(typeref);
-        if ((typeref & tr.unusedmask) != 0) {
-            // "unused field(s) in typeref not zero"
-            throw new LogIllegalArgumentException(M202);
-        }
-        sb.append(tr.toString());
-        if (tr.numind > 0) {
-            sb.append(' ');
-            sb.append(tr.getIndex(typeref));
-        }
-        if (tr.numind > 1) {
-            sb.append(' ');
-            sb.append(tr.getBound(typeref));
-        }
-        return sb.toString();
-    }
-
     public static void checkInst(TypeRef tr, AsmOp lastjop) {
         EnumSet<AsmOp> lastjops = null;
         switch (tr) {
@@ -232,10 +246,10 @@ public enum TypeRef {
             case tro_new:
                 lastjops = EnumSet.of(AsmOp.asm_new);
                 break;
-            case tro_arg_method:
+            case tro_argmethod:
                 lastjops = EnumSet.of(AsmOp.asm_invokeinterface, AsmOp.asm_invokestatic, AsmOp.asm_invokevirtual);
                 break;
-            case tro_arg_new:
+            case tro_argnew:
                 lastjops = EnumSet.of(AsmOp.asm_invokespecial);
                 break;
         }

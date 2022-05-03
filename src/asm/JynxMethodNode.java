@@ -104,8 +104,7 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
                 visitAnnotableCount(line,false);
                 break;
             case dir_default_annotation:
-            case dir_invisible_parameter_annotation:
-            case dir_visible_parameter_annotation:
+            case dir_parameter_annotation:
                 JynxAnnotation.setAnnotation(dir, this, js);
                 break;
             default:

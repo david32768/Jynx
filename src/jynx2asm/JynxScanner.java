@@ -112,21 +112,9 @@ public class JynxScanner implements Iterator<Line> {
             line.firstToken();
             line.noMoreTokens();
             return null;
-        } else if (dir != Directive.end) {
-            LOG(M127,dir,enddir);    // "directive %s reached before %s"
-            reread = true;
-            return null;
         }
-        line.firstToken();
-        String endof = line.nextToken().asString();
-        String dirstr = "end_" + endof;
-        Optional<Directive> dirend = Directive.getDirInstance(dirstr);
-        if (dirend.isPresent() && dirend.get() == enddir) {
-            // "this %s directive has been replaced by %s"
-            LOG(M193,dir,enddir);
-        } else {
-            LOG(M127,dir,enddir);    // "directive %s reached before %s"
-        }
+        LOG(M127,dir,enddir);    // "directive %s reached before %s"
+        reread = true;
         return null;
     }
     

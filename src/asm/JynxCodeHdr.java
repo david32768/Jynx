@@ -421,25 +421,32 @@ public class JynxCodeHdr implements ContextDependent {
             Line line = js.getLine();
             AnnotationVisitor av;
             TypeRef tr = TypeRef.getInstance(typeref);
-           switch (tr) {
-            case tro_var:
-            case tro_resource:
-                av = visitLocalVariableAnnotation(line,typeref, typepath, desc, visible);
-                break;
-            default:
-                av = visitInsnAnnotation(tr, typeref, typepath, desc, visible);
-                break;
+            switch (tr) {
+                case trt_except:
+                    av = visitTryCatchAnnotation(typeref, typepath, desc, visible);
+                    break;
+                 case tro_var:
+                 case tro_resource:
+                     av = visitLocalVariableAnnotation(line,typeref, typepath, desc, visible);
+                     break;
+                 default:
+                     av = visitInsnAnnotation(tr, typeref, typepath, desc, visible);
+                     break;
         }
         line.noMoreTokens();
         return av;
     }
 
-    @Override
-    public AnnotationVisitor visitTryCatchAnnotation(int typeref, TypePath tp, String desc, boolean visible) {
+    private AnnotationVisitor visitTryCatchAnnotation(int typeref, TypePath tp, String desc, boolean visible) {
         int index = TypeRef.getIndexFrom(typeref);
+        if (index != 0 && index != tryct - 1) {
+            // "index (%d) is not zero and does not refer to last %s directive (%d)"
+            LOG(M335,index,Directive.dir_catch,tryct - 1);
+        }
         if (index != tryct - 1) {
-            // "index (%d) does not refer to last %s directive (%d)"
-            throw new LogIllegalArgumentException(M335,index,Directive.dir_catch,tryct - 1);
+                TypeRef tr = TypeRef.getInstance(typeref);
+                int[] indices = new int[]{tryct - 1};
+                typeref = tr.getTypeRef(indices);
         }
         return mnode.visitTryCatchAnnotation(typeref, tp, desc, visible);
     }

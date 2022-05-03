@@ -1,7 +1,11 @@
 package jynx;
 
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
+import static jynx.Global.LOG;
+import static jynx.Message.M271;
+import static jynx.Message.M68;
 import static jynx.Message.M69;
 import static jynx.Message.M80;
 import static jynx.Message.M83;
@@ -139,6 +143,91 @@ public class StringUtil {
     
     public static String QuoteEscape(String token) {
         return '\"' + StringEscape(token) + '\"';
+    }
+    
+    public static String[] tokenise(String line) {
+        // remove comments which start with " ;"
+        ArrayList<String> tokens = new ArrayList<>();
+        StringState state = StringState.BLANK;
+        char quote = '"';
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < line.length(); ++i) {
+            char c = line.charAt(i);
+            switch (state) {
+                case SLASH:
+                    state = StringState.QUOTE;
+                    break;
+                case QUOTE:
+                    switch (c) {
+                        case '"': case '\'':
+                            if (quote == c) {
+                                state = StringState.ENDQUOTE;
+                            }
+                            break;
+                        case '\\':
+                            state = StringState.SLASH;
+                            break;
+                    }
+                    break;
+                case ENDQUOTE:  // last character was closing quote
+                    if (!Character.isWhitespace(c)) {
+                        // "Quoted string followed by '%1$c' instead of blank; blank inserted before '%1$c'"
+                        LOG(line,M68,c);
+                        --i;    // reread character
+                    }
+                    tokens.add(sb.toString());
+                    sb = new StringBuilder();
+                    state = StringState.BLANK;
+                    continue;
+                case BLANK:
+                    if (Character.isWhitespace(c)) {
+                        continue;
+                    }
+                    switch(c) {
+                        case ';':
+                            state = StringState.COMMENT;   // ignore characters
+                            continue;
+                        case '"': case '\'':
+                            state = StringState.QUOTE;
+                            quote = c;
+                            break;
+                        default:
+                            state = StringState.UNQUOTED;
+                            break;
+                    }
+                    break;
+                case COMMENT:  // last token was blank semicolon i.e. comment start
+                    continue;
+                case UNQUOTED:  // not in quoted string
+                    if (Character.isWhitespace(c)) {
+                        tokens.add(sb.toString());
+                        sb = new StringBuilder();
+                        state = StringState.BLANK;
+                        continue;
+                    }
+                    break;
+                default:
+                    throw new AssertionError();
+            }
+            sb.append(c);
+        }
+        switch (state) {
+            case QUOTE:
+            case SLASH:
+                LOG(M271,sb.toString()); // "incomplete quoted string %s"
+                // falllthrough
+            case BLANK:
+            case COMMENT:
+            case ENDQUOTE:
+            case UNQUOTED:
+                if (sb.length() != 0) {
+                    tokens.add(sb.toString());
+                }
+                break;
+            default:
+                throw new EnumConstantNotPresentException((state.getClass()), state.name());
+        }
+        return tokens.toArray(new String[0]);
     }
     
     public static boolean isVisibleAscii(int c) {
