@@ -1,14 +1,12 @@
 package jvm;
 
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.objectweb.asm.TypeReference.*;
 
 import static jynx.Directive.*;
-import static jynx.Global.LOG;
 import static jynx.Message.*;
 
 import jynx.Directive;
@@ -16,28 +14,30 @@ import jynx.LogIllegalArgumentException;
 
 public enum TypeRef {
 
-    trc_param(dir_param_type_annotation, Context.CLASS, CLASS_TYPE_PARAMETER, 1),
-    trm_param(dir_param_type_annotation, Context.METHOD, METHOD_TYPE_PARAMETER, 1),
-    trc_extends(dir_extends_type_annotation, Context.CLASS, CLASS_EXTENDS, 2),
-    trc_param_bound(dir_param_bound_type_annotation, Context.CLASS, CLASS_TYPE_PARAMETER_BOUND, 1, 1),
-    trm_param_bound(dir_param_bound_type_annotation, Context.METHOD, METHOD_TYPE_PARAMETER_BOUND, 1, 1),
-    trf_field(dir_field_type_annotation, Context.FIELD, org.objectweb.asm.TypeReference.FIELD),
-    trm_return(dir_return_type_annotation, Context.METHOD, METHOD_RETURN),
-    trm_receiver(dir_receiver_type_annotation, Context.METHOD, METHOD_RECEIVER),
-    trm_formal(dir_formal_type_annotation, Context.METHOD, METHOD_FORMAL_PARAMETER, 1),
-    trm_throws(dir_throws_type_annotation, Context.METHOD, THROWS, 2),
-    tro_var(dir_var_type_annotation, Context.CODE, LOCAL_VARIABLE),
-    tro_resource(dir_resource_type_annotation, Context.CODE, RESOURCE_VARIABLE),
-    trt_except(dir_except_type_annotation, Context.CATCH, EXCEPTION_PARAMETER, 2),
-    tro_instanceof(dir_instanceof_type_annotation, Context.CODE, INSTANCEOF),
-    tro_new(dir_new_type_annotation, Context.CODE, NEW),
-    tro_newref(dir_newref_type_annotation, Context.CODE, CONSTRUCTOR_REFERENCE),
-    tro_methodref(dir_methodref_type_annotation, Context.CODE, METHOD_REFERENCE),
-    tro_cast(dir_cast_type_annotation, Context.CODE, CAST, -2, 1),
-    tro_argnew(dir_argnew_type_annotation, Context.CODE, CONSTRUCTOR_INVOCATION_TYPE_ARGUMENT, -2, 1),
-    tro_argmethod(dir_argmethod_type_annotation, Context.CODE, METHOD_INVOCATION_TYPE_ARGUMENT, -2, 1),
-    tro_argnewref(dir_argnewref_type_annotation, Context.CODE, CONSTRUCTOR_REFERENCE_TYPE_ARGUMENT, -2, 1),
-    tro_argmethodref(dir_argmethodref_type_annotation, Context.CODE, METHOD_REFERENCE_TYPE_ARGUMENT, -2, 1),;
+    // Table 4.7.20-A
+    trc_param(0x00,dir_param_type_annotation, Context.CLASS, CLASS_TYPE_PARAMETER, 1),
+    trm_param(0x01,dir_param_type_annotation, Context.METHOD, METHOD_TYPE_PARAMETER, 1),
+    trc_extends(0x10,dir_extends_type_annotation, Context.CLASS, CLASS_EXTENDS, 2),
+    trc_param_bound(0x11,dir_param_bound_type_annotation, Context.CLASS, CLASS_TYPE_PARAMETER_BOUND, 1, 1),
+    trm_param_bound(0x12,dir_param_bound_type_annotation, Context.METHOD, METHOD_TYPE_PARAMETER_BOUND, 1, 1),
+    trf_field(0x13,dir_field_type_annotation, Context.FIELD, org.objectweb.asm.TypeReference.FIELD),
+    trm_return(0x14,dir_return_type_annotation, Context.METHOD, METHOD_RETURN),
+    trm_receiver(0x15,dir_receiver_type_annotation, Context.METHOD, METHOD_RECEIVER),
+    trm_formal(0x16,dir_formal_type_annotation, Context.METHOD, METHOD_FORMAL_PARAMETER, 1),
+    trm_throws(0x17,dir_throws_type_annotation, Context.METHOD, THROWS, 2),
+    // Table 4.7.20-B
+    tro_var(0x40,dir_var_type_annotation, Context.CODE, LOCAL_VARIABLE),
+    tro_resource(0x41,dir_resource_type_annotation, Context.CODE, RESOURCE_VARIABLE),
+    trt_except(0x42,dir_except_type_annotation, Context.CATCH, EXCEPTION_PARAMETER, 2),
+    tro_instanceof(0x43,dir_instanceof_type_annotation, Context.CODE, INSTANCEOF),
+    tro_new(0x44,dir_new_type_annotation, Context.CODE, NEW),
+    tro_newref(0x45,dir_newref_type_annotation, Context.CODE, CONSTRUCTOR_REFERENCE),
+    tro_methodref(0x46,dir_methodref_type_annotation, Context.CODE, METHOD_REFERENCE),
+    tro_cast(0x47,dir_cast_type_annotation, Context.CODE, CAST, -2, 1),
+    tro_argnew(0x48,dir_argnew_type_annotation, Context.CODE, CONSTRUCTOR_INVOCATION_TYPE_ARGUMENT, -2, 1),
+    tro_argmethod(0x49,dir_argmethod_type_annotation, Context.CODE, METHOD_INVOCATION_TYPE_ARGUMENT, -2, 1),
+    tro_argnewref(0x4a,dir_argnewref_type_annotation, Context.CODE, CONSTRUCTOR_REFERENCE_TYPE_ARGUMENT, -2, 1),
+    tro_argmethodref(0x4b,dir_argmethodref_type_annotation, Context.CODE, METHOD_REFERENCE_TYPE_ARGUMENT, -2, 1),;
 
     private final Directive dir;
     private final Context context;
@@ -51,37 +51,39 @@ public enum TypeRef {
     private final int len1;
     private final int len2;
 
-    private TypeRef(Directive dir, Context context, int sort, int... len) {
+    private TypeRef(int value, Directive dir, Context context, int sort, int... len) {
         this.dir = dir;
         String dirstr = dir.toString();
         int index = dirstr.indexOf("_type_annotation");
         assert name().substring(4).equals(dirstr.substring(1,index)):
                 String.format("%s %s",name().substring(4),dirstr.substring(1,index));
         char type = name().charAt(2);
-        switch (type) {
-            case 'c':
-                this.context = Context.CLASS;
+        char expected;
+        switch (context) {
+            case CLASS:
+                expected = 'c';
                 break;
-            case 'f':
-                this.context = Context.FIELD;
+            case FIELD:
+                expected = 'f';
                 break;
-            case 'm':
-                this.context = Context.METHOD;
+            case METHOD:
+                expected = 'm';
                 break;
-            case 'o':
-                this.context = Context.CODE;
+            case CODE:
+                expected = 'o';
                 break;
-            case 't':
-                this.context = Context.CATCH;
+            case CATCH:
+                expected = 't';
                 break;
             default:
-                throw new AssertionError("unknown type " + type);
+                throw new EnumConstantNotPresentException(context.getClass(), context.name());
         }
-        if (this.context != context) {
-            String msg = String.format("typeref = %s context = %s implied context = %s",name(),context,this.context);
-            throw new AssertionError(msg);
-        }
+        assert type == expected:
+                String.format("typeref = %s context = %s type = '%c' expected = '%c;",
+                        name(),context,type,expected);
+        this.context = context;
         this.sort = sort;
+        assert value == sort;
         int unused = 0;
         assert len.length <= 2;
         len = Arrays.copyOf(len, 2);
@@ -183,7 +185,7 @@ public enum TypeRef {
                     sort,shiftamt,mask,shiftamt2,mask2, unusedmask,numind,this);
     }
     
-    public String getTyperef(int typeref) {
+    public String getTypeRefString(int typeref) {
         StringBuilder sb = new StringBuilder();
         if ((typeref & unusedmask) != 0) {
             // "unused field(s) in typeref not zero"
@@ -232,32 +234,6 @@ public enum TypeRef {
     public static int getIndexFrom(int typeref) {
         TypeRef tr = getInstance(typeref);
         return tr.getIndex(typeref);
-    }
-
-    public static void checkInst(TypeRef tr, AsmOp lastjop) {
-        EnumSet<AsmOp> lastjops = null;
-        switch (tr) {
-            case tro_cast:
-//                lastjops = EnumSet.of(JOp.opc_checkcast); // specification was vague on what instruction it may appear on
-                break;
-            case tro_instanceof:
-//                lastjops = EnumSet.of(JOp.opc_instanceof); // specification was vague on what instruction it may appear on
-                break;
-            case tro_new:
-                lastjops = EnumSet.of(AsmOp.asm_new);
-                break;
-            case tro_argmethod:
-                lastjops = EnumSet.of(AsmOp.asm_invokeinterface, AsmOp.asm_invokestatic, AsmOp.asm_invokevirtual);
-                break;
-            case tro_argnew:
-                lastjops = EnumSet.of(AsmOp.asm_invokespecial);
-                break;
-        }
-        if (lastjops != null) {
-            if (lastjop == null || !lastjops.contains(lastjop)) {
-                LOG(M232, lastjop, lastjops); // "Last instruction was %s: expected %s"
-            }
-        }
     }
 
 }

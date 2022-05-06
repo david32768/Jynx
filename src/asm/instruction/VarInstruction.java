@@ -10,17 +10,17 @@ import jynx2asm.StackLocals;
 
 public class VarInstruction extends Instruction {
 
-    private int var;
+    private int varnum;
     private final boolean relative;
 
-    public VarInstruction(JvmOp jop, int var, boolean relative) {
+    public VarInstruction(JvmOp jop, int varnum, boolean relative) {
         super(jop);
-        this.var = var;
+        this.varnum = varnum;
         this.relative = relative;
     }
 
-    public VarInstruction(JvmOp jop, int var) {
-        this(jop,var,false);
+    public VarInstruction(JvmOp jop, int varnum) {
+        this(jop,varnum,false);
     }
 
     @Override
@@ -29,29 +29,29 @@ public class VarInstruction extends Instruction {
             return base;
         }
         if (relative) {
-            var = stackLocals.locals().absolute(var);
+            varnum = stackLocals.locals().absolute(varnum);
         }
         if (jvmop instanceof AliasOp) {
             AliasOp aliasop = (AliasOp)jvmop;
             FrameElement stackfe = stackLocals.stack().peekTOS();
-            FrameElement localfe = stackLocals.locals().peek(var);
+            FrameElement localfe = stackLocals.locals().peek(varnum);
             base = aliasop.resolve(stackfe,localfe);
         }
         return base;
     }
     @Override
     public void accept(MethodVisitor mv) {
-        mv.visitVarInsn(base.opcode(),var);
+        mv.visitVarInsn(base.opcode(),varnum);
     }
     
     @Override
     public void adjust(StackLocals stackLocals) {
-        stackLocals.adjustLoadStore(base, var);
+        stackLocals.adjustLoadStore(base, varnum);
     }
 
     @Override
     public String toString() {
-        return String.format("%s %d",base,var);
+        return String.format("%s %d",base,varnum);
     }
 
 }

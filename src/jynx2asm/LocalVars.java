@@ -21,6 +21,7 @@ public class LocalVars {
     private OperandStackFrame lastlocals;
     private final BitSet readVars;
     private final BitSet writeVars;
+    private final BitSet typedVars;
     private final int parmsz;
     
     
@@ -31,6 +32,7 @@ public class LocalVars {
         this.startblock = true;
         this.readVars = new BitSet();
         this.writeVars = new BitSet();
+        this.typedVars = new BitSet();
         visitFrame(parmlocals, Optional.empty());
         this.startblock = false;
         this.parmsz = sz;
@@ -175,6 +177,10 @@ public class LocalVars {
         startblock = false;
     }
 
+    public void typedVar(int num) {
+        typedVars.set(num);
+    }
+    
     private void setLocals(OperandStackFrame osf, Optional<JynxLabel> lastLab) {
         clear();
         sz = osf.size();
@@ -297,6 +303,13 @@ public class LocalVars {
             String ranges = rangeString(0,unwrittenvars);
             // "local variables [%s ] are read but not written"
             LOG(M65,ranges);
+        }
+        unwrittenvars = (BitSet)typedVars.clone();
+        unwrittenvars.andNot(writeVars);
+        if (!unwrittenvars.isEmpty()) {
+            String ranges = rangeString(0,unwrittenvars);
+            // "Annotation for unknown variables [%s ]"
+            LOG(M223,ranges);
         }
     }
     

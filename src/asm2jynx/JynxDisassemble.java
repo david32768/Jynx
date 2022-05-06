@@ -246,7 +246,7 @@ public class JynxDisassemble {
         accflags = AccessFlag.getEnumSet(module.access, MODULE,jvmVersion);
         jp.appendDirective(dir_module)
                 .append(accflags,module.name)
-                .append(module.version)
+                .appendNonNull(module.version)
                 .nl();
 
         jp.incrDepth();
@@ -349,16 +349,16 @@ public class JynxDisassemble {
         }
     }
 
-    private void printDotVersion() {
-        jp.appendDirective(dir_version)
-                .append(jvmVersion.asJava());
-        jp.nl();
-    }
-    
     private void printVersionSource() {
         jp.appendComment("options = " + OPTIONS().toString()).nl();
         jp.appendComment(Main.MainOption.DISASSEMBLY.version()).nl();
-        printDotVersion();
+        jp.appendDirective(dir_version)
+                .append(jvmVersion.asJava());
+        OPTIONS().stream()
+                .filter(opt->opt.isRelevent(Main.MainOption.ASSEMBLY))
+                .filter(opt-> opt != GlobalOption.SYSIN)
+                .forEach(jp::append);
+        jp.nl();
         jp.printDirective(dir_source, cn.sourceFile);
     }
     

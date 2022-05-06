@@ -6,9 +6,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.function.Predicate;
 import java.util.Optional;
-import java.util.Scanner;
 
 import static jynx.Global.*;
 import static jynx.GlobalOption.*;
@@ -18,14 +18,16 @@ import asm2jynx.JynxDisassemble;
 import jvm.JvmVersion;
 import jynx.GlobalOption;
 import jynx2asm.JynxClass;
+import jynx2asm.JynxScanner;
 
 public class Main {
     
     private final static String SUFFIX = ".jx";
+    private final static String JAVA_SUFFIX = ".java";
 
     private final static int JYNX_VERSION = 0;
     private final static int JYNX_RELEASE = 12;
-    private final static int JYNX_BUILD = 17;
+    private final static int JYNX_BUILD = 18;
     
     private static String version() {
         return String.format("%d+%d-%d",JYNX_VERSION,JYNX_RELEASE,JYNX_BUILD);
@@ -89,16 +91,16 @@ public class Main {
         }
         String fname = optfname.orElse("SYSIN");
         try {
-            Scanner scanner;
+            JynxScanner scanner;
             if (optfname.isPresent()) {
-                if (!fname.endsWith(SUFFIX)) {
+                if (!fname.endsWith(SUFFIX) && !fname.endsWith(JAVA_SUFFIX)) {
                     LOG(M97,fname,SUFFIX); // "file(%s) does not have %s suffix"
                     return false;
                 }
                 Path pathj = Paths.get(fname);
-                scanner = new Scanner(pathj);
+                scanner = JynxScanner.getInstance(pathj,fname.endsWith(JAVA_SUFFIX));
             } else {
-                scanner = new Scanner(System.in);
+                scanner = JynxScanner.getInstance(System.in);
             }
             return assemble(fname, scanner);
         } catch (IOException ex) {
@@ -107,8 +109,8 @@ public class Main {
         }
     }
 
-    private static boolean assemble(String fname, Scanner scanner) throws IOException {
-        byte[] ba = JynxClass.getBytes(fname,  scanner);
+    private static boolean assemble(String fname, JynxScanner scanner) throws IOException {
+        byte[] ba = JynxClass.getBytes(fname,scanner);
         if (ba == null) {
             return false;
         }
@@ -125,7 +127,7 @@ public class Main {
         return true;
     }
     
-    private static Optional<String> setOptions(String[] args, Main.MainOption main) {
+    public static Optional<String> setOptions(String[] args) {
         int i = 0;
         String[] remainder = new String[0];
         for (; i < args.length; ++i) {
@@ -137,11 +139,7 @@ public class Main {
                 Optional<GlobalOption> opt = GlobalOption.optArgInstance(argi);
                 if (opt.isPresent()) {
                     GlobalOption option = opt.get();
-                    if (option.isRelevent(main)) {
-                        ADD_OPTION(option);
-                    } else {
-                        LOG(M44,option,main); // "option %s is not relevent for %s"
-                    }
+                    ADD_OPTION(option);
                 } else {
                     LOG(M32,argi); // "%s is not a valid option"
                 }
@@ -204,13 +202,13 @@ public class Main {
             LOG(M28,main.extname());
             return false;
         }
-        Optional<String> optname = setOptions(args,main);
+        newGlobal(main, EnumSet.noneOf(GlobalOption.class));
+        Optional<String> optname = setOptions(args);
         if (LOGGER().numErrors() != 0) {
             LOG(M3); // "program terminated because of errors"
             appUsage();
             return false;
         }
-        newGlobal(main,OPTIONS());
         boolean success = main.fn.test(optname);
         if (!success) {
             LOG(M298,main.name(),CLASS_NAME()); // "%s of %s failed"

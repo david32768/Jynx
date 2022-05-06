@@ -1,20 +1,18 @@
 package jvm;
 
-import java.util.EnumSet;
-
 public enum Context {
 
     // use access flags
-    CLASS,
-    INNER_CLASS,
+    CLASS(true),
+    INNER_CLASS(true),
     
-    FIELD,
-    METHOD,
-    PARAMETER,
-    MODULE,
-    EXPORT,
-    OPEN,
-    REQUIRE,
+    FIELD(true),
+    METHOD(true),
+    PARAMETER(true),
+    MODULE(true),
+    EXPORT(true),
+    OPEN(true),
+    REQUIRE(true),
     
     INIT_METHOD,    // used in AccessFlag and Access
 
@@ -31,10 +29,18 @@ public enum Context {
     
     ;
 
-    private final static EnumSet<Context> basic = 
-            EnumSet.of(CLASS,INNER_CLASS,FIELD,METHOD,PARAMETER,MODULE,EXPORT,OPEN,REQUIRE);
+    private final boolean hasAccessFlags;
+
+    private Context() {
+        this(false);
+    }
+    
+    private Context(boolean hasAccessFlags) {
+        this.hasAccessFlags = hasAccessFlags;
+    }
+    
     
     public boolean usesAccessFlags() {
-        return basic.contains(this);
+        return hasAccessFlags;
     }
 }

@@ -1,16 +1,22 @@
 package jynx2asm;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.Scanner;
 
 import static jynx.Global.*;
 import static jynx.Message.*;
 
 import jynx.Directive;
+import jynx.LogIllegalArgumentException;
 
 public class JynxScanner implements Iterator<Line> {
 
@@ -19,13 +25,13 @@ public class JynxScanner implements Iterator<Line> {
     private boolean reread;
     private int precomments;
 
-    private final Scanner lines;
+    private final BufferedReader lines;
 
-    private JynxScanner(Scanner lines) {
+    private JynxScanner(BufferedReader  lines) {
         this.lines = lines;
 
         this.linect = 0;
-        this.line = null;
+        this.line = Line.EMPTY;
         this.reread = false;
         this.precomments = 0;
     }
@@ -34,20 +40,44 @@ public class JynxScanner implements Iterator<Line> {
         return precomments;
     }
 
-    public static JynxScanner getInstance(Scanner lines) {
-        JynxScanner js = new JynxScanner(lines);
+    public static JynxScanner getInstance(BufferedReader lines) {
+        return new JynxScanner(lines);
+    }
+    
+    public static JynxScanner getInstance(InputStream in) {
+        return new JynxScanner(new BufferedReader(new InputStreamReader(in)));
+    }
+    
+    public static JynxScanner getInstance(String str) {
+        return new JynxScanner(new BufferedReader(new StringReader(str)));
+    }
+    
+    public static JynxScanner getInstance(Path path, boolean javafile) throws IOException {
+        JynxScanner js = new JynxScanner(Files.newBufferedReader(path));
         js.skipPreComments();
         return js;
+    }
+    
+    private String readLine() {
+        try {
+            String linestr = lines.readLine();
+            if (linestr == null) {
+                lines.close();
+            }
+            return linestr;
+        } catch (IOException ioex) {
+            throw new AssertionError(ioex);
+        }
     }
     
     private void  skipPreComments() {
         String linestr;
         do {
-            if (!lines.hasNextLine()) {
-                lines.close();
-                return;
+            linestr = readLine();
+            if (linestr == null) {
+                // "no Jynx directives in file!"
+                throw new LogIllegalArgumentException(M273);
             }
-            linestr = lines.nextLine();
             ++linect;
             ++precomments;
         } while (!linestr.trim().startsWith(".")); // ignore lines until directive
@@ -66,12 +96,11 @@ public class JynxScanner implements Iterator<Line> {
         line.noMoreTokens();
         String linestr;
         do {
-            if (!lines.hasNextLine()) {
+            linestr = readLine();
+            if (linestr == null) {
                 line = null;
-                lines.close();
                 return;
             }
-            linestr = lines.nextLine();
             ++linect;
         } while (linestr.trim().length() == 0 || linestr.trim().startsWith(";")); // ignore empty lines and comments
         line = Line.tokenise(linestr, linect);
@@ -95,7 +124,7 @@ public class JynxScanner implements Iterator<Line> {
         }
         nextLine();
         if (line == null) {
-            return Line.tokenise(".end_class", Integer.MAX_VALUE);
+            return Line.tokenise(Directive.end_class.toString(), Integer.MAX_VALUE);
         }
         return line;
     }

@@ -21,7 +21,7 @@ import jynx2asm.Token;
 
 public class JynxVar {
     
-    private final int var;
+    private final int varnum;
     private final String name;
     private final String desc;
     private final String signature;
@@ -29,8 +29,8 @@ public class JynxVar {
     private final JynxLabel toref;
     private final Line line;
 
-    public JynxVar(int var, String name, String desc, String signature, JynxLabel fromref, JynxLabel toref, Line line) {
-        this.var = var;
+    public JynxVar(int varnum, String name, String desc, String signature, JynxLabel fromref, JynxLabel toref, Line line) {
+        this.varnum = varnum;
         this.name = name;
         this.desc = desc;
         this.signature = signature;
@@ -39,8 +39,8 @@ public class JynxVar {
         this.line = line;
     }
 
-    public int var() {
-        return var;
+    public int varnum() {
+        return varnum;
     }
 
     public String desc() {
@@ -80,7 +80,7 @@ public class JynxVar {
         Label from = fromref.asmlabel();
         Label to = toref.asmlabel();
         if (fromref.isLessThan(toref)) {
-            mv.visitLocalVariable(name, desc, signature, from, to, var);
+            mv.visitLocalVariable(name, desc, signature, from, to, varnum);
         } else {
             LOG(line,M217,fromref.name(),toref.name()); //"from label %s is not before to label %s"
         }

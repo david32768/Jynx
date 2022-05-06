@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Scanner;
 
 import static jynx.Global.*;
 import static jynx.GlobalOption.BASIC_VERIFIER;
@@ -19,7 +18,7 @@ import asm.JynxComponentNode;
 import asm.JynxFieldNode;
 import asm.JynxMethodNode;
 import asm.JynxModule;
-import jvm.AccessFlag;
+import com.github.david32768.jynx.Main;
 import jvm.JvmVersion;
 import jynx.ClassType;
 import jynx.Directive;
@@ -64,10 +63,9 @@ public class JynxClass {
         this.opmap = new HashMap<>(JynxOps.getOpMap());
     }
 
-    public static byte[] getBytes(String default_source, Scanner lines) {
+    public static byte[] getBytes(String default_source, JynxScanner lines) {
         try {
-            Global.resolveAmbiguity(SIMPLE_VERIFIER, BASIC_VERIFIER);
-            JynxClass jclass =  new JynxClass(default_source, JynxScanner.getInstance(lines));
+            JynxClass jclass =  new JynxClass(default_source, lines);
             jclass.assemble();
             return jclass.toByteArray();
         } catch (RuntimeException rtex) {
@@ -128,6 +126,7 @@ public class JynxClass {
             throw new IllegalStateException();
         }
         this.jvmVersion = jvmversion;
+        Global.resolveAmbiguity(SIMPLE_VERIFIER, BASIC_VERIFIER);
         Global.setJvmVersion(jvmversion);
         if (!OPTIONS().isEmpty()) {
             LOG(M88, OPTIONS());  // "options = %s"
@@ -141,7 +140,7 @@ public class JynxClass {
                 break;
             }
             Optional<GlobalOption> option = GlobalOption.optInstance(token.toString());
-            if (option.isPresent()) {
+            if (option.isPresent() && option.get().isRelevent(Main.MainOption.ASSEMBLY)) {
                 boolean added = ADD_OPTION(option.get());
             } else {
                 LOG(M105,token); // "unknown option %s - ignored"

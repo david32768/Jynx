@@ -7,29 +7,28 @@ import jynx2asm.StackLocals;
 
 public class IncrInstruction extends Instruction {
 
-    private final int var;
+    private final int varnum;
     private final int incr;
 
-    public IncrInstruction(JvmOp jop, int var, int incr) {
+    public IncrInstruction(JvmOp jop, int varnum, int incr) {
         super(jop);
-        this.var = var;
+        this.varnum = varnum;
         this.incr = incr;
     }
 
     @Override
     public void accept(MethodVisitor mv) {
-        mv.visitIincInsn(var, incr);
+        mv.visitIincInsn(varnum, incr);
     }
 
     @Override
     public void adjust(StackLocals stackLocals) {
-        stackLocals.checkIncr(var);
+        stackLocals.checkIncr(varnum);
     }
 
     @Override
     public String toString() {
-        return String.format("%s %d %d",base,var, incr);
+        return String.format("%s %d %d",base,varnum, incr);
     }
 
-    
 }

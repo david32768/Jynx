@@ -1,11 +1,10 @@
 package asm;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.objectweb.asm.AnnotationVisitor;
@@ -30,7 +29,6 @@ import jvm.FrameType;
 import jvm.TypeRef;
 import jynx.Access;
 import jynx.Directive;
-import jynx.LogIllegalArgumentException;
 import jynx.ReservedWord;
 import jynx2asm.ClassChecker;
 import jynx2asm.JynxCatch;
@@ -50,7 +48,6 @@ public class JynxCodeHdr implements ContextDependent {
 
     private final JynxScanner js;
     private List<Object> localStack;
-    private final Set<Integer> var_indices;
     private final int errct_at_start;
 
     private final StackLocals stackLocals;
@@ -75,7 +72,6 @@ public class JynxCodeHdr implements ContextDependent {
         String clname = access.is(AccessFlag.acc_static)?null:checker.getClassName();
         this.localStack = FrameType.getInitFrame(clname, cmd); // classname set non null for virtual methods
         this.mnode = mv;
-        this.var_indices = new HashSet<>();
         this.errct_at_start = LOGGER().numErrors();
         this.labelmap = labelmap;
         this.vars = new ArrayList<>();
@@ -360,7 +356,6 @@ public class JynxCodeHdr implements ContextDependent {
     
     private void visitVar(Line line) {
         JynxVar jvar = JynxVar.getInstance(line, labelmap);
-        var_indices.add(jvar.var());
         vars.add(jvar);
     }
     
@@ -372,7 +367,7 @@ public class JynxCodeHdr implements ContextDependent {
             if (ok) {
                 jvar.accept(mv);
             } else {
-                LOG(M54,jvar.var()); // "variable %d has not been written to"
+                LOG(M54,jvar.varnum()); // "variable %d has not been written to"
             }
         }
         LOGGER().popCurrent();
@@ -451,9 +446,35 @@ public class JynxCodeHdr implements ContextDependent {
         return mnode.visitTryCatchAnnotation(typeref, tp, desc, visible);
     }
 
+    private static void checkAnnotatedInst(TypeRef tr, AsmOp lastjop) {
+        EnumSet<AsmOp> lastjops = null;
+        switch (tr) {
+            case tro_cast:
+                lastjops = EnumSet.of(AsmOp.asm_checkcast);
+                break;
+            case tro_instanceof:
+                lastjops = EnumSet.of(AsmOp.asm_instanceof);
+                break;
+            case tro_new:
+                lastjops = EnumSet.of(AsmOp.asm_new);
+                break;
+            case tro_argmethod:
+                lastjops = EnumSet.of(AsmOp.asm_invokeinterface, AsmOp.asm_invokestatic, AsmOp.asm_invokevirtual);
+                break;
+            case tro_argnew:
+                lastjops = EnumSet.of(AsmOp.asm_invokespecial);
+                break;
+        }
+        if (lastjops != null) {
+            if (lastjop == null || !lastjops.contains(lastjop)) {
+                LOG(M232, lastjop, lastjops); // "Last instruction was %s: expected %s"
+            }
+        }
+    }
+    
     private AnnotationVisitor visitInsnAnnotation
         (TypeRef tr, int typeref, TypePath tp, String desc, boolean visible) {
-            TypeRef.checkInst(tr, stackLocals.lastOp());
+            checkAnnotatedInst(tr, stackLocals.lastOp());
             return mnode.visitInsnAnnotation(typeref, tp, desc, visible);
     }
 
@@ -478,10 +499,7 @@ public class JynxCodeHdr implements ContextDependent {
             Label[] end_arr = new Label[endlist.size()];
             for (int i = 0; i < index_arr.length; ++i) {
                 index_arr[i] = indexlist.get(i);
-                if (!var_indices.contains(index_arr[i])) {
-                    LOG(M223,index_arr[i]); // "Annotation for unknown variable  %d"
-                    // -g not specified for javac
-                }
+                stackLocals.locals().typedVar(index_arr[i]);
                 JynxLabel startref = labelmap.useOfJynxLabel(startlist.get(i), line);
                 JynxLabel endref = labelmap.useOfJynxLabel(endlist.get(i), line);
                 start_arr[i] = startref.asmlabel();

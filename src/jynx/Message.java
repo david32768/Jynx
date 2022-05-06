@@ -48,7 +48,7 @@ public enum Message {
     M41("component can only appear in a record"),
     M42("%s invalid in context"),
     M43("line contains newline or carriage return character"),
-    M44(WARNING,"option %s is not relevent for %s"),
+
     M45("value(%d) for %s exceeds that(%d) set by line:%n  %s"),
     M46("method %s has no body"),
     M47("Invalid component name - %s"),
@@ -223,7 +223,7 @@ public enum Message {
     M220(WARNING,"label %s is an alias for label %s"),
     M221("required %s for var %d but found %s"),
     M222("either option %s is specified or file name is present but not both"),
-    M223("Annotation for unknown variable  %d"),
+    M223("Annotation for unknown variables [%s ]"),
     M224(WARNING,"invalid %s as only has %s"),
     M225(WARNING,"empty %s ignored"),
     M226("invalid access flags %s for component"),
@@ -273,7 +273,7 @@ public enum Message {
     M270(WARNING,"%s directive missing but assumed"),
     M271("incomplete quoted string %s"),
     M272(WARNING,"Label %s not used - defined in line:%n  %s"),
-
+    M273("no Jynx directives in file!"),
     M274(SEVERE,"duplicate: %s has the same opcode(%d) as %s"),
 
     M280(BLANK,"program terminated because of severe error(s)"),

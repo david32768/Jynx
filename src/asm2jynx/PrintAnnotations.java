@@ -40,7 +40,7 @@ public class PrintAnnotations {
         Directive dir = tr.getDirective();
         CHECK_SUPPORTS(dir);
         String typepath = tp == null?null:tp.toString();
-        String trstr = tr.getTyperef(typeref);
+        String trstr = tr.getTypeRefString(typeref);
         ReservedWord visibility = visible?ReservedWord.res_visible:ReservedWord.res_invisible;
         lb.appendDirective(dir)
                 .append(visibility);
@@ -291,7 +291,7 @@ public class PrintAnnotations {
             Directive dir = tr.getDirective();
             CHECK_SUPPORTS(dir);
             String typepath = lvan.typePath == null?null:lvan.typePath.toString();
-            String trstr = tr.getTyperef(typeref);
+            String trstr = tr.getTypeRefString(typeref);
             ReservedWord visibility = visible?ReservedWord.res_visible:ReservedWord.res_invisible;
             lb.appendDirective(dir)
                     .append(visibility);
