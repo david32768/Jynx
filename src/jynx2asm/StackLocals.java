@@ -236,8 +236,8 @@ public class StackLocals {
         }
     }
 
-    public boolean visitVar(JynxVar jvar) {
-        return locals().visitVar(FrameElement.fromDesc(jvar.desc()), jvar.varnum());
+    public boolean visitVarDirective(JynxVar jvar) {
+        return locals().visitVarDirective(FrameElement.fromDesc(jvar.desc()), jvar.varnum());
     }
     
     public void visitEnd() {

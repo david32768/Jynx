@@ -52,7 +52,7 @@ public class JynxVar {
     }
     
     public static JynxVar getInstance(Line line, JynxLabelMap labelmap) {
-        int var = line.nextToken().asUnsignedShort();
+        int varnum = line.nextToken().asUnsignedShort();
         String name = line.after(res_is);
         String desc = line.nextToken().asString();
         String vsignature = line.optAfter(res_signature);
@@ -73,7 +73,7 @@ public class JynxVar {
             Global.CHECK_SUPPORTS(Signature);
             NameDesc.FIELD_SIGNATURE.validate(vsignature);
         }
-        return new JynxVar(var,name, desc, vsignature, fromref, toref, line);
+        return new JynxVar(varnum,name, desc, vsignature, fromref, toref, line);
     }
     
     public void accept(MethodVisitor mv) {

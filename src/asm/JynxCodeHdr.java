@@ -363,7 +363,7 @@ public class JynxCodeHdr implements ContextDependent {
         LOGGER().pushCurrent();
         for (JynxVar jvar:vars) {
             LOGGER().setLine(jvar.getLine().toString());
-            boolean ok = stackLocals.visitVar(jvar);
+            boolean ok = stackLocals.visitVarDirective(jvar);
             if (ok) {
                 jvar.accept(mv);
             } else {

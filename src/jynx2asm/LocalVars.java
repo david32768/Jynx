@@ -33,8 +33,7 @@ public class LocalVars {
         this.readVars = new BitSet();
         this.writeVars = new BitSet();
         this.typedVars = new BitSet();
-        visitFrame(parmlocals, Optional.empty());
-        this.startblock = false;
+        visitFrame(parmlocals, Optional.empty());  // wiil set startblock to false
         this.parmsz = sz;
     }
 
@@ -265,12 +264,9 @@ public class LocalVars {
         label.updateLocal(osf);
     }
 
-    public boolean visitVar(FrameElement fe, int num) {
-        adjustMax(fe,num);
-        readVars.set(num);
+    public boolean visitVarDirective(FrameElement fe, int num) {
         boolean ok = writeVars.get(num);
         if (fe.isTwo()) {
-            readVars.set(num + 1);
             ok &= writeVars.get(num + 1);
         }
         return ok;
