@@ -5,8 +5,8 @@ import java.util.stream.Stream;
 
 import static jvm.AsmOp.*;
 import static jvm.Op.opc_labelweak;
-import static jynx2asm.ops.AliasOps.opc_xreturn;
 import static jynx2asm.ops.ExtendedOps.*;
+import static jynx2asm.ops.InternalOps.opc_xreturn;
 import static jynx2asm.ops.LineOps.*;
 
 
@@ -57,6 +57,20 @@ public enum StructuredOps implements MacroOp {
     ext_IF_DCMPGT(mac_label_else,ext_if_dcmple),
     ext_IF_DCMPGE(mac_label_else,ext_if_dcmplt),
 
+    ext_IF_IUCMPNE(mac_label_else,ext_if_iucmpeq),
+    ext_IF_IUCMPEQ(mac_label_else,ext_if_iucmpne),
+    ext_IF_IUCMPLT(mac_label_else,ext_if_iucmpge),
+    ext_IF_IUCMPLE(mac_label_else,ext_if_iucmpgt),
+    ext_IF_IUCMPGT(mac_label_else,ext_if_iucmple),
+    ext_IF_IUCMPGE(mac_label_else,ext_if_iucmplt),
+
+    ext_IF_LUCMPNE(mac_label_else,ext_if_lucmpeq),
+    ext_IF_LUCMPEQ(mac_label_else,ext_if_lucmpne),
+    ext_IF_LUCMPLT(mac_label_else,ext_if_lucmpge),
+    ext_IF_LUCMPLE(mac_label_else,ext_if_lucmpgt),
+    ext_IF_LUCMPGT(mac_label_else,ext_if_lucmple),
+    ext_IF_LUCMPGE(mac_label_else,ext_if_lucmplt),
+
     ext_BR(lab_get,asm_goto),
     ext_BR_IFEQZ(lab_get,asm_ifeq),
     ext_BR_IFNEZ(lab_get,asm_ifne),
@@ -92,6 +106,20 @@ public enum StructuredOps implements MacroOp {
     ext_BR_IF_DCMPLE(lab_get,ext_if_dcmple),
     ext_BR_IF_DCMPGT(lab_get,ext_if_dcmpgt),
     ext_BR_IF_DCMPGE(lab_get,ext_if_dcmpge),
+
+    ext_BR_IF_IUCMPEQ(lab_get,ext_if_iucmpeq),
+    ext_BR_IF_IUCMPNE(lab_get,ext_if_iucmpne),
+    ext_BR_IF_IUCMPLT(lab_get,ext_if_iucmplt),
+    ext_BR_IF_IUCMPLE(lab_get,ext_if_iucmple),
+    ext_BR_IF_IUCMPGT(lab_get,ext_if_iucmpgt),
+    ext_BR_IF_IUCMPGE(lab_get,ext_if_iucmpge),
+
+    ext_BR_IF_LUCMPEQ(lab_get,ext_if_lucmpeq),
+    ext_BR_IF_LUCMPNE(lab_get,ext_if_lucmpne),
+    ext_BR_IF_LUCMPLT(lab_get,ext_if_lucmplt),
+    ext_BR_IF_LUCMPLE(lab_get,ext_if_lucmple),
+    ext_BR_IF_LUCMPGT(lab_get,ext_if_lucmpgt),
+    ext_BR_IF_LUCMPGE(lab_get,ext_if_lucmpge),
 
     ;
     

@@ -44,6 +44,7 @@ public enum Feature implements JvmVersioned {
     V6methods(V1_6),
     
     invokeDynamic(V1_7),
+    V7methods(V1_7),
 
     type_annotations(V1_8),
     invokespecial_interface(V1_8),

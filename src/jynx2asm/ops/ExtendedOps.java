@@ -4,11 +4,10 @@ import java.util.Arrays;
 import java.util.stream.Stream;
 
 import static jvm.AsmOp.*;
+import static jynx2asm.ops.JavaCallOps.*;
 
 
 public enum ExtendedOps implements MacroOp {
-
-    // callop not used
 
     ext_isignum(asm_i2l,asm_lconst_0,asm_lcmp),
     // extended stack ops; stack-opcode stack-opcode
@@ -16,8 +15,9 @@ public enum ExtendedOps implements MacroOp {
     ext_swap21(asm_dup_x2,asm_pop),
     ext_swap12(asm_dup2_x1,asm_pop2),
     //
-    ext_icmp(asm_i2l,ext_swap12,asm_i2l,asm_lcmp,asm_ineg),
-    ext_irevcmp(asm_i2l,ext_swap12,asm_i2l,asm_lcmp),
+    ext_icmp(inv_icompare, ext_isignum),
+    ext_iucmp(inv_iucompare, ext_isignum),
+    ext_lucmp(inv_lucompare, ext_isignum),
     //
     ext_ireturn_0(asm_iconst_0,asm_ireturn),
     ext_ireturn_1(asm_iconst_1,asm_ireturn),
@@ -45,6 +45,21 @@ public enum ExtendedOps implements MacroOp {
     ext_if_dcmple(asm_dcmpg, asm_ifle),
     ext_if_dcmplt(asm_dcmpg, asm_iflt),
     ext_if_dcmpne(asm_dcmpl, asm_ifne),
+
+    // unsigned comparisons
+    ext_if_iucmpeq(inv_iucompare, asm_ifeq),
+    ext_if_iucmpge(inv_iucompare, asm_ifge),
+    ext_if_iucmpgt(inv_iucompare, asm_ifgt),
+    ext_if_iucmple(inv_iucompare, asm_ifle),
+    ext_if_iucmplt(inv_iucompare, asm_iflt),
+    ext_if_iucmpne(inv_iucompare, asm_ifne),
+
+    ext_if_lucmpeq(inv_lucompare, asm_ifeq),
+    ext_if_lucmpge(inv_lucompare, asm_ifge),
+    ext_if_lucmpgt(inv_lucompare, asm_ifgt),
+    ext_if_lucmple(inv_lucompare, asm_ifle),
+    ext_if_lucmplt(inv_lucompare, asm_iflt),
+    ext_if_lucmpne(inv_lucompare, asm_ifne),
 
     ;
     

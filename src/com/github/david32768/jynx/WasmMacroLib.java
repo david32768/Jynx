@@ -9,6 +9,7 @@ import org.objectweb.asm.Type;
 import static jvm.AsmOp.*;
 import static jynx2asm.ops.AliasOps.*;
 import static jynx2asm.ops.ExtendedOps.*;
+import static jynx2asm.ops.InternalOps.*;
 import static jynx2asm.ops.JavaCallOps.*;
 import static jynx2asm.ops.LineOps.*;
 import static jynx2asm.ops.StructuredOps.*;
@@ -55,7 +56,7 @@ public class WasmMacroLib  extends MacroLib {
         
     private enum WasmOp implements MacroOp {
 
-    aux_ilt(asm_iconst_m1,asm_iushr),
+    aux_ilt(asm_iconst_m1,asm_iushr), // shifts right 31 bits i.e. sign bit to one bit
     // boolean result; top of stack must be one of (-1, 0, 1)
     aux_ine_m101(asm_iconst_1,asm_iand),
     aux_ieq_m101(aux_ine_m101,asm_iconst_1,asm_ixor),
@@ -69,6 +70,8 @@ public class WasmMacroLib  extends MacroLib {
     aux_ile(asm_i2l,asm_lconst_1,asm_lcmp,aux_ilt),
     aux_igt(asm_i2l,asm_lneg,asm_iconst_m1,asm_lushr,asm_l2i),
     aux_ige(aux_ilt,asm_iconst_1,asm_ixor),
+
+    aux_swapnn(opc_dupn_xn, opc_popn),
 
     aux_newtable(LineOps.insert(WASM_TABLE,"getInstance","()" + WASM_TABLE_L),asm_invokestatic),
     aux_newmem(LineOps.insert(WASM_STORAGE,"getInstance","(II)" + WASM_STORAGE_L),asm_invokestatic),
@@ -86,7 +89,7 @@ public class WasmMacroLib  extends MacroLib {
         // parametric operators
         NOP(asm_nop),
         DROP(opc_popn),
-        SELECT(mac_label, asm_ifne, opc_dupn_xn, opc_popn, mac_label, xxx_label,  opc_popn),
+        SELECT(mac_label, asm_ifne, aux_swapnn, mac_label, xxx_label,  opc_popn),
         UNWIND(DynamicOp.of("unwind", null, WASM_HELPER, "unwindBootstrap")),
         // variable access
         LOCAL_GET(opc_xload_rel),
@@ -138,17 +141,17 @@ public class WasmMacroLib  extends MacroLib {
 
         // comparison operators
             // call static method would be length 3
-            // jump version would be shorter in some cases but extra stack attribute size
+            // jump version may be shorter or equal in some cases
         I32_EQZ(asm_i2l,asm_lconst_0, asm_lcmp, aux_ieq_m101),
-        I32_EQ(ext_irevcmp, aux_ieq_m101),
-        I32_NE(ext_irevcmp, aux_ine_m101),
-        I32_LT_S(ext_icmp, aux_ilt_m101),
+        I32_EQ(inv_icompare, aux_ieq),
+        I32_NE(inv_icompare, aux_ine),
+        I32_LT_S(inv_icompare, aux_ilt),
         I32_LT_U(inv_iucompare, aux_ilt),
-        I32_GT_S(ext_irevcmp, aux_ilt_m101),
+        I32_GT_S(inv_icompare, aux_igt),
         I32_GT_U(inv_iucompare, aux_igt),
-        I32_LE_S(ext_irevcmp, aux_ige_m101),
+        I32_LE_S(inv_icompare, aux_ile),
         I32_LE_U(inv_iucompare, aux_ile),
-        I32_GE_S(ext_irevcmp, aux_ile_m101),
+        I32_GE_S(inv_icompare, aux_ige),
         I32_GE_U(inv_iucompare, aux_ige),
 
         I64_EQZ(asm_lconst_0, asm_lcmp, aux_ieq_m101),
@@ -287,28 +290,30 @@ public class WasmMacroLib  extends MacroLib {
 
         // optimizations
         I32_IFEQZ(ext_IF_EQZ),
+        
         I32_IFEQ(ext_IF_ICMPEQ),
         I32_IFNE(ext_IF_ICMPNE),
         I32_IFLT_S(ext_IF_ICMPLT),
-        I32_IFLT_U(inv_iucompare, ext_IF_LTZ),
+        I32_IFLT_U(ext_IF_IUCMPLT),
         I32_IFGT_S(ext_IF_ICMPGT),
-        I32_IFGT_U(inv_iucompare, ext_IF_GTZ),
+        I32_IFGT_U(ext_IF_IUCMPGT),
         I32_IFLE_S(ext_IF_ICMPLE),
-        I32_IFLE_U(inv_iucompare, ext_IF_LEZ),
+        I32_IFLE_U(ext_IF_IUCMPLE),
         I32_IFGE_S(ext_IF_ICMPGE),
-        I32_IFGE_U(inv_iucompare, ext_IF_GEZ),
+        I32_IFGE_U(ext_IF_IUCMPGE),
 
         I64_IFEQZ(asm_lconst_0, ext_IF_LCMPEQ),
+        
         I64_IFEQ(ext_IF_LCMPEQ),
         I64_IFNE(ext_IF_LCMPNE),
         I64_IFLT_S(ext_IF_LCMPLT),
-        I64_IFLT_U(inv_lucompare, ext_IF_LTZ),
+        I64_IFLT_U(ext_IF_LUCMPLT),
         I64_IFGT_S(ext_IF_LCMPGT),
-        I64_IFGT_U(inv_lucompare, ext_IF_GTZ),
+        I64_IFGT_U(ext_IF_LUCMPGT),
         I64_IFLE_S(ext_IF_LCMPLE),
-        I64_IFLE_U(inv_lucompare, ext_IF_LEZ),
+        I64_IFLE_U(ext_IF_LUCMPLE),
         I64_IFGE_S(ext_IF_LCMPGE),
-        I64_IFGE_U(inv_lucompare, ext_IF_GEZ),
+        I64_IFGE_U(ext_IF_LUCMPGE),
 
         F32_IFEQ(ext_IF_FCMPEQ),
         F32_IFNE(ext_IF_FCMPNE),
@@ -325,28 +330,30 @@ public class WasmMacroLib  extends MacroLib {
         F64_IFGE(ext_IF_DCMPGE),
 
         I32_BR_IFEQZ(ext_BR_IFEQZ),
+        
         I32_BR_IFEQ(ext_BR_IF_ICMPEQ),
         I32_BR_IFNE(ext_BR_IF_ICMPNE),
         I32_BR_IFLT_S(ext_BR_IF_ICMPLT),
-        I32_BR_IFLT_U(inv_iucompare, ext_BR_IFLTZ),
+        I32_BR_IFLT_U(ext_BR_IF_IUCMPLT),
         I32_BR_IFGT_S(ext_BR_IF_ICMPGT),
-        I32_BR_IFGT_U(inv_iucompare, ext_BR_IFGTZ),
+        I32_BR_IFGT_U(ext_BR_IF_IUCMPGT),
         I32_BR_IFLE_S(ext_BR_IF_ICMPLE),
-        I32_BR_IFLE_U(inv_iucompare, ext_BR_IFLEZ),
+        I32_BR_IFLE_U(ext_BR_IF_IUCMPLE),
         I32_BR_IFGE_S(ext_BR_IF_ICMPGE),
-        I32_BR_IFGE_U(inv_iucompare, ext_BR_IFGEZ),
+        I32_BR_IFGE_U(ext_BR_IF_IUCMPGE),
 
         I64_BR_IFEQZ(asm_lconst_0, ext_BR_IF_LCMPEQ),
+        
         I64_BR_IFEQ(ext_BR_IF_LCMPEQ),
         I64_BR_IFNE(ext_BR_IF_LCMPNE),
         I64_BR_IFLT_S(ext_BR_IF_LCMPLT),
-        I64_BR_IFLT_U(inv_lucompare, ext_BR_IFLTZ),
+        I64_BR_IFLT_U(ext_BR_IF_LUCMPLT),
         I64_BR_IFGT_S(ext_BR_IF_LCMPGT),
-        I64_BR_IFGT_U(inv_lucompare, ext_BR_IFGTZ),
+        I64_BR_IFGT_U(ext_BR_IF_LUCMPGT),
         I64_BR_IFLE_S(ext_BR_IF_LCMPLE),
-        I64_BR_IFLE_U(inv_lucompare, ext_BR_IFLEZ),
+        I64_BR_IFLE_U(ext_BR_IF_LUCMPLE),
         I64_BR_IFGE_S(ext_BR_IF_LCMPGE),
-        I64_BR_IFGE_U(inv_lucompare, ext_BR_IFGEZ),
+        I64_BR_IFGE_U(ext_BR_IF_LUCMPGE),
 
         F32_BR_IFEQ(ext_BR_IF_FCMPEQ),
         F32_BR_IFNE(ext_BR_IF_FCMPNE),
