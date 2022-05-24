@@ -218,7 +218,7 @@ public enum NameDesc {
         if (ok && checkfn != null) {
             try {
                 checkfn.accept(str);
-            } catch (IllegalArgumentException  | AssertionError iaex) {
+            } catch (IllegalArgumentException iaex) {
                 return false;
             } 
         }

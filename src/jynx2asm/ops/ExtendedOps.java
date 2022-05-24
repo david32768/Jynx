@@ -31,7 +31,7 @@ public enum ExtendedOps implements MacroOp {
     ext_if_lcmple(asm_lcmp, asm_ifle),
     ext_if_lcmplt(asm_lcmp, asm_iflt),
     ext_if_lcmpne(asm_lcmp, asm_ifne),
-
+    
     ext_if_fcmpeq(asm_fcmpl, asm_ifeq),
     ext_if_fcmpge(asm_fcmpl, asm_ifge),
     ext_if_fcmpgt(asm_fcmpl, asm_ifgt),
@@ -47,19 +47,15 @@ public enum ExtendedOps implements MacroOp {
     ext_if_dcmpne(asm_dcmpl, asm_ifne),
 
     // unsigned comparisons
-    ext_if_iucmpeq(inv_iucompare, asm_ifeq),
     ext_if_iucmpge(inv_iucompare, asm_ifge),
     ext_if_iucmpgt(inv_iucompare, asm_ifgt),
     ext_if_iucmple(inv_iucompare, asm_ifle),
     ext_if_iucmplt(inv_iucompare, asm_iflt),
-    ext_if_iucmpne(inv_iucompare, asm_ifne),
 
-    ext_if_lucmpeq(inv_lucompare, asm_ifeq),
     ext_if_lucmpge(inv_lucompare, asm_ifge),
     ext_if_lucmpgt(inv_lucompare, asm_ifgt),
     ext_if_lucmple(inv_lucompare, asm_ifle),
     ext_if_lucmplt(inv_lucompare, asm_iflt),
-    ext_if_lucmpne(inv_lucompare, asm_ifne),
 
     ;
     

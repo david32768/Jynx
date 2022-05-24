@@ -22,15 +22,14 @@ import static jynx.Message.*;
 import static jynx.ReservedWord.*;
 
 import asm.instruction.Instruction;
-import jvm.AccessFlag;
 import jvm.AsmOp;
 import jvm.Context;
 import jvm.FrameType;
 import jvm.TypeRef;
-import jynx.Access;
 import jynx.Directive;
 import jynx.ReservedWord;
 import jynx2asm.ClassChecker;
+import jynx2asm.InstList;
 import jynx2asm.JynxCatch;
 import jynx2asm.JynxLabel;
 import jynx2asm.JynxLabelMap;
@@ -67,9 +66,9 @@ public class JynxCodeHdr implements ContextDependent {
     private final Map<Directive,Line> unique_directives;
     
     private JynxCodeHdr(MethodNode mv, JynxScanner js, ClassChecker checker,
-            OwnerNameDesc cmd, JynxLabelMap labelmap, Access access, Map<String,JynxOp> opmap) {
+            OwnerNameDesc cmd, JynxLabelMap labelmap, boolean isStatic, Map<String,JynxOp> opmap) {
         this.js = js;
-        String clname = access.is(AccessFlag.acc_static)?null:checker.getClassName();
+        String clname = isStatic?null:checker.getClassName();
         this.localStack = FrameType.getInitFrame(clname, cmd); // classname set non null for virtual methods
         this.mnode = mv;
         this.errct_at_start = LOGGER().numErrors();
@@ -77,7 +76,7 @@ public class JynxCodeHdr implements ContextDependent {
         this.vars = new ArrayList<>();
         Type rtype = Type.getReturnType(cmd.getDesc());
         AsmOp returnop = getReturnOp(rtype);
-        this.stackLocals = StackLocals.getInstance(localStack,labelmap,returnop);
+        this.stackLocals = StackLocals.getInstance(localStack,labelmap,returnop,isStatic);
         this.s2a = new String2Insn(js, labelmap, checker, returnop,opmap);
         this.printFlag = 0;
         this.expandMacro = 0;
@@ -86,9 +85,9 @@ public class JynxCodeHdr implements ContextDependent {
     }
 
     public static JynxCodeHdr getInstance(MethodNode mv, JynxScanner js, OwnerNameDesc cmd,
-            JynxLabelMap labelmap, Access access,ClassChecker checker, Map<String,JynxOp> opmap) {
+            JynxLabelMap labelmap, boolean isStatic, ClassChecker checker, Map<String,JynxOp> opmap) {
         CHECK_SUPPORTS(Code);
-        return new JynxCodeHdr(mv, js, checker, cmd, labelmap,access,opmap);
+        return new JynxCodeHdr(mv, js, checker, cmd, labelmap, isStatic ,opmap);
     }
 
     private static AsmOp getReturnOp(Type rtype) {
@@ -225,39 +224,10 @@ public class JynxCodeHdr implements ContextDependent {
         --endif;
     }
 
-    private void visitInsns(List<Instruction> instructions, Line line) {
-        for (Instruction in:instructions) {
-            boolean ok = stackLocals.visitInsn(in, line);
-            if (ok) {
-                if (expandMacro > 0) {
-                    System.out.format(" +%s%n",in);
-                }
-                in.accept(mnode);
-            }
-        }
-    }
-    
     private void visitInsn(Line line) {
-        String stackb = printFlag > 0?stackLocals.stringStack():"";
-        String localsb = printFlag > 0?stackLocals.stringLocals():"";
-        if (printFlag > 0) {
-            System.out.println(line);
-        }
-        List<Instruction>  instructions = s2a.getInsts(line);
-        visitInsns(instructions, line);
-        if (printFlag > 0) {
-            printStackLocals(stackb, localsb,line,instructions);
-        }
-    }
-    
-    private void printStackLocals(String stackb, String localsb, Line line, List<Instruction> instructions) {
-        String stacka = stackLocals.stringStack();
-        String localsa = stackLocals.stringLocals();
-        System.out.format("; %s -> %s", stackb,stacka);
-        if (!localsa.equals(localsb)) {
-            System.out.format(" ; %s = %s",res_locals,localsa);
-        }
-        System.out.println();
+        InstList instlist = new InstList(stackLocals,line,printFlag > 0,expandMacro > 0);
+        s2a.getInsts(line,instlist);
+        instlist.accept(mnode);
     }
     
     private void visitLineNumber(Line line) {

@@ -5,6 +5,7 @@ import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
+
 import static jynx.Global.OPTION;
 
 import static jynx.Message.*;
@@ -114,10 +115,8 @@ public class Logger {
                 break;
             case ERROR:
                 printError(msg,objs);
-                if (exitOnError) {
-                    if (OPTION(GlobalOption.__EXIT_IF_ERROR)) {
-                        Thread.dumpStack();
-                    }
+                if (exitOnError && OPTION(GlobalOption.__EXIT_IF_ERROR)) {
+                    Thread.dumpStack();
                     System.exit(1);
                 }
                 if (errct > MAX_ERRORS) {

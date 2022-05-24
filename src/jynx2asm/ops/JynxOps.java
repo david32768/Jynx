@@ -56,8 +56,6 @@ public class JynxOps {
                 .forEach(JynxOps::addOp);
         JavaCallOps.streamExternal()
                 .forEach(JynxOps::addOp);
-        StructuredOps.streamExternal()
-                .forEach(JynxOps::addOp);
     }
 
     public static void addMacroLib(Map<String, JynxOp> opmap, String libname) {

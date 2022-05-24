@@ -44,6 +44,10 @@ public class Access {
     public boolean is(AccessFlag af) {
         return accflags.contains(af);
     }
+
+    public void setComponent() {
+        accflags.add(xxx_component);
+    }
     
     private boolean isComponent() {
         return is(xxx_component);

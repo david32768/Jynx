@@ -61,6 +61,9 @@ public class JynxFieldNode implements ContextDependent, HasAccessFlags {
         String name = accessname.getName();
         String desc = line.nextToken().asString();
         FIELD_DESC.validate(desc);
+        if (checker.isComponent(FIELD, name, desc)) {
+            accessname.setComponent();
+        }
         Token token = line.nextToken();
         Object value = null;
         if (token != Token.END_TOKEN) {

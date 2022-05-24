@@ -208,10 +208,6 @@ public class ClassChecker {
     public Access getAccess(Context context, Line line) {
         EnumSet<AccessFlag> flags = line.getAccFlags();
         String name = line.nextToken().asName();
-        boolean component = isComponent(name,context);
-        if (component) {
-            flags.add(AccessFlag.xxx_component);
-        }
         return Access.getInstance(flags, jvmVersion, name,classType);
     }
     
@@ -278,10 +274,9 @@ public class ClassChecker {
         return null;
     }
     
-    private boolean isComponent(String name,Context context) {
+    public boolean isComponent(Context context, String name, String desc) {
         if (context == Context.METHOD) {
-            MethodDesc md = MethodDesc.getInstance(name);
-            JynxComponentNode jcn = getComponent4Method(md.getName(), md.getDesc());
+            JynxComponentNode jcn = getComponent4Method(name, desc);
             return jcn != null;
         } else if (context == Context.FIELD) {
             return components.containsKey(name);

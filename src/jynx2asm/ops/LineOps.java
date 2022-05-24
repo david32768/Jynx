@@ -26,6 +26,7 @@ public enum LineOps implements LineOp {
     lab_get,
     tok_skip,
     tok_swap,
+    tok_print, // for debugging
     ;    
     
     private LineOps() {}
@@ -117,6 +118,9 @@ public enum LineOps implements LineOp {
             case tok_skip:
                 line.nextToken();
                 break;
+            case tok_print:
+                System.err.format("token = %s%n", line.peekToken());
+                break;
             case tok_swap:
                 Token first = line.nextToken();
                 Token second = line.nextToken();
@@ -133,6 +137,7 @@ public enum LineOps implements LineOp {
        INSERT_AFTER,
        PREPEND,
        APPEND,
+       REPLACE,
        CHECK,
        ;
     }
@@ -157,18 +162,31 @@ public enum LineOps implements LineOp {
         return new AdjustLine(Adjustment.APPEND,str);
     }
     
+    public static LineOp replace(String find, String replace) {
+        return new AdjustLine(Adjustment.REPLACE,find,replace);
+    }
+    
     public static LineOp check(String str) {
         return new AdjustLine(Adjustment.CHECK,str);
     }
     
     private static class AdjustLine implements LineOp {
 
-        private final String adjust;
         private final Adjustment type;
+        private final String adjust;
+        private final String replace;
 
         public AdjustLine(Adjustment type, String adjust) {
             this.adjust = adjust;
             this.type = type;
+            this.replace = null;
+        }
+
+        public AdjustLine(LineOps.Adjustment type, String adjust, String replace) {
+            this.type = type;
+            this.adjust = adjust;
+            this.replace = replace;
+            assert type == LineOps.Adjustment.REPLACE;
         }
 
         @Override
@@ -193,6 +211,10 @@ public enum LineOps implements LineOp {
                     break;
                 case APPEND:
                     token = line.nextToken().append(adjust);
+                    line.insert(token);
+                    break;
+                case REPLACE:
+                    token = line.nextToken().replace(adjust, replace);
                     line.insert(token);
                     break;
                 case CHECK:

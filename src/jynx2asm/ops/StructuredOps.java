@@ -57,15 +57,11 @@ public enum StructuredOps implements MacroOp {
     ext_IF_DCMPGT(mac_label_else,ext_if_dcmple),
     ext_IF_DCMPGE(mac_label_else,ext_if_dcmplt),
 
-    ext_IF_IUCMPNE(mac_label_else,ext_if_iucmpeq),
-    ext_IF_IUCMPEQ(mac_label_else,ext_if_iucmpne),
     ext_IF_IUCMPLT(mac_label_else,ext_if_iucmpge),
     ext_IF_IUCMPLE(mac_label_else,ext_if_iucmpgt),
     ext_IF_IUCMPGT(mac_label_else,ext_if_iucmple),
     ext_IF_IUCMPGE(mac_label_else,ext_if_iucmplt),
 
-    ext_IF_LUCMPNE(mac_label_else,ext_if_lucmpeq),
-    ext_IF_LUCMPEQ(mac_label_else,ext_if_lucmpne),
     ext_IF_LUCMPLT(mac_label_else,ext_if_lucmpge),
     ext_IF_LUCMPLE(mac_label_else,ext_if_lucmpgt),
     ext_IF_LUCMPGT(mac_label_else,ext_if_lucmple),
@@ -107,15 +103,11 @@ public enum StructuredOps implements MacroOp {
     ext_BR_IF_DCMPGT(lab_get,ext_if_dcmpgt),
     ext_BR_IF_DCMPGE(lab_get,ext_if_dcmpge),
 
-    ext_BR_IF_IUCMPEQ(lab_get,ext_if_iucmpeq),
-    ext_BR_IF_IUCMPNE(lab_get,ext_if_iucmpne),
     ext_BR_IF_IUCMPLT(lab_get,ext_if_iucmplt),
     ext_BR_IF_IUCMPLE(lab_get,ext_if_iucmple),
     ext_BR_IF_IUCMPGT(lab_get,ext_if_iucmpgt),
     ext_BR_IF_IUCMPGE(lab_get,ext_if_iucmpge),
 
-    ext_BR_IF_LUCMPEQ(lab_get,ext_if_lucmpeq),
-    ext_BR_IF_LUCMPNE(lab_get,ext_if_lucmpne),
     ext_BR_IF_LUCMPLT(lab_get,ext_if_lucmplt),
     ext_BR_IF_LUCMPLE(lab_get,ext_if_lucmple),
     ext_BR_IF_LUCMPGT(lab_get,ext_if_lucmpgt),
@@ -139,6 +131,7 @@ public enum StructuredOps implements MacroOp {
         return name().substring(4);
     }
 
+    @Override
     public boolean reduceIndent() {
         switch(this) {
             case ext_ELSE:

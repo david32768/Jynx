@@ -258,7 +258,7 @@ public enum Message {
     M255(ENDINFO,"classname has been added to argument of some %s instruction(s)"),
     M256("%s has %d entries, maximum possible is %d"),
     M257("argument count %d is not in range [0,%d]"),
-    M258("%s is a reserved word and cannot be a Java Id"),
+    M258(WARNING,"%s is a reserved word and cannot be a Java Id"),
     M259("dynamic constant is %s but %s expected"),
     M260("return type (%s) of invoke bootstrap method is not ( a known subtype of ) CallSite or Object"),
     M261("enclosing class name(%s) is not a prefix of class name(%s)"),
@@ -280,7 +280,7 @@ public enum Message {
 
     M289("A nest member has already been defined"),
 
-    M298("%s of %s failed"),
+    M298(WARNING,"%s of %s failed"),
 
     M302("%s is null or has different feature requirement than %s"),
     M304("Nest host already defined%n  %s"),

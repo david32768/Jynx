@@ -49,7 +49,6 @@ import jynx2asm.ops.JynxOp;
 import jynx2asm.ops.LineOp;
 import jynx2asm.ops.LineOps;
 import jynx2asm.ops.MacroOp;
-import jynx2asm.ops.StructuredOps;
 
 public class String2Insn {
 
@@ -64,7 +63,7 @@ public class String2Insn {
     private final String className;
     private final Map<String,JynxOp> opmap;
     
-    private List<Instruction> instructions;
+    private InstList instList;
     private Line line;
     private boolean multi;
     private int macroCount;
@@ -83,26 +82,26 @@ public class String2Insn {
         this.opmap = opmap;
     }
 
-    public List<Instruction> getInsts(Line linex) {
+    public void getInsts(Line linex, InstList instlist) {
         line = linex;
-        instructions = new ArrayList<>();
+        instList = instlist;
         if (line.isLabel()) {
             String lab = line.firstToken().asLabel();
             line.noMoreTokens();
             JynxLabel target = labmap.defineJynxLabel(lab, line);
-            instructions.add(new LabelInstruction(AsmOp.xxx_label,target));
-            return instructions;
+            instList.add(new LabelInstruction(AsmOp.xxx_label,target));
+            return;
         }
         String tokenstr = line.firstToken().asString();
         JynxOp jynxop = opmap.get(tokenstr);
         if (jynxop == null) {
             LOG(M86,tokenstr); // "invalid op - %s"
             line.skipTokens();
-            return instructions;
+            return;
         }
         if (OPTION(GlobalOption.WARN_INDENT)) {
             int expected = INDENT_LENGTH * (labelStack.size() + 1);
-            if (jynxop instanceof StructuredOps && ((StructuredOps)jynxop).reduceIndent()) {
+            if (jynxop.reduceIndent()) {
                 expected -= 2;
             }
             if (line.getIndent() != expected) {
@@ -115,9 +114,8 @@ public class String2Insn {
         add(jynxop,macroCount);
         line.noMoreTokens();
         if (addDotLine) {
-            instructions.add(0,new LineInstruction(null,line.getLinect()));
+            instList.addFront(new LineInstruction(null,line.getLinect()));
         }
-        return instructions;
     }
 
     private void add(JynxOp jop, int macct) {
@@ -126,13 +124,13 @@ public class String2Insn {
         }
         if (jop instanceof AliasOp) {
             AliasOp alias = (AliasOp)jop;
-            alias.getInst(line, returnop).ifPresent(instructions::add);
+            alias.getInst(line, returnop).ifPresent(instList::add);
         } else if (jop instanceof JvmOp) {
             JvmOp jvmop = (JvmOp)jop;
-            switchArg(jvmop).ifPresent(instructions::add);
+            switchArg(jvmop).ifPresent(instList::add);
         } else if (jop instanceof DynamicOp) {
             DynamicOp dynamicop = (DynamicOp)jop;
-            instructions.add(dynamicop.getInstruction(js,line,checker));
+            instList.add(dynamicop.getInstruction(js,line,checker));
         } else if (jop instanceof LineOp) {
             LineOp lineop = (LineOp)jop;
             lineop.adjustLine(line, macct, labelStack);

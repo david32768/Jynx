@@ -14,4 +14,8 @@ public interface JynxOp extends JvmVersioned {
     default public Integer length() {
         return null; // unknown
     }
+    
+    default public boolean reduceIndent() {
+        return false;
+    }
 }

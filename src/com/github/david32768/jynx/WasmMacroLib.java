@@ -33,7 +33,6 @@ public class WasmMacroLib  extends MacroLib {
         public final static String MH_ARRAY = Type.getType(MethodHandle[].class).getInternalName();
         public final static String MH = "L" + Type.getType(MethodHandle.class).getInternalName() + ";";
         public final static String TABLE_PREFIX = "__Table__";
-        public final static String GS_TABLE_PREFIX = HandleType.REF_getStatic.getPrefix() + TABLE_PREFIX;
         public final static String MEMORY = "__Memory__0";
         public final static String GS_MEMORY = HandleType.REF_getStatic.getPrefix() + MEMORY;
         
@@ -78,14 +77,25 @@ public class WasmMacroLib  extends MacroLib {
 
         // control operators
         UNREACHABLE(LineOps.insert(WASM_HELPER ,"unreachable","()Ljava/lang/AssertionError;"),asm_invokestatic,asm_athrow),
+        BLOCK(ext_BLOCK),
+        LOOP(ext_LOOP),
         IF(ext_IF_NEZ),
+        ELSE(ext_ELSE),
         BR_IF(ext_BR_IFNEZ),
         BR_TABLE(asm_tableswitch),
+        RETURN(ext_RETURN),
+        END(ext_END),
+        BR(ext_BR),
         CALL(asm_invokestatic),
-        CALL_INDIRECT(LineOps.prepend(GS_TABLE_PREFIX),
-                LineOps.append("()" + WASM_TABLE_L),tok_swap,
-                DynamicOp.withBootParms("table", null, WASM_TABLE,
-                "callIndirectBootstrap",MH)),
+        CALL_INDIRECT(
+                LineOps.prepend(TABLE_PREFIX),
+                LineOps.insertAfter(WASM_TABLE_L),
+                asm_getstatic,
+                asm_swap,
+                LineOps.insert(WASM_TABLE, "getMH", "(I)" + MH),
+                asm_invokevirtual,
+                LineOps.replace("I)", MH + ")"),
+                DynamicOp.of("invokeExact", null, WASM_TABLE,"callIndirectBootstrapMH")),
         // parametric operators
         NOP(asm_nop),
         DROP(opc_popn),
@@ -369,6 +379,46 @@ public class WasmMacroLib  extends MacroLib {
         F64_BR_IFLE(ext_BR_IF_DCMPLE),
         F64_BR_IFGE(ext_BR_IF_DCMPGE),
 
+        I32_SELECTEQZ(mac_label, asm_ifeq, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        
+        I32_SELECTEQ(mac_label, asm_if_icmpeq, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        I32_SELECTNE(mac_label, asm_if_icmpne, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        I32_SELECTLT_S(mac_label, asm_if_icmplt, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        I32_SELECTLT_U(mac_label, ext_if_iucmplt, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        I32_SELECTGT_S(mac_label, asm_if_icmpgt, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        I32_SELECTGT_U(mac_label, ext_if_iucmpgt, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        I32_SELECTLE_S(mac_label, asm_if_icmple, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        I32_SELECTLE_U(mac_label, ext_if_iucmple, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        I32_SELECTGE_S(mac_label, asm_if_icmpge, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        I32_SELECTGE_U(mac_label, ext_if_iucmpge, aux_swapnn, mac_label, xxx_label,  opc_popn),
+
+        I64_SELECTEQZ(asm_lconst_0,mac_label, ext_if_lcmpeq, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        
+        I64_SELECTEQ(mac_label, ext_if_lcmpeq, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        I64_SELECTNE(mac_label, ext_if_lcmpne, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        I64_SELECTLT_S(mac_label, ext_if_lcmplt, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        I64_SELECTLT_U(mac_label, ext_if_lucmplt, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        I64_SELECTGT_S(mac_label, ext_if_lcmpgt, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        I64_SELECTGT_U(mac_label, ext_if_lucmpgt, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        I64_SELECTLE_S(mac_label, ext_if_lcmple, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        I64_SELECTLE_U(mac_label, ext_if_lucmple, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        I64_SELECTGE_S(mac_label, ext_if_lcmpge, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        I64_SELECTGE_U(mac_label, ext_if_lucmpge, aux_swapnn, mac_label, xxx_label,  opc_popn),
+
+        F32_SELECTEQ(mac_label, ext_if_fcmpeq, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        F32_SELECTNE(mac_label, ext_if_fcmpne, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        F32_SELECTLT(mac_label, ext_if_fcmplt, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        F32_SELECTGT(mac_label, ext_if_fcmpgt, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        F32_SELECTLE(mac_label, ext_if_fcmple, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        F32_SELECTGE(mac_label, ext_if_fcmpge, aux_swapnn, mac_label, xxx_label,  opc_popn),
+
+        F64_SELECTEQ(mac_label, ext_if_dcmpeq, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        F64_SELECTNE(mac_label, ext_if_dcmpne, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        F64_SELECTLT(mac_label, ext_if_dcmplt, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        F64_SELECTGT(mac_label, ext_if_dcmpgt, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        F64_SELECTLE(mac_label, ext_if_dcmple, aux_swapnn, mac_label, xxx_label,  opc_popn),
+        F64_SELECTGE(mac_label, ext_if_dcmpge, aux_swapnn, mac_label, xxx_label,  opc_popn),
+
     // init functions
     MEMORY_NEW(asm_ldc,asm_ldc,aux_newmem),
     MEMORY_CHECK(asm_ldc,asm_ldc,WasmMacroLib.dynStorage("checkIntance", "(II)V")),
@@ -388,6 +438,17 @@ public class WasmMacroLib  extends MacroLib {
         private WasmOp(JynxOp... jops) {
             this.jynxOps = jops;
         }
+    @Override
+    public boolean reduceIndent() {
+        switch(this) {
+            case ELSE:
+            case END:
+                return true;
+            default:
+                return false;
+        }
+    }
+    
 
         @Override
         public JynxOp[] getJynxOps() {

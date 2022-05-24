@@ -68,6 +68,12 @@ public class Token {
         return new Token(token + str);
     }
     
+    public Token replace(String find, String replace) {
+        checkNotEnd();
+        checkNotQuoted();
+        return new Token(token.replace(find, replace));
+    }
+    
     public String asString() {
         checkNotEnd();
         return token;

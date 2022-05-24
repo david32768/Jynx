@@ -63,6 +63,9 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
         if (md.isInit()) {
             accessname.check4InitMethod();
         } else {
+            if (checker.isComponent(METHOD, md.getName(), md.getDesc())) {
+                accessname.setComponent();
+            }
             accessname.check4Method();
         }
         JynxMethodNode jmn =  new JynxMethodNode(line,accessname,md,checker);
@@ -125,7 +128,7 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
             LOG(M155); // "code is not allowed as method is abstract or native"
             return null;
         }
-        return JynxCodeHdr.getInstance(mnode, js, md, labelmap,accessName,checker,opmap);
+        return JynxCodeHdr.getInstance(mnode, js, md, labelmap,is(AccessFlag.acc_static),checker,opmap);
     }
 
     public MethodDesc getMethodDesc() {

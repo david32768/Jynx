@@ -30,8 +30,7 @@ public class Global {
 
     private Global(EnumSet<GlobalOption> options,Main.MainOption type) {
         this.options = options;
-        boolean exiterr = options.contains(GlobalOption.__EXIT_IF_ERROR);
-        this.logger  = new Logger(type.name().toLowerCase(),exiterr);
+        this.logger  = new Logger(type.name().toLowerCase(),true);
         this.jvmVersion = null;
         this.main = type;
     }

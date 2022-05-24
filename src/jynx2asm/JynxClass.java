@@ -66,7 +66,10 @@ public class JynxClass {
     public static byte[] getBytes(String default_source, JynxScanner lines) {
         try {
             JynxClass jclass =  new JynxClass(default_source, lines);
-            jclass.assemble();
+            boolean ok = jclass.assemble();
+            if (!ok) {
+                return null;
+            }
             return jclass.toByteArray();
         } catch (RuntimeException rtex) {
             rtex.printStackTrace();

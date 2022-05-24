@@ -104,7 +104,7 @@ public class ONDRecord {
     }
     
     public boolean isStaticInit() {
-        return Constants.STATIC_INIT.equalString(nameDesc());
+        return desc != null && desc.charAt(0) == '(' && Constants.STATIC_INIT.equalString(nameDesc());
     }
     
     public String packageName() {

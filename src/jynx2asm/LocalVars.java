@@ -16,6 +16,7 @@ public class LocalVars {
     
     private final LimitValue localsz;
     private final FrameElement[] locals;
+    private final boolean isStatic;
     private int sz;
     private boolean startblock;
     private OperandStackFrame lastlocals;
@@ -25,9 +26,10 @@ public class LocalVars {
     private final int parmsz;
     
     
-    public LocalVars(OperandStackFrame parmlocals) {
+    public LocalVars(OperandStackFrame parmlocals, boolean isStatic) {
         this.localsz = new LimitValue(LimitValue.Type.locals);
         this.locals = new FrameElement[MAXSTACK];
+        this.isStatic = isStatic;
         this.sz = 0;
         this.startblock = true;
         this.readVars = new BitSet();
@@ -47,9 +49,10 @@ public class LocalVars {
     }
 
     public int absolute(int relnum) {
-        int abs = 0;
+        assert relnum >= 0;
+        int abs = isStatic?0:1; // preserve this and start parms at rel 0
         int rel = 0;
-        for (int i = 0; i < sz; ++i)  {
+        for (int i = abs; i < sz; ++i)  {
             if (rel == relnum) {
                 return abs;
             }

@@ -72,9 +72,9 @@ public class StackLocals {
         this.activeLabels = new ArrayList<>();
     }
     
-    public static StackLocals getInstance(List<Object> localstack, JynxLabelMap labelmap, AsmOp returnop) {
+    public static StackLocals getInstance(List<Object> localstack, JynxLabelMap labelmap, AsmOp returnop, boolean isStatic) {
         Object[] objs = localstack.toArray(new Object[0]);
-        return new StackLocals(new LocalVars(objs2OSF(objs,false)), new OperandStack(), labelmap, returnop);
+        return new StackLocals(new LocalVars(objs2OSF(objs,false),isStatic), new OperandStack(), labelmap, returnop);
     }
 
     public LocalVars locals() {
