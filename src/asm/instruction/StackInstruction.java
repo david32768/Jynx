@@ -2,9 +2,7 @@ package asm.instruction;
 
 import org.objectweb.asm.MethodVisitor;
 
-import jvm.AsmOp;
 import jvm.JvmOp;;
-import jynx2asm.ops.InternalOps;
 import jynx2asm.StackLocals;
 
 public class StackInstruction extends Instruction {
@@ -13,15 +11,6 @@ public class StackInstruction extends Instruction {
         super(jop);
     }
 
-    @Override
-    public AsmOp resolve(StackLocals stackLocals) {
-        if (base == null && jvmop instanceof InternalOps) {
-            InternalOps aliasop = (InternalOps)jvmop;
-            base = aliasop.resolve(stackLocals.stack().peekTOS(),null);
-        }
-        return base;
-    }
-    
     @Override
     public void accept(MethodVisitor mv) {
         mv.visitInsn(base.opcode());
@@ -36,6 +25,5 @@ public class StackInstruction extends Instruction {
     public String toString() {
         return jvmop.toString();
     }
-    
     
 }

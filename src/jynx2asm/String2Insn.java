@@ -43,7 +43,7 @@ import jynx.GlobalOption;
 import jynx.LogIllegalArgumentException;
 import jynx.ReservedWord;
 
-import jynx2asm.ops.AliasOp;
+import jynx2asm.ops.AliasOps;
 import jynx2asm.ops.DynamicOp;
 import jynx2asm.ops.JynxOp;
 import jynx2asm.ops.LineOp;
@@ -59,11 +59,9 @@ public class String2Insn {
     private final JynxLabelMap labmap;
     private final LabelStack labelStack;
     private final ClassChecker checker;
-    private final AsmOp returnop;
     private final String className;
     private final Map<String,JynxOp> opmap;
     
-    private InstList instList;
     private Line line;
     private boolean multi;
     private int macroCount;
@@ -71,12 +69,11 @@ public class String2Insn {
     private final boolean generateDotLine;
     
     public String2Insn(JynxScanner js, JynxLabelMap labmap,
-            ClassChecker checker, AsmOp returnop, Map<String,JynxOp> opmap) {
+            ClassChecker checker, Map<String,JynxOp> opmap) {
         this.js = js;
         this.labmap = labmap;
         this.labelStack = new LabelStack();
         this.checker = checker;
-        this.returnop = returnop;
         this.className = checker.getClassName();
         this.generateDotLine = OPTION(GlobalOption.GENERATE_LINE_NUMBERS);
         this.opmap = opmap;
@@ -84,12 +81,11 @@ public class String2Insn {
 
     public void getInsts(Line linex, InstList instlist) {
         line = linex;
-        instList = instlist;
         if (line.isLabel()) {
             String lab = line.firstToken().asLabel();
             line.noMoreTokens();
             JynxLabel target = labmap.defineJynxLabel(lab, line);
-            instList.add(new LabelInstruction(AsmOp.xxx_label,target));
+            instlist.add(new LabelInstruction(AsmOp.xxx_label,target));
             return;
         }
         String tokenstr = line.firstToken().asString();
@@ -111,26 +107,26 @@ public class String2Insn {
         macroCount = 0;
         addDotLine = false;
         multi = false;
-        add(jynxop,macroCount);
+        add(jynxop,macroCount,instlist);
         line.noMoreTokens();
         if (addDotLine) {
-            instList.addFront(new LineInstruction(null,line.getLinect()));
+            instlist.addFront(new LineInstruction(null,line.getLinect()));
         }
     }
 
-    private void add(JynxOp jop, int macct) {
+    private void add(JynxOp jop, int macct, InstList instlist) {
         if (multi) {
             LOG(M254,jop); // "%s is used in a macro after a mulit-line op"
         }
-        if (jop instanceof AliasOp) {
-            AliasOp alias = (AliasOp)jop;
-            alias.getInst(line, returnop).ifPresent(instList::add);
+        if (jop instanceof AliasOps) {
+            AliasOps alias = (AliasOps)jop;
+            instlist.add(alias.getInst(line, instlist));
         } else if (jop instanceof JvmOp) {
             JvmOp jvmop = (JvmOp)jop;
-            switchArg(jvmop).ifPresent(instList::add);
+            switchArg(jvmop).ifPresent(instlist::add);
         } else if (jop instanceof DynamicOp) {
             DynamicOp dynamicop = (DynamicOp)jop;
-            instList.add(dynamicop.getInstruction(js,line,checker));
+            instlist.add(dynamicop.getInstruction(js,line,checker));
         } else if (jop instanceof LineOp) {
             LineOp lineop = (LineOp)jop;
             lineop.adjustLine(line, macct, labelStack);
@@ -139,7 +135,7 @@ public class String2Insn {
             ++macroCount;
             macct = macroCount;
             for (JynxOp mjop:macroop.getJynxOps()) {
-                add(mjop,macct);
+                add(mjop,macct,instlist);
             }
         } else {
             throw new AssertionError();

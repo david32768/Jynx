@@ -23,13 +23,8 @@ public interface DynamicOp extends JynxOp {
         return DynamicSimpleOp.getInstance(name, desc, bootclass, bootmethod,"");
     }
 
-    public static DynamicOp varArgs(String name, Class<?> arrayclass, Integer ct,
-            String bootclass,String bootmethod) {
-        return DynamicVarArgsOp.getInstance(name, arrayclass, ct, bootclass, bootmethod);
-    }
-
-    public static DynamicOp withBootParms(String name, String desc,
-            String bootclass,String bootmethod, String bootdescplus, String... bootparms) {
+    public static DynamicOp withBootParms(String name, String desc,String bootclass,String bootmethod,
+            String bootdescplus, String... bootparms) {
         return DynamicSimpleOp.getInstance(name, desc, bootclass, bootmethod,bootdescplus,bootparms);
     }
 

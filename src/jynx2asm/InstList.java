@@ -9,6 +9,7 @@ import org.objectweb.asm.tree.MethodNode;
 import static jynx.ReservedWord.res_locals;
 
 import asm.instruction.Instruction;
+import jvm.AsmOp;
 
 public class InstList {
 
@@ -83,5 +84,21 @@ public class InstList {
             in.accept(mnode);
         }
         
+    }
+    
+    public FrameElement peekTOS() {
+        return stackLocals.stack().peekTOS();
+    }
+    
+    public FrameElement peekVar(int varnum) {
+        return stackLocals.locals().peek(varnum);
+    }
+    
+    public int absolute(int varnum) {
+        return stackLocals.locals().absolute(varnum);
+    }
+
+    public AsmOp getReturnOp() {
+        return stackLocals.getReturnOp();
     }
 }

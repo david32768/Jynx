@@ -21,7 +21,6 @@ import static jynx.GlobalOption.*;
 import static jynx.Message.*;
 import static jynx.ReservedWord.*;
 
-import asm.instruction.Instruction;
 import jvm.AsmOp;
 import jvm.Context;
 import jvm.FrameType;
@@ -77,7 +76,7 @@ public class JynxCodeHdr implements ContextDependent {
         Type rtype = Type.getReturnType(cmd.getDesc());
         AsmOp returnop = getReturnOp(rtype);
         this.stackLocals = StackLocals.getInstance(localStack,labelmap,returnop,isStatic);
-        this.s2a = new String2Insn(js, labelmap, checker, returnop,opmap);
+        this.s2a = new String2Insn(js, labelmap, checker, opmap);
         this.printFlag = 0;
         this.expandMacro = 0;
         this.endif = 0;

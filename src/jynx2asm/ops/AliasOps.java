@@ -1,9 +1,6 @@
 package jynx2asm.ops;
 
-import java.util.Arrays;
-import java.util.function.BiFunction;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import static jvm.AsmOp.*;
@@ -11,46 +8,56 @@ import static jvm.AsmOp.*;
 import asm.instruction.Instruction;
 import asm.instruction.IntInstruction;
 import asm.instruction.LdcInstruction;
+import asm.instruction.StackInstruction;
+import asm.instruction.VarInstruction;
 import jvm.AsmOp;
 import jvm.ConstType;
 import jvm.Feature;
 import jvm.JvmOp;
 import jvm.NumType;
 import jvm.Op;
+import jynx2asm.FrameElement;
+import jynx2asm.InstList;
 import jynx2asm.Line;
 
-public enum AliasOps implements AliasOp, JvmOp {
+public enum AliasOps implements JynxOp, JvmOp {
 
-    //convenience aliases
-    opc_ildc(AliasOps::ildc,1,3),
-    opc_lldc(AliasOps::lldc,1,3),
-    opc_fldc(AliasOps::fldc,1,3),
-    opc_dldc(AliasOps::dldc,1,3),
+    opc_ildc(1,3),
+    opc_lldc(1,3),
+    opc_fldc(1,3),
+    opc_dldc(1,3),
+
+    xxx_xload(2,4),
+    xxx_xstore(2,4),
+    xxx_xload_rel(2,4),
+    xxx_xstore_rel(2,4),
+
+    xxx_dupn(1,1),
+    xxx_popn(1,1),
+    xxx_dupn_xn(1,1),
+
+    xxx_xreturn(1,1),
     ;    
 
-    private final BiFunction<AliasOps,Line,Instruction> fn;
     private final Integer minlength;
     private final Integer maxlength;
     private final Feature requires;
 
-    private AliasOps(BiFunction<AliasOps,Line,Instruction> fn,
-            Integer minlength, Integer maxlength) {
-        this(fn,minlength,maxlength,Feature.unlimited);
+    private AliasOps(Integer minlength, Integer maxlength) {
+        this(minlength,maxlength,Feature.unlimited);
     }
 
-    private AliasOps(BiFunction<AliasOps,Line, Instruction> fn,
-            Integer minlength, Integer maxlength, Feature requires) {
-        this.fn = fn;
+    private AliasOps(Integer minlength, Integer maxlength, Feature requires) {
         this.minlength = minlength;
         this.maxlength = maxlength;
         this.requires = requires;
     }
     
-    public static Stream<AliasOps> streamExternal() {
-        return Arrays.stream(values())
-            .filter(m->m.name().startsWith("opc_"));
+    @Override
+    public boolean isExternal() {
+        return name().startsWith("opc_");
     }
-    
+
     @Override
     public Feature feature() {
         return requires;
@@ -76,12 +83,57 @@ public enum AliasOps implements AliasOp, JvmOp {
         return null;
     }
 
-    @Override
-    public Optional<Instruction> getInst(Line line, AsmOp returnop) {
-        Objects.nonNull(fn);
-        return Optional.of(fn.apply(this,line));
+    public Instruction getInst(Line line, InstList instlist) {
+        switch (this) {
+            case opc_ildc:
+                return ildc(line);
+            case opc_lldc:
+                return lldc(line);
+            case opc_fldc:
+                return fldc(line);
+            case opc_dldc:
+                return dldc(line);
+            case xxx_xreturn:
+                AsmOp asmop = instlist.getReturnOp();
+                return Instruction.getInstance(asmop);
+        }
+        FrameElement stackfe = instlist.peekTOS();
+        boolean isTwo = stackfe.isTwo();
+        AsmOp asmop;
+        int num;
+        switch (this) {
+            case xxx_dupn:
+                asmop = isTwo?asm_dup2:asm_dup;
+                return new StackInstruction(asmop);
+            case xxx_dupn_xn:
+                asmop = isTwo?asm_dup2_x2:asm_dup_x1;
+                return new StackInstruction(asmop);
+            case xxx_popn:
+                asmop = isTwo?asm_pop2:asm_pop;
+                return new StackInstruction(asmop);
+            case xxx_xload:
+                num = line.nextToken().asUnsignedShort();
+                asmop = resolveLoad(instlist.peekVar(num));
+                return new VarInstruction(asmop, num);
+            case xxx_xload_rel:
+                num = line.nextToken().asUnsignedShort();
+                num = instlist.absolute(num);
+                asmop = resolveLoad(instlist.peekVar(num));
+                return new VarInstruction(asmop, num);
+            case xxx_xstore:
+                num = line.nextToken().asUnsignedShort();
+                asmop = resolveStore(stackfe);
+                return new VarInstruction(asmop, num);
+            case xxx_xstore_rel:
+                num = line.nextToken().asUnsignedShort();
+                num = instlist.absolute(num);
+                asmop = resolveStore(stackfe);
+                return new VarInstruction(asmop, num);
+            default:
+                throw new EnumConstantNotPresentException(this.getClass(), name());
+        }
     }
-    
+
     private Instruction ildc(Line line) {
         int ival = line.nextToken().asInt();
         switch(ival) {
@@ -148,10 +200,58 @@ public enum AliasOps implements AliasOp, JvmOp {
         }
     }
     
+    private static AsmOp resolveLoad(FrameElement localfe) {
+        AsmOp base;
+        switch(localfe) {
+            case INTEGER:
+                base = asm_iload;
+                break;
+            case LONG:
+                base = asm_lload;
+                break;
+            case FLOAT:
+                base = asm_fload;
+                break;
+            case DOUBLE:
+                base = asm_dload;
+                break;
+            default:
+                base = asm_aload;
+                break;
+        }
+        return base;
+    }
+    
+    private static  AsmOp resolveStore(FrameElement stackfe) {
+        AsmOp base;
+        switch(stackfe) {
+            case INTEGER:
+                base = asm_istore;
+                break;
+            case LONG:
+                base = asm_lstore;
+                break;
+            case FLOAT:
+                base = asm_fstore;
+                break;
+            case DOUBLE:
+                base = asm_dstore;
+                break;
+            default:
+                base = asm_astore;
+                break;
+        }
+        return base;
+    }
+    
     @Override
     public String toString() {
-        assert name().startsWith("opc_");
-        return name().substring(4);
+        return name().startsWith("opc_")?name().substring(4):name();
     }
 
+    public static Stream<AliasOps> streamExternal() {
+        return Stream.of(values())
+            .filter(AliasOps::isExternal);
+    }
+    
 }

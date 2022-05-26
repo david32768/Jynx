@@ -18,4 +18,8 @@ public interface JynxOp extends JvmVersioned {
     default public boolean reduceIndent() {
         return false;
     }
+    
+    default public boolean isExternal() {
+        return true;
+    }
 }
