@@ -26,6 +26,7 @@ import jynx2asm.Line;
 import jynx2asm.MethodDesc;
 import jynx2asm.NameDesc;
 import jynx2asm.ops.JynxOp;
+import jynx2asm.ops.JynxOps;
 
 public class JynxMethodNode implements ContextDependent, HasAccessFlags {
 
@@ -122,7 +123,7 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
       annotationLists.accept(mnode);
     }
     
-    public JynxCodeHdr getJynxCodeHdr(JynxScanner js, Map<String,JynxOp> opmap) {
+    public JynxCodeHdr getJynxCodeHdr(JynxScanner js, JynxOps opmap) {
         endHeader();
         if (isAbstractOrNative()) {
             LOG(M155); // "code is not allowed as method is abstract or native"

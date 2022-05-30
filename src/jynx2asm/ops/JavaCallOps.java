@@ -107,13 +107,18 @@ public enum JavaCallOps implements MacroOp {
     }
 
     @Override
+    public boolean isExternal() {
+        return name().startsWith("inv_");
+    }
+
+    @Override
     public String toString() {
         return name().substring(4);
     }
     
     public static Stream<JavaCallOps> streamExternal() {
         return Arrays.stream(values())
-            .filter(m->m.name().startsWith("inv_"));
+            .filter(JavaCallOps::isExternal);
     }
 
     @Override

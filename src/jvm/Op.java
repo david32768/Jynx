@@ -156,6 +156,11 @@ public enum Op implements JvmOp {
     public AsmOp getBase() {
         return base;
     }
+
+    @Override
+    public boolean isExternal() {
+        return name().startsWith("opc_");
+    }
     
     public static Stream<JvmOp> stream() {
         return OPMAP.values().stream();
@@ -179,6 +184,10 @@ public enum Op implements JvmOp {
         JvmOp result = code >= 0 && code < CODEMAP.length?CODEMAP[code]:null;
         Objects.nonNull(result);
         return result;
+    }
+
+    public static JvmOp getOp(String opstr) {
+        return OPMAP.get(opstr);
     }
     
     public static JvmOp getWideOp(int code) {

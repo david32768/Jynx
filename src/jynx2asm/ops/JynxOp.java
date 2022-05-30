@@ -19,7 +19,6 @@ public interface JynxOp extends JvmVersioned {
         return false;
     }
     
-    default public boolean isExternal() {
-        return true;
-    }
+    public boolean isExternal();
+
 }

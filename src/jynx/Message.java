@@ -9,7 +9,7 @@ public enum Message {
     M2(BLANK,"display version information"),
     M3(BLANK,"program terminated because of errors"),
     M4(BLANK,"%n%s; Java runtime version %s"),
-    
+    M5(BLANK,"only JVM specified ops"),
     M6(BLANK,"Options are:%n"),
     M7(BLANK,"use SYSIN as input file"),
     M8(BLANK,"check that called methods exist (on class path)"),
@@ -22,7 +22,7 @@ public enum Message {
     M15(BLANK,"warn if names non-standard"),
     M16(BLANK,"use ASM BasicVerifier"),
     M17(BLANK,"use ASM SimpleVerifier (default)"),
-    M18(BLANK,"prepend class name to methods and fields if neccessary"),
+    M18(BLANK,"prepend class name to methods and fields if necessary"),
     M19(BLANK,"use user stack map instead of ASM generated"),
     M20("invalid major version(%d)"),
     M21("invalid minor version(%d) - spec table 4.1A"),

@@ -6,53 +6,49 @@ import static jynx.Message.M206;
 import static jynx.Message.M906;
 
 import jvm.FrameType;
+import jvm.JvmOp;
+import jvm.Op;
 import jynx.LogAssertionError;
 import jynx.LogIllegalArgumentException;
 
 public enum FrameElement {
 
-    UNUSED('_',true),
-    RETURN_ADDRESS('R'),
+    UNUSED('_',' ',true),
+    RETURN_ADDRESS('R',' '),
     INTEGER('I','i'),
     FLOAT('F','f'),
     DOUBLE('D','d'),
-    DOUBLE2('d',true),
+    DOUBLE2('d',' ',true),
     LONG('J','l'),
-    LONG2('j',true),
+    LONG2('j',' ',true),
     OBJECT('A','a'),
     EXCEPTION('A','a'),
-    ERROR('X',true),
-    IRRELEVANT(' ',true),
+    ERROR('X',' ',true),
+    IRRELEVANT(' ',' ',true),
 ;
 
     private final char typeLetter;
+    private final char instChar;
     private final boolean localsOnly;
-    private final Character instChar;
-
-    private FrameElement(char typeLetter, boolean localsOnly, Character instChar) {
-        this.typeLetter = typeLetter;
-        this.localsOnly = localsOnly;
-        this.instChar = instChar;
-    }
-
-    private FrameElement(char typeLetter, boolean localsOnly) {
-        this(typeLetter,localsOnly,null);
-    }
 
     private FrameElement(char typeLetter, Character instChar) {
-        this(typeLetter,false,instChar);
+        this(typeLetter, instChar, false);
     }
 
-    private FrameElement(char typeLetter) {
-        this(typeLetter,false);
+    private FrameElement(char typeLetter, char instChar, boolean localsOnly) {
+        this.typeLetter = typeLetter;
+        this.instChar = instChar;
+        this.localsOnly = localsOnly;
     }
 
     public char typeLetter() {
         return typeLetter;
     }
 
-    public Character getInstChar() {
-        return instChar;
+    public JvmOp addTypeChar(String suffix) {
+        assert instChar != ' ';
+        String opstr = instChar + suffix;
+        return Op.getOp(opstr);
     }
 
     public boolean isLocalsOnly() {

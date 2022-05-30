@@ -46,6 +46,7 @@ import jynx.ReservedWord;
 import jynx2asm.ops.AliasOps;
 import jynx2asm.ops.DynamicOp;
 import jynx2asm.ops.JynxOp;
+import jynx2asm.ops.JynxOps;
 import jynx2asm.ops.LineOp;
 import jynx2asm.ops.LineOps;
 import jynx2asm.ops.MacroOp;
@@ -60,7 +61,7 @@ public class String2Insn {
     private final LabelStack labelStack;
     private final ClassChecker checker;
     private final String className;
-    private final Map<String,JynxOp> opmap;
+    private final JynxOps opmap;
     
     private Line line;
     private boolean multi;
@@ -69,7 +70,7 @@ public class String2Insn {
     private final boolean generateDotLine;
     
     public String2Insn(JynxScanner js, JynxLabelMap labmap,
-            ClassChecker checker, Map<String,JynxOp> opmap) {
+            ClassChecker checker, JynxOps opmap) {
         this.js = js;
         this.labmap = labmap;
         this.labelStack = new LabelStack();

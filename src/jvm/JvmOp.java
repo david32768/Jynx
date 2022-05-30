@@ -8,19 +8,13 @@ public interface JvmOp extends JynxOp {
     public Feature feature();
 
     @Override
-    public Integer length();
-
-    default Integer minLength() {
-        return length();
-    }
-    
-    default Integer maxLength() {
-        return length();
+    default JvmVersionRange range() {
+        return feature().range();
     }
     
     default boolean isImmediate() {
         Integer length = length();
         return length != null && length == 1;
     }
-    
+
 }

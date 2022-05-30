@@ -18,7 +18,7 @@ import asm.JynxComponentNode;
 import asm.JynxFieldNode;
 import asm.JynxMethodNode;
 import asm.JynxModule;
-import com.github.david32768.jynx.Main;
+import com.github.david32768.jynx.Main.MainOption;
 import jvm.JvmVersion;
 import jynx.ClassType;
 import jynx.Directive;
@@ -51,8 +51,9 @@ public class JynxClass {
     private ContextDependent sd;
     
     private final Map<Directive,Line> unique_directives;
-    private final Map<String,JynxOp> opmap;
+    private JynxOps opmap;
     
+
     private JynxClass(String file_source, JynxScanner js) {
         this.js = js;
         this.file_source = file_source;
@@ -60,7 +61,6 @@ public class JynxClass {
         this.default_source = file_source.substring(index + 1);
         this.source = null;
         this.unique_directives = new HashMap<>();
-        this.opmap = new HashMap<>(JynxOps.getOpMap());
     }
 
     public static byte[] getBytes(String default_source, JynxScanner lines) {
@@ -134,6 +134,7 @@ public class JynxClass {
         if (!OPTIONS().isEmpty()) {
             LOG(M88, OPTIONS());  // "options = %s"
         }
+        this.opmap = JynxOps.getInstance(!OPTION(GlobalOption.JVM_OPS_ONLY),jvmVersion);
     }
     
     private void setOptions(Line line) {
@@ -143,7 +144,7 @@ public class JynxClass {
                 break;
             }
             Optional<GlobalOption> option = GlobalOption.optInstance(token.toString());
-            if (option.isPresent() && option.get().isRelevent(Main.MainOption.ASSEMBLY)) {
+            if (option.isPresent() && option.get().isRelevent(MainOption.ASSEMBLY)) {
                 boolean added = ADD_OPTION(option.get());
             } else {
                 LOG(M105,token); // "unknown option %s - ignored"
@@ -173,7 +174,7 @@ public class JynxClass {
     private void setMacroLib(Line line) {
         String libname = line.nextToken().asString();
         line.noMoreTokens();
-        JynxOps.addMacroLib(opmap, libname);
+        boolean found = opmap.addMacroLib(libname);
     }
     
     public void setStart(Directive dir) {

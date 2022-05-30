@@ -19,6 +19,11 @@ public interface DynamicOp extends JynxOp {
         return 5;
     }
 
+    @Override
+    public default boolean isExternal() {
+        return false;
+    }
+
     public static DynamicOp of(String name, String desc, String bootclass,String bootmethod) {
         return DynamicSimpleOp.getInstance(name, desc, bootclass, bootmethod,"");
     }

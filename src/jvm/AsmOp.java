@@ -276,6 +276,11 @@ public enum AsmOp implements JvmOp {
         return this;
     }
 
+    @Override
+    public boolean isExternal() {
+        return name().startsWith("asm_");
+    }
+
     public boolean isStack() {
         return type == STACK;
     }

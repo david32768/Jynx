@@ -3,11 +3,12 @@ package jynx2asm.ops;
 import java.io.PrintWriter;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.Set;
 
 import static jynx.Global.LOG;
 import static jynx.Message.M176;
@@ -17,24 +18,42 @@ import static jynx.Message.M267;
 import com.github.david32768.jynx.MacroLib;
 import jvm.Feature;
 import jvm.JvmOp;
+import jvm.JvmVersion;
 import jvm.JvmVersionRange;
 import jvm.Op;
 import jynx.LogAssertionError;
 
 public class JynxOps {
 
-    private JynxOps() {
+    private final Map<String, JynxOp> opmap;
+    private final Set<String> macrolibs;
+    private final JvmVersion jvmVersion;
+
+    private JynxOps(JvmVersion jvmversion) {
+        this.opmap = new HashMap<>(512);
+        this.macrolibs = new HashSet<>();
+        this.jvmVersion = jvmversion;
     }
 
-    private static final Map<String, JynxOp> OPMAP = new HashMap<>();
-
-    private static void addOp(JynxOp op) {
-        addOp(op, OPMAP);
+    public static JynxOps getInstance(boolean extensions, JvmVersion jvmversion) {
+        JynxOps ops =  new JynxOps(jvmversion);
+        if (extensions) {
+            AliasOps.streamExternal()
+                    .map(op->(JynxOp)op)
+                    .forEach(ops::addOp);
+            ExtendedOps.streamExternal()
+                    .map(op->(JynxOp)op)
+                    .forEach(ops::addOp);
+            JavaCallOps.streamExternal()
+                    .map(op->(JynxOp)op)
+                    .forEach(ops::addOp);
+        }
+        return ops;
     }
 
     private static final int MAX_SIMPLE = 16;
     
-    private static void addOp(JynxOp op, Map<String, JynxOp> opmap) {
+    private void addOp(JynxOp op) {
         String name = op.toString();
         JynxOp before = opmap.putIfAbsent(name, op);
         if (before != null) {
@@ -47,35 +66,35 @@ public class JynxOps {
         }
     }
 
-    static {
-        Op.stream().forEach(JynxOps::addOp);
-
-        AliasOps.streamExternal()
-                .forEach(JynxOps::addOp);
-        ExtendedOps.streamExternal()
-                .forEach(JynxOps::addOp);
-        JavaCallOps.streamExternal()
-                .forEach(JynxOps::addOp);
+    public JynxOp get(String jopstr) {
+        JynxOp op =  Op.getOp(jopstr);
+        if (op == null) {
+            op = opmap.get(jopstr);
+        }
+        jvmVersion.checkSupports(op);
+        return op;
     }
-
-    public static void addMacroLib(Map<String, JynxOp> opmap, String libname) {
+    
+    public boolean addMacroLib(String libname) {
+        if (macrolibs.contains(libname)) {
+            return true;
+        }
         ServiceLoader<MacroLib> libloader = ServiceLoader.load(MacroLib.class);
         boolean found = false;
         for (MacroLib lib : libloader) {
             if (lib.name().equals(libname)) {
                 lib.streamExternal()
-                        .forEach(op -> JynxOps.addOp(op, opmap));
+                        .forEach(this::addOp);
                 found = true;
                 break;
             }
         }
-        if (!found) {
+        if (found) {
+            macrolibs.add(libname);
+        } else  {
             LOG(M176,libname); // "%s not found as a macro library service"
         }
-    }
-
-    public static Map<String, JynxOp> getOpMap() {
-        return Collections.unmodifiableMap(OPMAP);
+        return found;
     }
 
     public static Integer length(MacroOp macop) {
@@ -144,18 +163,20 @@ public class JynxOps {
     }
 
     public static void main(String[] args) {
-        System.out.format("number of Jynx ops = %d%n", OPMAP.size());
-        if (args.length > 1) {
-            System.err.println("Usage: JynxOps [jynxop]");
+        if (args.length == 0 || args.length == 1 && (args[0].equals("-h") || args[0].equals("--help"))) {
+            System.err.println("Usage: JynxOps [macrolib]* [jynxop]");
             System.exit(1);
         }
-        if (args.length == 0) {
-            return;
+        JynxOps ops  = getInstance(true, JvmVersion.DEFAULT_VERSION);
+        int last = args.length - 1;
+        for (int i = 0; i < last; ++i) {
+            ops.addMacroLib(args[i]);
         }
-        addMacroLib(OPMAP, "wasm32MVP");
-        JynxOp jop = OPMAP.get(args[0]);
+        System.out.format("number of Jynx ops = %d%n", ops.opmap.size());
+        String jopstr = args[last];
+        JynxOp jop = ops.get(jopstr);
         if (jop == null) {
-            System.err.format("%s is an unknown JynxOp", args[0]);
+            System.err.format("%s is an unknown JynxOp", jopstr);
             System.exit(1);
         }
         try (PrintWriter pw = new PrintWriter(System.out)) {

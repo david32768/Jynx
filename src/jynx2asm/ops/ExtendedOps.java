@@ -75,9 +75,14 @@ public enum ExtendedOps implements MacroOp {
         return name().substring(4);
     }
 
+    @Override
+    public boolean isExternal() {
+        return name().startsWith("ext_");
+    }
+
     public static Stream<ExtendedOps> streamExternal() {
         return Arrays.stream(values())
-            .filter(m->m.name().startsWith("ext_"));
+            .filter(ExtendedOps::isExternal);
     }
     
 }

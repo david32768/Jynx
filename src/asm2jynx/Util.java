@@ -16,11 +16,11 @@ public class Util {
         return !isAbsent(list);
     }
 
-   public static <E> List<E> nonNullList(List<E> list) {
+    public static <E> List<E> nonNullList(List<E> list) {
         return list == null ? Collections.emptyList() : list;
     }
 
-   public static <E> Iterable<E> nonNullIterable(Iterable<E> list) {
+    public static <E> Iterable<E> nonNullIterable(Iterable<E> list) {
         return list == null ? Collections.emptyList() : list;
     }
 

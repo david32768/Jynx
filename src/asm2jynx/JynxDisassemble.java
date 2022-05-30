@@ -184,7 +184,7 @@ public class JynxDisassemble {
                     .append(rcn.name)
                     .append(rcn.descriptor)
                     .nl();
-            if (isAnyPresent(
+            if (rcn.signature != null || isAnyPresent(
                     rcn.invisibleAnnotations,
                     rcn.visibleAnnotations,
                     rcn.visibleTypeAnnotations,

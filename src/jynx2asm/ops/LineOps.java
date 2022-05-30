@@ -31,7 +31,6 @@ public enum LineOps implements LineOp {
     
     private LineOps() {}
 
-
     @Override
     public void adjustLine(Line line, int macrolevel,LabelStack labelStack) {
         lineop(line, macrolevel, labelStack);

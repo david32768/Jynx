@@ -35,7 +35,7 @@ import jynx2asm.JynxLabelMap;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
 import jynx2asm.LinesIterator;
-import jynx2asm.ops.JynxOp;
+import jynx2asm.ops.JynxOps;
 import jynx2asm.OwnerNameDesc;
 import jynx2asm.StackLocals;
 import jynx2asm.String2Insn;
@@ -65,7 +65,7 @@ public class JynxCodeHdr implements ContextDependent {
     private final Map<Directive,Line> unique_directives;
     
     private JynxCodeHdr(MethodNode mv, JynxScanner js, ClassChecker checker,
-            OwnerNameDesc cmd, JynxLabelMap labelmap, boolean isStatic, Map<String,JynxOp> opmap) {
+            OwnerNameDesc cmd, JynxLabelMap labelmap, boolean isStatic, JynxOps opmap) {
         this.js = js;
         String clname = isStatic?null:checker.getClassName();
         this.localStack = FrameType.getInitFrame(clname, cmd); // classname set non null for virtual methods
@@ -84,7 +84,7 @@ public class JynxCodeHdr implements ContextDependent {
     }
 
     public static JynxCodeHdr getInstance(MethodNode mv, JynxScanner js, OwnerNameDesc cmd,
-            JynxLabelMap labelmap, boolean isStatic, ClassChecker checker, Map<String,JynxOp> opmap) {
+            JynxLabelMap labelmap, boolean isStatic, ClassChecker checker, JynxOps opmap) {
         CHECK_SUPPORTS(Code);
         return new JynxCodeHdr(mv, js, checker, cmd, labelmap, isStatic ,opmap);
     }

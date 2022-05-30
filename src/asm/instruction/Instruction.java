@@ -27,11 +27,11 @@ public class Instruction {
     }
 
     public Integer minLength() {
-        return jvmop.minLength();
+        return jvmop.length();
     }
     
     public Integer maxLength() {
-        return jvmop.maxLength();
+        return jvmop.length();
     }
     
     public void accept(MethodVisitor mv) {

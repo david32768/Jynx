@@ -4,6 +4,9 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import static jvm.AsmOp.*;
+import static jvm.OpArg.arg_constant;
+import static jvm.OpArg.arg_none;
+import static jvm.OpArg.arg_var;
 
 import asm.instruction.Instruction;
 import asm.instruction.IntInstruction;
@@ -14,53 +17,52 @@ import jvm.AsmOp;
 import jvm.ConstType;
 import jvm.Feature;
 import jvm.JvmOp;
+import jvm.JvmVersionRange;
 import jvm.NumType;
 import jvm.Op;
+import jvm.OpArg;
 import jynx2asm.FrameElement;
 import jynx2asm.InstList;
 import jynx2asm.Line;
 
-public enum AliasOps implements JynxOp, JvmOp {
+public enum AliasOps implements JynxOp {
 
-    opc_ildc(1,3),
-    opc_lldc(1,3),
-    opc_fldc(1,3),
-    opc_dldc(1,3),
+    opc_ildc(arg_constant,1,3),
+    opc_lldc(arg_constant,1,3),
+    opc_fldc(arg_constant,1,3),
+    opc_dldc(arg_constant,1,3),
 
-    xxx_xload(2,4),
-    xxx_xstore(2,4),
-    xxx_xload_rel(2,4),
-    xxx_xstore_rel(2,4),
+    xxx_xload(arg_var,1,4),
+    xxx_xstore(arg_var,1,4),
+    xxx_xload_rel(arg_var,1,4),
+    xxx_xstore_rel(arg_var,1,4),
 
-    xxx_dupn(1,1),
-    xxx_popn(1,1),
-    xxx_dupn_xn(1,1),
+    xxx_dupn(arg_none,1,1),
+    xxx_popn(arg_none,1,1),
+    xxx_dupn_xn(arg_none,1,1),
 
-    xxx_xreturn(1,1),
+    xxx_xreturn(arg_none,1,1),
     ;    
 
+    private final OpArg oparg;
     private final Integer minlength;
     private final Integer maxlength;
     private final Feature requires;
 
-    private AliasOps(Integer minlength, Integer maxlength) {
-        this(minlength,maxlength,Feature.unlimited);
+    private AliasOps(OpArg oparg, Integer minlength, Integer maxlength) {
+        this(oparg,minlength,maxlength,Feature.unlimited);
     }
 
-    private AliasOps(Integer minlength, Integer maxlength, Feature requires) {
+    private AliasOps(OpArg oparg, Integer minlength, Integer maxlength, Feature requires) {
+        this.oparg = oparg;
         this.minlength = minlength;
         this.maxlength = maxlength;
         this.requires = requires;
     }
     
     @Override
-    public boolean isExternal() {
-        return name().startsWith("opc_");
-    }
-
-    @Override
-    public Feature feature() {
-        return requires;
+    public JvmVersionRange range() {
+        return requires.range();
     }
 
     @Override
@@ -69,21 +71,72 @@ public enum AliasOps implements JynxOp, JvmOp {
     }
 
     @Override
-    public Integer minLength() {
-        return minlength;
-    }
-
-    @Override
-    public Integer maxLength() {
-        return maxlength;
-    }
-
-    @Override
-    public AsmOp getBase() {
-        return null;
+    public boolean isExternal() {
+        return name().startsWith("opc_");
     }
 
     public Instruction getInst(Line line, InstList instlist) {
+        switch (oparg) {
+            case arg_none:
+                return getInstNone(instlist);
+            case arg_var:
+                return getInstVar(line,instlist);
+            case arg_constant:
+                return getInstConstant(line);
+            default:
+                throw new EnumConstantNotPresentException(oparg.getClass(), oparg.name());
+        }
+    }
+
+    private Instruction getInstVar(Line line, InstList instlist) {
+        int num  = line.nextToken().asUnsignedShort();
+        JvmOp jvmop;
+        switch (this) {
+            case xxx_xload_rel:
+                num = instlist.absolute(num);
+                // FALL THROUGH
+            case xxx_xload:
+                FrameElement localfe = instlist.peekVar(num);
+                jvmop = localfe.addTypeChar("load");
+                break;
+            case xxx_xstore_rel:
+                num = instlist.absolute(num);
+                // FALL THROUGH
+            case xxx_xstore:
+                FrameElement stackfe = instlist.peekTOS();
+                jvmop = stackfe.addTypeChar("store");
+                break;
+            default:
+                throw new EnumConstantNotPresentException(this.getClass(), name());
+        }
+        return new VarInstruction(jvmop, num);
+    }
+
+    private Instruction getInstNone(InstList instlist) {
+        if (this == xxx_xreturn) {
+            AsmOp asmop = instlist.getReturnOp();
+            return Instruction.getInstance(asmop);
+        }
+        FrameElement stackfe = instlist.peekTOS();
+        boolean isTwo = stackfe.isTwo();
+        JvmOp jvmop;
+        switch (this) {
+            case xxx_dupn:
+                jvmop = isTwo?asm_dup2:asm_dup;
+                break;
+            case xxx_dupn_xn:
+                jvmop = isTwo?asm_dup2_x2:asm_dup_x1;
+                break;
+            case xxx_popn:
+                jvmop = isTwo?asm_pop2:asm_pop;
+                break;
+            default:
+                throw new EnumConstantNotPresentException(this.getClass(), name());
+        }
+        return new StackInstruction(jvmop);
+    }
+
+    private Instruction getInstConstant(Line line) {
         switch (this) {
             case opc_ildc:
                 return ildc(line);
@@ -93,42 +146,6 @@ public enum AliasOps implements JynxOp, JvmOp {
                 return fldc(line);
             case opc_dldc:
                 return dldc(line);
-            case xxx_xreturn:
-                AsmOp asmop = instlist.getReturnOp();
-                return Instruction.getInstance(asmop);
-        }
-        FrameElement stackfe = instlist.peekTOS();
-        boolean isTwo = stackfe.isTwo();
-        AsmOp asmop;
-        int num;
-        switch (this) {
-            case xxx_dupn:
-                asmop = isTwo?asm_dup2:asm_dup;
-                return new StackInstruction(asmop);
-            case xxx_dupn_xn:
-                asmop = isTwo?asm_dup2_x2:asm_dup_x1;
-                return new StackInstruction(asmop);
-            case xxx_popn:
-                asmop = isTwo?asm_pop2:asm_pop;
-                return new StackInstruction(asmop);
-            case xxx_xload:
-                num = line.nextToken().asUnsignedShort();
-                asmop = resolveLoad(instlist.peekVar(num));
-                return new VarInstruction(asmop, num);
-            case xxx_xload_rel:
-                num = line.nextToken().asUnsignedShort();
-                num = instlist.absolute(num);
-                asmop = resolveLoad(instlist.peekVar(num));
-                return new VarInstruction(asmop, num);
-            case xxx_xstore:
-                num = line.nextToken().asUnsignedShort();
-                asmop = resolveStore(stackfe);
-                return new VarInstruction(asmop, num);
-            case xxx_xstore_rel:
-                num = line.nextToken().asUnsignedShort();
-                num = instlist.absolute(num);
-                asmop = resolveStore(stackfe);
-                return new VarInstruction(asmop, num);
             default:
                 throw new EnumConstantNotPresentException(this.getClass(), name());
         }
@@ -200,53 +217,9 @@ public enum AliasOps implements JynxOp, JvmOp {
         }
     }
     
-    private static AsmOp resolveLoad(FrameElement localfe) {
-        AsmOp base;
-        switch(localfe) {
-            case INTEGER:
-                base = asm_iload;
-                break;
-            case LONG:
-                base = asm_lload;
-                break;
-            case FLOAT:
-                base = asm_fload;
-                break;
-            case DOUBLE:
-                base = asm_dload;
-                break;
-            default:
-                base = asm_aload;
-                break;
-        }
-        return base;
-    }
-    
-    private static  AsmOp resolveStore(FrameElement stackfe) {
-        AsmOp base;
-        switch(stackfe) {
-            case INTEGER:
-                base = asm_istore;
-                break;
-            case LONG:
-                base = asm_lstore;
-                break;
-            case FLOAT:
-                base = asm_fstore;
-                break;
-            case DOUBLE:
-                base = asm_dstore;
-                break;
-            default:
-                base = asm_astore;
-                break;
-        }
-        return base;
-    }
-    
     @Override
     public String toString() {
-        return name().startsWith("opc_")?name().substring(4):name();
+        return name().substring(4);
     }
 
     public static Stream<AliasOps> streamExternal() {
