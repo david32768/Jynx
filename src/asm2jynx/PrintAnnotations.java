@@ -151,11 +151,25 @@ public class PrintAnnotations {
             values = valuesx;
             isArray = true;
             if (values.isEmpty()) {
-                ConstType ct = desc == null? ConstType.ct_int:ConstType.getFromDesc(desc.substring(1), ANNOTATION);
                 // a zero array does not need a type, so use [I
-                lb.appendNonNull(name).append(ct.getJynx_desc(true)).appendNonNull(null).append(ReservedWord.equals_sign);
-                lb.append(ReservedWord.left_array).append(ReservedWord.right_array);
-                lb.nl();
+                ConstType ct = desc == null? ConstType.ct_int:ConstType.getFromDesc(desc.substring(1), ANNOTATION);
+                if (ct == ConstType.ct_annotation) {
+                    lb.appendNonNull(name)
+                            .append(ct.getJynx_desc(true))
+                            .appendNonNull(desc.substring(1))
+                            .append(ReservedWord.equals_sign)
+                            .append(ReservedWord.dot_annotation_array)
+                            .nl();
+                    lb.append(Directive.end_annotation_array)
+                            .nl();
+                } else {
+                    lb.appendNonNull(name)
+                            .append(ct.getJynx_desc(true))
+                            .append(ReservedWord.equals_sign)
+                            .append(ReservedWord.left_array)
+                            .append(ReservedWord.right_array)
+                            .nl();
+                }
                 return;
             }
         } else {

@@ -148,11 +148,9 @@ public class JynxAnnotation {
                     line.nextToken().mustBe(equals_sign);
                     Token dot = line.nextToken();
                     if (array) {
-                        dot.oneOf(dot_annotation, dot_annotation_array);
+                        dot.oneOf(dot_annotation_array);
                         line.noMoreTokens();
-                        Directive enddir = dot.is(dot_annotation_array)?
-                                Directive.end_annotation_array:
-                                Directive.end_annotation;
+                        Directive enddir = Directive.end_annotation_array;
                         visitArrayOfAnnotations(av, name,desc,enddir);
                         break;
                     }
@@ -203,7 +201,6 @@ public class JynxAnnotation {
     
     private void visitArrayOfAnnotations(AnnotationVisitor av, String name,String desc, Directive enddir) {
         AnnotationVisitor avarr = av.visitArray(name);
-        int ct = 0;
         while(true) {
             Line line = js.next();
             Token token = line.firstToken();
@@ -215,13 +212,8 @@ public class JynxAnnotation {
                 throw new LogIllegalStateException(M168,dirx); // "unexpected directive(%s) in annotation"
             }
             line.noMoreTokens();
-            ++ct;
             AnnotationVisitor avarrav = avarr.visitAnnotation(name, desc);
             visitAnnotationValues(avarrav);
-        }
-        if (ct == 0) {
-            AnnotationVisitor avarrav = avarr.visitAnnotation(name, desc);
-            avarrav.visitEnd();
         }
         avarr.visitEnd();
     }

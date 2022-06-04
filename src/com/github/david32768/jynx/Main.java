@@ -27,7 +27,7 @@ public class Main {
 
     private final static int JYNX_VERSION = 0;
     private final static int JYNX_RELEASE = 12;
-    private final static int JYNX_BUILD = 20;
+    private final static int JYNX_BUILD = 22;
     
     private static String version() {
         return String.format("%d+%d-%d",JYNX_VERSION,JYNX_RELEASE,JYNX_BUILD);
@@ -127,38 +127,6 @@ public class Main {
         return true;
     }
     
-    public static Optional<String> setOptions(String[] args) {
-        int i = 0;
-        String[] remainder = new String[0];
-        for (; i < args.length; ++i) {
-            String argi = args[i];
-            if (argi.isEmpty()) {
-                continue;
-            }
-            if (GlobalOption.mayBeOption(argi)) {
-                Optional<GlobalOption> opt = GlobalOption.optArgInstance(argi);
-                if (opt.isPresent()) {
-                    GlobalOption option = opt.get();
-                    ADD_OPTION(option);
-                } else {
-                    LOG(M32,argi); // "%s is not a valid option"
-                }
-            } else {
-                remainder = Arrays.copyOfRange(args, i, args.length);
-                if (remainder.length == 1) {
-                    return Optional.of(args[i]);
-                }
-                break;
-            }
-        }
-        if (remainder.length == 0) {
-            LOG(M218); //"SYSIN will be used as input"
-        } else {
-            LOG(M219,Arrays.asList(remainder)); // "wrong number of parameters after options %s"
-        }
-        return Optional.empty();
-    }
-
     private static boolean a2j(Optional<String> optfname) {
         String fname = optfname.get();
         PrintWriter pw = new PrintWriter(System.out);

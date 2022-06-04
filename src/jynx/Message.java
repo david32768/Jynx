@@ -70,7 +70,7 @@ public enum Message {
     M63("Loading of %s not supported in %s"),
     M64(STYLE,"final static field name (%s) is not in uppercase"),
     M65("local variables [%s ] are read but not written"),
-    M66("%s is not a valid %s"),
+    M66("invalid %s: %s"),
     M67(ENDINFO,"poolsz = %d"),
     M68(WARNING,"Quoted string followed by '%1$c' instead of blank; blank inserted before '%1$c'"),
     M69("Embedded naked quote"),
@@ -303,7 +303,7 @@ public enum Message {
     M404("(redundant?) checkcasts or hint needed to obtain common supertype of%n    %s and %s"),
     M405("%s has different type %s from previous %s at line %d"),
     M406("method %s in %s class must be %s, not %s and have no parameters"),
-    M407("cannot %s end_token"),
+
     M408("expected %s but found %s"),
     M409("illegal operation on END_TOKEN"),
     M410("cannot amend quoted token"),

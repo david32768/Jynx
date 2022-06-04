@@ -228,7 +228,7 @@ public enum NameDesc {
     public boolean validate(String str) {
         boolean ok = isValid(str);
         if (!ok) {
-            LOG(M66,str,this);   // "%s is not a valid %s"
+            LOG(M66,this,str);   // "invalid %s: %s"
         }
         return ok;
     }

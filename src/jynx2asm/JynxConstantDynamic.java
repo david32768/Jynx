@@ -287,7 +287,8 @@ public class JynxConstantDynamic {
             name = namedesc;
             desc = line.nextToken().asString();
         }
-        NameDesc.NAME_DESC.validate(name+desc); // not <init> or <clinit>
+        NameDesc.METHOD_ID.validate(name); // not <init> or <clinit>
+        NameDesc.DESC.validate(desc);
         String bootname = line.nextToken().asString();
         Handle bsm = S2O.parseHandle(bootname);
         checker.mayBeHandle(bsm, line);
@@ -301,7 +302,8 @@ public class JynxConstantDynamic {
     public ConstantDynamic getSimple(String name, String desc, String bootmethod,
             String bootdescplus,String... bootparms) {
         Object[] bootargs = getSimpleBootArgs(bootdescplus,bootparms);
-        NameDesc.NAME_DESC.validate(name+desc); // not <init> or <clinit>
+        NameDesc.METHOD_ID.validate(name); // not <init> or <clinit>
+        NameDesc.DESC.validate(desc);
         String bootdesc = String.format(ARRAY_BOOT_DESC_FORMAT,bootdescplus);
         String bootstrap = "ST:" + bootmethod + bootdesc;
         Handle bootstrapmethod = S2O.parseHandle(bootstrap);

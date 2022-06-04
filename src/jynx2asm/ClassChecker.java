@@ -134,9 +134,9 @@ public class ClassChecker {
         if (owner.equals(className)) {
             ObjectLine<HandleType> objline = new ObjectLine<>(ht,line);
             ObjectLine<HandleType> previous = ownMethodsUsed.putIfAbsent(cmd, objline);
-            if (previous != null && objline.object() != previous.object()) {
+            if (previous != null && !ht.maybeOK(previous.object())) {
                 // "%s has different type %s from previous %s at line %d"
-                LOG(M405,cmd.toJynx(),objline.object(), previous.object(),previous.line().getLinect());
+                LOG(M405,cmd.toJynx(),ht, previous.object(),previous.line().getLinect());
             }
         } else if (OPTION(GlobalOption.CHECK_METHOD_REFERENCES)) {
             checkMethodExists(cmd, ht);

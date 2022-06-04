@@ -21,7 +21,7 @@ public class DynamicSimpleOp implements DynamicOp {
     private final String bootdescplus;
     private final String[] bootparms;
 
-    public DynamicSimpleOp(String name, String desc, String bootmethodName,
+    private DynamicSimpleOp(String name, String desc, String bootmethodName,
             String bootdescplus, String... bootparms) {
         this.name = name;
         this.desc = desc;

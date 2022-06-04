@@ -1,8 +1,8 @@
 package jynx2asm.ops;
 
-import static jynx.Message.M248;
+import java.util.function.UnaryOperator;
 
-import static jynx.Message.M407;
+import static jynx.Message.M248;
 import static jynx.Message.M408;
 
 import jynx.LogIllegalStateException;
@@ -121,8 +121,8 @@ public enum LineOps implements LineOp {
                 System.err.format("token = %s%n", line.peekToken());
                 break;
             case tok_swap:
-                Token first = line.nextToken();
-                Token second = line.nextToken();
+                Token first = line.nextToken().checkNotEnd();
+                Token second = line.nextToken().checkNotEnd();
                 line.insert(first);
                 line.insert(second);
                 break;
@@ -133,10 +133,7 @@ public enum LineOps implements LineOp {
 
     private static enum Adjustment {
        INSERT,
-       INSERT_AFTER,
-       PREPEND,
-       APPEND,
-       REPLACE,
+       TRANSFORM,
        CHECK,
        ;
     }
@@ -145,24 +142,23 @@ public enum LineOps implements LineOp {
         return new AdjustLine(Adjustment.INSERT, str);
     }
     
-    public static LineOp insertAfter(String str) {
-        return new AdjustLine(Adjustment.INSERT_AFTER, str);
-    }
-    
     public static LineOp insert(String klass, String method, String desc) {
+        assert NameDesc.CLASS_NAME.validate(klass);
+        assert NameDesc.METHOD_ID.validate(method);
+        assert NameDesc.DESC.validate(desc);
         return new AdjustLine(Adjustment.INSERT, klass + '/' + method + desc);
     }
     
     public static LineOp prepend(String str) {
-        return new AdjustLine(Adjustment.PREPEND,str);
+        return new AdjustLine(Adjustment.TRANSFORM,s->str + s);
     }
     
     public static LineOp append(String str) {
-        return new AdjustLine(Adjustment.APPEND,str);
+        return new AdjustLine(Adjustment.TRANSFORM,s->s + str);
     }
     
     public static LineOp replace(String find, String replace) {
-        return new AdjustLine(Adjustment.REPLACE,find,replace);
+        return new AdjustLine(Adjustment.TRANSFORM,str->str.replace(find,replace));
     }
     
     public static LineOp check(String str) {
@@ -173,47 +169,32 @@ public enum LineOps implements LineOp {
 
         private final Adjustment type;
         private final String adjust;
-        private final String replace;
+        private final UnaryOperator<String> op;
 
         public AdjustLine(Adjustment type, String adjust) {
             this.adjust = adjust;
             this.type = type;
-            this.replace = null;
+            this.op = null;
+            assert type != LineOps.Adjustment.TRANSFORM;
         }
 
-        public AdjustLine(LineOps.Adjustment type, String adjust, String replace) {
+        public AdjustLine(LineOps.Adjustment type, UnaryOperator<String> op) {
             this.type = type;
-            this.adjust = adjust;
-            this.replace = replace;
-            assert type == LineOps.Adjustment.REPLACE;
+            this.adjust = null;
+            this.op = op;
+            assert type == LineOps.Adjustment.TRANSFORM;
         }
 
         @Override
         public void adjustLine(Line line, int macrolevel, LabelStack labelStack){
+            Token token;
             switch(type) {
                 case INSERT:
-                    Token token = Token.getInstance(adjust);
+                    token = Token.getInstance(adjust);
                     line.insert(token);
                     break;
-                case INSERT_AFTER:
-                    token = line.nextToken();
-                    if (token == Token.END_TOKEN) {
-                        throw new LogIllegalStateException(M407,type);  // "cannot %s end_token"
-                    }
-                    Token inserted = Token.getInstance(adjust);
-                    line.insert(inserted);
-                    line.insert(token);
-                    break;
-                case PREPEND:
-                    token = line.nextToken().prepend(adjust);
-                    line.insert(token);
-                    break;
-                case APPEND:
-                    token = line.nextToken().append(adjust);
-                    line.insert(token);
-                    break;
-                case REPLACE:
-                    token = line.nextToken().replace(adjust, replace);
+                case TRANSFORM:
+                    token = line.nextToken().transform(op);
                     line.insert(token);
                     break;
                 case CHECK:

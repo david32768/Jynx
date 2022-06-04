@@ -1,6 +1,7 @@
 package jynx2asm;
 
 import java.util.EnumSet;
+import java.util.function.UnaryOperator;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -38,10 +39,11 @@ public class Token {
         this.token = token;
     }
 
-    private void checkNotEnd() {
+    public Token checkNotEnd() {
         if (this == END_TOKEN) {
             throw new LogIllegalArgumentException(M409); // "illegal operation on END_TOKEN"
         }
+        return this;
     }
   
     private final static String QUOTES = "\"'";
@@ -56,22 +58,11 @@ public class Token {
         return new Token(tokenstr);
     }
 
-    public Token prepend(String str) {
+    public Token transform(UnaryOperator<String> op) {
         checkNotEnd();
         checkNotQuoted();
-        return new Token(str + token);
-    }
-    
-    public Token append(String str) {
-        checkNotEnd();
-        checkNotQuoted();
-        return new Token(token + str);
-    }
-    
-    public Token replace(String find, String replace) {
-        checkNotEnd();
-        checkNotQuoted();
-        return new Token(token.replace(find, replace));
+        String str = op.apply(token);
+        return new Token(str);
     }
     
     public String asString() {

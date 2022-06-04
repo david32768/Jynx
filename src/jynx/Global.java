@@ -1,9 +1,14 @@
 package jynx;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Objects;
+import java.util.Optional;
 
+import static jynx.Message.M218;
+import static jynx.Message.M219;
 import static jynx.Message.M24;
+import static jynx.Message.M32;
 import static jynx.Message.M4;
 
 import com.github.david32768.jynx.Main;
@@ -117,6 +122,38 @@ public class Global {
         return global.options.clone();
     }
     
+    public static Optional<String> setOptions(String[] args) {
+        int i = 0;
+        String[] remainder = new String[0];
+        for (; i < args.length; ++i) {
+            String argi = args[i];
+            if (argi.isEmpty()) {
+                continue;
+            }
+            if (GlobalOption.mayBeOption(argi)) {
+                Optional<GlobalOption> opt = GlobalOption.optArgInstance(argi);
+                if (opt.isPresent()) {
+                    GlobalOption option = opt.get();
+                    ADD_OPTION(option);
+                } else {
+                    LOG(M32,argi); // "%s is not a valid option"
+                }
+            } else {
+                remainder = Arrays.copyOfRange(args, i, args.length);
+                if (remainder.length == 1) {
+                    return Optional.of(args[i]);
+                }
+                break;
+            }
+        }
+        if (remainder.length == 0) {
+            LOG(M218); //"SYSIN will be used as input"
+        } else {
+            LOG(M219,Arrays.asList(remainder)); // "wrong number of parameters after options %s"
+        }
+        return Optional.empty();
+    }
+
     private static LogMsgType msgType(Message msg) {
         LogMsgType logtype = msg.getLogtype();
         if (logtype.compareTo(LogMsgType.STYLE) >= 0 && OPTION(GlobalOption.__TREAT_WARNINGS_AS_ERRORS)) {

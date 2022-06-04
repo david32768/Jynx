@@ -26,8 +26,10 @@ public class MethodDesc extends OwnerNameDesc {
             // "Invalid method description %s"
             throw new LogIllegalArgumentException(M145,mspec);
         }
-        METHOD_NAME.validate(ond.name());
-        METHOD_NAME_DESC.validate(ond.nameDesc());
+        boolean ok = METHOD_NAME.validate(ond.name());
+        if (ok) {
+            METHOD_NAME_DESC.validate(ond.nameDesc());
+        }
         return new MethodDesc(ond);
     }
     

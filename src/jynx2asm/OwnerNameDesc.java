@@ -95,11 +95,15 @@ public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
         } else {
             CLASS_NAME.validate(ond.owner());
             if (ond.isInterface()) {
-                INTERFACE_METHOD_NAME.validate(ond.name());
-                INTERFACE_METHOD_NAME_DESC.validate(ond.nameDesc());
+                boolean ok = INTERFACE_METHOD_NAME.validate(ond.name());
+                if (ok) {
+                    INTERFACE_METHOD_NAME_DESC.validate(ond.nameDesc());
+                }
             } else {
-                METHOD_NAME.validate(ond.name());
-                METHOD_NAME_DESC.validate(ond.nameDesc());
+                boolean ok = METHOD_NAME.validate(ond.name());
+                if (ok) {
+                    METHOD_NAME_DESC.validate(ond.nameDesc());
+                }
             }
         }
         return new OwnerNameDesc(ond);

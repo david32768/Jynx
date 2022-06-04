@@ -1,9 +1,8 @@
 package asm;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,8 +16,8 @@ import static jynx.Message.M238;
 
 public class JynxClassReader extends ClassReader {
 
-    public JynxClassReader(final java.lang.String className) throws IOException {
-        this(path4Class(className.replace('.', '/') + ".class"));
+    public JynxClassReader(final String className) throws IOException {
+        this(bytes4Class(className));
     }
 
     public JynxClassReader(final Path path) throws IOException {
@@ -30,7 +29,7 @@ public class JynxClassReader extends ClassReader {
     }
 
     // main constructor
-    JynxClassReader(final byte[] classFile) {
+    public JynxClassReader(final byte[] classFile) {
         super(classFile, 0, classFile.length);
         int expectedLength = classFile.length;
         int actualLength;
@@ -52,10 +51,10 @@ public class JynxClassReader extends ClassReader {
         Path path;
         if (name.endsWith(".class")) {
             path = Paths.get(name);
+            return Files.readAllBytes(path);
         } else {
-            path = JynxClassReader.path4Class(name);
+            return bytes4Class(name);
         }
-        return Files.readAllBytes(path);
     }
 
     public static Optional<ClassReader> getClassReader(String name) {
@@ -63,19 +62,32 @@ public class JynxClassReader extends ClassReader {
             byte[] ba = getClassBytes(name);
             ClassReader cr = new JynxClassReader(ba);
             return Optional.of(cr);
-        } catch (Exception ex) {
-            LOG(M238,ex); // "error reading class file: %s"
+        } catch (IOException ex) {
+            LOG(M238,ex.getMessage()); // "error reading class file: %s"
             return Optional.empty();
         }
     }
 
-    private static Path path4Class(String name) throws IOException {
-        URL url = ClassLoader.getSystemResource(name.replace('.', '/') +".class");
-        try {
-            URI uri = url.toURI();
-            return Paths.get(uri);
-        } catch (URISyntaxException | NullPointerException ex) {
-            throw new IOException("unable to get class " + name,ex);
+    private static int BUFFER_SIZE = 1<<14;
+    
+    private static byte[] bytes4Class(String name) throws IOException {
+        assert !name.endsWith(".class");
+        try (InputStream is = ClassLoader.getSystemResourceAsStream(name.replace('.', '/') + ".class")) {
+            byte[] ba = new byte[BUFFER_SIZE];
+            int readct = is.read(ba, 0, BUFFER_SIZE >> 1);
+            if (readct < 0) {
+                return new byte[0];
+            }
+            int readct2 = is.read(ba, readct, BUFFER_SIZE - readct);
+            if (readct2 < 0) {
+                return Arrays.copyOf(ba, readct);
+            }
+            readct += readct2;
+            ByteArrayOutputStream os = new ByteArrayOutputStream(BUFFER_SIZE << 1);
+            do {
+                os.write(ba, 0, readct);
+            } while ((readct = is.read(ba))>= 0);
+            return os.toByteArray();
         }
     }
     

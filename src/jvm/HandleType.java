@@ -83,6 +83,12 @@ public enum HandleType {
         return maincpt == ConstantPoolType.CONSTANT_Fieldref;
     }
     
+    public boolean maybeOK(HandleType other) {
+        return this == other
+                || this == REF_invokeSpecial && other == REF_invokeVirtual
+                || other == REF_invokeSpecial && this == REF_invokeVirtual;
+    }
+    
     @Override
     public String toString() {
         return String.format("%s: (=%s)",mnemonic,name().replace("REF_",""));

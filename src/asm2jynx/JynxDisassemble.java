@@ -105,6 +105,7 @@ public class JynxDisassemble {
     }
     
     public boolean print() {
+        Global.setClassName(cn.name);
         printVersionSource();
         if (cn.module != null) {
             LOGGER().setLine("module " + cn.name);

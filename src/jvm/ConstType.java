@@ -180,21 +180,24 @@ public enum ConstType {
         return ct;
     }
     
-    private static ConstType getFromDesc(String str) {
-        return all.stream()
-                .filter(ct->ct.desc.equals(str))
-                .findFirst()
-                .orElseThrow(()->new LogIllegalArgumentException(M183,str)); // "Type is not known - %s"
-    }
-
     public static ConstType getFromDesc(String str,Context context) {
-        ConstType ct = getFromDesc(str);
+        Optional<ConstType> ctopt = all.stream()
+                .filter(ct->ct.desc.equals(str))
+                .findFirst();
+
+        ConstType ct;
+        if (!ctopt.isPresent() && context == Context.ANNOTATION) {
+            ct = ct_annotation;
+        } else {
+            ct = ctopt
+                .orElseThrow(()->new LogIllegalArgumentException(M183,str)); // "Type is not known - %s"
+        }
         return ct.checkedContext(context);
     }
     
     public static ConstType getFromType(Type type,Context context) {
-        ConstType ct = getFromDesc(type.getDescriptor());
-        return ct.checkedContext(context);
+        String str = type.getDescriptor();
+        return getFromDesc(str,context);
     }
     
     public static ConstType getFromASM(Object value, Context context) {
