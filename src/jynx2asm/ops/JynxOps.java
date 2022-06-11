@@ -70,6 +70,9 @@ public class JynxOps {
         JynxOp op =  Op.getOp(jopstr);
         if (op == null) {
             op = opmap.get(jopstr);
+            if (op == null) {
+                return null;
+            }
         }
         jvmVersion.checkSupports(op);
         return op;

@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import static jynx.Global.LOG;
 import static jynx.Global.OPTION;
+import static jynx.Global.SUPPORTS;
 import static jynx.GlobalOption.WARN_UNNECESSARY_LABEL;
 import static jynx.Message.*;
 
@@ -14,7 +15,9 @@ import asm.instruction.Instruction;
 import asm.instruction.LineInstruction;
 import asm.JynxVar;
 import jvm.AsmOp;
+import jvm.Feature;
 import jvm.FrameType;
+import jynx.GlobalOption;
 import jynx.LogIllegalArgumentException;
 
 public class StackLocals {
@@ -47,8 +50,6 @@ public class StackLocals {
     private boolean hasThrow;
 
     private boolean frameRequired;
-    private boolean frameFound;
-    private boolean frameMissing;
     
     private Optional<JynxLabel> lastLab;
     private AsmOp lastop;
@@ -66,8 +67,6 @@ public class StackLocals {
         this.lastLab = Optional.empty();
         this.lastop = AsmOp.asm_nop;
         this.frameRequired = false;
-        this.frameFound = false;
-        this.frameMissing = false;
         this.completion = Last.OP;
         this.activeLabels = new ArrayList<>();
     }
@@ -168,7 +167,6 @@ public class StackLocals {
     }
     
     public void visitFrame(Object[] stackarr, Object[] localarr, Line line) {
-        frameFound = true;
         if (lastLab.isPresent()) {
             labelmap.weakUseOfJynxLabel(lastLab.get(), line);
         }
@@ -225,10 +223,10 @@ public class StackLocals {
             if (asmop == AsmOp.asm_new && lastLab.isPresent()) {
                 labelmap.weakUseOfJynxLabel(lastLab.get(), line);
             }
-            if (frameRequired) {
-                frameMissing = true;
-                frameRequired = false; // to prevent multiple error messages
+            if (frameRequired && SUPPORTS(Feature.stackmap) && OPTION(GlobalOption.USE_STACK_MAP)) {
+                    LOG(M124);  // "stack frame is definitely required here"
             }
+            frameRequired = false; // to prevent multiple error messages
             visitPreJvmOp(asmop);
             in.adjust(this);
             visitPostJvmOp(asmop);
@@ -261,9 +259,6 @@ public class StackLocals {
                 break;
             default:
                 throw new AssertionError();
-        }
-        if (frameFound && frameMissing) {
-                LOG(M124);  // "stack frames are present but incomplete"
         }
     }
 

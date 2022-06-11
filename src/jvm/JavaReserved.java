@@ -76,6 +76,10 @@ public enum JavaReserved {
     WITH(Feature.modules,true),
     YIELD(Feature.switch_expression,true),
 
+    // literal values
+    TRUE,
+    FALSE,
+    NULL,
     ;
     
     private final String word;

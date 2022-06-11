@@ -122,6 +122,12 @@ public class Main {
         String cfname = cname.substring(index + 1);
         cfname += ".class";
         Path pathc = Paths.get(cfname);
+        if (!OPTION(SYSIN)) {
+            Path parent = Paths.get(fname).getParent();
+            if (parent != null) {
+                pathc = parent.resolve(pathc);
+            }
+        }
         Files.write(pathc, ba);
         LOG(M116,pathc,ba.length); // "%s created - size %d bytes"
         return true;

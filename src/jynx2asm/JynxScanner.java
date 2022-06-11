@@ -40,12 +40,10 @@ public class JynxScanner implements Iterator<Line> {
         return precomments;
     }
 
-    public static JynxScanner getInstance(BufferedReader lines) {
-        return new JynxScanner(lines);
-    }
-    
     public static JynxScanner getInstance(InputStream in) {
-        return new JynxScanner(new BufferedReader(new InputStreamReader(in)));
+        JynxScanner js =  new JynxScanner(new BufferedReader(new InputStreamReader(in)));
+        js.skipPreComments();
+        return js;
     }
     
     public static JynxScanner getInstance(String str) {

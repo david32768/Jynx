@@ -262,7 +262,7 @@ public class OperandStack {
         OperandStackFrame osf = new OperandStackFrame(stack, endpos);
         if (!startblock && !framesf.equals(osf)) {
             LOG(M184,osf,dir_stack,framesf); // "current stack is %s but %s is %s"
-            startblock = true; // set so as to use following if; stattblock is set to false at end of this metohd
+            startblock = true; // set so as to use following if; startblock is set to false at end of this metohd
         }
         if (startblock) {
             setStack(framesf);

@@ -189,11 +189,10 @@ public enum AliasOps implements JynxOp {
         }
     }
 
-    private static final int MINUS_ZERO_FLOAT = Float.floatToRawIntBits(-0.0f);
-    
     private Instruction fldc(Line line) {
         float fval = line.nextToken().asFloat();
-        if (fval == 0.0f && Float.floatToRawIntBits(fval) != MINUS_ZERO_FLOAT) {
+        if (Float.floatToRawIntBits(fval) == Float.floatToRawIntBits(0.0F)) { // not -0.0F
+            assert fval == 0.0F && 1/fval > 0.0F;
             return Instruction.getInstance(asm_fconst_0);
         } else if (fval == 1.0f) {
             return Instruction.getInstance(asm_fconst_1);
@@ -204,11 +203,10 @@ public enum AliasOps implements JynxOp {
         }
     }
 
-    private static final long MINUS_ZERO_DOUBLE = Double.doubleToRawLongBits(-0.0);
-    
     private Instruction dldc(Line line) {
         double dval = line.nextToken().asDouble();
-        if (dval == 0.0 && Double.doubleToRawLongBits(dval) != MINUS_ZERO_DOUBLE) {
+        if (Double.doubleToRawLongBits(dval) == Double.doubleToRawLongBits(0.0D)) { // not -0.0
+            assert dval == 0.0 && 1/dval > 0.0;
             return Instruction.getInstance(asm_dconst_0);
         } else if (dval == 1.0) {
             return Instruction.getInstance(asm_dconst_1);

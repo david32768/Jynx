@@ -40,6 +40,8 @@ public enum JvmVersion {
     V17_PREVIEW(Opcodes.V17 | Opcodes.V_PREVIEW),
     V18(Opcodes.V18),
     V18_PREVIEW(Opcodes.V18 | Opcodes.V_PREVIEW),
+    V19(63), // Opcodes.V19
+    V19_PREVIEW(63 | Opcodes.V_PREVIEW),  // Opcodes.V19
     
     NEVER(-1); // must be last 0xffff ffff
     
@@ -85,7 +87,8 @@ public enum JvmVersion {
     
     public final static JvmVersion MIN_VERSION = V1_0_2;
     public final static JvmVersion DEFAULT_VERSION = V18;
-    public final static JvmVersion MAX_VERSION = V18_PREVIEW;
+    public final static JvmVersion SUPPORTED_VERSION = V18;
+    public final static JvmVersion MAX_VERSION = V19_PREVIEW;
 
     static {
         PARSE_MAP = new HashMap<>();
@@ -139,7 +142,7 @@ public enum JvmVersion {
     }
     
     public void checkSupported() {
-        if (isPreview()) {
+        if (isPreview() || compareTo(SUPPORTED_VERSION) > 0) {
             LOG(M72,this); // "version %s may not be fully supported"
         }
     }

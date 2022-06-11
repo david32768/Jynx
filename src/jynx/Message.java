@@ -128,7 +128,7 @@ public enum Message {
     M121("Instruction \'%s\' dropped as unreachable after '%s' without intervening label"),
     M122(WARNING,"Instruction \'%s\' dropped as unreachable after '%s' without intervening label"),
     M123("compilation of %s failed because of %s"),
-    M124(WARNING,"stack frames are present but incomplete"),
+    M124("stack frame is definitely required here"),
     M125("Requires none of {%s} specified"),
     M126(INFO,"\'%s %s\' is required and has been added"),
     M127("directive %s reached before %s"),
