@@ -14,7 +14,7 @@ not previously branched to or is not an exception handler.
 
 The opportunity has beeen taken to change the syntax of some statements.
 
-It supports "macros" as a service with WebAssembly MVP instructions as an example.
+It supports "macros" as a service with structured macros (cf WebAssembly MVP) as an example.
 
 ## WARNING
 
@@ -30,7 +30,7 @@ Usage:
 
 Options are:
 
-*	--SYSIN use SYSIN as input file
+*	--SYSIN use SYSIN as input file. (omit .jx_file)
 *	--USE_STACK_MAP use user stack map instead of ASM generated
 *	--WARN_UNNECESSARY_LABEL warn if label unreferenced or alias
 *	--WARN_STYLE warn if names non-standard
@@ -40,7 +40,7 @@ Options are:
 *	--SIMPLE_VERIFIER use ASM SimpleVerifier (default)
 *	--ALLOW_CLASS_FORNAME let simple verifier use Class.forName()
 *	--CHECK_METHOD_REFERENCES check that called methods exist (on class path)
-*	--PREPEND_CLASSNAME prepend class name to methods and fields if neccessary
+*	--PREPEND_CLASSNAME prepend class name to methods and fields if necessary
 *	--VALIDATE_ONLY do not output class file
 
  2jynx {options}  class-name|class_file > .jx_file
@@ -60,7 +60,7 @@ Changes are:
 
 *	unicode escape sequences are actioned before parsing line
 *	.end_method instead of .end method
-*	table switch - new format
+*	tableswitch - new format
 ```
 		; <high> is always omitted
 		tableswitch 0 DefaultLabel .array
@@ -68,25 +68,30 @@ Changes are:
 			OneLabel
 		.end_array
 ```		
-*	lookup switch - new format
+*	lookupswitch - new format
 ```
 		lookupswitch DLabel .array
 			1 : Label1
 			10 : Label2
 		.end_array
 ```
-*	invokeinterface n -> invvokeinterface ; omit number as will be calculated
-*	default for .limit is calculated rather than 1
+*	invokeinterface; omit number as will be calculated and precede method_name with '@'
+```
+		; invokeinterface java/util/Enumeration/hasMoreElements()Z 1
+		invokeinterface @java/util/Enumeration/hasMoreElements()Z
+```
+*	if .limit is omitted it will be calculated rather than 1
+*	class names etc. must be valid Java names
 *	labels are constrained to be a Java Id or if generated start with an @
 *	.interface must be used to declare an interface rather than .class interface
 ```
-		; .class interface abstract anInterface ; change to
+		; .class interface abstract anInterface
 		.interface anInterface
 ```
-*	labels in .catch must not be previously defined (ASM)
+*	labels in .catch must not be previously defined
 *	if .var labels are omitted then from start_method to end_method is assumed
-*	float constants must be suffixed by 'F' and long constants by 'L'.
-*	hexadecimal constants are supported.
+*	float constants must be suffixed by 'F' and long constants by 'L'
+*	hexadecimal constants are supported
 *	default version is V18(62.0)
   
 ## Jasmin 2.4
@@ -113,7 +118,7 @@ Changes are
 ```
 *	.enum instead of .class enum
 ```
-		; .class enum anEnum ; change to
+		; .class enum anEnum
 		.enum anEnum
 ```
 *	.define_annotation instead of .class annotation
@@ -180,6 +185,6 @@ Changes are
 *	alias ops e.g. ildc 3 ; load integer 3
 *	extended ops e.g. if_fcmpge label
 *	call common java methods e.g. iabs instead of invokestatic java/lang/Math/iabs(I)I
-*	structured ops e.g. BLOCK, LOOP, END
 *	.macrolib
+*	.macrolib structured ; gives access to structured ops e.g. BLOCK, LOOP, END
 *	.catch block if it has .except_type_annotation

@@ -1,0 +1,26 @@
+.version V9
+.source module-info.java
+.module com.github.david32768.jynx 0.12
+.main com/github/david32768/jynx/Main
+.exports com/github/david32768/jynx
+.requires mandated java.base 9
+.requires org.objectweb.asm 9.2.0
+.requires org.objectweb.asm.tree 9.2.0
+.requires org.objectweb.asm.tree.analysis 9.2.0
+.requires org.objectweb.asm.util 9.2.0
+.uses com/github/david32768/jynx/MacroLib
+.provides com/github/david32768/jynx/MacroLib with .array
+  jynx2asm/ops/StructuredMacroLib
+.end_array
+.packages .array
+  asm
+  asm/instruction
+  asm2jynx
+  com/github/david32768/jynx
+  jvm
+  jynx
+  jynx2asm
+  jynx2asm/ops
+.end_array
+; jar -uf Jynx.jar module-info.class
+; REM move Jynx.jar to a module directory or delete module-info.class
