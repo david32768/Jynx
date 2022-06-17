@@ -5,7 +5,6 @@ import java.util.stream.Stream;
 
 import static org.objectweb.asm.Opcodes.*;
 
-import static jynx.Global.LOG;
 import static jynx.Message.*;
 
 import jynx.LogIllegalArgumentException;

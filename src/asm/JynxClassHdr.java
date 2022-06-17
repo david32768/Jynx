@@ -281,16 +281,14 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
                 throw new EnumConstantNotPresentException(dir.getClass(), dir.name());
         }
         EnumSet<AccessFlag> accflags = line.getAccFlags();
-        String innerclass;
-        String innername;
-        innerclass = line.nextToken().asName();
-        innername = line.optAfter(res_innername);
+        String innerclass = line.nextToken().asName();
+        String outerclass = line.optAfter(res_outer);
+        String innername = line.optAfter(res_innername);
+        line.noMoreTokens();
         accflags.addAll(classtype.getMustHave4Inner(jvmVersion));
         Access accessname = Access.getInstance(accflags, jvmVersion, innerclass,classtype);
         accessname.check4InnerClass();
         int flags = accessname.getAccess();
-        String outerclass = line.optAfter(res_outer);
-        line.noMoreTokens();
         CLASS_NAME.validate(innerclass);
         if (innername != null) {
             INNER_CLASS_NAME.validate(innername);

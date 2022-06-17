@@ -2,6 +2,7 @@ package jynx;
 
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.function.UnaryOperator;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -24,6 +25,7 @@ public class Global {
     private JvmVersion jvmVersion;
     private String classname;
     private final Main.MainOption main;
+    private UnaryOperator<String> parmtrans;
     
     private Global() {
         this.options = EnumSet.noneOf(GlobalOption.class);
@@ -31,6 +33,7 @@ public class Global {
         this.jvmVersion = null;
         this.classname = null;
         this.main = null;
+        this.parmtrans = null;
     }
 
     private Global(EnumSet<GlobalOption> options,Main.MainOption type) {
@@ -38,6 +41,7 @@ public class Global {
         this.logger  = new Logger(type.name().toLowerCase(),true);
         this.jvmVersion = null;
         this.main = type;
+        this.parmtrans = null;
     }
     
     private static Global global = new Global();
@@ -193,5 +197,18 @@ public class Global {
     
     public static Main.MainOption MAIN_OPTION() {
         return global.main;
+    }
+
+    public static void setParmTrans(UnaryOperator<String> parmtrans) {
+        assert global.parmtrans == null;
+        global.parmtrans = parmtrans;
+    }
+    
+    public static String TRANSLATE(String string) {
+        if (string == null || global.parmtrans == null || !string.startsWith("(") || !string.contains("->")) {
+            return string;
+        } else {
+            return global.parmtrans.apply(string);
+        }
     }
 }

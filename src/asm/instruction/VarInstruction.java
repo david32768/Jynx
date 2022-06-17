@@ -2,9 +2,7 @@ package asm.instruction;
 
 import org.objectweb.asm.MethodVisitor;
 
-import jvm.AsmOp;
 import jvm.JvmOp;
-import jynx2asm.FrameElement;
 import jynx2asm.StackLocals;
 
 public class VarInstruction extends Instruction {

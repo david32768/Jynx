@@ -209,8 +209,8 @@ public class JynxDisassemble {
             Directive inner = classtype.getInnerDir();
             jp.appendDirective(inner)
                     .append(inneraccflags, icn.name)
-                    .append(res_innername, icn.innerName)
                     .append(res_outer, icn.outerName)
+                    .append(res_innername, icn.innerName)
                     .nl();
         }
     }

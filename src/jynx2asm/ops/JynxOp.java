@@ -15,7 +15,11 @@ public interface JynxOp extends JvmVersioned {
         return null; // unknown
     }
     
-    default public boolean reduceIndent() {
+    default public boolean reduceIndentBefore() {
+        return false;
+    }
+    
+    default public boolean increaseIndentAfter() {
         return false;
     }
     

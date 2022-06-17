@@ -148,7 +148,7 @@ public class StructuredMacroLib extends MacroLib {
         }
 
         @Override
-        public boolean reduceIndent() {
+        public boolean reduceIndentBefore() {
             switch(this) {
                 case ext_ELSE:
                 case ext_CATCH_ALL:
@@ -156,6 +156,19 @@ public class StructuredMacroLib extends MacroLib {
                     return true;
                 default:
                     return false;
+            }
+        }
+
+        @Override
+        public boolean increaseIndentAfter() {
+            switch(this) {
+                case ext_BLOCK:
+                case ext_LOOP:
+                case ext_TRY:
+                case ext_ELSE:
+                    return true;
+                default:
+                    return name().startsWith("ext_IF_");
             }
         }
 

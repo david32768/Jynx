@@ -174,7 +174,7 @@ public class JynxClass {
     private void setMacroLib(Line line) {
         String libname = line.nextToken().asString();
         line.noMoreTokens();
-        boolean found = opmap.addMacroLib(libname);
+        opmap.addMacroLib(libname);
     }
     
     public void setStart(Directive dir) {

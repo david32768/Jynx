@@ -161,6 +161,10 @@ public enum LineOps implements LineOp {
         return new AdjustLine(Adjustment.TRANSFORM,str->str.replace(find,replace));
     }
     
+    public static LineOp translateDesc() {
+        return new AdjustLine(Adjustment.TRANSFORM,jynx.Global::TRANSLATE);
+    }
+    
     public static LineOp check(String str) {
         return new AdjustLine(Adjustment.CHECK,str);
     }

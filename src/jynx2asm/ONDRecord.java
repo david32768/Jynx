@@ -6,7 +6,9 @@ import org.objectweb.asm.Handle;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import static jynx.Global.TRANSLATE;
 import static jynx2asm.NameDesc.PACKAGE_NAME;
+
 import jvm.Constants;
 
 public class ONDRecord {
@@ -19,7 +21,7 @@ public class ONDRecord {
     private ONDRecord(String owner, String name, String desc, boolean ownerInterface) {
         this.owner = owner;
         this.name = name;
-        this.desc = desc;
+        this.desc = TRANSLATE(desc);
         this.ownerInterface = ownerInterface;
     }
 

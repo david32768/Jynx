@@ -126,12 +126,19 @@ Changes are
 		; .class annotation interface abstract anAnnotationClass ; change to
 		.define_annotation anAnnotationClass
 ```
-*	.inner
+*	.inner class -> .inner_class, .inner interface -> .inner_interface etc.
 ```
-		; swap "name" x and "inner" y as "name" may be omitted
-		; .inner class x inner y ... ; change to
-		.inner_class y innername x ...
-		; also .inner_interface etc.
+		; InnerClass Attribute is inner_class, outer_class, inner_name, inner_class_flags (jvms 4.7.6)
+		;	inner_class must be present but outer_class and inner_name may be absent
+		; visitInnerClass(name,outer_name,inner_name,access) ; ASM
+		;	name is inner_class
+		; .inner class [<access>] [<name>] [inner <classname>] [outer <name>] ; Jasmin 2.4
+		;	name after access is inner_name (which can be absent)
+		;	classname is inner_class
+		; .inner_class [<access>] <inner_class> [outer <outer_class>] [innername <innername>]; Jynx
+		;	i.e. change 
+		; .inner class x inner y$z outer w ; Jasmin 2.4
+		.inner_class y$z outer w innername x; Jynx
 ```
 *	.enclosing method -> .enclosing_method or .enclosing_class
 *	invokedynamic boot method and parameters must be specified

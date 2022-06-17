@@ -3,12 +3,11 @@ package jynx2asm.ops;
 import java.io.PrintWriter;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.function.UnaryOperator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
-import java.util.Set;
 
 import static jynx.Global.LOG;
 import static jynx.Message.M176;
@@ -26,12 +25,12 @@ import jynx.LogAssertionError;
 public class JynxOps {
 
     private final Map<String, JynxOp> opmap;
-    private final Set<String> macrolibs;
+    private final Map<String,MacroLib> macrolibs;
     private final JvmVersion jvmVersion;
 
     private JynxOps(JvmVersion jvmversion) {
         this.opmap = new HashMap<>(512);
-        this.macrolibs = new HashSet<>();
+        this.macrolibs = new HashMap<>();
         this.jvmVersion = jvmversion;
     }
 
@@ -78,26 +77,29 @@ public class JynxOps {
         return op;
     }
     
-    public boolean addMacroLib(String libname) {
-        if (macrolibs.contains(libname)) {
-            return true;
+    public MacroLib addMacroLib(String libname) {
+        MacroLib result = macrolibs.get(libname);
+        if (result != null) {
+            return result;
         }
         ServiceLoader<MacroLib> libloader = ServiceLoader.load(MacroLib.class);
-        boolean found = false;
         for (MacroLib lib : libloader) {
             if (lib.name().equals(libname)) {
                 lib.streamExternal()
                         .forEach(this::addOp);
-                found = true;
+                macrolibs.put(libname, lib);
+                UnaryOperator<String> parmtrans = lib.parmTranslator();
+                if (parmtrans != null) {
+                    jynx.Global.setParmTrans(parmtrans);
+                }
+                result = lib;
                 break;
             }
         }
-        if (found) {
-            macrolibs.add(libname);
-        } else  {
+        if (result == null) {
             LOG(M176,libname); // "%s not found as a macro library service"
         }
-        return found;
+        return result;
     }
 
     public static Integer length(MacroOp macop) {

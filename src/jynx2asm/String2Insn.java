@@ -68,6 +68,7 @@ public class String2Insn {
     private int macroCount;
     private boolean addDotLine;
     private final boolean generateDotLine;
+    private int indent;
     
     public String2Insn(JynxScanner js, JynxLabelMap labmap,
             ClassChecker checker, JynxOps opmap) {
@@ -78,6 +79,7 @@ public class String2Insn {
         this.className = checker.getClassName();
         this.generateDotLine = OPTION(GlobalOption.GENERATE_LINE_NUMBERS);
         this.opmap = opmap;
+        this.indent = INDENT_LENGTH;
     }
 
     public void getInsts(Line linex, InstList instlist) {
@@ -97,12 +99,14 @@ public class String2Insn {
             return;
         }
         if (OPTION(GlobalOption.WARN_INDENT)) {
-            int expected = INDENT_LENGTH * (labelStack.size() + 1);
-            if (jynxop.reduceIndent()) {
-                expected -= 2;
+            if (jynxop.reduceIndentBefore()) {
+                indent -= INDENT_LENGTH;
             }
-            if (line.getIndent() != expected) {
-                LOG(M228,line.getIndent(),expected); // "indent %d found but expected %d"
+            if (line.getIndent() != indent) {
+                LOG(M228,line.getIndent(),indent); // "indent %d found but expected %d"
+            }
+            if (jynxop.increaseIndentAfter()) {
+                indent += INDENT_LENGTH;
             }
         }
         macroCount = 0;
