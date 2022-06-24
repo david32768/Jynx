@@ -4,9 +4,9 @@ import java.util.stream.Stream;
 
 import static jvm.AsmOp.*;
 import static jvm.Op.opc_labelweak;
-import static jynx2asm.ops.AliasOps.xxx_xreturn;
 import static jynx2asm.ops.ExtendedOps.*;
 import static jynx2asm.ops.LineOps.*;
+import static jynx2asm.ops.SelectOps.xxx_xreturn;
 
 import com.github.david32768.jynx.MacroLib;
 
@@ -29,59 +29,59 @@ public class StructuredMacroLib extends MacroLib {
     public enum StructuredOps implements MacroOp {
 
         // structured ops
-        ext_BLOCK(push_mac_label),
-        ext_LOOP(push_mac_label,lab_peek,xxx_label),
-        ext_TRY(mac_label_try,xxx_catch, lab_peek_try,xxx_label),
+        ext_BLOCK(mac_label,lab_push),
+        ext_LOOP(mac_label,tok_dup,lab_push,xxx_label),
         ext_RETURN(xxx_xreturn),
 
-        ext_ELSE(lab_else,asm_goto,lab_peek,xxx_label),
-        ext_CATCH_ALL(lab_else,asm_goto,lab_peek,xxx_label),
+        ext_ELSE(lab_peek_if,asm_goto,lab_peek_else,xxx_label),
         ext_END(lab_peek_else,opc_labelweak,lab_pop,opc_labelweak),
 
-        ext_IF_NEZ(mac_label_else,asm_ifeq),
-        ext_IF_EQZ(mac_label_else,asm_ifne),
-        ext_IF_LTZ(mac_label_else,asm_ifge),
-        ext_IF_LEZ(mac_label_else,asm_ifgt),
-        ext_IF_GTZ(mac_label_else,asm_ifle),
-        ext_IF_GEZ(mac_label_else,asm_iflt),
+        aux_iflabel(mac_label,lab_push_if,lab_peek_else),
+        
+        ext_IF_NEZ(aux_iflabel,asm_ifeq),
+        ext_IF_EQZ(aux_iflabel,asm_ifne),
+        ext_IF_LTZ(aux_iflabel,asm_ifge),
+        ext_IF_LEZ(aux_iflabel,asm_ifgt),
+        ext_IF_GTZ(aux_iflabel,asm_ifle),
+        ext_IF_GEZ(aux_iflabel,asm_iflt),
 
-        ext_IF_ICMPNE(mac_label_else,asm_if_icmpeq),
-        ext_IF_ICMPEQ(mac_label_else,asm_if_icmpne),
-        ext_IF_ICMPLT(mac_label_else,asm_if_icmpge),
-        ext_IF_ICMPLE(mac_label_else,asm_if_icmpgt),
-        ext_IF_ICMPGT(mac_label_else,asm_if_icmple),
-        ext_IF_ICMPGE(mac_label_else,asm_if_icmplt),
+        ext_IF_ICMPNE(aux_iflabel,asm_if_icmpeq),
+        ext_IF_ICMPEQ(aux_iflabel,asm_if_icmpne),
+        ext_IF_ICMPLT(aux_iflabel,asm_if_icmpge),
+        ext_IF_ICMPLE(aux_iflabel,asm_if_icmpgt),
+        ext_IF_ICMPGT(aux_iflabel,asm_if_icmple),
+        ext_IF_ICMPGE(aux_iflabel,asm_if_icmplt),
 
-        ext_IF_LCMPNE(mac_label_else,ext_if_lcmpeq),
-        ext_IF_LCMPEQ(mac_label_else,ext_if_lcmpne),
-        ext_IF_LCMPLT(mac_label_else,ext_if_lcmpge),
-        ext_IF_LCMPLE(mac_label_else,ext_if_lcmpgt),
-        ext_IF_LCMPGT(mac_label_else,ext_if_lcmple),
-        ext_IF_LCMPGE(mac_label_else,ext_if_lcmplt),
+        ext_IF_LCMPNE(aux_iflabel,ext_if_lcmpeq),
+        ext_IF_LCMPEQ(aux_iflabel,ext_if_lcmpne),
+        ext_IF_LCMPLT(aux_iflabel,ext_if_lcmpge),
+        ext_IF_LCMPLE(aux_iflabel,ext_if_lcmpgt),
+        ext_IF_LCMPGT(aux_iflabel,ext_if_lcmple),
+        ext_IF_LCMPGE(aux_iflabel,ext_if_lcmplt),
 
-        ext_IF_FCMPNE(mac_label_else,ext_if_fcmpeq),
-        ext_IF_FCMPEQ(mac_label_else,ext_if_fcmpne),
-        ext_IF_FCMPLT(mac_label_else,ext_if_fcmpge),
-        ext_IF_FCMPLE(mac_label_else,ext_if_fcmpgt),
-        ext_IF_FCMPGT(mac_label_else,ext_if_fcmple),
-        ext_IF_FCMPGE(mac_label_else,ext_if_fcmplt),
+        ext_IF_FCMPNE(aux_iflabel,ext_if_fcmpeq),
+        ext_IF_FCMPEQ(aux_iflabel,ext_if_fcmpne),
+        ext_IF_FCMPLT(aux_iflabel,ext_if_fcmpge),
+        ext_IF_FCMPLE(aux_iflabel,ext_if_fcmpgt),
+        ext_IF_FCMPGT(aux_iflabel,ext_if_fcmple),
+        ext_IF_FCMPGE(aux_iflabel,ext_if_fcmplt),
 
-        ext_IF_DCMPNE(mac_label_else,ext_if_dcmpeq),
-        ext_IF_DCMPEQ(mac_label_else,ext_if_dcmpne),
-        ext_IF_DCMPLT(mac_label_else,ext_if_dcmpge),
-        ext_IF_DCMPLE(mac_label_else,ext_if_dcmpgt),
-        ext_IF_DCMPGT(mac_label_else,ext_if_dcmple),
-        ext_IF_DCMPGE(mac_label_else,ext_if_dcmplt),
+        ext_IF_DCMPNE(aux_iflabel,ext_if_dcmpeq),
+        ext_IF_DCMPEQ(aux_iflabel,ext_if_dcmpne),
+        ext_IF_DCMPLT(aux_iflabel,ext_if_dcmpge),
+        ext_IF_DCMPLE(aux_iflabel,ext_if_dcmpgt),
+        ext_IF_DCMPGT(aux_iflabel,ext_if_dcmple),
+        ext_IF_DCMPGE(aux_iflabel,ext_if_dcmplt),
 
-        ext_IF_IUCMPLT(mac_label_else,ext_if_iucmpge),
-        ext_IF_IUCMPLE(mac_label_else,ext_if_iucmpgt),
-        ext_IF_IUCMPGT(mac_label_else,ext_if_iucmple),
-        ext_IF_IUCMPGE(mac_label_else,ext_if_iucmplt),
+        ext_IF_IUCMPLT(aux_iflabel,ext_if_iucmpge),
+        ext_IF_IUCMPLE(aux_iflabel,ext_if_iucmpgt),
+        ext_IF_IUCMPGT(aux_iflabel,ext_if_iucmple),
+        ext_IF_IUCMPGE(aux_iflabel,ext_if_iucmplt),
 
-        ext_IF_LUCMPLT(mac_label_else,ext_if_lucmpge),
-        ext_IF_LUCMPLE(mac_label_else,ext_if_lucmpgt),
-        ext_IF_LUCMPGT(mac_label_else,ext_if_lucmple),
-        ext_IF_LUCMPGE(mac_label_else,ext_if_lucmplt),
+        ext_IF_LUCMPLT(aux_iflabel,ext_if_lucmpge),
+        ext_IF_LUCMPLE(aux_iflabel,ext_if_lucmpgt),
+        ext_IF_LUCMPGT(aux_iflabel,ext_if_lucmple),
+        ext_IF_LUCMPGE(aux_iflabel,ext_if_lucmplt),
 
         ext_BR(lab_get,asm_goto),
         ext_BR_IFEQZ(lab_get,asm_ifeq),
@@ -151,7 +151,6 @@ public class StructuredMacroLib extends MacroLib {
         public boolean reduceIndentBefore() {
             switch(this) {
                 case ext_ELSE:
-                case ext_CATCH_ALL:
                 case ext_END:
                     return true;
                 default:
@@ -164,7 +163,6 @@ public class StructuredMacroLib extends MacroLib {
             switch(this) {
                 case ext_BLOCK:
                 case ext_LOOP:
-                case ext_TRY:
                 case ext_ELSE:
                     return true;
                 default:

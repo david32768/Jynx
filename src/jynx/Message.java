@@ -248,7 +248,7 @@ public enum Message {
     M245("Unknown directive = %s"),
     M246("unable to calculate relative local position %d:%n   current abs = %d max = %d locals = %s"),
     M247("inner class %s must be different from %s %s"),
-    M248("ELSE does not match asn IF op"),
+    M248("ELSE does not match an IF or TRY op"),
     M249("structured op(s) missing; level at end is %d"),
     M250(INFO,"the following own virtual method(s) are used but not found in class (but may be in super class or interface)%n    %s"),
     M251(WARNING,"own static method %s not found (but may be in super class)"),
@@ -275,7 +275,8 @@ public enum Message {
     M272(WARNING,"Label %s not used - defined in line:%n  %s"),
     M273("no Jynx directives in file!"),
     M274(SEVERE,"duplicate: %s has the same opcode(%d) as %s"),
-
+    M275("descriptor '%s' for %s must start with '()'"),
+    
     M280(BLANK,"program terminated because of severe error(s)"),
 
     M289("A nest member has already been defined"),

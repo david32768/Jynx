@@ -6,10 +6,16 @@ import org.objectweb.asm.Handle;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import static jynx.Global.CLASS_NAME;
+import static jynx.Global.LOG;
+import static jynx.Global.OPTION;
 import static jynx.Global.TRANSLATE;
+import static jynx.Message.M255;
 import static jynx2asm.NameDesc.PACKAGE_NAME;
 
+import jvm.AsmOp;
 import jvm.Constants;
+import jynx.GlobalOption;
 
 public class ONDRecord {
     
@@ -101,6 +107,13 @@ public class ONDRecord {
         return name + desc;
     }
     
+    public String ownerName() {
+        if (owner == null)  {
+            return name;
+        }
+        return owner + "/" + name;
+    }
+    
     public boolean isInit() {
         return Constants.CLASS_INIT_NAME.equalString(name) && desc.endsWith(VOID_METHOD);
     }
@@ -128,11 +141,14 @@ public class ONDRecord {
         return pkgname;
     }
     
-    public ONDRecord changeOwner(String newowner) {
-        assert owner == null;
-        return new ONDRecord(newowner, name, desc, ownerInterface);
+    public ONDRecord addClassName(AsmOp op) {
+        if (owner == null && OPTION(GlobalOption.PREPEND_CLASSNAME)) {
+            LOG(M255,op); // "classname has been added to argument of some %s instruction(s)"
+            return new ONDRecord(CLASS_NAME(), name, desc, ownerInterface);
+        }
+        return this;
     }
-
+    
     public ONDRecord changeDesc(String newdesc) {
         assert desc == null;
         return new ONDRecord(owner, name, newdesc, ownerInterface);

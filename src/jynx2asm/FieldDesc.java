@@ -1,21 +1,14 @@
 package jynx2asm;
 
-import java.util.Arrays;
-import java.util.List;
-
-import static jynx.Global.LOG;
-import static jynx.Global.OPTION;
 import static jynx.Message.M137;
-import static jynx.Message.M255;
-import static jynx.Message.M47;
+import static jynx.Message.M275;
 import static jynx2asm.NameDesc.CLASS_NAME;
 import static jynx2asm.NameDesc.FIELD_DESC;
 import static jynx2asm.NameDesc.FIELD_NAME;
 
 import jvm.AsmOp;
 import jvm.Context;
-import jynx.Global;
-import jynx.GlobalOption;
+import jvm.HandleType;
 import jynx.LogIllegalArgumentException;
 
 public class FieldDesc extends OwnerNameDesc {
@@ -28,11 +21,7 @@ public class FieldDesc extends OwnerNameDesc {
     public static FieldDesc getInstance(String mname, String desc, AsmOp asmop) {
         ONDRecord ond = ONDRecord.getInstance(mname);
         ond = ond.changeDesc(desc);
-        if (ond.owner() == null && OPTION(GlobalOption.PREPEND_CLASSNAME)) {
-            // "classname has been added to argument of some %s instruction(s)"
-            LOG(M255,asmop);
-            ond = ond.changeOwner(Global.CLASS_NAME());
-        }
+        ond = ond.addClassName(asmop);
         CLASS_NAME.validate(ond.owner());
         FIELD_NAME.validate(ond.name());
         FIELD_DESC.validate(ond.desc());
@@ -50,5 +39,15 @@ public class FieldDesc extends OwnerNameDesc {
         FIELD_DESC.validate(ond.desc());
         return new FieldDesc(ond);
     }
-    
+
+    public static FieldDesc getInstance(String mspec, HandleType ht) {
+        ONDRecord ond = ONDRecord.getInstance(mspec);
+        String desc = ond.desc();
+        if (!desc.startsWith("()")) {
+            // "descriptor '%s' for %s must start with '()'"
+            throw new LogIllegalArgumentException(M275, desc , ht);
+        }
+        desc = desc.substring(2);
+        return getInstance(ond.ownerName(),desc,ht.op());
+    }
 }

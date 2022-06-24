@@ -12,7 +12,6 @@ import static jynx2asm.NameDesc.*;
 import jvm.AsmOp;
 import jvm.Feature;
 import jvm.HandleType;
-import jynx.GlobalOption;
 import jynx.LogIllegalArgumentException;
 
 public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
@@ -120,29 +119,21 @@ public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
     }
 
     public static OwnerNameDesc getOwnerMethodDescAndCheck(String mspec, HandleType ht) {
+        if (ht.isField()) {
+            return FieldDesc.getInstance(mspec, ht);
+        }
         return getOwnerMethodDescAndCheck(mspec, ht.op());
     }
 
     public static OwnerNameDesc getOwnerMethodDescAndCheck(String mspec, AsmOp op) {
         ONDRecord ond = ONDRecord.getInstance(mspec);
         ond = checkInterface(op, ond);
-        ond = addClassName(ond, op);
+        ond = ond.addClassName(op);
         if (ond.isStaticInit() || ond.isInit() && op != AsmOp.asm_invokespecial) {
             // "either init method %s is static or op  is not %s"
             throw new LogIllegalArgumentException(M242,ond.toJynx(),AsmOp.asm_invokespecial);
         }
         return getInstanceOfObjectMethod(ond);
-    }
-    
-    private static ONDRecord addClassName(ONDRecord ond, AsmOp op) {
-        if (!OPTION(GlobalOption.PREPEND_CLASSNAME)) {
-            return ond;
-        }
-        if (ond.owner() == null) {
-            LOG(M255,op); // "classname has been added to argument of some %s instruction(s)"
-            ond = ond.changeOwner(CLASS_NAME());
-        }
-        return ond;
     }
     
     private static ONDRecord checkInterface(AsmOp op, ONDRecord ond) {

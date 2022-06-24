@@ -43,13 +43,13 @@ import jynx.GlobalOption;
 import jynx.LogIllegalArgumentException;
 import jynx.ReservedWord;
 
-import jynx2asm.ops.AliasOps;
 import jynx2asm.ops.DynamicOp;
 import jynx2asm.ops.JynxOp;
 import jynx2asm.ops.JynxOps;
 import jynx2asm.ops.LineOp;
 import jynx2asm.ops.LineOps;
 import jynx2asm.ops.MacroOp;
+import jynx2asm.ops.SelectOp;
 
 public class String2Insn {
 
@@ -123,9 +123,9 @@ public class String2Insn {
         if (multi) {
             LOG(M254,jop); // "%s is used in a macro after a mulit-line op"
         }
-        if (jop instanceof AliasOps) {
-            AliasOps alias = (AliasOps)jop;
-            instlist.add(alias.getInst(line, instlist));
+        if (jop instanceof SelectOp) {
+            SelectOp selector = (SelectOp)jop;
+            add(selector.getOp(line,instlist),macct,instlist);
         } else if (jop instanceof JvmOp) {
             JvmOp jvmop = (JvmOp)jop;
             switchArg(jvmop).ifPresent(instlist::add);
@@ -187,7 +187,7 @@ public class String2Insn {
     }
     
     private Instruction arg_atype(JvmOp jvmop) {
-        addDotLine = generateDotLine;
+        addDotLine |= generateDotLine;
         int atype = line.nextToken().asTypeCode();
         return new IntInstruction(jvmop,atype);
     }
@@ -198,14 +198,14 @@ public class String2Insn {
     }
     
     private Instruction arg_callsite(JvmOp jvmop) {
-        addDotLine = generateDotLine;
+        addDotLine |= generateDotLine;
         JynxConstantDynamic jcd = new JynxConstantDynamic(js, line, checker);
         ConstantDynamic cd = jcd.getConstantDynamic4Invoke();
         return new DynamicInstruction(jvmop,cd);
     }
     
     private Instruction arg_class(JvmOp jvmop) {
-        addDotLine = generateDotLine;
+        addDotLine |= generateDotLine;
         String type = line.nextToken().asString();
         if (jvmop.getBase() == AsmOp.asm_new && OPTION(GlobalOption.PREPEND_CLASSNAME)) {
             if (type.equals("/")) {
@@ -361,7 +361,7 @@ public class String2Insn {
     }
 
     private Instruction arg_marray(JvmOp jvmop) {
-        addDotLine = generateDotLine;
+        addDotLine |= generateDotLine;
         String desc = line.nextToken().asString();
         ARRAY_DESC.validate(desc);
         int lastbracket = desc.lastIndexOf('[') + 1;
@@ -373,7 +373,7 @@ public class String2Insn {
     }
 
     private Instruction arg_method(JvmOp jvmop) {
-        addDotLine = generateDotLine;
+        addDotLine |= generateDotLine;
         String mspec = line.nextToken().asString();
         OwnerNameDesc cmd = OwnerNameDesc.getOwnerMethodDescAndCheck(mspec,jvmop.getBase());
         checker.usedMethod(cmd, jvmop, line);
@@ -381,7 +381,7 @@ public class String2Insn {
     }
 
     private Instruction arg_none(JvmOp jvmop) {
-        addDotLine = generateDotLine && (jvmop == AsmOp.asm_idiv  || jvmop == AsmOp.asm_ldiv);
+        addDotLine |= generateDotLine && (jvmop == AsmOp.asm_idiv  || jvmop == AsmOp.asm_ldiv);
         if (jvmop == Op.opc_wide) {
             return wide();
         }

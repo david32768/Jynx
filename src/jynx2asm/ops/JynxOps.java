@@ -37,7 +37,7 @@ public class JynxOps {
     public static JynxOps getInstance(boolean extensions, JvmVersion jvmversion) {
         JynxOps ops =  new JynxOps(jvmversion);
         if (extensions) {
-            AliasOps.streamExternal()
+            SelectOps.streamExternal()
                     .map(op->(JynxOp)op)
                     .forEach(ops::addOp);
             ExtendedOps.streamExternal()

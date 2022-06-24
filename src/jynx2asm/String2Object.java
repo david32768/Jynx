@@ -102,10 +102,7 @@ public class String2Object {
         OwnerNameDesc ond = OwnerNameDesc.getOwnerMethodDescAndCheck(handle,ht);
         
         String desc = ond.getDesc();
-        if (ht.isField()) {
-            // remove () from getfield etc;
-            desc = desc.substring(2);
-        } else if (ond.isStaticInit() || (ht == REF_newInvokeSpecial) != ond.isInit()) {
+        if (!ht.isField() && ond.isStaticInit() || (ht == REF_newInvokeSpecial) != ond.isInit()) {
             // "method %s invalid for %s"
             throw new LogIllegalArgumentException(M102,ond.getName(),ht);
         }

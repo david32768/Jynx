@@ -1,19 +1,28 @@
 package jynx2asm;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 
+import static jynx.Message.M248;
 import static jynx.Message.M264;
 import static jynx.Message.M265;
 
 import jynx.LogIllegalArgumentException;
+import jynx.LogIllegalStateException;
 
 public class LabelStack {
 
     private final ArrayList<Token> stack = new ArrayList<>();
+    private final BitSet ifs = new BitSet();
 
     public LabelStack() {}
 
     public void push(Token element) {
+        stack.add(element);
+    }
+    
+    public void pushIf(Token element) {
+        ifs.set(stack.size());
         stack.add(element);
     }
     
@@ -37,7 +46,16 @@ public class LabelStack {
         return stack.get(last());
     }
     
+    public Token peekIf() {
+        if (!ifs.get(stack.size() - 1)) {
+            throw new LogIllegalStateException(M248); // "ELSE does not match an IF or TRY op"
+        }
+        ifs.clear(stack.size() - 1);
+        return stack.get(last());
+    }
+    
     public Token pop() {
+        ifs.clear(stack.size() - 1);
         return stack.remove(last());
     }
     
