@@ -1,5 +1,7 @@
 package jynx;
 
+import java.util.Optional;
+import java.util.stream.Stream;
 import jynx2asm.Token;
 
 public enum ReservedWord {
@@ -90,23 +92,20 @@ public enum ReservedWord {
         return optional;
     }
 
+    public String externalName() {
+        return external_name;
+    }
+
     @Override
     public String toString() {
         return external_name;
     }
 
     
-    public static ReservedWord getOptInstance(String str) {
-        for (ReservedWord res:values()) {
-            if (res.external_name.equals(str)) {
-                return res;
-            }
-        }
-        return null;
-    }
-    
-    public boolean isString(String str) {
-        return external_name.equals(str);
+    public static Optional<ReservedWord> getOptInstance(String str) {
+        return Stream.of(values())
+                .filter(res ->res.external_name.equals(str))
+                .findAny();
     }
     
     public String token2string(Token token) {
@@ -134,8 +133,4 @@ public enum ReservedWord {
         }
     }
 
-    public boolean requiresLabel() {
-        return type == 'l';
-    }
-    
 }

@@ -177,7 +177,7 @@ public class JynxCodeHdr implements ContextDependent {
     }
 
     private void setPrint(Line line) {
-        ReservedWord rw  = line.nextToken().oneOf(res_stack, res_locals, res_on, res_off,res_label);
+        ReservedWord rw  = line.nextToken().expectOneOf(res_stack, res_locals, res_on, res_off,res_label);
         switch (rw) {
             case res_stack:
                 System.out.format("%s; = %s%n", line, stackLocals.stringStack());
@@ -290,10 +290,6 @@ public class JynxCodeHdr implements ContextDependent {
             line = lines.next();
             Token token = line.firstToken();
             ReservedWord rw = token.expectOneOf(res_stack, res_locals);
-            if (rw == null) {
-                line.skipTokens();
-                continue;
-            }
             String type = line.nextToken().asString(); // verification type
             FrameType ft = FrameType.fromString(type);
             Object item = getAsmFrameType(ft,line);
@@ -314,7 +310,7 @@ public class JynxCodeHdr implements ContextDependent {
     }
 
     private void setLimit(Line line) {
-        ReservedWord type = line.nextToken().oneOf(res_stack, res_locals);
+        ReservedWord type = line.nextToken().expectOneOf(res_stack, res_locals);
         int num = line.lastToken().asUnsignedShort();
         if (type == res_locals) {
             stackLocals.locals().setLimit(num, line);

@@ -199,7 +199,7 @@ public enum Message {
     M196(WARNING,"no %s instruction found"),
     M197("inner class cannot be module"),
     M198("empty line - should not occur"),
-    M199("%s has now a different format from Jynx 2.4"),
+
     M200(WARNING,"unknown release (%d): used %s"),
     M201("%s can only occur in locals"),
     M202("unused field(s) in typeref not zero"),
@@ -276,6 +276,8 @@ public enum Message {
     M273("no Jynx directives in file!"),
     M274(SEVERE,"duplicate: %s has the same opcode(%d) as %s"),
     M275("descriptor '%s' for %s must start with '()'"),
+    M276("empty element in  array"),
+    M277("unexpected reserved word %s found"),
     
     M280(BLANK,"program terminated because of severe error(s)"),
 

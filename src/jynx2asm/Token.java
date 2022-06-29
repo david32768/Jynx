@@ -58,6 +58,10 @@ public class Token {
         return new Token(tokenstr);
     }
 
+    public static Token getInstance(ReservedWord res) {
+        return new Token(res.toString());
+    }
+
     public Token transform(UnaryOperator<String> op) {
         checkNotEnd();
         checkNotQuoted();
@@ -212,52 +216,63 @@ public class Token {
         return null;
     }
 
-    public ReservedWord mayBe(ReservedWord res1,ReservedWord... res) {
-        if (this == END_TOKEN) {
-            return null;
-        }
-        EnumSet<ReservedWord> rwset = EnumSet.of(res1,res);
-        ReservedWord word = ReservedWord.getOptInstance(token);
-        if (word == null || !rwset.contains((word))) {
-            return null;
-        }
-        return word;
+    public boolean is(ReservedWord res) {
+        return this != END_TOKEN && res.externalName().equals(token);
     }
     
-    public boolean is(ReservedWord res) {
-        if (this == END_TOKEN) {
-            return false;
+    public Token removeAtStart(ReservedWord res) {
+        String resname = res.externalName();
+        if (this == END_TOKEN || is(res) || !token.startsWith(resname)) {
+            return this;
+        } else {
+            return Token.getInstance(token.substring(resname.length()));
         }
-        return res.isString(token);
+    }
+    
+    public Token removeAtEnd(ReservedWord res) {
+        String resname = res.externalName();
+        if (this == END_TOKEN || is(res) || !token.endsWith(resname)) {
+            return this;
+        } else {
+            return Token.getInstance(token.substring(0, token.length() - resname.length()));
+        }
+    }
+
+    private Optional<ReservedWord> mayBe(EnumSet<ReservedWord> rwset) {
+        if (this == END_TOKEN) {
+            return Optional.empty();
+        }
+        return ReservedWord.getOptInstance(token)
+            .filter(rwset::contains);
+    }
+    
+    public Optional<ReservedWord> mayBe(ReservedWord res1,ReservedWord... res) {
+        return mayBe(EnumSet.of(res1,res));
     }
     
     public void mustBe(ReservedWord res) {
         checkNotEnd();
-        if (!res.isString(token)) {
+        if (!is(res)) {
             throw new LogIllegalStateException(M109,res, token); // "reserved word %s expected but found %s"
         }
     }
     
-    public ReservedWord oneOf(ReservedWord res1,ReservedWord... res) {
-        checkNotEnd();
-        ReservedWord word = mayBe(res1,res);
-        if (word == null) {
-            EnumSet<ReservedWord> rwset = EnumSet.of(res1,res);
-            throw new LogIllegalStateException(M109,rwset, token); // "reserved word %s expected but found %s"
-        }
-        return word;
-    }
-    
     public ReservedWord expectOneOf(ReservedWord res1,ReservedWord... res) {
         checkNotEnd();
-        ReservedWord rw = mayBe(res1, res);
-        if (rw == null) {
-            EnumSet<ReservedWord> rwset = EnumSet.of(res1,res);
-            LOG(M109,rwset, token); // "reserved word %s expected but found %s"
-        }
-        return rw;
+        EnumSet<ReservedWord> rwset = EnumSet.of(res1,res);
+        return mayBe(rwset)
+                 // "reserved word %s expected but found %s"
+                .orElseThrow(()->new LogIllegalStateException(M109,rwset, token));
     }
-
+    
+    public void noneOf(ReservedWord res1,ReservedWord... res) {
+        checkNotEnd();
+        Optional<ReservedWord> optword = mayBe(res1,res);
+        if (optword.isPresent()) {
+            throw new LogIllegalStateException(M277,token); // "unexpected reserved word %s found"
+        }
+    }
+    
     @Override
     public String toString() {
         if (this == END_TOKEN) {

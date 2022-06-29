@@ -39,9 +39,6 @@ public class TypeHints {
             NameDesc.CLASS_NAME.validate(sub);
             ReservedWord rw = dotarray.nextToken()
                     .expectOneOf(res_common,res_subtypes);
-            if (rw == null) { // message is output in expectedOneOf
-                continue;
-            }
             String base;
             switch (rw) {
                 case res_common:

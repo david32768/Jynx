@@ -139,7 +139,7 @@ public enum SelectOps implements SelectOp {
         private int getRelStackType(Line line,InstList instlist) {
             int num  = line.nextToken().asUnsignedShort();
             num = instlist.absolute(num);
-            line.insert(Token.getInstance(Integer.toString(num)));
+            line.insert(Integer.toString(num));
             return getType(line,instlist);
         }
 
@@ -152,7 +152,7 @@ public enum SelectOps implements SelectOp {
         private int getRelLocal(Line line,InstList instlist) {
             int num  = line.nextToken().asUnsignedShort();
             num = instlist.absolute(num);
-            line.insert(Token.getInstance(Integer.toString(num)));
+            line.insert(Integer.toString(num));
             return getAbsLocal(line,instlist);
         }
 

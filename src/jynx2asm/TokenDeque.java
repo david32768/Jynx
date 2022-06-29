@@ -43,6 +43,14 @@ public interface TokenDeque {
         getDeque().addFirst(insert);
     }
 
+    public default void insert(String str) {
+        getDeque().addFirst(Token.getInstance(str));
+    }
+
+    public default void insert(ReservedWord res) {
+        getDeque().addFirst(Token.getInstance(res));
+    }
+
     public default void noMoreTokens() {
         Token token = getDeque().peekFirst();
         if (token == null || token == Token.END_TOKEN) {

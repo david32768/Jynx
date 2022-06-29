@@ -148,7 +148,7 @@ public class JynxAnnotation {
                     line.nextToken().mustBe(equals_sign);
                     Token dot = line.nextToken();
                     if (array) {
-                        dot.oneOf(dot_annotation_array);
+                        dot.mustBe(dot_annotation_array);
                         line.noMoreTokens();
                         Directive enddir = Directive.end_annotation_array;
                         visitArrayOfAnnotations(av, name,desc,enddir);

@@ -27,7 +27,6 @@ import jynx.GlobalOption;
 import jynx.LogAssertionError;
 import jynx.SevereError;
 import jynx.State;
-import jynx2asm.ops.JynxOp;
 import jynx2asm.ops.JynxOps;
 
 public class JynxClass {

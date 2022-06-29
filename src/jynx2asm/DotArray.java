@@ -14,7 +14,7 @@ class DotArray implements TokenArray {
     DotArray(JynxScanner js, Line line) {
         Objects.nonNull(line);
         Objects.nonNull(js);
-        line.nextToken().is(ReservedWord.dot_array);
+        line.nextToken().mustBe(ReservedWord.dot_array);
         line.noMoreTokens();
         this.js = js;
         this.line = line;

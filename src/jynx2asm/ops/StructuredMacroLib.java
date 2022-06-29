@@ -8,7 +8,6 @@ import static jynx2asm.ops.ExtendedOps.*;
 import static jynx2asm.ops.LineOps.*;
 import static jynx2asm.ops.SelectOps.xxx_xreturn;
 
-import com.github.david32768.jynx.MacroLib;
 
 public class StructuredMacroLib extends MacroLib {
             
@@ -83,51 +82,51 @@ public class StructuredMacroLib extends MacroLib {
         ext_IF_LUCMPGT(aux_iflabel,ext_if_lucmple),
         ext_IF_LUCMPGE(aux_iflabel,ext_if_lucmplt),
 
-        ext_BR(lab_get,asm_goto),
-        ext_BR_IFEQZ(lab_get,asm_ifeq),
-        ext_BR_IFNEZ(lab_get,asm_ifne),
-        ext_BR_IFLTZ(lab_get,asm_iflt),
-        ext_BR_IFLEZ(lab_get,asm_ifle),
-        ext_BR_IFGTZ(lab_get,asm_ifgt),
-        ext_BR_IFGEZ(lab_get,asm_ifge),
+        ext_BR(asm_goto),
+        ext_BR_IFEQZ(asm_ifeq),
+        ext_BR_IFNEZ(asm_ifne),
+        ext_BR_IFLTZ(asm_iflt),
+        ext_BR_IFLEZ(asm_ifle),
+        ext_BR_IFGTZ(asm_ifgt),
+        ext_BR_IFGEZ(asm_ifge),
 
-        ext_BR_IF_ICMPEQ(lab_get,asm_if_icmpeq),
-        ext_BR_IF_ICMPNE(lab_get,asm_if_icmpne),
-        ext_BR_IF_ICMPLT(lab_get,asm_if_icmplt),
-        ext_BR_IF_ICMPLE(lab_get,asm_if_icmple),
-        ext_BR_IF_ICMPGT(lab_get,asm_if_icmpgt),
-        ext_BR_IF_ICMPGE(lab_get,asm_if_icmpge),
+        ext_BR_IF_ICMPEQ(asm_if_icmpeq),
+        ext_BR_IF_ICMPNE(asm_if_icmpne),
+        ext_BR_IF_ICMPLT(asm_if_icmplt),
+        ext_BR_IF_ICMPLE(asm_if_icmple),
+        ext_BR_IF_ICMPGT(asm_if_icmpgt),
+        ext_BR_IF_ICMPGE(asm_if_icmpge),
 
-        ext_BR_IF_LCMPEQ(lab_get,ext_if_lcmpeq),
-        ext_BR_IF_LCMPNE(lab_get,ext_if_lcmpne),
-        ext_BR_IF_LCMPLT(lab_get,ext_if_lcmplt),
-        ext_BR_IF_LCMPLE(lab_get,ext_if_lcmple),
-        ext_BR_IF_LCMPGT(lab_get,ext_if_lcmpgt),
-        ext_BR_IF_LCMPGE(lab_get,ext_if_lcmpge),
+        ext_BR_IF_LCMPEQ(ext_if_lcmpeq),
+        ext_BR_IF_LCMPNE(ext_if_lcmpne),
+        ext_BR_IF_LCMPLT(ext_if_lcmplt),
+        ext_BR_IF_LCMPLE(ext_if_lcmple),
+        ext_BR_IF_LCMPGT(ext_if_lcmpgt),
+        ext_BR_IF_LCMPGE(ext_if_lcmpge),
 
-        ext_BR_IF_FCMPEQ(lab_get,ext_if_fcmpeq),
-        ext_BR_IF_FCMPNE(lab_get,ext_if_fcmpne),
-        ext_BR_IF_FCMPLT(lab_get,ext_if_fcmplt),
-        ext_BR_IF_FCMPLE(lab_get,ext_if_fcmple),
-        ext_BR_IF_FCMPGT(lab_get,ext_if_fcmpgt),
-        ext_BR_IF_FCMPGE(lab_get,ext_if_fcmpge),
+        ext_BR_IF_FCMPEQ(ext_if_fcmpeq),
+        ext_BR_IF_FCMPNE(ext_if_fcmpne),
+        ext_BR_IF_FCMPLT(ext_if_fcmplt),
+        ext_BR_IF_FCMPLE(ext_if_fcmple),
+        ext_BR_IF_FCMPGT(ext_if_fcmpgt),
+        ext_BR_IF_FCMPGE(ext_if_fcmpge),
 
-        ext_BR_IF_DCMPEQ(lab_get,ext_if_dcmpeq),
-        ext_BR_IF_DCMPNE(lab_get,ext_if_dcmpne),
-        ext_BR_IF_DCMPLT(lab_get,ext_if_dcmplt),
-        ext_BR_IF_DCMPLE(lab_get,ext_if_dcmple),
-        ext_BR_IF_DCMPGT(lab_get,ext_if_dcmpgt),
-        ext_BR_IF_DCMPGE(lab_get,ext_if_dcmpge),
+        ext_BR_IF_DCMPEQ(ext_if_dcmpeq),
+        ext_BR_IF_DCMPNE(ext_if_dcmpne),
+        ext_BR_IF_DCMPLT(ext_if_dcmplt),
+        ext_BR_IF_DCMPLE(ext_if_dcmple),
+        ext_BR_IF_DCMPGT(ext_if_dcmpgt),
+        ext_BR_IF_DCMPGE(ext_if_dcmpge),
 
-        ext_BR_IF_IUCMPLT(lab_get,ext_if_iucmplt),
-        ext_BR_IF_IUCMPLE(lab_get,ext_if_iucmple),
-        ext_BR_IF_IUCMPGT(lab_get,ext_if_iucmpgt),
-        ext_BR_IF_IUCMPGE(lab_get,ext_if_iucmpge),
+        ext_BR_IF_IUCMPLT(ext_if_iucmplt),
+        ext_BR_IF_IUCMPLE(ext_if_iucmple),
+        ext_BR_IF_IUCMPGT(ext_if_iucmpgt),
+        ext_BR_IF_IUCMPGE(ext_if_iucmpge),
 
-        ext_BR_IF_LUCMPLT(lab_get,ext_if_lucmplt),
-        ext_BR_IF_LUCMPLE(lab_get,ext_if_lucmple),
-        ext_BR_IF_LUCMPGT(lab_get,ext_if_lucmpgt),
-        ext_BR_IF_LUCMPGE(lab_get,ext_if_lucmpge),
+        ext_BR_IF_LUCMPLT(ext_if_lucmplt),
+        ext_BR_IF_LUCMPLE(ext_if_lucmple),
+        ext_BR_IF_LUCMPGT(ext_if_lucmpgt),
+        ext_BR_IF_LUCMPGE(ext_if_lucmpge),
 
         ;
 

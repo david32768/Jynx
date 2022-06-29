@@ -14,7 +14,6 @@ import static jynx.Message.M176;
 import static jynx.Message.M243;
 import static jynx.Message.M267;
 
-import com.github.david32768.jynx.MacroLib;
 import jvm.Feature;
 import jvm.JvmOp;
 import jvm.JvmVersion;

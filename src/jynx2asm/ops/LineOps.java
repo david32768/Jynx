@@ -20,7 +20,6 @@ public enum LineOps implements LineOp {
     lab_push,
     lab_push_if,
     lab_pop,
-    lab_get,
 
     tok_skip,
     tok_swap,
@@ -37,11 +36,6 @@ public enum LineOps implements LineOp {
 
     private final static String ELSE = "ELSE";
 
-    public static String peekEndLabel(int index, LabelStack labelStack) {
-        Token token = labelStack.peek(index);
-        return token.asString();
-    }
-    
     private void lineop(Line line, int macrolevel,LabelStack labelStack) {
         Token token;
         switch(this) {
@@ -51,11 +45,6 @@ public enum LineOps implements LineOp {
                 line.insert(maclabel);
                 break;
 
-            case lab_get:
-                int index = line.nextToken().asInt();
-                token = labelStack.peek(index);
-                line.insert(token);
-                break;
             case lab_pop:
                 line.insert(labelStack.pop());
                 break;

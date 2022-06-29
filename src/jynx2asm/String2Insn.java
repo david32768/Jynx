@@ -47,7 +47,6 @@ import jynx2asm.ops.DynamicOp;
 import jynx2asm.ops.JynxOp;
 import jynx2asm.ops.JynxOps;
 import jynx2asm.ops.LineOp;
-import jynx2asm.ops.LineOps;
 import jynx2asm.ops.MacroOp;
 import jynx2asm.ops.SelectOp;
 
@@ -318,8 +317,7 @@ public class String2Insn {
     }
 
     private Instruction arg_label(JvmOp jvmop) {
-        String lab = line.nextToken().asString();
-        JynxLabel jlab = labmap.codeUseOfJynxLabel(lab, line);
+        JynxLabel jlab = getJynxLabel(line.nextToken());
         return new JumpInstruction(jvmop,jlab);
     }
 
@@ -328,10 +326,7 @@ public class String2Insn {
     private final static int MAX_LOOKUP_ENTRIES = (MAX_METHOD_SIZE - LOOKUPSWITCH_OVERHEAD)/8;
 
     private Instruction arg_lookupswitch(JvmOp jvmop) {
-        ReservedWord rw = line.nextToken().mayBe(res_default);
-        if (rw == null) {
-            throw new LogIllegalArgumentException(M199,jvmop);  // "%s has now a different format from Jynx 2.4"
-        }
+        line.nextToken().mustBe(res_default);
         JynxLabel dflt = getJynxLabel(line.nextToken());
         TokenArray dotarray = TokenArray.getInstance(js, line);
         multi |= dotarray.isMultiLine(); 
@@ -397,7 +392,7 @@ public class String2Insn {
         String labstr = token.asString();
         if (Character.isDigit(labstr.codePointAt(0))) {
             int index = token.asInt();
-            labstr = LineOps.peekEndLabel(index, labelStack);
+            labstr = labelStack.peek(index).asString();
         }
         return labmap.codeUseOfJynxLabel(labstr, line);
     }
@@ -408,10 +403,7 @@ public class String2Insn {
     
     private Instruction arg_tableswitch(JvmOp jvmop) {
         int min = line.nextToken().asInt();
-        ReservedWord rw = line.nextToken().mayBe(res_default);
-        if (rw == null) {
-            throw new LogIllegalArgumentException(M199,jvmop);  // "%s has now a different format from Jynx 2.4"
-        }
+        line.nextToken().mustBe(res_default);
         JynxLabel dflt = getJynxLabel(line.nextToken());
         TokenArray dotarray = TokenArray.getInstance(js, line);
         multi |= dotarray.isMultiLine(); 
