@@ -171,7 +171,7 @@ public class StringUtil {
                     break;
                 case ENDQUOTE:  // last character was closing quote
                     if (!Character.isWhitespace(c)) {
-                        // "Quoted string followed by '%1$c' instead of blank; blank inserted before '%1$c'"
+                        // "Quoted string not followed by white space; blank inserted before '%c'"
                         LOG(line,M68,c);
                         --i;    // reread character
                     }

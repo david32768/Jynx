@@ -32,12 +32,14 @@ public enum GlobalOption {
     SKIP_CODE(M39,DISASSEMBLY), // "do not produce code"
     SKIP_DEBUG(M29,DISASSEMBLY), // "do not produce debug info"
     SKIP_FRAMES(M30,DISASSEMBLY), // "do not produce stack map"
-    
+
     // DEBUG options - may change
     __EXIT_IF_ERROR(M13,ASSEMBLY), // "exit if error"
     __TREAT_WARNINGS_AS_ERRORS(M25,ASSEMBLY), // "treat warnings as errors"
     __PRINT_STACK_TRACES(M23,ASSEMBLY), // "print stack trace of exceptions"
 
+    // internal
+    __STRUCTURED_LABELS(null,ASSEMBLY), // labels are numeric level
     ;
 
     private final String msg;
@@ -45,7 +47,7 @@ public enum GlobalOption {
     private final EnumSet<Main.MainOption> main;
 
     private GlobalOption(Message msg, Main.MainOption main1, Main.MainOption... mains) {
-        this.msg = msg.format();
+        this.msg = msg == null?null:msg.format();
         this.abbrev = null;
         this.main = EnumSet.of(main1, mains);
     }
@@ -85,12 +87,14 @@ public enum GlobalOption {
     
     public static Optional<GlobalOption> optInstance(String str) {
         return Stream.of(values())
+                .filter(g-> g.msg != null)
                 .filter(g -> g.name().equalsIgnoreCase(str))
                 .findFirst();
     }
 
     public static Optional<GlobalOption> optArgInstance(String str) {
         return Stream.of(values())
+                .filter(g-> g.msg != null)
                 .filter(g -> g.isArg(str))
                 .findFirst();
     }

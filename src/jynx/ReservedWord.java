@@ -43,7 +43,7 @@ public enum ReservedWord {
     res_invisible,
     dot_annotation(".annotation"),
     dot_annotation_array(".annotation_array"),
-    colon(":",'l'),
+    right_arrow("->",'l'),
     left_brace("{"),
     right_brace("}"),
     left_array("["),

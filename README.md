@@ -63,16 +63,18 @@ Changes are:
 *	tableswitch - new format
 ```
 		; <high> is always omitted
-		tableswitch 0 DefaultLabel .array
+		; tableswitch <minimum> default <default_label> <array of labels>
+		tableswitch 0 default DefaultLabel .array
 			ZeroLabel
 			OneLabel
 		.end_array
 ```		
 *	lookupswitch - new format
 ```
-		lookupswitch DLabel .array
-			1 : Label1
-			10 : Label2
+		; lookupswitch default <default_label> <array of <num -> <label>>
+		lookupswitch default DefaultLabel .array
+			1 -> Label1
+			10 -> Label2
 		.end_array
 ```
 *	invokeinterface; omit number as will be calculated and precede method_name with '@'

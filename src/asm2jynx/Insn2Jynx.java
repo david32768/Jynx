@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.objectweb.asm.ConstantDynamic;
 import org.objectweb.asm.Label;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.FrameNode;
@@ -219,7 +220,7 @@ public class Insn2Jynx {
             } else {
                 lb.append(ReservedWord.comma);
             }
-            lb.append(me.getKey()).append(ReservedWord.colon).append(me.getValue());
+            lb.append(me.getKey()).append(ReservedWord.right_arrow).append(me.getValue());
         }
         lb.append(ReservedWord.right_array).nl();
     }
@@ -301,12 +302,12 @@ public class Insn2Jynx {
                 return;
             }
             FrameNode fn = (FrameNode) in;
+            assert fn.type == Opcodes.F_NEW;
             Object[] thislocal = fn.local.toArray(); // they are objects
             int min = Math.min(lastLocalStack.length,thislocal.length);
-            int match = min;
-            for (int i = 0; i < min;++i) {
-                if (!lastLocalStack[i].equals(thislocal[i])) {
-                    match = i;
+            int match;
+            for (match = 0; match < min;++match) {
+                if (!lastLocalStack[match].equals(thislocal[match])) {
                     break;
                 }
             }

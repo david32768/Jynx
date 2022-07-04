@@ -22,13 +22,8 @@ class LineArray implements TokenArray {
     }
 
     private void readArray(Line line) {
-        Token token = line.nextToken();
-        Token after = token.removeAtStart(ReservedWord.left_array);
-        if (after == token) {
-            token.mustBe(ReservedWord.left_array);
-        } else {
-            line.insert(after);
-        }
+        Token token = line.nextTokenSplitIfStart(ReservedWord.left_array);
+        token.mustBe(ReservedWord.left_array);
         if (line.peekToken().is(ReservedWord.right_array)) {
             line.nextToken();
             return;
@@ -36,21 +31,12 @@ class LineArray implements TokenArray {
         while (true) {
             Deque<Token> tokens = new ArrayDeque<>();
             while(true) {
-                token = line.nextToken();
+                token = line.nextTokenSplitIfEnd(ReservedWord.comma, ReservedWord.right_array);
                 if (token.mayBe(ReservedWord.comma,ReservedWord.right_array).isPresent()) {
                     break;
                 }
-                Token before = token.removeAtEnd(ReservedWord.comma);
-                if (before != token) {
-                    line.insert(ReservedWord.comma);
-                } else {
-                    before = token.removeAtEnd(ReservedWord.right_array);
-                    if (before != token) {
-                        line.insert(ReservedWord.right_array);
-                    }
-                }
-                before.noneOf(ReservedWord.comma, ReservedWord.right_array, ReservedWord.left_array, ReservedWord.dot_array);
-                tokens.addLast(before);
+                token.noneOf(ReservedWord.left_array, ReservedWord.dot_array);
+                tokens.addLast(token);
             }
             if (tokens.isEmpty()) {
                     // "empty element in  array"

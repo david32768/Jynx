@@ -72,7 +72,7 @@ public enum Message {
     M65("local variables [%s ] are read but not written"),
     M66("invalid %s: %s"),
     M67(ENDINFO,"poolsz = %d"),
-    M68(WARNING,"Quoted string followed by '%1$c' instead of blank; blank inserted before '%1$c'"),
+    M68(WARNING,"Quoted string not followed by white space; blank inserted before '%c'"),
     M69("Embedded naked quote"),
     M70("cannot range check floating point numbers"),
     M71(WARNING,"as %s is not a final static field, ' = %s' may be silently ignored by JVM (JVMS 5.5 6)"),

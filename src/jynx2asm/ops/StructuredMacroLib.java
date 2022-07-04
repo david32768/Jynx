@@ -1,5 +1,6 @@
 package jynx2asm.ops;
 
+import java.util.EnumSet;
 import java.util.stream.Stream;
 
 import static jvm.AsmOp.*;
@@ -8,6 +9,7 @@ import static jynx2asm.ops.ExtendedOps.*;
 import static jynx2asm.ops.LineOps.*;
 import static jynx2asm.ops.SelectOps.xxx_xreturn;
 
+import jynx.GlobalOption;
 
 public class StructuredMacroLib extends MacroLib {
             
@@ -23,6 +25,11 @@ public class StructuredMacroLib extends MacroLib {
     @Override
     public String name() {
         return NAME;
+    }
+
+    @Override
+    public EnumSet<GlobalOption> getOptions() {
+        return EnumSet.of(GlobalOption.__STRUCTURED_LABELS);
     }
 
     public enum StructuredOps implements MacroOp {

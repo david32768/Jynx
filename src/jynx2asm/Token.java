@@ -220,24 +220,6 @@ public class Token {
         return this != END_TOKEN && res.externalName().equals(token);
     }
     
-    public Token removeAtStart(ReservedWord res) {
-        String resname = res.externalName();
-        if (this == END_TOKEN || is(res) || !token.startsWith(resname)) {
-            return this;
-        } else {
-            return Token.getInstance(token.substring(resname.length()));
-        }
-    }
-    
-    public Token removeAtEnd(ReservedWord res) {
-        String resname = res.externalName();
-        if (this == END_TOKEN || is(res) || !token.endsWith(resname)) {
-            return this;
-        } else {
-            return Token.getInstance(token.substring(0, token.length() - resname.length()));
-        }
-    }
-
     private Optional<ReservedWord> mayBe(EnumSet<ReservedWord> rwset) {
         if (this == END_TOKEN) {
             return Optional.empty();

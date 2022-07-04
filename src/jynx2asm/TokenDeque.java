@@ -8,6 +8,7 @@ import static jynx.Global.LOG;
 import static jynx.Message.M140;
 import static jynx.Message.M402;
 import static jynx.Message.M90;
+import static jynx2asm.Token.END_TOKEN;
 
 import jvm.AccessFlag;
 import jynx.LogIllegalStateException;
@@ -51,6 +52,32 @@ public interface TokenDeque {
         getDeque().addFirst(Token.getInstance(res));
     }
 
+    public default Token nextTokenSplitIfStart(ReservedWord... res) {
+        Token token = nextToken();
+        String tokstr = token.asString();
+        for (ReservedWord rw:res) {
+            String rwname = rw.externalName();
+            if (token != END_TOKEN && !token.is(rw) && tokstr.startsWith(rwname)) {
+                insert(Token.getInstance(tokstr.substring(rwname.length())));
+                return Token.getInstance(rw);
+            }
+        }
+        return token;
+    }
+    
+    public default Token nextTokenSplitIfEnd(ReservedWord... res) {
+        Token token = nextToken();
+        String tokstr = token.asString();
+        for (ReservedWord rw:res) {
+            String rwname = rw.externalName();
+            if (token != END_TOKEN && !token.is(rw) && tokstr.endsWith(rwname)) {
+                insert(Token.getInstance(rw));
+                return Token.getInstance(tokstr.substring(0, tokstr.length() - rwname.length()));
+            }
+        }
+        return token;
+    }
+    
     public default void noMoreTokens() {
         Token token = getDeque().peekFirst();
         if (token == null || token == Token.END_TOKEN) {

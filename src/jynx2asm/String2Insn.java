@@ -40,9 +40,6 @@ import jvm.Op;
 import jvm.OpArg;
 
 import jynx.GlobalOption;
-import jynx.LogIllegalArgumentException;
-import jynx.ReservedWord;
-
 import jynx2asm.ops.DynamicOp;
 import jynx2asm.ops.JynxOp;
 import jynx2asm.ops.JynxOps;
@@ -338,7 +335,7 @@ public class String2Insn {
                 break;
             }
             Integer key = token.asInt();
-            dotarray.nextToken().mustBe(colon);
+            dotarray.nextToken().mustBe(right_arrow);
             JynxLabel target = getJynxLabel(dotarray.nextToken());
             JynxLabel mustbenull = swmap.put(key, target);
             if (mustbenull != null) {
@@ -390,7 +387,7 @@ public class String2Insn {
     
     private JynxLabel getJynxLabel(Token token) {
         String labstr = token.asString();
-        if (Character.isDigit(labstr.codePointAt(0))) {
+        if (OPTION(GlobalOption.__STRUCTURED_LABELS) && Character.isDigit(labstr.codePointAt(0))) {
             int index = token.asInt();
             labstr = labelStack.peek(index).asString();
         }

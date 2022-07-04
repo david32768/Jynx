@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
+import static jynx.Global.ADD_OPTION;
 import static jynx.Global.LOG;
 import static jynx.Message.M176;
 import static jynx.Message.M243;
@@ -19,6 +20,7 @@ import jvm.JvmOp;
 import jvm.JvmVersion;
 import jvm.JvmVersionRange;
 import jvm.Op;
+import jynx.GlobalOption;
 import jynx.LogAssertionError;
 
 public class JynxOps {
@@ -90,6 +92,9 @@ public class JynxOps {
                 UnaryOperator<String> parmtrans = lib.parmTranslator();
                 if (parmtrans != null) {
                     jynx.Global.setParmTrans(parmtrans);
+                }
+                for (GlobalOption opt:lib.getOptions()) {
+                    ADD_OPTION(opt);
                 }
                 result = lib;
                 break;
