@@ -3,7 +3,6 @@ package jynx2asm.ops;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
-import jvm.AsmOp;
 import jvm.Feature;
 
 public enum JavaCallOps implements MacroOp {
@@ -99,7 +98,7 @@ public enum JavaCallOps implements MacroOp {
         this.jynxops = new JynxOp[2];
         String classname = klass.getName().replace('.', '/');
         jynxops[0] = LineOps.insert(classname,methodName,desc);
-        jynxops[1] = AsmOp.asm_invokestatic;
+        jynxops[1] = JvmOp.asm_invokestatic;
     }
 
     public Feature feature() {

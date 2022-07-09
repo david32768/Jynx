@@ -25,7 +25,6 @@ import static jynx.ReservedWord.left_brace;
 import static jynx.ReservedWord.right_array;
 import static jynx.ReservedWord.right_brace;
 
-import jvm.AsmOp;
 import jvm.ConstantPoolType;
 import jvm.ConstType;
 import jvm.Context;
@@ -33,6 +32,7 @@ import jvm.Feature;
 import jvm.HandleType;
 import jynx.Global;
 import jynx.LogIllegalArgumentException;
+import jynx2asm.ops.JvmOp;
 
 public class JynxConstantDynamic {
     
@@ -183,7 +183,7 @@ public class JynxConstantDynamic {
             return result;
         }
         // "Unsupported version of %s: first parms are not compatible with:%n   %s"
-        LOG(M98, AsmOp.asm_invokedynamic,INVOKE3);
+        LOG(M98, JvmOp.asm_invokedynamic,INVOKE3);
         return new Type[0];
     }
     
@@ -203,7 +203,7 @@ public class JynxConstantDynamic {
             return result;
         }
         // "Unsupported version of %s: first parms are not compatible with:%n   %s"
-        LOG(M98, AsmOp.asm_ldc,LDC3);
+        LOG(M98, JvmOp.asm_ldc,LDC3);
         return new Type[0];
     }
     

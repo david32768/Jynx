@@ -3,9 +3,8 @@ package jynx2asm.ops;
 import java.util.EnumSet;
 import java.util.stream.Stream;
 
-import static jvm.AsmOp.*;
-import static jvm.Op.opc_labelweak;
 import static jynx2asm.ops.ExtendedOps.*;
+import static jynx2asm.ops.JvmOp.*;
 import static jynx2asm.ops.LineOps.*;
 import static jynx2asm.ops.SelectOps.xxx_xreturn;
 
@@ -28,8 +27,8 @@ public class StructuredMacroLib extends MacroLib {
     }
 
     @Override
-    public EnumSet<GlobalOption> getOptions() {
-        return EnumSet.of(GlobalOption.__STRUCTURED_LABELS);
+    public EnumSet<MacroOption> getOptions() {
+        return EnumSet.of(MacroOption.STRUCTURED_LABELS);
     }
 
     public enum StructuredOps implements MacroOp {
@@ -40,7 +39,7 @@ public class StructuredMacroLib extends MacroLib {
         ext_RETURN(xxx_xreturn),
 
         ext_ELSE(lab_peek_if,asm_goto,lab_peek_else,xxx_label),
-        ext_END(lab_peek_else,opc_labelweak,lab_pop,opc_labelweak),
+        ext_END(lab_peek_else,xxx_labelweak,lab_pop,xxx_labelweak),
 
         aux_iflabel(mac_label,lab_push_if,lab_peek_else),
         

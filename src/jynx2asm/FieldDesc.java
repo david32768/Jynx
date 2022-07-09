@@ -6,10 +6,10 @@ import static jynx2asm.NameDesc.CLASS_NAME;
 import static jynx2asm.NameDesc.FIELD_DESC;
 import static jynx2asm.NameDesc.FIELD_NAME;
 
-import jvm.AsmOp;
 import jvm.Context;
 import jvm.HandleType;
 import jynx.LogIllegalArgumentException;
+import jynx2asm.ops.JvmOp;
 
 public class FieldDesc extends OwnerNameDesc {
 
@@ -18,7 +18,7 @@ public class FieldDesc extends OwnerNameDesc {
         assert !ond.isInterface() && ond.desc() != null && !ond.hasParameters();
     }
     
-    public static FieldDesc getInstance(String mname, String desc, AsmOp asmop) {
+    public static FieldDesc getInstance(String mname, String desc, JvmOp asmop) {
         ONDRecord ond = ONDRecord.getInstance(mname);
         ond = ond.changeDesc(desc);
         ond = ond.addClassName(asmop);

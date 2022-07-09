@@ -6,9 +6,9 @@ import java.util.stream.Collectors;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 
-import jvm.JvmOp;
 import jynx.ReservedWord;
 import jynx2asm.JynxLabel;
+import jynx2asm.ops.JvmOp;
 import jynx2asm.StackLocals;
 
 public class LookupInstruction extends Instruction {
@@ -55,7 +55,7 @@ public class LookupInstruction extends Instruction {
                 .map(me-> me.getKey().toString() + " : " + me.getValue().name())
                 .collect(Collectors.joining(" "));
         return String.format("%s default %s %s %s %s",
-                base,dflt,ReservedWord.left_array,brlabels,ReservedWord.right_array);
+                jvmop,dflt,ReservedWord.left_array,brlabels,ReservedWord.right_array);
     }
 
 }

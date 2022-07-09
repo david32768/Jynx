@@ -14,11 +14,11 @@ import static jynx.Message.*;
 import asm.instruction.Instruction;
 import asm.instruction.LineInstruction;
 import asm.JynxVar;
-import jvm.AsmOp;
 import jvm.Feature;
 import jvm.FrameType;
 import jynx.GlobalOption;
 import jynx.LogIllegalArgumentException;
+import jynx2asm.ops.JvmOp;
 
 public class StackLocals {
 
@@ -45,19 +45,19 @@ public class StackLocals {
     private final OperandStack stack;
     private final JynxLabelMap labelmap;
 
-    private final AsmOp returnOp;
+    private final JvmOp returnOp;
     private boolean returns;
     private boolean hasThrow;
 
     private boolean frameRequired;
     
     private Optional<JynxLabel> lastLab;
-    private AsmOp lastop;
+    private JvmOp lastop;
     private Last completion;
     private final List<JynxLabel> activeLabels;
 
     
-    private StackLocals(LocalVars locals, OperandStack stack, JynxLabelMap labelmap, AsmOp returnop) {
+    private StackLocals(LocalVars locals, OperandStack stack, JynxLabelMap labelmap, JvmOp returnop) {
         this.locals = locals;
         this.stack = stack;
         this.labelmap = labelmap;
@@ -65,13 +65,13 @@ public class StackLocals {
         this.returns = false;
         this.hasThrow = false;
         this.lastLab = Optional.empty();
-        this.lastop = AsmOp.asm_nop;
+        this.lastop = JvmOp.asm_nop;
         this.frameRequired = false;
         this.completion = Last.OP;
         this.activeLabels = new ArrayList<>();
     }
     
-    public static StackLocals getInstance(List<Object> localstack, JynxLabelMap labelmap, AsmOp returnop, boolean isStatic) {
+    public static StackLocals getInstance(List<Object> localstack, JynxLabelMap labelmap, JvmOp returnop, boolean isStatic) {
         Object[] objs = localstack.toArray(new Object[0]);
         return new StackLocals(new LocalVars(objs2OSF(objs,false),isStatic), new OperandStack(), labelmap, returnop);
     }
@@ -84,7 +84,7 @@ public class StackLocals {
         return stack;
     }
 
-    public AsmOp getReturnOp() {
+    public JvmOp getReturnOp() {
         return returnOp;
     }
 
@@ -92,7 +92,7 @@ public class StackLocals {
         return lastLab;
     }
 
-    public AsmOp lastOp() {
+    public JvmOp lastOp() {
         return lastLab.isPresent()?null:lastop;
     }
 
@@ -176,14 +176,14 @@ public class StackLocals {
         completion = Last.FRAME;
     }
     
-    private void visitPreJvmOp(AsmOp asmop) {
+    private void visitPreJvmOp(JvmOp asmop) {
         locals.preVisitJvmOp(lastLab);
         stack.preVisitJvmOp(lastLab);
         lastLab = Optional.empty();
         lastop = asmop;
     }
 
-    private void visitPostJvmOp(AsmOp asmop) {
+    private void visitPostJvmOp(JvmOp asmop) {
         boolean startblock = asmop.isUnconditional();
         if (startblock) {
             startBlock();
@@ -198,38 +198,38 @@ public class StackLocals {
         if (in instanceof LineInstruction) {
             return !isUnreachable();
         }
-        AsmOp asmop = in.resolve(this);
-        if (asmop.opcode() < 0) { // label or try
+        JvmOp jvmop = in.resolve(this);
+        if (jvmop.opcode() < 0) { // label or try
             in.adjust(this);
             return true;
         }
-        if (asmop.isReturn()) {
-            if (asmop == returnOp) {
+        if (jvmop.isReturn()) {
+            if (jvmop == returnOp) {
                 returns = true;
             } else {
-                LOG(M191, returnOp, asmop); // "method requires %s but found %s"
+                LOG(M191, returnOp, jvmop); // "method requires %s but found %s"
                 return false;
             }
         }
-        hasThrow |= asmop == AsmOp.asm_athrow; 
+        hasThrow |= jvmop == JvmOp.asm_athrow; 
         if (isUnreachable()) {
-            if (asmop.isUnconditional()) {
-                LOG(M122,asmop,lastop);  // "Instruction '%s' dropped as unreachable after '%s' without intervening label"
+            if (jvmop.isUnconditional()) {
+                LOG(M122,jvmop,lastop);  // "Instruction '%s' dropped as unreachable after '%s' without intervening label"
             } else {
-                LOG(M121,asmop,lastop);  // "Instruction '%s' dropped as unreachable after '%s' without intervening label"
+                LOG(M121,jvmop,lastop);  // "Instruction '%s' dropped as unreachable after '%s' without intervening label"
             }
             return false;
         } else {
-            if (asmop == AsmOp.asm_new && lastLab.isPresent()) {
+            if (jvmop == JvmOp.asm_new && lastLab.isPresent()) {
                 labelmap.weakUseOfJynxLabel(lastLab.get(), line);
             }
             if (frameRequired && SUPPORTS(Feature.stackmap) && OPTION(GlobalOption.USE_STACK_MAP)) {
                     LOG(M124);  // "stack frame is definitely required here"
             }
             frameRequired = false; // to prevent multiple error messages
-            visitPreJvmOp(asmop);
+            visitPreJvmOp(jvmop);
             in.adjust(this);
-            visitPostJvmOp(asmop);
+            visitPostJvmOp(jvmop);
             return true;
         }
     }
@@ -240,7 +240,7 @@ public class StackLocals {
     
     public void visitEnd() {
         locals.visitEnd();
-        if(!returns && (returnOp != AsmOp.asm_return || !hasThrow)) {
+        if(!returns && (returnOp != JvmOp.asm_return || !hasThrow)) {
             LOG(M196,returnOp); // "no %s instruction found"
         }
         switch(completion) {
@@ -307,7 +307,7 @@ public class StackLocals {
         locals.checkChar('I', var);
     }
     
-    public void adjustLoadStore(AsmOp jop, int var) {
+    public void adjustLoadStore(JvmOp jop, int var) {
         char ctype = jop.vartype();
         if (jop.isStoreVar()) {
             FrameElement fe = stack.storeType(ctype, var);
@@ -324,7 +324,7 @@ public class StackLocals {
         }
     }
     
-    public void adjustStack(AsmOp jop) {
+    public void adjustStack(JvmOp jop) {
         String opdesc = jop.desc();
         if (opdesc == null) {
             throw new AssertionError("" + jop);
@@ -333,7 +333,7 @@ public class StackLocals {
         }
     }
     
-    public void adjustStackOp(AsmOp jop) {
+    public void adjustStackOp(JvmOp jop) {
         if (jop.isStack()) {
             stack.adjustStackOp(jop);
         } else {

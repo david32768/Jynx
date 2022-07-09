@@ -4,8 +4,8 @@ import org.objectweb.asm.MethodVisitor;
 
 import static jynx.Message.M908;
 
-import jvm.JvmOp;
 import jynx.LogAssertionError;
+import jynx2asm.ops.JvmOp;
 import jynx2asm.OwnerNameDesc;
 import jynx2asm.StackLocals;
 
@@ -20,7 +20,7 @@ public class MethodInstruction extends Instruction {
 
     @Override
     public void accept(MethodVisitor mv) {
-        mv.visitMethodInsn(base.opcode(),cmd.getOwner(), cmd.getName(), cmd.getDesc(), cmd.isOwnerInterface());
+        mv.visitMethodInsn(jvmop.opcode(),cmd.getOwner(), cmd.getName(), cmd.getDesc(), cmd.isOwnerInterface());
     }
 
     @Override
@@ -29,7 +29,7 @@ public class MethodInstruction extends Instruction {
         owner = owner.charAt(0) == '['?owner:"L" + owner + ";";
         String desc = cmd.getDesc();
         String stackdesc;
-        switch (base) {
+        switch (jvmop) {
             case asm_invokestatic:
                 stackdesc = desc;
                 break;
@@ -42,14 +42,14 @@ public class MethodInstruction extends Instruction {
                 break;
             default:
                 // "unexpected Op %s in this instruction"),
-                throw new LogAssertionError(M908,base.name());
+                throw new LogAssertionError(M908,jvmop.name());
         }
         stackLocals.adjustStackOperand(stackdesc);
     }
 
     @Override
     public String toString() {
-        return String.format("%s %s",base,cmd.toJynx());
+        return String.format("%s %s",jvmop,cmd.toJynx());
     }
 
 }

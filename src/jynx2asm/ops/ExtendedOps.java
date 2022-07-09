@@ -3,8 +3,8 @@ package jynx2asm.ops;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
-import static jvm.AsmOp.*;
 import static jynx2asm.ops.JavaCallOps.*;
+import static jynx2asm.ops.JvmOp.*;
 
 
 public enum ExtendedOps implements MacroOp {

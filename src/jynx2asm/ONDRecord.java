@@ -13,9 +13,9 @@ import static jynx.Global.TRANSLATE;
 import static jynx.Message.M255;
 import static jynx2asm.NameDesc.PACKAGE_NAME;
 
-import jvm.AsmOp;
 import jvm.Constants;
 import jynx.GlobalOption;
+import jynx2asm.ops.JvmOp;
 
 public class ONDRecord {
     
@@ -141,7 +141,7 @@ public class ONDRecord {
         return pkgname;
     }
     
-    public ONDRecord addClassName(AsmOp op) {
+    public ONDRecord addClassName(JvmOp op) {
         if (owner == null && OPTION(GlobalOption.PREPEND_CLASSNAME)) {
             LOG(M255,op); // "classname has been added to argument of some %s instruction(s)"
             return new ONDRecord(CLASS_NAME(), name, desc, ownerInterface);

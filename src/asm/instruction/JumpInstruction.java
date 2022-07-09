@@ -2,9 +2,8 @@ package asm.instruction;
 
 import org.objectweb.asm.MethodVisitor;
 
-import jvm.AsmOp;
-import jvm.JvmOp;
 import jynx2asm.JynxLabel;
+import jynx2asm.ops.JvmOp;
 import jynx2asm.StackLocals;
 
 public class JumpInstruction extends Instruction {
@@ -18,19 +17,19 @@ public class JumpInstruction extends Instruction {
 
     @Override
     public void accept(MethodVisitor mv) {
-        mv.visitJumpInsn(base.opcode(), jlab.asmlabel());
+        mv.visitJumpInsn(jvmop.asmOpcode(), jlab.asmlabel());
     }
 
     @Override
     public void adjust(StackLocals stackLocals) {
         super.adjust(stackLocals);
-        boolean jsr = base == AsmOp.asm_jsr;
+        boolean jsr = jvmop == JvmOp.asm_jsr;
         stackLocals.adjustLabel(jlab, jsr);
     }
 
     @Override
     public String toString() {
-        return String.format("%s %s",base,jlab.name());
+        return String.format("%s %s",jvmop,jlab.name());
     }
 
 }

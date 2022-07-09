@@ -2,8 +2,8 @@ package asm.instruction;
 
 import org.objectweb.asm.MethodVisitor;
 
-import jvm.JvmOp;
 import jynx2asm.JynxLabel;
+import jynx2asm.ops.JvmOp;
 import jynx2asm.StackLocals;
 
 public class LabelInstruction extends Instruction {

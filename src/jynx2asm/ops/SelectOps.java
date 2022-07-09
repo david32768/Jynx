@@ -1,9 +1,8 @@
 package jynx2asm.ops;
 
 import java.util.stream.Stream;
-import static jvm.AsmOp.*;
+import static jynx2asm.ops.JvmOp.*;
 import jvm.NumType;
-import jvm.Op;
 
 import jynx2asm.FrameElement;
 import jynx2asm.InstList;
@@ -15,9 +14,9 @@ public enum SelectOps implements SelectOp {
     opc_ildc(Type.ILDC,
             asm_iconst_0,asm_iconst_1,asm_iconst_2,asm_iconst_3,asm_iconst_4,asm_iconst_5,
             asm_iconst_m1,asm_bipush,asm_sipush,asm_ldc),
-    opc_lldc(Type.LLDC,asm_lconst_0,asm_lconst_1,Op.opc_ldc2_w),
+    opc_lldc(Type.LLDC,asm_lconst_0,asm_lconst_1,JvmOp.opc_ldc2_w),
     opc_fldc(Type.FLDC,asm_fconst_0,asm_fconst_1,asm_fconst_2,asm_ldc),
-    opc_dldc(Type.DLDC,asm_dconst_0,asm_dconst_1,Op.opc_ldc2_w),
+    opc_dldc(Type.DLDC,asm_dconst_0,asm_dconst_1,JvmOp.opc_ldc2_w),
 
     xxx_xreturn(Type.RETURN),
     
@@ -157,15 +156,15 @@ public enum SelectOps implements SelectOp {
         }
 
         private int getIldc(Line line,InstList instlist) {
-            int ival = line.peekToken().asInt();
+            Token token = line.nextToken();
+            int ival = token.asInt();
             if (ival >= 0 && ival <= 5) {
-                line.nextToken(); // discard
                 return ival;
             }
             if (ival == -1) {
-                line.nextToken(); // discard
                 return 6;
             }
+            line.insert(token);
             if (NumType.t_byte.isInRange(ival)) {
                 return 7;
             } else if (NumType.t_short.isInRange(ival)) {
@@ -176,45 +175,58 @@ public enum SelectOps implements SelectOp {
         }
 
         private int getLldc(Line line,InstList instlist) {
-            long lval = line.peekToken().asLong();
+            Token token = line.nextToken();
+            long lval = token.asLong();
             if (lval == 0L) {
-                line.nextToken(); // discard
                 return 0;
             } else if (lval == 1L) {
-                line.nextToken(); // discard
                 return 1;
             } else {
+                if (!token.asString().endsWith("L")) {
+                    line.insert(token.asString() + 'L');
+                } else {
+                    line.insert(token);
+                }
                 return 2;
             }
         }
 
         private int getFldc(Line line,InstList instlist) {
-            float fval = line.peekToken().asFloat();
+            Token token = line.nextToken();
+            float fval = token.asFloat();
             if (Float.floatToRawIntBits(fval) == Float.floatToRawIntBits(0.0F)) { // not -0.0F
                 assert fval == 0.0F && 1/fval > 0.0F;
-                line.nextToken(); // discard
                 return 0;
             } else if (fval == 1.0f) {
-                line.nextToken(); // discard
                 return 1;
             } else if (fval == 2.0f) {
-                line.nextToken(); // discard
                 return 2;
             } else {
+                if (Float.isNaN(fval)) {
+                    line.insert("+NaNF");
+                } else if (!token.asString().endsWith("F")) {
+                    line.insert(token.asString() + 'F');
+                } else {
+                    line.insert(token);
+                }
                 return 3;
             }
         }
 
         private int getDldc(Line line,InstList instlist) {
-            double dval = line.peekToken().asDouble();
+            Token token = line.nextToken();
+            double dval = token.asDouble();
             if (Double.doubleToRawLongBits(dval) == Double.doubleToRawLongBits(0.0D)) { // not -0.0
                 assert dval == 0.0 && 1/dval > 0.0;
-                line.nextToken(); // discard
                 return 0;
             } else if (dval == 1.0) {
-                line.nextToken(); // discard
                 return 1;
             } else {
+                if (Double.isNaN(dval)) {
+                    line.insert("+NaN");
+                } else {
+                    line.insert(token);
+                }
                 return 2;
             }
         }

@@ -6,7 +6,6 @@ import org.objectweb.asm.ConstantDynamic;
 
 import asm.instruction.DynamicInstruction;
 import asm.instruction.Instruction;
-import jvm.AsmOp;
 import jynx2asm.ClassChecker;
 import jynx2asm.JynxConstantDynamic;
 import jynx2asm.JynxScanner;
@@ -61,7 +60,7 @@ public class DynamicSimpleOp implements DynamicOp {
         }
         JynxConstantDynamic jcd = new JynxConstantDynamic(js, line, checker);
         ConstantDynamic cd = jcd.getSimple(namex, descx, bootmethodName, bootdescplus,bootparms);
-        return new DynamicInstruction(AsmOp.asm_invokedynamic, cd);
+        return new DynamicInstruction(JvmOp.asm_invokedynamic, cd);
     }
 
     @Override

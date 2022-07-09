@@ -2,7 +2,7 @@ package asm.instruction;
 
 import org.objectweb.asm.MethodVisitor;
 
-import jvm.JvmOp;
+import jynx2asm.ops.JvmOp;
 
 public class TypeInstruction extends Instruction {
 
@@ -15,12 +15,12 @@ public class TypeInstruction extends Instruction {
 
     @Override
     public void accept(MethodVisitor mv) {
-        mv.visitTypeInsn(base.opcode(), type);
+        mv.visitTypeInsn(jvmop.asmOpcode(), type);
     }
 
     @Override
     public String toString() {
-        return String.format("%s %s",base,type);
+        return String.format("%s %s",jvmop,type);
     }
 
 }

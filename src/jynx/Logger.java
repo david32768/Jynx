@@ -17,7 +17,6 @@ public class Logger {
     private final Deque<String> contexts;
     private final Deque<String> lines;
     private final Set<String> endinfo;
-    private final boolean exitOnError;
     private final String type;
 
     private String currentLine;
@@ -25,8 +24,7 @@ public class Logger {
     
     private int errct = 0;
 
-    public Logger(String type, boolean exitOnError) {
-        this.exitOnError = exitOnError;
+    public Logger(String type) {
         this.contexts = new ArrayDeque<>();
         this.lines = new ArrayDeque<>();
         this.endinfo = new LinkedHashSet<>(); // so order of info messages is reproducible
@@ -115,7 +113,7 @@ public class Logger {
                 break;
             case ERROR:
                 printError(msg,objs);
-                if (exitOnError && OPTION(GlobalOption.__EXIT_IF_ERROR)) {
+                if (OPTION(GlobalOption.__EXIT_IF_ERROR)) {
                     Thread.dumpStack();
                     System.exit(1);
                 }
@@ -147,8 +145,8 @@ public class Logger {
     }
 
     void log(Exception ex) {
-        printError(M999,ex); // "%s"
-        if (exitOnError) {
+        printError(M999,ex.toString()); // "%s"
+        if (OPTION(GlobalOption.__EXIT_IF_ERROR)) {
             ex.printStackTrace();
             System.exit(1);
         }

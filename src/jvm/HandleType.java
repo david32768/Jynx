@@ -7,12 +7,13 @@ import static org.objectweb.asm.Opcodes.*;
 
 import org.objectweb.asm.Handle;
 
-import static jvm.AsmOp.*;
 import static jynx.Message.*;
 import static jynx.Message.M101;
 import static jynx.Message.M76;
+import static jynx2asm.ops.JvmOp.*;
 
 import jynx.LogIllegalArgumentException;
+import jynx2asm.ops.JvmOp;
 
 public enum HandleType {
     
@@ -32,16 +33,16 @@ public enum HandleType {
     
     private final String mnemonic;
     private final int reftype;
-    private final AsmOp op;
+    private final JvmOp op;
     private final ConstantPoolType maincpt;
     private final Feature altfeature;
     private final ConstantPoolType altcpt;
     
-    private HandleType(String mnemonic,int reftype, int refnum, AsmOp op, ConstantPoolType maincpt) {
+    private HandleType(String mnemonic,int reftype, int refnum, JvmOp op, ConstantPoolType maincpt) {
         this(mnemonic, reftype, refnum, op, maincpt, Feature.never, null);
     }
     
-    private HandleType(String mnemonic,int reftype, int refnum, AsmOp op, ConstantPoolType maincpt,
+    private HandleType(String mnemonic,int reftype, int refnum, JvmOp op, ConstantPoolType maincpt,
             Feature altfeature, ConstantPoolType altcpt) {
         this.mnemonic = mnemonic;
         // "%s: asm value (%d) does not agree with jvm value(%d)"
@@ -64,7 +65,7 @@ public enum HandleType {
         return mnemonic + SEP;
     }
     
-    public AsmOp op() {
+    public JvmOp op() {
         return op;
     }
 
@@ -127,7 +128,7 @@ public enum HandleType {
                 .orElseThrow(()-> new LogIllegalArgumentException(M101,mnemonic)); // "unknown handle mnemonic: %s"
     }
 
-    public static HandleType fromOp(AsmOp op, boolean init) {
+    public static HandleType fromOp(JvmOp op, boolean init) {
         if (init && op == asm_invokespecial) {
             return REF_newInvokeSpecial;
         }

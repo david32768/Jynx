@@ -6,8 +6,8 @@ import org.objectweb.asm.MethodVisitor;
 import static jynx.Global.LOG;
 import static jynx.Message.M34;
 
-import jvm.JvmOp;
 import jvm.NumType;
+import jynx2asm.ops.JvmOp;
 import jynx2asm.StackLocals;
 
 public class LineInstruction extends Instruction {

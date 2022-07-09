@@ -2,7 +2,7 @@ package asm.instruction;
 
 import org.objectweb.asm.MethodVisitor;
 
-import jvm.JvmOp;;
+import jynx2asm.ops.JvmOp;;
 import jynx2asm.StackLocals;
 
 public class StackInstruction extends Instruction {
@@ -13,12 +13,12 @@ public class StackInstruction extends Instruction {
 
     @Override
     public void accept(MethodVisitor mv) {
-        mv.visitInsn(base.opcode());
+        mv.visitInsn(jvmop.asmOpcode());
     }
 
     @Override
     public void adjust(StackLocals stackLocals) {
-        stackLocals.adjustStackOp(base);
+        stackLocals.adjustStackOp(jvmop);
     }
 
     @Override

@@ -29,7 +29,7 @@ public class Global {
     
     private Global() {
         this.options = EnumSet.noneOf(GlobalOption.class);
-        this.logger  = new Logger("",false);
+        this.logger  = new Logger("");
         this.jvmVersion = null;
         this.classname = null;
         this.main = null;
@@ -38,7 +38,7 @@ public class Global {
 
     private Global(EnumSet<GlobalOption> options,Main.MainOption type) {
         this.options = options;
-        this.logger  = new Logger(type.name().toLowerCase(),true);
+        this.logger  = new Logger(type.name().toLowerCase());
         this.jvmVersion = null;
         this.main = type;
         this.parmtrans = null;

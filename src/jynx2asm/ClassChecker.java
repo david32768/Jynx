@@ -23,17 +23,16 @@ import asm.JynxComponentNode;
 import asm.JynxFieldNode;
 import asm.JynxMethodNode;
 import jvm.AccessFlag;
-import jvm.AsmOp;
 import jvm.Constants;
 import jvm.Context;
 import jvm.Feature;
 import jvm.HandleType;
-import jvm.JvmOp;
 import jvm.JvmVersion;
 import jynx.Access;
 import jynx.ClassType;
 import jynx.Directive;
 import jynx.GlobalOption;
+import jynx2asm.ops.JvmOp;
 
 public class ClassChecker {
     
@@ -124,7 +123,7 @@ public class ClassChecker {
     }
 
     public void usedMethod(OwnerNameDesc cmd, JvmOp jvmop, Line line) {
-        HandleType ht = fromOp(jvmop.getBase(), cmd.isInit());
+        HandleType ht = fromOp(jvmop, cmd.isInit());
         usedMethod(cmd, ht, line);
     }
     
@@ -310,8 +309,8 @@ public class ClassChecker {
 
     public void usedField(FieldDesc fd, JvmOp jvmop) {
         if (fd.getOwner().equals(className)) {
-            AsmOp asmop = jvmop.getBase();
-            boolean instance = asmop == AsmOp.asm_getfield || asmop == AsmOp.asm_putfield;
+            JvmOp asmop = jvmop;
+            boolean instance = asmop == JvmOp.asm_getfield || asmop == JvmOp.asm_putfield;
             JynxFieldNode jfn = fields.get(fd.getName());
             if (jfn == null || !fd.getDesc().equals(jfn.getDesc())) {
                 // "field %s %s does not exist in this class but may exist in superclass/superinterface"

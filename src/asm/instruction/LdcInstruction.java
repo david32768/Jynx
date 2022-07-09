@@ -3,7 +3,7 @@ package asm.instruction;
 import org.objectweb.asm.MethodVisitor;
 
 import jvm.ConstType;
-import jvm.JvmOp;
+import jynx2asm.ops.JvmOp;
 import jynx2asm.StackLocals;
 
 public class LdcInstruction extends Instruction {
@@ -39,7 +39,7 @@ public class LdcInstruction extends Instruction {
 
     @Override
     public String toString() {
-        return String.format("%s %s",base,cst);
+        return String.format("%s %s",jvmop,cst);
     }
 
 }

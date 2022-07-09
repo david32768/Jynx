@@ -2,7 +2,7 @@ package asm.instruction;
 
 import org.objectweb.asm.MethodVisitor;
 
-import jvm.JvmOp;
+import jynx2asm.ops.JvmOp;
 import jynx2asm.StackLocals;
 
 public class IncrInstruction extends Instruction {
@@ -28,7 +28,7 @@ public class IncrInstruction extends Instruction {
 
     @Override
     public String toString() {
-        return String.format("%s %d %d",base,varnum, incr);
+        return String.format("%s %d %d",jvmop,varnum, incr);
     }
 
 }

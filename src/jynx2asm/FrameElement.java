@@ -6,8 +6,6 @@ import static jynx.Message.M206;
 import static jynx.Message.M906;
 
 import jvm.FrameType;
-import jvm.JvmOp;
-import jvm.Op;
 import jynx.LogAssertionError;
 import jynx.LogIllegalArgumentException;
 
@@ -43,12 +41,6 @@ public enum FrameElement {
 
     public char typeLetter() {
         return typeLetter;
-    }
-
-    public JvmOp addTypeChar(String suffix) {
-        assert instChar != ' ';
-        String opstr = instChar + suffix;
-        return Op.getOp(opstr);
     }
 
     public boolean isLocalsOnly() {

@@ -9,10 +9,10 @@ import static jynx.Global.*;
 import static jynx.Message.*;
 import static jynx2asm.NameDesc.*;
 
-import jvm.AsmOp;
 import jvm.Feature;
 import jvm.HandleType;
 import jynx.LogIllegalArgumentException;
+import jynx2asm.ops.JvmOp;
 
 public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
 
@@ -125,18 +125,18 @@ public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
         return getOwnerMethodDescAndCheck(mspec, ht.op());
     }
 
-    public static OwnerNameDesc getOwnerMethodDescAndCheck(String mspec, AsmOp op) {
+    public static OwnerNameDesc getOwnerMethodDescAndCheck(String mspec, JvmOp op) {
         ONDRecord ond = ONDRecord.getInstance(mspec);
         ond = checkInterface(op, ond);
         ond = ond.addClassName(op);
-        if (ond.isStaticInit() || ond.isInit() && op != AsmOp.asm_invokespecial) {
+        if (ond.isStaticInit() || ond.isInit() && op != JvmOp.asm_invokespecial) {
             // "either init method %s is static or op  is not %s"
-            throw new LogIllegalArgumentException(M242,ond.toJynx(),AsmOp.asm_invokespecial);
+            throw new LogIllegalArgumentException(M242,ond.toJynx(),JvmOp.asm_invokespecial);
         }
         return getInstanceOfObjectMethod(ond);
     }
     
-    private static ONDRecord checkInterface(AsmOp op, ONDRecord ond) {
+    private static ONDRecord checkInterface(JvmOp op, ONDRecord ond) {
         boolean ownerInterface = ond.isInterface();
         switch(op) {
             case asm_invokeinterface:

@@ -9,7 +9,7 @@ import org.objectweb.asm.tree.MethodNode;
 import static jynx.ReservedWord.res_locals;
 
 import asm.instruction.Instruction;
-import jvm.AsmOp;
+import jynx2asm.ops.JvmOp;
 
 public class InstList {
 
@@ -98,7 +98,7 @@ public class InstList {
         return stackLocals.locals().absolute(varnum);
     }
 
-    public AsmOp getReturnOp() {
+    public JvmOp getReturnOp() {
         return stackLocals.getReturnOp();
     }
 }

@@ -10,8 +10,8 @@ import static jynx.Global.*;
 import static jynx.Message.*;
 import static jynx.Message.M163;
 
-import jvm.AsmOp;
 import jynx.LogIllegalStateException;
+import jynx2asm.ops.JvmOp;
 
 public class OperandStack {
 
@@ -197,7 +197,7 @@ public class OperandStack {
         adjust(sb.toString(),typeLetter(mt.getReturnType()));
     }
 
-    public void adjustStackOp(AsmOp op) {
+    public void adjustStackOp(JvmOp op) {
         String tos;
         String nos;
         switch (op) {

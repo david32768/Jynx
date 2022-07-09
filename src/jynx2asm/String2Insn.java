@@ -31,16 +31,13 @@ import asm.instruction.TryInstruction;
 import asm.instruction.TypeInstruction;
 import asm.instruction.VarInstruction;
 
-import jvm.AsmOp;
 import jvm.ConstantPoolType;
 import jvm.ConstType;
 import jvm.Context;
-import jvm.JvmOp;
-import jvm.Op;
 import jvm.OpArg;
-
 import jynx.GlobalOption;
 import jynx2asm.ops.DynamicOp;
+import jynx2asm.ops.JvmOp;
 import jynx2asm.ops.JynxOp;
 import jynx2asm.ops.JynxOps;
 import jynx2asm.ops.LineOp;
@@ -84,7 +81,7 @@ public class String2Insn {
             String lab = line.firstToken().asLabel();
             line.noMoreTokens();
             JynxLabel target = labmap.defineJynxLabel(lab, line);
-            instlist.add(new LabelInstruction(AsmOp.xxx_label,target));
+            instlist.add(new LabelInstruction(JvmOp.xxx_label,target));
             return;
         }
         String tokenstr = line.firstToken().asString();
@@ -151,14 +148,14 @@ public class String2Insn {
     
     private Instruction wide() {
         line.noMoreTokens();
-        LOG(M210,Op.opc_wide);    // "%s instruction ignored as never required"
+        LOG(M210,JvmOp.opc_wide);    // "%s instruction ignored as never required"
         return null;
     }
     
 
     private Optional<Instruction> switchArg(JvmOp jvmop) {
         Instruction insn;
-        OpArg oparg = jvmop.getBase().args();
+        OpArg oparg = jvmop.args();
         switch(oparg) {
             case arg_atype:insn = arg_atype(jvmop);break;
             case arg_byte:insn = arg_byte(jvmop);break;
@@ -203,7 +200,7 @@ public class String2Insn {
     private Instruction arg_class(JvmOp jvmop) {
         addDotLine |= generateDotLine;
         String type = line.nextToken().asString();
-        if (jvmop.getBase() == AsmOp.asm_new && OPTION(GlobalOption.PREPEND_CLASSNAME)) {
+        if (jvmop == JvmOp.asm_new && OPTION(GlobalOption.PREPEND_CLASSNAME)) {
             if (type.equals("/")) {
                 type = className;
                 LOG(M255,jvmop); // "classname has been added to argument of some %s instruction(s)"
@@ -219,7 +216,7 @@ public class String2Insn {
         Token token = line.nextToken();
         Object value = token.getConst();
         ConstType ct = ConstType.getFromASM(value,Context.JVMCONSTANT);
-        boolean ldc2 = jvmop == Op.opc_ldc2_w;
+        boolean ldc2 = jvmop == JvmOp.opc_ldc2_w;
         switch (ct) {
             case ct_int:
                 if (ldc2) {
@@ -235,12 +232,12 @@ public class String2Insn {
                 break;
             case ct_long:
                 if (!ldc2) {
-                    LOG(M113,Op.opc_ldc2_w,value);   // "%s must be used for long constant - %s"
+                    LOG(M113,JvmOp.opc_ldc2_w,value);   // "%s must be used for long constant - %s"
                 }
                 break;
             case ct_double:
                 if (!ldc2) {
-                    LOG(M117,Op.opc_ldc2_w); // "%s must be used for double constants but assumed float required"
+                    LOG(M117,JvmOp.opc_ldc2_w); // "%s must be used for double constants but assumed float required"
                     value = ((Double)value).floatValue();
                     ct = ConstType.ct_float;
                 }
@@ -251,7 +248,7 @@ public class String2Insn {
                 // fall through
             default:
                 if (ldc2) {
-                    LOG(M138,Op.opc_ldc2_w,value);   // "%s cannot be used for constant - %s"
+                    LOG(M138,JvmOp.opc_ldc2_w,value);   // "%s cannot be used for constant - %s"
                 }
                 break;
         }
@@ -279,22 +276,22 @@ public class String2Insn {
     }
     
     private Instruction arg_dir(JvmOp jvmop) {
-        if (jvmop == AsmOp.xxx_label) {
+        if (jvmop == JvmOp.xxx_label) {
             String labstr = line.nextToken().asString();
             JynxLabel target = labmap.defineJynxLabel(labstr, line);
             return new LabelInstruction(jvmop,target);
         }
-        if (jvmop == Op.opc_labelweak) {
+        if (jvmop == JvmOp.xxx_labelweak) {
             String labstr = line.nextToken().asString();
             JynxLabel target = labmap.defineWeakJynxLabel(labstr, line);
             return target == null?null:new LabelInstruction(jvmop,target);
         }
-        if (jvmop == AsmOp.xxx_catch) {
+        if (jvmop == JvmOp.xxx_catch) {
             String fromname = line.nextToken().toString();
             String toname = line.nextToken().toString();
             String usingname = line.nextToken().toString();
             JynxCatch jcatch = JynxCatch.getInstance(line, fromname, toname, usingname, null, labmap);
-            return new TryInstruction(AsmOp.xxx_catch,jcatch);
+            return new TryInstruction(JvmOp.xxx_catch,jcatch);
         }
         throw new AssertionError();
     }
@@ -302,7 +299,7 @@ public class String2Insn {
     private Instruction arg_field(JvmOp jvmop) {
         String fname = line.nextToken().asString();
         String desc = line.nextToken().asString();
-        FieldDesc fd = FieldDesc.getInstance(fname, desc,jvmop.getBase());
+        FieldDesc fd = FieldDesc.getInstance(fname, desc,jvmop);
         checker.usedField(fd,jvmop);
         return new FieldInstruction(jvmop,fd);
     }
@@ -367,17 +364,17 @@ public class String2Insn {
     private Instruction arg_method(JvmOp jvmop) {
         addDotLine |= generateDotLine;
         String mspec = line.nextToken().asString();
-        OwnerNameDesc cmd = OwnerNameDesc.getOwnerMethodDescAndCheck(mspec,jvmop.getBase());
+        OwnerNameDesc cmd = OwnerNameDesc.getOwnerMethodDescAndCheck(mspec,jvmop);
         checker.usedMethod(cmd, jvmop, line);
         return new MethodInstruction(jvmop, cmd);
     }
 
     private Instruction arg_none(JvmOp jvmop) {
-        addDotLine |= generateDotLine && (jvmop == AsmOp.asm_idiv  || jvmop == AsmOp.asm_ldiv);
-        if (jvmop == Op.opc_wide) {
+        addDotLine |= generateDotLine && (jvmop == JvmOp.asm_idiv  || jvmop == JvmOp.asm_ldiv);
+        if (jvmop == JvmOp.opc_wide) {
             return wide();
         }
-        return jvmop.getBase().isStack()?new StackInstruction(jvmop):Instruction.getInstance(jvmop);
+        return jvmop.isStack()?new StackInstruction(jvmop):Instruction.getInstance(jvmop);
     }
 
     private Instruction arg_short(JvmOp jvmop) {

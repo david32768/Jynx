@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import org.objectweb.asm.MethodVisitor;
 
-import jvm.JvmOp;
+import jynx2asm.ops.JvmOp;
 import jynx2asm.StackLocals;
 
 public class MarrayInstruction extends Instruction {
@@ -34,7 +34,7 @@ public class MarrayInstruction extends Instruction {
 
     @Override
     public String toString() {
-        return String.format("%s %s %d",base,type, dims);
+        return String.format("%s %s %d",jvmop,type, dims);
     }
 
 }

@@ -28,21 +28,19 @@ import org.objectweb.asm.tree.VarInsnNode;
 import static jynx.Global.*;
 import static jynx.Message.*;
 
-import jvm.AsmOp;
 import jvm.AttributeName;
 import jvm.ConstType;
 import jvm.Context;
 import jvm.Feature;
-import jvm.JvmOp;
 import jvm.JvmVersion;
 import jvm.NumType;
-import jvm.Op;
 import jvm.OpArg;
 import jynx.Directive;
 import jynx.LogAssertionError;
 import jynx.ReservedWord;
 import jynx2asm.Line;
 import jynx2asm.NameDesc;
+import jynx2asm.ops.JvmOp;
 import jynx2asm.OwnerNameDesc;
 
 public class Insn2Jynx {
@@ -53,7 +51,7 @@ public class Insn2Jynx {
 
     private final Map<Label, String> labelMap;
     private Object[] lastLocalStack;
-    private AsmOp asmop;
+    private JvmOp asmop;
     
     public Insn2Jynx(LineBuilder lb, JvmVersion jvmVersion, Object2String o2s, Object[] initstack) {
         this.o2s = o2s;
@@ -65,7 +63,7 @@ public class Insn2Jynx {
 
     public void printInsn(AbstractInsnNode in) {
         int asmcode = in.getOpcode();
-        asmop = asmcode >= 0?AsmOp.getInstance(asmcode,jvmVersion):null;
+        asmop = asmcode >= 0?JvmOp.getInstance(asmcode,jvmVersion):null;
         OpArg arg = asmop == null?OpArg.arg_dir:asmop.args();
         switchArg(arg,in);
     }
@@ -157,8 +155,8 @@ public class Insn2Jynx {
         Object cst = lin.cst;
         JvmOp jop = asmop;
         if (ConstType.getLDCsz(cst) == 2) {
-            assert jop == AsmOp.asm_ldc;
-            jop = Op.opc_ldc2_w;
+            assert jop == JvmOp.asm_ldc;
+            jop = JvmOp.opc_ldc2_w;
             CHECK_SUPPORTS(jop);
         }
         ConstType ct = ConstType.getFromASM(cst,Context.JVMCONSTANT);
@@ -176,7 +174,7 @@ public class Insn2Jynx {
     
     public void arg_incr(AbstractInsnNode in) {
         IincInsnNode incn = (IincInsnNode)in;
-        JvmOp jop = Op.exactIncr(asmop,incn.var, incn.incr,jvmVersion);
+        JvmOp jop = JvmOp.exactIncr(asmop,incn.var, incn.incr,jvmVersion);
         lb.append(jop).append(incn.var).append(incn.incr).nl();
     }
 
@@ -204,7 +202,7 @@ public class Insn2Jynx {
             String mustbenull = labmap.put(lsin.keys.get(i), labelname);
             if (mustbenull != null) {
                 // "%s: key %d has duplicate entries %s and %s"
-                LOG(M154,AsmOp.asm_lookupswitch,lsin.keys.get(i),labelname,mustbenull);
+                LOG(M154,JvmOp.asm_lookupswitch,lsin.keys.get(i),labelname,mustbenull);
             }
             ++i;
         }
@@ -259,7 +257,7 @@ public class Insn2Jynx {
             ++i;
         }
         String deflab = getLabelName(tsin.dflt);
-        lb.append(AsmOp.asm_tableswitch)
+        lb.append(JvmOp.asm_tableswitch)
                 .append(tsin.min)
                 .append(ReservedWord.res_default)
                 .append(deflab)
@@ -279,7 +277,7 @@ public class Insn2Jynx {
     public void arg_var(AbstractInsnNode in) {
         VarInsnNode varnode = (VarInsnNode)in;
         int v = varnode.var;
-        JvmOp jop = Op.exactVar(asmop,v,jvmVersion);
+        JvmOp jop = JvmOp.exactVar(asmop,v,jvmVersion);
         if (jop.isImmediate()) {
             lb.append(jop).nl();
         } else {

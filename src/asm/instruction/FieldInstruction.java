@@ -4,9 +4,9 @@ import org.objectweb.asm.MethodVisitor;
 
 import static jynx.Message.M908;
 
-import jvm.JvmOp;
 import jynx.LogAssertionError;
 import jynx2asm.FieldDesc;
+import jynx2asm.ops.JvmOp;
 import jynx2asm.StackLocals;
 
 public class FieldInstruction extends Instruction {
@@ -20,14 +20,14 @@ public class FieldInstruction extends Instruction {
 
     @Override
     public void accept(MethodVisitor mv) {
-        mv.visitFieldInsn(base.opcode(),fd.getOwner(), fd.getName(), fd.getDesc());
+        mv.visitFieldInsn(jvmop.asmOpcode(),fd.getOwner(), fd.getName(), fd.getDesc());
     }
 
     @Override
     public void adjust(StackLocals stackLocals) {
         String desc = fd.getDesc();
         String stackdesc;
-        switch (base) {
+        switch (jvmop) {
             case asm_getfield:
                 stackdesc = String.format("(L%s;)%s",fd.getOwner(),desc);
                 break;
@@ -42,14 +42,14 @@ public class FieldInstruction extends Instruction {
                 break;
             default:
                 // "unexpected Op %s in this instruction"),
-                throw new LogAssertionError(M908,base.name());
+                throw new LogAssertionError(M908,jvmop.name());
         }
         stackLocals.adjustStackOperand(stackdesc);
     }
 
     @Override
     public String toString() {
-        return String.format("%s %s",base,fd.toJynx());
+        return String.format("%s %s",jvmop,fd.toJynx());
     }
 
 }

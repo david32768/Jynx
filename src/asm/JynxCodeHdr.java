@@ -21,7 +21,6 @@ import static jynx.GlobalOption.*;
 import static jynx.Message.*;
 import static jynx.ReservedWord.*;
 
-import jvm.AsmOp;
 import jvm.Context;
 import jvm.FrameType;
 import jvm.TypeRef;
@@ -35,6 +34,7 @@ import jynx2asm.JynxLabelMap;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
 import jynx2asm.LinesIterator;
+import jynx2asm.ops.JvmOp;
 import jynx2asm.ops.JynxOps;
 import jynx2asm.OwnerNameDesc;
 import jynx2asm.StackLocals;
@@ -74,7 +74,7 @@ public class JynxCodeHdr implements ContextDependent {
         this.labelmap = labelmap;
         this.vars = new ArrayList<>();
         Type rtype = Type.getReturnType(cmd.getDesc());
-        AsmOp returnop = getReturnOp(rtype);
+        JvmOp returnop = getReturnOp(rtype);
         this.stackLocals = StackLocals.getInstance(localStack,labelmap,returnop,isStatic);
         this.s2a = new String2Insn(js, labelmap, checker, opmap);
         this.printFlag = 0;
@@ -89,25 +89,25 @@ public class JynxCodeHdr implements ContextDependent {
         return new JynxCodeHdr(mv, js, checker, cmd, labelmap, isStatic ,opmap);
     }
 
-    private static AsmOp getReturnOp(Type rtype) {
+    private static JvmOp getReturnOp(Type rtype) {
         char rtchar = rtype.getDescriptor().charAt(0);
         switch (rtchar) {
             case 'V':
-                return AsmOp.asm_return;
+                return JvmOp.asm_return;
             case 'Z':
             case 'B':
             case 'C':
             case 'S':
             case 'I':
-                return AsmOp.asm_ireturn;
+                return JvmOp.asm_ireturn;
             case 'F':
-                return AsmOp.asm_freturn;
+                return JvmOp.asm_freturn;
             case 'D':
-                return AsmOp.asm_dreturn;
+                return JvmOp.asm_dreturn;
             case 'J':
-                return AsmOp.asm_lreturn;
+                return JvmOp.asm_lreturn;
             default:
-                return AsmOp.asm_areturn;
+                return JvmOp.asm_areturn;
         }
     }
     
@@ -411,23 +411,23 @@ public class JynxCodeHdr implements ContextDependent {
         return mnode.visitTryCatchAnnotation(typeref, tp, desc, visible);
     }
 
-    private static void checkAnnotatedInst(TypeRef tr, AsmOp lastjop) {
-        EnumSet<AsmOp> lastjops = null;
+    private static void checkAnnotatedInst(TypeRef tr, JvmOp lastjop) {
+        EnumSet<JvmOp> lastjops = null;
         switch (tr) {
             case tro_cast:
-                lastjops = EnumSet.of(AsmOp.asm_checkcast);
+                lastjops = EnumSet.of(JvmOp.asm_checkcast);
                 break;
             case tro_instanceof:
-                lastjops = EnumSet.of(AsmOp.asm_instanceof);
+                lastjops = EnumSet.of(JvmOp.asm_instanceof);
                 break;
             case tro_new:
-                lastjops = EnumSet.of(AsmOp.asm_new);
+                lastjops = EnumSet.of(JvmOp.asm_new);
                 break;
             case tro_argmethod:
-                lastjops = EnumSet.of(AsmOp.asm_invokeinterface, AsmOp.asm_invokestatic, AsmOp.asm_invokevirtual);
+                lastjops = EnumSet.of(JvmOp.asm_invokeinterface, JvmOp.asm_invokestatic, JvmOp.asm_invokevirtual);
                 break;
             case tro_argnew:
-                lastjops = EnumSet.of(AsmOp.asm_invokespecial);
+                lastjops = EnumSet.of(JvmOp.asm_invokespecial);
                 break;
         }
         if (lastjops != null) {

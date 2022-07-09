@@ -16,10 +16,8 @@ import static jynx.Message.M243;
 import static jynx.Message.M267;
 
 import jvm.Feature;
-import jvm.JvmOp;
 import jvm.JvmVersion;
 import jvm.JvmVersionRange;
-import jvm.Op;
 import jynx.GlobalOption;
 import jynx.LogAssertionError;
 
@@ -67,7 +65,7 @@ public class JynxOps {
     }
 
     public JynxOp get(String jopstr) {
-        JynxOp op =  Op.getOp(jopstr);
+        JynxOp op =  JvmOp.getOp(jopstr);
         if (op == null) {
             op = opmap.get(jopstr);
             if (op == null) {
@@ -93,8 +91,8 @@ public class JynxOps {
                 if (parmtrans != null) {
                     jynx.Global.setParmTrans(parmtrans);
                 }
-                for (GlobalOption opt:lib.getOptions()) {
-                    ADD_OPTION(opt);
+                for (MacroOption opt:lib.getOptions()) {
+                    ADD_OPTION(opt.option());
                 }
                 result = lib;
                 break;

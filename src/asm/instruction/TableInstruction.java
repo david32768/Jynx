@@ -6,9 +6,9 @@ import java.util.stream.Collectors;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 
-import jvm.JvmOp;
 import jynx.ReservedWord;
 import jynx2asm.JynxLabel;
+import jynx2asm.ops.JvmOp;
 import jynx2asm.StackLocals;
 
 public class TableInstruction extends Instruction {
@@ -56,7 +56,7 @@ public class TableInstruction extends Instruction {
                 .map(JynxLabel::name)
                 .collect(Collectors.joining(" "));
         return String.format("%s %d default %s %s %s %s",
-                base,min, dflt,ReservedWord.left_array,brlabels,ReservedWord.right_array);
+                jvmop,min, dflt,ReservedWord.left_array,brlabels,ReservedWord.right_array);
     }
 
 }
