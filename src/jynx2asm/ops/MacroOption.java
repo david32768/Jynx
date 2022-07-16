@@ -1,13 +1,11 @@
 package jynx2asm.ops;
 
-import static jynx.GlobalOption.__STRUCTURED_LABELS;
-
 import jynx.GlobalOption;
 
 public enum MacroOption {
     
-    STRUCTURED_LABELS(__STRUCTURED_LABELS),
-    
+    STRUCTURED_LABELS(GlobalOption.__STRUCTURED_LABELS),
+    UNSIGNED_LONG(GlobalOption.__UNSIGNED_LONG);
     ;
     
     private final GlobalOption option;

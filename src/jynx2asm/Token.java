@@ -156,6 +156,11 @@ public class Token {
         return S2O.parseHandle(token);
     }
 
+    public long asUnsignedLong() {
+        checkNotEnd();
+        return S2O.decodeUnsignedLong(token, NumType.t_long);
+    }
+    
     public int asUnsignedInt() {
         checkNotEnd();
         return (int)S2O.decodeUnsignedLong(token, NumType.t_int);

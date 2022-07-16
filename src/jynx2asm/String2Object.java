@@ -12,12 +12,16 @@ import static jynx.Message.*;
 import jvm.ConstType;
 import jvm.HandleType;
 import jvm.NumType;
+import jynx.GlobalOption;
 import jynx.LogIllegalArgumentException;
 import jynx.StringUtil;
 
 public class String2Object {
 
+    private final boolean ulong;
+    
     public String2Object() {
+        this.ulong = OPTION(GlobalOption.__UNSIGNED_LONG);
     }
     
     public boolean parseBoolean(String token) {
@@ -46,10 +50,8 @@ public class String2Object {
     
     public long decodeLong(String token, NumType nt) {
         long var;
-        if (token.length() == 16 + 2 && token.toUpperCase().startsWith("0X")) {
+        if (token.toUpperCase().startsWith("0X")) {
             var = Long.parseUnsignedLong(token.substring(2), 16);
-        } else if (token.length() == 16 + 1 && token.startsWith("#")) {
-            var = Long.parseUnsignedLong(token.substring(1), 16);
         } else {
             var = Long.parseLong(token);
         }
@@ -59,10 +61,8 @@ public class String2Object {
 
     public long decodeUnsignedLong(String token, NumType nt) {
         long var;
-        if (token.length() == 16 + 2 && token.toUpperCase().startsWith("0X")) {
-                var = Long.parseUnsignedLong(token.substring(2), 16);
-        } else if (token.length() == 16 + 1 && token.startsWith("#")) {
-            var = Long.parseUnsignedLong(token.substring(1), 16);
+        if (token.toUpperCase().startsWith("0X")) {
+            var = Long.parseUnsignedLong(token.substring(2), 16);
         } else {
             var = Long.parseUnsignedLong(token);
         }
@@ -111,14 +111,20 @@ public class String2Object {
     
     public Object getConst(Token token) {
         String constant = token.asString();
+        if (constant.isEmpty()) {
+            throw new AssertionError();
+        }
         if (constant.equals("true")) {
             return 1;
         }
         if (constant.equals("false")) {
             return 0;
         }
-        char typeconstant = constant.charAt(0);
-        int index = "+-0123456789.".indexOf(typeconstant);
+        char first = constant.charAt(0);
+        char last = constant.toUpperCase().charAt(constant.length() - 1);
+
+        char typeconstant = first;
+        int index = "+-0123456789".indexOf(typeconstant);
         if (index >= 0) {
             typeconstant = '0';
             if (index <= 1) {   // "+-"
@@ -127,20 +133,25 @@ public class String2Object {
                     typeconstant = '.';
                 }
             }
-            if (constant.contains(".") || constant.toLowerCase().contains("e") || constant.toLowerCase().contains("p")) {
+            if (constant.toUpperCase().startsWith("0X") && !constant.contains(".") &&  !constant.toLowerCase().contains("p")) {
+                typeconstant = '0';
+            } else if (constant.contains(".") || constant.toLowerCase().contains("e") || constant.toLowerCase().contains("p")) {
                 typeconstant = '.';
             }
         }
-        char last = constant.toUpperCase().charAt(constant.length() - 1);
         switch(typeconstant) {
             case '\"':
                 return token.asQuoted();
             case '0':
-                Long lval = token.asLong();
-                if (last == 'L' || lval.longValue() != lval.intValue()) {
-                    return lval;
+                Long lval = ulong && first != '-'?token.asLong():token.asLong();
+                if (last != 'L') {
+                    boolean unsigned = constant.toUpperCase().startsWith("0X");
+                    if (NumType.t_int.isInRange(lval)
+                            || unsigned && NumType.t_int.isInUnsignedRange(lval)) {
+                            return lval.intValue();
+                    }
                 }
-                return lval.intValue();
+                return lval;
             case '.':
                 if (last == 'F') {
                     return token.asFloat();

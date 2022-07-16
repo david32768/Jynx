@@ -57,6 +57,9 @@ public enum ExtendedOps implements MacroOp {
     ext_if_lucmple(inv_lucompare, asm_ifle),
     ext_if_lucmplt(inv_lucompare, asm_iflt),
 
+    // raw float
+    xxx_fraw(asm_ldc,inv_iasf),
+    xxx_draw(opc_ldc2_w,inv_lasd),
     ;
     
     private final JynxOp[] jynxOps;

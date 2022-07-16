@@ -1,9 +1,12 @@
 package jynx2asm.ops;
 
 import java.util.stream.Stream;
-import static jynx2asm.ops.JvmOp.*;
-import jvm.NumType;
 
+import static jynx.Message.M278;
+import static jynx2asm.ops.JvmOp.*;
+
+import jvm.NumType;
+import jynx.LogIllegalArgumentException;
 import jynx2asm.FrameElement;
 import jynx2asm.InstList;
 import jynx2asm.Line;
@@ -14,9 +17,9 @@ public enum SelectOps implements SelectOp {
     opc_ildc(Type.ILDC,
             asm_iconst_0,asm_iconst_1,asm_iconst_2,asm_iconst_3,asm_iconst_4,asm_iconst_5,
             asm_iconst_m1,asm_bipush,asm_sipush,asm_ldc),
-    opc_lldc(Type.LLDC,asm_lconst_0,asm_lconst_1,JvmOp.opc_ldc2_w),
-    opc_fldc(Type.FLDC,asm_fconst_0,asm_fconst_1,asm_fconst_2,asm_ldc),
-    opc_dldc(Type.DLDC,asm_dconst_0,asm_dconst_1,JvmOp.opc_ldc2_w),
+    opc_lldc(Type.LLDC,asm_lconst_0,asm_lconst_1,opc_ldc2_w),
+    opc_fldc(Type.FLDC,asm_fconst_0,asm_fconst_1,asm_fconst_2,asm_ldc,ExtendedOps.xxx_fraw),
+    opc_dldc(Type.DLDC,asm_dconst_0,asm_dconst_1,opc_ldc2_w,ExtendedOps.xxx_draw),
 
     xxx_xreturn(Type.RETURN),
     
@@ -182,17 +185,27 @@ public enum SelectOps implements SelectOp {
             } else if (lval == 1L) {
                 return 1;
             } else {
-                if (!token.asString().endsWith("L")) {
-                    line.insert(token.asString() + 'L');
-                } else {
-                    line.insert(token);
-                }
+                line.insert(Long.toString(lval) + 'L');
                 return 2;
             }
         }
 
         private int getFldc(Line line,InstList instlist) {
             Token token = line.nextToken();
+            String qnan = token.toString();
+            if (qnan.startsWith("NaN:") || qnan.startsWith("-NaN:")  || qnan.startsWith("+NaN:")) {
+                int num = Integer.valueOf(qnan.substring(qnan.indexOf(':') + 1),16);
+                if (num <= 0 || num >= 1 << 23) {
+                    // "NaN type %d is not in (0,%d)"
+                    throw new LogIllegalArgumentException(M278, num, 1 << 23);
+                }
+                num |= 0x7f800000;
+                if (qnan.charAt(0) == '-') {
+                    num |= 1 << 31; 
+                }
+                line.insert("0x" + Integer.toHexString(num));
+                return 4;
+            }
             float fval = token.asFloat();
             if (Float.floatToRawIntBits(fval) == Float.floatToRawIntBits(0.0F)) { // not -0.0F
                 assert fval == 0.0F && 1/fval > 0.0F;
@@ -204,6 +217,8 @@ public enum SelectOps implements SelectOp {
             } else {
                 if (Float.isNaN(fval)) {
                     line.insert("+NaNF");
+                } else if (Float.isInfinite(fval) && fval > 0) {
+                    line.insert("+InfinityF");
                 } else if (!token.asString().endsWith("F")) {
                     line.insert(token.asString() + 'F');
                 } else {
@@ -215,6 +230,20 @@ public enum SelectOps implements SelectOp {
 
         private int getDldc(Line line,InstList instlist) {
             Token token = line.nextToken();
+            String qnan = token.toString();
+            if (qnan.startsWith("NaN:") || qnan.startsWith("-NaN:")  || qnan.startsWith("+NaN:")) {
+                long num = Long.valueOf(qnan.substring(qnan.indexOf(':') + 1),16);
+                if (num <= 0 || num >= 1L<<52) {
+                    // "NaN type %d is not in (0,%d)"
+                    throw new LogIllegalArgumentException(M278, num, 1L << 52);
+                }
+                num |= 0x7ff0000000000000L;
+                if (qnan.charAt(0) == '-') {
+                    num |= 1L << 63; 
+                }
+                line.insert("0x" + Long.toHexString(num) + "L");
+                return 3;
+            }
             double dval = token.asDouble();
             if (Double.doubleToRawLongBits(dval) == Double.doubleToRawLongBits(0.0D)) { // not -0.0
                 assert dval == 0.0 && 1/dval > 0.0;
@@ -224,6 +253,8 @@ public enum SelectOps implements SelectOp {
             } else {
                 if (Double.isNaN(dval)) {
                     line.insert("+NaN");
+                } else if (Double.isInfinite(dval) && dval > 0) {
+                    line.insert("+Infinity");
                 } else {
                     line.insert(token);
                 }

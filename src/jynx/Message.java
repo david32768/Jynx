@@ -278,6 +278,7 @@ public enum Message {
     M275("descriptor '%s' for %s must start with '()'"),
     M276("empty element in  array"),
     M277("unexpected reserved word %s found"),
+    M278("NaN type %d is not in (0,%d)"),
     
     M280(BLANK,"program terminated because of severe error(s)"),
 

@@ -40,6 +40,7 @@ public enum GlobalOption {
 
     // internal
     __STRUCTURED_LABELS(null,ASSEMBLY), // labels are numeric level
+    __UNSIGNED_LONG(null,ASSEMBLY),
     ;
 
     private final String msg;
