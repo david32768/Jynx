@@ -35,13 +35,13 @@ Options are:
 *	--WARN_UNNECESSARY_LABEL warn if label unreferenced or alias
 *	--WARN_STYLE warn if names non-standard
 *	--GENERATE_LINE_NUMBERS generate line numbers
-*	--WARN_INDENT check indent for structured code
 *	--BASIC_VERIFIER use ASM BasicVerifier
 *	--SIMPLE_VERIFIER use ASM SimpleVerifier (default)
 *	--ALLOW_CLASS_FORNAME let simple verifier use Class.forName()
 *	--CHECK_METHOD_REFERENCES check that called methods exist (on class path)
 *	--PREPEND_CLASSNAME prepend class name to methods and fields if necessary
 *	--VALIDATE_ONLY do not output class file
+*	--JVM_OPS_ONLY only JVM specified ops
 
  2jynx {options}  class-name|class_file > .jx_file
    (produces a .jx file from a class)
@@ -140,7 +140,7 @@ Changes are
 		; .inner_class [<access>] <inner_class> [outer <outer_class>] [innername <innername>]; Jynx
 		;	i.e. change 
 		; .inner class x inner y$z outer w ; Jasmin 2.4
-		.inner_class y$z outer w innername x; Jynx
+		.inner_class y$z outer w innername x ; Jynx
 ```
 *	.enclosing method -> .enclosing_method or .enclosing_class
 *	invokedynamic boot method and parameters must be specified
@@ -149,7 +149,7 @@ Changes are
 		; invokedynamic { name desc  boot_method_and_parameters }
 ```
 *	An interface method name should be preceded with a '@' in invoke ops and handles
-'''
+```
 		; invokestatic anInterfaceMethod
 		invokestatic @anInterfaceMethod
 '''
