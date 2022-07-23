@@ -139,25 +139,6 @@ public class OperandStack {
         return result;
     }
     
-    private String pop(int i) {
-        switch (i) {
-            case 32:
-                return pop32();
-            case 64:
-                return pop64();
-            default:
-                throw new AssertionError();
-        }
-    }
-    
-    private void dup_x(int tosi, int nosi) {
-        String tos = pop(tosi);
-        String nos = pop(nosi);
-        pushString(tos);
-        pushString(nos);
-        pushString(tos);
-    }
-    
     private void setStack(OperandStackFrame osf) {
         clear();
         osf.stream()
@@ -198,45 +179,49 @@ public class OperandStack {
     }
 
     public void adjustStackOp(JvmOp op) {
-        String tos;
-        String nos;
-        switch (op) {
-            case asm_dup:
-                tos = pop32();
-                pushString(tos);
-                pushString(tos);
-                break;
-            case asm_dup2:
-                tos = pop64();
-                pushString(tos);
-                pushString(tos);
-                break;
-            case asm_dup_x1:
-                dup_x(32,32);
-                break;
-            case asm_dup_x2:
-                dup_x(32,64);
-                break;
-            case asm_dup2_x1:
-                dup_x(64,32);
-                break;
-            case asm_dup2_x2:
-                dup_x(64,64);
-                break;
-            case asm_swap:
-                tos = pop32();
-                nos = pop32();
-                pushString(tos);
-                pushString(nos);
-                break;
-            case asm_pop:
-                pop32();
-                break;
-            case asm_pop2:
-                pop64();
-                break;
-            default:
-                throw new AssertionError();
+        String manstr = op.stackManipulate();
+        int arrowidx = manstr.indexOf("->");
+        String tos = null;
+        String nos = null;
+        int idx = arrowidx;
+        while (--idx >= 0) {
+            switch (manstr.charAt(idx)) {
+                case 't':
+                    assert tos == null && nos == null;
+                    tos = pop32();
+                    break;
+                case 'T':
+                    assert tos == null && nos == null;
+                    tos = pop64();
+                    break;
+                case 'n':
+                    assert tos != null && nos == null;
+                    nos = pop32();
+                    break;
+                case 'N':
+                    assert tos != null && nos == null;
+                    nos = pop64();
+                    break;
+                default:
+                    throw new AssertionError();
+            }
+        }
+        assert tos != null;
+        String to = manstr.substring(arrowidx + 2);
+        for (char ch:to.toCharArray()) {
+            switch(ch) {
+                case 't':
+                case 'T':
+                    pushString(tos);
+                    break;
+                case 'n':
+                case 'N':
+                    assert nos != null;
+                    pushString(nos);
+                    break;
+                default:
+                    throw new AssertionError();
+            }
         }
     }
 

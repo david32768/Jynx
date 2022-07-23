@@ -29,6 +29,11 @@ public enum NameDesc {
     STATIC_INIT_NAME(Constants.STATIC_INIT_NAME.toString()),
     CLASS_INIT_NAME(Constants.CLASS_INIT_NAME.toString()),
 
+    OP_STACK("[AIJFD]"),
+    OP_PARMS("\\((%s)*\\)",OP_STACK),
+    OP_DESC("%s(V|%s)",OP_PARMS,OP_STACK),
+    STACKOP_DESC("[nN]?[tT]->[nNtT]*"),
+    
     PRIMITIVE("[BCDFIJSZ]"),
     JAVA_ID("\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*"),
     GENERATED_LABEL("@%s",JAVA_ID),

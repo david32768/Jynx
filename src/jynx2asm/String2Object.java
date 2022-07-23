@@ -128,8 +128,8 @@ public class String2Object {
         if (index >= 0) {
             typeconstant = '0';
             if (index <= 1) {   // "+-"
-                String con1 = constant.substring(1); // remove +- for NaN/Infinity test 
-                if (con1.startsWith("NaN") || con1.startsWith("Infinity")) {
+                String con1 = constant.substring(1).toLowerCase(); // remove +- for NaN/Infinity test 
+                if (con1.startsWith("nan") || con1.startsWith("inf")) {
                     typeconstant = '.';
                 }
             }

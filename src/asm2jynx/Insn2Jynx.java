@@ -84,6 +84,7 @@ public class Insn2Jynx {
             case arg_method:case arg_interface:arg_method(in);break;
             case arg_none:arg_none(in);break;
             case arg_short:arg_short(in);break;
+            case arg_stack:arg_none(in);break;
             case arg_tableswitch:arg_tableswitch(in);break;
             case arg_var:arg_var(in);break;
             default:

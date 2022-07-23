@@ -18,7 +18,7 @@ public enum Message {
     M11(BLANK,"let simple verifier use Class.forName()"),
     M12(BLANK,"%nUsage:%n"),
     M13(BLANK,"exit if error"),
-    M14(BLANK,"check indent for structured code"),
+
     M15(BLANK,"warn if names non-standard"),
     M16(BLANK,"use ASM BasicVerifier"),
     M17(BLANK,"use ASM SimpleVerifier (default)"),
@@ -278,7 +278,7 @@ public enum Message {
     M275("descriptor '%s' for %s must start with '()'"),
     M276("empty element in  array"),
     M277("unexpected reserved word %s found"),
-    M278("NaN type %d is not in (0,%d)"),
+    M278("NaN type %#x is not in (0,%#x)"),
     
     M280(BLANK,"program terminated because of severe error(s)"),
 

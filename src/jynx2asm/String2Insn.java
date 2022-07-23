@@ -91,7 +91,7 @@ public class String2Insn {
             line.skipTokens();
             return;
         }
-        if (OPTION(GlobalOption.WARN_INDENT)) {
+        if (OPTION(GlobalOption.__WARN_INDENT)) {
             if (jynxop.reduceIndentBefore()) {
                 indent -= INDENT_LENGTH;
             }
@@ -171,6 +171,7 @@ public class String2Insn {
             case arg_method:case arg_interface:insn = arg_method(jvmop);break;
             case arg_none:insn = arg_none(jvmop);break;
             case arg_short:insn = arg_short(jvmop);break;
+            case arg_stack:insn = arg_stack(jvmop);break;
             case arg_tableswitch:insn = arg_tableswitch(jvmop);break;
             case arg_var:insn = arg_var(jvmop);break;
             default:
@@ -374,7 +375,7 @@ public class String2Insn {
         if (jvmop == JvmOp.opc_wide) {
             return wide();
         }
-        return jvmop.isStack()?new StackInstruction(jvmop):Instruction.getInstance(jvmop);
+        return Instruction.getInstance(jvmop);
     }
 
     private Instruction arg_short(JvmOp jvmop) {
@@ -382,6 +383,10 @@ public class String2Insn {
         return new IntInstruction(jvmop,v);
     }
     
+    private Instruction arg_stack(JvmOp jvmop) {
+        return new StackInstruction(jvmop);
+    }
+
     private JynxLabel getJynxLabel(Token token) {
         String labstr = token.asString();
         if (OPTION(GlobalOption.__STRUCTURED_LABELS) && Character.isDigit(labstr.codePointAt(0))) {

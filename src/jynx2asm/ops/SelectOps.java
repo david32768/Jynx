@@ -190,25 +190,38 @@ public enum SelectOps implements SelectOp {
             }
         }
 
+        private final static int F_NAN_PREFIX = 0x7f800000;
+        private final static int F_NAN_CANONICAL = Float.floatToRawIntBits(Float.NaN);
+        private final static int F_NAN_LIMIT = 1 << 23;
+        
         private int getFldc(Line line,InstList instlist) {
             Token token = line.nextToken();
-            String qnan = token.toString();
-            if (qnan.startsWith("NaN:") || qnan.startsWith("-NaN:")  || qnan.startsWith("+NaN:")) {
-                int num = Integer.valueOf(qnan.substring(qnan.indexOf(':') + 1),16);
-                if (num <= 0 || num >= 1 << 23) {
-                    // "NaN type %d is not in (0,%d)"
-                    throw new LogIllegalArgumentException(M278, num, 1 << 23);
+            String str = token.toString();
+            if (str.equals("-nan") || str.equals("nan") || str.equals("+nan")) {
+                str += ":" + Long.toHexString(D_NAN_CANONICAL & ~D_NAN_PREFIX);
+            }
+            if (str.startsWith("nan:") || str.startsWith("-nan:")  || str.startsWith("+nan:")) {
+                int num = Integer.valueOf(str.substring(str.indexOf(':') + 1),16);
+                if (num <= 0 || num >= F_NAN_LIMIT) {
+                    // "NaN type %#x is not in (0,%#x)"
+                    throw new LogIllegalArgumentException(M278, num, F_NAN_LIMIT);
                 }
-                num |= 0x7f800000;
-                if (qnan.charAt(0) == '-') {
-                    num |= 1 << 31; 
+                num |= F_NAN_PREFIX;
+                if (str.charAt(0) == '-') {
+                    num |= 1 << 31; // set sign bit
                 }
                 line.insert("0x" + Integer.toHexString(num));
                 return 4;
             }
+            if (str.equals("inf") || str.equals("+inf") || str.equals("-inf")) {
+                if (str.equals("inf")) {
+                    str = "+" + str;
+                }
+                line.insert(str.replace("inf","InfinityF"));
+                return 3;
+            }
             float fval = token.asFloat();
-            if (Float.floatToRawIntBits(fval) == Float.floatToRawIntBits(0.0F)) { // not -0.0F
-                assert fval == 0.0F && 1/fval > 0.0F;
+            if (fval == 0.0F && 1/fval > 0.0F) { // +0.0f not -0.0F
                 return 0;
             } else if (fval == 1.0f) {
                 return 1;
@@ -216,9 +229,9 @@ public enum SelectOps implements SelectOp {
                 return 2;
             } else {
                 if (Float.isNaN(fval)) {
-                    line.insert("+NaNF");
+                    line.insert("+NaNF"); // ldc requires + sign
                 } else if (Float.isInfinite(fval) && fval > 0) {
-                    line.insert("+InfinityF");
+                    line.insert("+InfinityF");  // ldc requires + sign
                 } else if (!token.asString().endsWith("F")) {
                     line.insert(token.asString() + 'F');
                 } else {
@@ -228,33 +241,47 @@ public enum SelectOps implements SelectOp {
             }
         }
 
+        private final static long D_NAN_PREFIX = 0x7ff0000000000000L;
+        private final static long D_NAN_CANONICAL = Double.doubleToRawLongBits(Double.NaN);
+        private final static long D_NAN_LIMIT = 1L << 52;
+        
         private int getDldc(Line line,InstList instlist) {
             Token token = line.nextToken();
-            String qnan = token.toString();
-            if (qnan.startsWith("NaN:") || qnan.startsWith("-NaN:")  || qnan.startsWith("+NaN:")) {
-                long num = Long.valueOf(qnan.substring(qnan.indexOf(':') + 1),16);
-                if (num <= 0 || num >= 1L<<52) {
-                    // "NaN type %d is not in (0,%d)"
-                    throw new LogIllegalArgumentException(M278, num, 1L << 52);
+            String str = token.toString();
+            if (str.equals("-nan") || str.equals("nan") || str.equals("+nan")) {
+                str += ":" + Long.toHexString(D_NAN_CANONICAL & ~D_NAN_PREFIX);
+            }
+            if (str.startsWith("nan:") || str.startsWith("-nan:")  || str.startsWith("+nan:")) {
+                String hexstr = str.substring(str.indexOf(':') + 1);
+                long num = Long.valueOf(hexstr,16);
+                if (num <= 0 || num >= D_NAN_LIMIT) {
+                    // "NaN type %#x is not in (0,%#x)"
+                    throw new LogIllegalArgumentException(M278, num, D_NAN_LIMIT);
                 }
-                num |= 0x7ff0000000000000L;
-                if (qnan.charAt(0) == '-') {
-                    num |= 1L << 63; 
+                num |= D_NAN_PREFIX;
+                if (str.charAt(0) == '-') {
+                    num |= 1L << 63; // set sign bit 
                 }
                 line.insert("0x" + Long.toHexString(num) + "L");
                 return 3;
             }
+            if (str.equals("inf") || str.equals("+inf") || str.equals("-inf")) {
+                if (str.equals("inf")) {
+                    str = "+" + str;
+                }
+                line.insert(str.replace("inf","InfinityF"));
+                return 3;
+            }
             double dval = token.asDouble();
-            if (Double.doubleToRawLongBits(dval) == Double.doubleToRawLongBits(0.0D)) { // not -0.0
-                assert dval == 0.0 && 1/dval > 0.0;
+            if (dval == 0.0 && 1/dval > 0.0) { // +0.0 not -0.0
                 return 0;
             } else if (dval == 1.0) {
                 return 1;
             } else {
                 if (Double.isNaN(dval)) {
-                    line.insert("+NaN");
+                    line.insert("+NaN"); // ldc requires + sign
                 } else if (Double.isInfinite(dval) && dval > 0) {
-                    line.insert("+Infinity");
+                    line.insert("+Infinity"); // ldc requires + sign
                 } else {
                     line.insert(token);
                 }

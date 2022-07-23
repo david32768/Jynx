@@ -20,7 +20,6 @@ public enum GlobalOption {
     WARN_UNNECESSARY_LABEL(M10,ASSEMBLY), // "warn if label unreferenced or alias"
     WARN_STYLE(M15,ASSEMBLY), // "warn if names non-standard"
     GENERATE_LINE_NUMBERS(M9,ASSEMBLY), // "generate line numbers"
-    WARN_INDENT(M14,ASSEMBLY), // "check indent for structured code"
     BASIC_VERIFIER(M16,ASSEMBLY), // "use ASM BasicVerifier"
     SIMPLE_VERIFIER(M17,ASSEMBLY), // "use ASM SimpleVerifier (default)"
     ALLOW_CLASS_FORNAME(M11,ASSEMBLY), // "let simple verifier use Class.forName()"
@@ -41,6 +40,7 @@ public enum GlobalOption {
     // internal
     __STRUCTURED_LABELS(null,ASSEMBLY), // labels are numeric level
     __UNSIGNED_LONG(null,ASSEMBLY),
+    __WARN_INDENT(null,ASSEMBLY), // "check indent for structured code"
     ;
 
     private final String msg;

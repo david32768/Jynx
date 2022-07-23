@@ -17,6 +17,7 @@ public enum OpArg {
     arg_method(3),
     arg_none(1),
     arg_short(3),
+    arg_stack(1),
     arg_tableswitch(null),
     arg_var(2),
     ;

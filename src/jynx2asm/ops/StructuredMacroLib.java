@@ -8,8 +8,6 @@ import static jynx2asm.ops.JvmOp.*;
 import static jynx2asm.ops.LineOps.*;
 import static jynx2asm.ops.SelectOps.xxx_xreturn;
 
-import jynx.GlobalOption;
-
 public class StructuredMacroLib extends MacroLib {
             
     private final static String NAME = "structured";
@@ -28,7 +26,7 @@ public class StructuredMacroLib extends MacroLib {
 
     @Override
     public EnumSet<MacroOption> getOptions() {
-        return EnumSet.of(MacroOption.STRUCTURED_LABELS);
+        return EnumSet.of(MacroOption.STRUCTURED_LABELS,MacroOption.INDENT);
     }
 
     public enum StructuredOps implements MacroOp {
