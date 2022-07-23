@@ -152,7 +152,7 @@ Changes are
 ```
 		; invokestatic anInterfaceMethod
 		invokestatic @anInterfaceMethod
-'''
+```
 *	if signature of a field is present must use .signature directive (NOT appear in .field directive) 
 *	.package
 ```
