@@ -15,9 +15,7 @@ import asm.instruction.Instruction;
 import asm.instruction.LineInstruction;
 import asm.JynxVar;
 import jvm.Feature;
-import jvm.FrameType;
 import jynx.GlobalOption;
-import jynx.LogIllegalArgumentException;
 import jynx2asm.ops.JvmOp;
 
 public class StackLocals {
@@ -72,8 +70,8 @@ public class StackLocals {
     }
     
     public static StackLocals getInstance(List<Object> localstack, JynxLabelMap labelmap, JvmOp returnop, boolean isStatic) {
-        Object[] objs = localstack.toArray(new Object[0]);
-        return new StackLocals(new LocalVars(objs2OSF(objs,false),isStatic), new OperandStack(), labelmap, returnop);
+        return new StackLocals(new LocalVars(OperandStackFrame.getInstance(localstack,false),isStatic),
+                new OperandStack(), labelmap, returnop);
     }
 
     public LocalVars locals() {
@@ -152,26 +150,12 @@ public class StackLocals {
         completion = Last.LINE;
     }
     
-    private static OperandStackFrame objs2OSF(Object[] objs, boolean stack) {
-        List<FrameElement> framestack = new ArrayList<>();
-        for (int i = 0; i < objs.length;++i) {
-            Object obj = objs[i];
-            FrameType ft = FrameType.fromObject(obj);
-            FrameElement fe =  FrameElement.fromFrame(ft);
-            if (stack && fe.isLocalsOnly()) {
-                throw new LogIllegalArgumentException(M201, ft); // "%s can only occur in locals"
-            }
-            framestack.add(fe);
-        }
-        return new OperandStackFrame(framestack);
-    }
-    
-    public void visitFrame(Object[] stackarr, Object[] localarr, Line line) {
+    public void visitFrame(List<Object> stackarr, List<Object> localarr, Line line) {
         if (lastLab.isPresent()) {
             labelmap.weakUseOfJynxLabel(lastLab.get(), line);
         }
-        stack.visitFrame(objs2OSF(stackarr, true),lastLab);
-        locals.visitFrame(objs2OSF(localarr,false),lastLab);
+        stack.visitFrame(OperandStackFrame.getInstance(stackarr, true),lastLab);
+        locals.visitFrame(OperandStackFrame.getInstance(localarr,false),lastLab);
         frameRequired = false;
         completion = Last.FRAME;
     }
@@ -238,6 +222,10 @@ public class StackLocals {
         return locals().visitVarDirective(FrameElement.fromDesc(jvar.desc()), jvar.varnum());
     }
     
+    public void visitVarAnnotation(int num) {
+        locals.visitVarAnnotation(num);
+    }
+    
     public void visitEnd() {
         locals.visitEnd();
         if(!returns && (returnOp != JvmOp.asm_return || !hasThrow)) {
@@ -262,13 +250,13 @@ public class StackLocals {
         }
     }
 
-    private void updateLocal(JynxLabel label, OperandStackFrame osf) {
+    private void updateLocal(JynxLabel label, LocalFrame osf) {
         label.updateLocal(osf);
     }
     
 
     private void updateLocal(JynxLabel label) {
-        OperandStackFrame osf = locals.currentOSF();
+        LocalFrame osf = locals.currentFrame();
         updateLocal(label,osf);
     }
     
@@ -278,7 +266,7 @@ public class StackLocals {
     }
     
     private void updateLocal(JynxLabel dflt,Collection<JynxLabel> labels) {
-        OperandStackFrame osf = locals.currentOSF();
+        LocalFrame osf = locals.currentFrame();
         updateLocal(dflt,osf);
         for (JynxLabel label:labels) {
             updateLocal(label,osf);
@@ -286,7 +274,7 @@ public class StackLocals {
     }
 
     private void checkStack(JynxLabel dflt, Collection<JynxLabel> labels) {
-        OperandStackFrame osf = stack.currentOSF();
+        OperandStackFrame osf = stack.currentFrame();
         stack.checkStack(dflt,osf);
         for (JynxLabel label:labels) {
             stack.checkStack(label,osf);

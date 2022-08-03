@@ -16,9 +16,8 @@ public enum FrameElement {
     INTEGER('I','i'),
     FLOAT('F','f'),
     DOUBLE('D','d'),
-    DOUBLE2('d',' ',true),
+    TOP('2', ' ',true),
     LONG('J','l'),
-    LONG2('j',' ',true),
     OBJECT('A','a'),
     EXCEPTION('A','a'),
     ERROR('X',' ',true),
@@ -43,6 +42,10 @@ public enum FrameElement {
         return typeLetter;
     }
 
+    public char instLetter() {
+        return instChar;
+    }
+    
     public boolean isLocalsOnly() {
         return localsOnly;
     }
@@ -56,17 +59,14 @@ public enum FrameElement {
     }
     
     public FrameElement next() {
-        if (this == DOUBLE) {
-            return DOUBLE2;
-        }
-        if (this == LONG) {
-            return LONG2;
+        if (isTwo()) {
+            return TOP;
         }
         throw new AssertionError();
     } 
 
     public boolean checkNext(FrameElement fe) {
-        return this == DOUBLE && fe == DOUBLE2 || this  == LONG && fe == LONG2;
+        return isTwo() && fe == TOP;
     } 
 
     public static FrameElement fromStack(char type) {
@@ -106,10 +106,8 @@ public enum FrameElement {
                 return ERROR;
             case 'U':
                 return UNUSED;
-            case 'j':
-                return LONG2;
-            case 'd':
-                return DOUBLE2;
+            case '2' :
+                return TOP;
             default:
                 throw new LogIllegalArgumentException(M206, type,(int)type); // "Invalid type letter '%c' (%d)"
         }
@@ -159,7 +157,7 @@ public enum FrameElement {
             case ft_UninitializedThis:
                 return OBJECT;
             case ft_Top:
-                return ERROR;
+                return TOP;
             default:
                 throw new EnumConstantNotPresentException(ft.getClass(), ft.name());
         }

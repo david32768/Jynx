@@ -18,7 +18,7 @@ public enum FrameType {
 
     // jvms 4.7.4
     // null means that extra parameter required
-    ft_Top(0, TOP),  // top means primitive or object
+    ft_Top(0, TOP),  // top means 2nd slot for Long or Double; NOTE ASM does not include this after LONG and DOUBLE
     ft_Integer(1, INTEGER),
     ft_Float(2, FLOAT),
     ft_Double(3, DOUBLE),
@@ -78,8 +78,7 @@ public enum FrameType {
         return result;
     }
     
-    private static Object objectFrom(Type type) {
-        String tdesc = type.getDescriptor();
+    private static Object objectFrom(String tdesc) {
         switch(tdesc.charAt(0)) {
             case 'Z':
             case 'B':
@@ -127,7 +126,8 @@ public enum FrameType {
         }
         Type[] parmtypes = Type.getArgumentTypes(ond.getDesc());
         for (Type type:parmtypes) {
-            localStack.add(objectFrom(type));
+            String tdesc = type.getDescriptor();
+            localStack.add(objectFrom(tdesc));
         }
         return localStack;
     }

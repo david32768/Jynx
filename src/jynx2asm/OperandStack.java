@@ -268,7 +268,7 @@ public class OperandStack {
         label.updateStack(osf);
     }
 
-    public OperandStackFrame currentOSF() {
+    public OperandStackFrame currentFrame() {
         return new OperandStackFrame(stack, endpos);
     }
     
@@ -310,7 +310,7 @@ public class OperandStack {
     }
     
     public String stringForm() {
-        return currentOSF().stringForm();
+        return currentFrame().stringForm();
     }
 
     @Override

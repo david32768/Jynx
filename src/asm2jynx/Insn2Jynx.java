@@ -303,6 +303,7 @@ public class Insn2Jynx {
             FrameNode fn = (FrameNode) in;
             assert fn.type == Opcodes.F_NEW;
             Object[] thislocal = fn.local.toArray(); // they are objects
+            // NOTE DOUBLE and LONG are NOT followed by TOP
             int min = Math.min(lastLocalStack.length,thislocal.length);
             int match;
             for (match = 0; match < min;++match) {

@@ -62,33 +62,33 @@ Changes are:
 *	.end_method instead of .end method
 *	tableswitch - new format
 ```
-		; <high> is always omitted
-		; tableswitch <minimum> default <default_label> <array of labels>
-		tableswitch 0 default DefaultLabel .array
-			ZeroLabel
-			OneLabel
-		.end_array
+	; <high> is always omitted
+	; tableswitch <minimum> default <default_label> <array of labels>
+	tableswitch 0 default DefaultLabel .array
+		ZeroLabel
+		OneLabel
+	.end_array
 ```		
 *	lookupswitch - new format
 ```
-		; lookupswitch default <default_label> <array of <num -> <label>>
-		lookupswitch default DefaultLabel .array
-			1 -> Label1
-			10 -> Label2
-		.end_array
+	; lookupswitch default <default_label> <array of <num -> <label>>
+	lookupswitch default DefaultLabel .array
+		1 -> Label1
+		10 -> Label2
+	.end_array
 ```
 *	invokeinterface; omit number as will be calculated and precede method_name with '@'
 ```
-		; invokeinterface java/util/Enumeration/hasMoreElements()Z 1
-		invokeinterface @java/util/Enumeration/hasMoreElements()Z
+	; invokeinterface java/util/Enumeration/hasMoreElements()Z 1
+	invokeinterface @java/util/Enumeration/hasMoreElements()Z
 ```
 *	if .limit is omitted it will be calculated rather than 1
 *	class names etc. must be valid Java names
 *	labels are constrained to be a Java Id or if generated start with an @
 *	.interface must be used to declare an interface rather than .class interface
 ```
-		; .class interface abstract anInterface
-		.interface anInterface
+	; .class interface abstract anInterface
+	.interface anInterface
 ```
 *	labels in .catch must not be previously defined
 *	if .var labels are omitted then from start_method to end_method is assumed
@@ -104,60 +104,68 @@ Changes are
 *	user attributes are NOT supported
 *	.bytecode -> .version
 ```
-		; .bytecoode 61.0 ; change to
-		.version V17
+	; .bytecoode 61.0 ; change to
+	.version V17
 ```
 *	options (without -- prefix) can be on .version directive
 ```
-		.version V17 GENERATE_LINE_NUMBERS PREPEND_CLASSNAME
+	.version V17 GENERATE_LINE_NUMBERS PREPEND_CLASSNAME
 ```
 *	.deprecated removed; use deprecated pseudo-access_flag
 ```
-		; .class public aClass
-		; .deprecated
-		.class public deprecated aClass
-		; etc.
+	; .class public aClass
+	; .deprecated
+	.class public deprecated aClass
+	; etc.
 ```
 *	.enum instead of .class enum
 ```
-		; .class enum anEnum
-		.enum anEnum
+	; .class enum anEnum
+	.enum anEnum
 ```
 *	.define_annotation instead of .class annotation
 ```
-		; .class annotation interface abstract anAnnotationClass ; change to
-		.define_annotation anAnnotationClass
+	; .class annotation interface abstract anAnnotationClass ; change to
+	.define_annotation anAnnotationClass
 ```
 *	.inner class -> .inner_class, .inner interface -> .inner_interface etc.
 ```
-		; InnerClass Attribute is inner_class, outer_class, inner_name, inner_class_flags (jvms 4.7.6)
-		;	inner_class must be present but outer_class and inner_name may be absent
-		; visitInnerClass(name,outer_name,inner_name,access) ; ASM
-		;	name is inner_class
-		; .inner class [<access>] [<name>] [inner <classname>] [outer <name>] ; Jasmin 2.4
-		;	name after access is inner_name (which can be absent)
-		;	classname is inner_class
-		; .inner_class [<access>] <inner_class> [outer <outer_class>] [innername <innername>]; Jynx
-		;	i.e. change 
-		; .inner class x inner y$z outer w ; Jasmin 2.4
-		.inner_class y$z outer w innername x ; Jynx
+	; .class file (jvms 4.7.6)
+	; InnerClass Attribute is inner_class, outer_class, inner_name, inner_class_flags
+	;	inner_class must be present but outer_class and inner_name may be absent
+
+	: ASM
+	; visitInnerClass(name,outer_name,inner_name,access)
+	;	name is inner_class
+
+	; Jasmin 2,4
+	; .inner class [<access>] [<name>] [inner <classname>] [outer <name>]
+	;	name after access is inner_name (which can be absent)
+	;	classname is inner_class
+
+	; Jynx
+	; .inner_class [<access>] <inner_class> [outer <outer_class>] [innername <innername>]
+	;	i.e. change 
+
+	; .inner class x inner y$z outer w ; Jasmin 2.4
+	.inner_class y$z outer w innername x ; Jynx
 ```
 *	.enclosing method -> .enclosing_method or .enclosing_class
 *	invokedynamic boot method and parameters must be specified
 ```
-		; (a boot method parameter may be dynamic) 
-		; invokedynamic { name desc  boot_method_and_parameters }
+	; (a boot method parameter may be dynamic) 
+	; invokedynamic { name desc  boot_method_and_parameters }
 ```
 *	An interface method name should be preceded with a '@' in invoke ops and handles
 ```
-		; invokestatic anInterfaceMethod
-		invokestatic @anInterfaceMethod
+	; invokestatic anInterfaceMethod
+	invokestatic @anInterfaceMethod
 ```
 *	if signature of a field is present must use .signature directive (NOT appear in .field directive) 
 *	.package
 ```
-		; .class interface abstract aPackage/package-info ; change to
-		.package aPackage
+	; .class interface abstract aPackage/package-info ; change to
+	.package aPackage
 ```
 
 ### ANNOTATIONS
@@ -167,10 +175,10 @@ Changes are
 *	default maxparms annotation is numparms(ASM)
 *	[ annotation values must use .array e.g
 ```
-		intArrayValue [I = .array
-			0
-			1
-    		.end_array
+	intArrayValue [I = .array
+		0
+		1
+	.end_array
 ```
 *	annotation of array of annotations must end line with .annotation_array not .annotation
 *	.end_annotation_array NOT .end_annotation after .annotation_array at end of line
@@ -188,8 +196,8 @@ Changes are
 *	.permittedSubclass
 *	dynamic ldc
 ```
-		; (a boot method parameter may be dynamic) 
-		; ldc { name desc boot_method_and_parameters } 
+	; (a boot method parameter may be dynamic) 
+	; ldc { name desc boot_method_and_parameters } 
 ```
 *	alias ops e.g. ildc 3 ; load integer 3
 *	extended ops e.g. if_fcmpge label

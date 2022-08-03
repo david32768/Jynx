@@ -300,10 +300,10 @@ public class JynxCodeHdr implements ContextDependent {
                 frame_local.add(item);
             }
         }
-        Object[] stackarr = frame_stack.toArray();
-        Object[] localarr = frame_local.toArray();
-        stackLocals.visitFrame(stackarr, localarr,js.getLine());
+        stackLocals.visitFrame(frame_stack, frame_local,js.getLine());
         if (SUPPORTS(StackMapTable)) {
+            Object[] stackarr = frame_stack.toArray();
+            Object[] localarr = frame_local.toArray();
             mnode.visitFrame(Opcodes.F_NEW, localarr.length, localarr, stackarr.length, stackarr);
         }
         localStack = frame_local;
@@ -464,7 +464,7 @@ public class JynxCodeHdr implements ContextDependent {
             Label[] end_arr = new Label[endlist.size()];
             for (int i = 0; i < index_arr.length; ++i) {
                 index_arr[i] = indexlist.get(i);
-                stackLocals.locals().typedVar(index_arr[i]);
+                stackLocals.visitVarAnnotation(index_arr[i]);
                 JynxLabel startref = labelmap.useOfJynxLabel(startlist.get(i), line);
                 JynxLabel endref = labelmap.useOfJynxLabel(endlist.get(i), line);
                 start_arr[i] = startref.asmlabel();

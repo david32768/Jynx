@@ -4,56 +4,57 @@ import java.util.Arrays;
 
 import static jynx.Global.*;
 import static jynx.Message.*;
+
 import jynx.LogIllegalArgumentException;
 import jynx.ReservedWord;
 
 public class JynxLabelFrame {
 
     private final String name;
-    private OperandStackFrame osfLocals;
-    private OperandStackFrame osfStack;
+    private LocalFrame locals;
+    private OperandStackFrame stack;
 
-    private OperandStackFrame osfLocalsFrame;
+    private LocalFrame localsInFrame;
 
-    private OperandStackFrame osfLocalsBefore;
+    private LocalFrame localsBefore;
     private FrameElement[] afterframe;
 
     public JynxLabelFrame(String name) {
         this.name = name;
-        this.osfLocals = null;
-        this.osfLocalsFrame = null;
-        this.osfLocalsBefore = null;
+        this.locals = null;
+        this.localsInFrame = null;
+        this.localsBefore = null;
     }
 
     public JynxLabelFrame merge(JynxLabelFrame  alias) {
-        assert alias.osfLocalsFrame == null;
-        assert alias.osfLocalsBefore == null;
+        assert alias.localsInFrame == null;
+        assert alias.localsBefore == null;
         assert alias.afterframe == null;
-        updateLocal(alias.osfLocals);
-        updateStack(alias.osfStack);
+        updateLocal(alias.locals);
+        updateStack(alias.stack);
         return this;
     }
     
-    public OperandStackFrame locals() {
-        return osfLocals;
+    public LocalFrame locals() {
+        return locals;
     }
 
     public OperandStackFrame stack() {
-        return osfStack;
+        return stack;
     }
     
-    public void updateLocal(OperandStackFrame osfx) {
+    public void updateLocal(LocalFrame osfx) {
         if (osfx == null) {
             return;
         }
-        OperandStackFrame osfy = OperandStackFrame.combine(osfLocals, osfx);
         if (isFrozen()) {
-            OperandStackFrame.checkLabel(osfLocals, osfx, new OperandStackFrame(afterframe));
+            LocalFrame.checkLabel(locals, osfx, new LocalFrame(afterframe));
         } else {
-            osfLocals = osfy;
+            locals = LocalFrame.combine(locals, osfx);
         }
-        if (osfLocalsFrame != null && !OperandStackFrame.check(osfLocalsFrame,osfLocals)) {
-              throw new LogIllegalArgumentException(M216,osfLocalsFrame,osfLocals); // "frame locals %s incompatible with current locals %s"
+        if (localsInFrame != null && !localsInFrame.check(locals)) {
+            // "frame locals %s incompatible with current locals %s"
+            throw new LogIllegalArgumentException(M216,localsInFrame,locals);
         }
     }
 
@@ -65,24 +66,24 @@ public class JynxLabelFrame {
         if (osf == null) {
             return;
         }
-        if (osfStack == null) {
-            osfStack = osf;
-        } else if (!osfStack.equals(osf)) {
-            LOG(M185,ReservedWord.res_stack,name,osfStack,osf); // "%s required for label %s is %s but currently is %s"
+        if (stack == null) {
+            stack = osf;
+        } else if (!stack.equals(osf)) {
+            LOG(M185,ReservedWord.res_stack,name,stack,osf); // "%s required for label %s is %s but currently is %s"
         }
     }
     
-    public void setLocalsFrame(OperandStackFrame osfx) {
-        osfLocalsFrame = osfx;
+    public void setLocalsFrame(LocalFrame osfx) {
+        localsInFrame = osfx;
         updateLocal(osfx);
     }
 
-    public void setLocalsBefore(OperandStackFrame osfLocalsBefore) {
-        this.osfLocalsBefore = osfLocalsBefore;
+    public void setLocalsBefore(LocalFrame localsBefore) {
+        this.localsBefore = localsBefore;
     }
 
-    public OperandStackFrame localsBefore() {
-        return osfLocalsBefore;
+    public LocalFrame localsBefore() {
+        return localsBefore;
     }
     
     public void load(FrameElement fe, int num) {
@@ -105,11 +106,11 @@ public class JynxLabelFrame {
     }
     
     public void freeze() {
-        afterframe = new FrameElement[osfLocals.size()];
+        afterframe = new FrameElement[locals.size()];
         Arrays.fill(afterframe, FrameElement.UNUSED);
     }
     
     public String print() {
-        return String.format("label %s locals = %s stack = %s%n", name,osfLocals,osfStack);
+        return String.format("label %s locals = %s stack = %s%n", name,locals,stack);
     }
 }

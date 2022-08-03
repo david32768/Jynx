@@ -134,11 +134,11 @@ public class JynxLabel {
         base.startLabels.putAll(startLabels);
     }
     
-    public void updateLocal(OperandStackFrame osfx) {
+    public void updateLocal(LocalFrame osfx) {
         jlf.updateLocal(osfx);
     }
 
-    public OperandStackFrame getLocals() {
+    public LocalFrame getLocals() {
         return jlf.locals();
     }
 
@@ -150,16 +150,16 @@ public class JynxLabel {
         jlf.updateStack(osf);
     }
     
-    public void setLocalsFrame(OperandStackFrame osfx) {
+    public void setLocalsFrame(LocalFrame osfx) {
         jlf.setLocalsFrame(osfx);
     }
 
-    public void setLocalsBefore(OperandStackFrame osfLocalsBefore) {
+    public void setLocalsBefore(LocalFrame osfLocalsBefore) {
         jlf.setLocalsBefore(osfLocalsBefore);
     }
 
-    public OperandStackFrame getLocalsBefore() {
-        return jlf.localsBefore(); //osfLocalsBefore;
+    public LocalFrame getLocalsBefore() {
+        return jlf.localsBefore();
     }
     
     public void load(FrameElement fe, int num) {

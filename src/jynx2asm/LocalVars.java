@@ -1,7 +1,6 @@
 package jynx2asm;
 
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Optional;
 
 import static jynx.Global.LOG;
@@ -19,10 +18,8 @@ public class LocalVars {
     private final boolean isStatic;
     private int sz;
     private boolean startblock;
-    private OperandStackFrame lastlocals;
-    private final BitSet readVars;
-    private final BitSet writeVars;
-    private final BitSet typedVars;
+    private LocalFrame lastlocals;
+    private final VarAccess varAccess;
     private final int parmsz;
     
     
@@ -30,17 +27,16 @@ public class LocalVars {
         this.localsz = new LimitValue(LimitValue.Type.locals);
         this.locals = new FrameElement[MAXSTACK];
         this.isStatic = isStatic;
+        this.varAccess = new VarAccess();
         this.sz = 0;
         this.startblock = true;
-        this.readVars = new BitSet();
-        this.writeVars = new BitSet();
-        this.typedVars = new BitSet();
         visitFrame(parmlocals, Optional.empty());  // wiil set startblock to false
         this.parmsz = sz;
+        varAccess.completeInit(this.parmsz);
     }
 
-    public OperandStackFrame currentOSF() {
-        return new OperandStackFrame(locals,sz);
+    public LocalFrame currentFrame() {
+        return new LocalFrame(locals,sz);
     }
     
     public void setLimit(int num, Line line) {
@@ -79,7 +75,7 @@ public class LocalVars {
     }
     
     public void startBlock() {
-        lastlocals = currentOSF();
+        lastlocals = currentFrame();
         clear();
         startblock = true;
     }
@@ -98,8 +94,7 @@ public class LocalVars {
         sz = Math.max(sz, maxv);
     }
     
-    // if state changed then method peek needs changing
-    public FrameElement load(int num) {
+    public FrameElement peek(int num) {
         FrameElement fe = locals[num];
         if (fe == null) {
             fe = FrameElement.UNUSED;
@@ -115,16 +110,10 @@ public class LocalVars {
         return fe;
     }
     
-    // do not change state
-    public FrameElement peek(int num) {
-        return load(num);
-    }
-    
-    // aload cannot be used to load a ret address
-    public FrameElement loadType(char type, int num) {
+    private FrameElement peekType(char type, int num) {
         FrameElement fe;
         if (num < sz) {
-            fe = load(num);
+            fe = peek(num);
             char local0 = fe.typeLetter();
             if (type != local0) {
                 LOG(M190,num,FrameElement.fromLocal(type),fe); // "mismatched local %d: required %s but found %s"
@@ -139,29 +128,34 @@ public class LocalVars {
             store(num, fe);
         }
         adjustMax(fe,num);
-        readVars.set(num);
-        if (fe.isTwo()) {
-            readVars.set(num + 1);
-        }
         return fe;
     }
 
+    // aload cannot be used to load a ret address
+    public FrameElement loadType(char type, int num) {
+        FrameElement fe = peekType(type, num);
+        varAccess.setRead(num, fe);
+        return fe;
+    }
+    
     public void checkChar(char type, int num) {
         loadType(type, num);
     }
     
     private void store(int num, FrameElement fe) {
         locals[num] = fe;
-        writeVars.set(num);
         if (fe.isTwo()) {
             locals[num + 1] = fe.next();
-            writeVars.set(num + 1);
         }
+        adjustMax(fe,num);
     }
     
     public void storeFrameElement(FrameElement fe, int num) {
-        adjustMax(fe,num);
         store(num,fe);
+        if (fe == FrameElement.UNUSED || fe == FrameElement.ERROR) {
+            return;
+        }
+        varAccess.setWrite(num, fe);
     }
 
     public void preVisitJvmOp(Optional<JynxLabel> lastLab) {
@@ -180,11 +174,7 @@ public class LocalVars {
         startblock = false;
     }
 
-    public void typedVar(int num) {
-        typedVars.set(num);
-    }
-    
-    private void setLocals(OperandStackFrame osf, Optional<JynxLabel> lastLab) {
+    private void setLocals(LocalFrame osf, Optional<JynxLabel> lastLab) {
         clear();
         sz = osf.size();
         for (int i = 0; i < sz;++i) {
@@ -195,12 +185,12 @@ public class LocalVars {
         startblock = false;
     }
     
-    private void mergeLocal(JynxLabel label, OperandStackFrame b4osf) {
-        OperandStackFrame labosf = label.getLocals();
+    private void mergeLocal(JynxLabel label, LocalFrame b4osf) {
+        LocalFrame labosf = label.getLocals();
         if (labosf == null) {
             return;
         }
-        OperandStackFrame osf = OperandStackFrame.combine(b4osf, labosf);
+        LocalFrame osf = LocalFrame.combine(b4osf, labosf);
         clear();
         sz = osf.size();
         for (int i = 0; i < sz;++i) {
@@ -210,15 +200,15 @@ public class LocalVars {
     }
     
     public void visitLabel(JynxLabel label, Optional<JynxLabel> lastLab) {
-        OperandStackFrame b4osf;
-        OperandStackFrame labosf = label.getLocals();
+        LocalFrame b4osf;
+        LocalFrame labosf = label.getLocals();
         if (startblock) {
             if (labosf != null) {
                 setLocals(labosf, lastLab);
             }
             b4osf = lastlocals;
         } else {
-            b4osf = currentOSF();
+            b4osf = currentFrame();
             updateLocal(label,b4osf);
             mergeLocal(label,b4osf);
         }
@@ -235,22 +225,26 @@ public class LocalVars {
         for (int i = 0; i < osf.size(); ++i) {
             FrameElement fe = osf.at(i);
             char type = fe.typeLetter();
-            if (check && type != FrameElement.ERROR.typeLetter()) {
+            if (check && type != FrameElement.TOP.typeLetter()) {
                 int num = sz;
                 sz += 2;
-                loadType(type,num);
+                peekType(type,num);
                 sz -=2;
             }
-            storeFrameElement(fe,sz);
+            varAccess.setFrame(sz, fe);
+            if (fe == FrameElement.TOP) { // as '.stack local Top' means error(local usage ambiguous) or not used
+                fe = FrameElement.ERROR;
+            }
+            store(sz,fe);
         }
         localsz.adjust(sz);
         if (startblock) {
-            lastLab.ifPresent(lab->setFrame(lab,osf));
+            lastLab.ifPresent(lab->setFrame(lab,currentFrame()));
         }
         startblock = false;
     }
     
-    private void setFrame(JynxLabel label,OperandStackFrame osf) {
+    private void setFrame(JynxLabel label,LocalFrame osf) {
         label.setLocalsFrame(osf);
         updateLocal(label, osf);
     }
@@ -261,81 +255,23 @@ public class LocalVars {
     }
     
     public String stringForm() {
-        return currentOSF().stringForm();
+        return currentFrame().stringForm();
     }
 
-    private void updateLocal(JynxLabel label, OperandStackFrame osf) {
+    private void updateLocal(JynxLabel label, LocalFrame osf) {
         label.updateLocal(osf);
     }
 
     public boolean visitVarDirective(FrameElement fe, int num) {
-        boolean ok = writeVars.get(num);
-        if (fe.isTwo()) {
-            ok &= writeVars.get(num + 1);
-        }
-        return ok;
+        return varAccess.checkWritten(fe, num);
     }
     
-    private final static int MAX_GAP = 0;
+    public void visitVarAnnotation(int num) {
+        varAccess.setTyped(num);
+    }
     
     public void visitEnd() {
-        int last = 0;
-        for (int i = writeVars.nextSetBit(0); i >= 0; i = writeVars.nextSetBit(i+1)) {
-            int gap = i - last - 1;
-            if (gap > MAX_GAP) {
-                LOG(M56, gap,last,i); // "gap %d between local variables: %d - %d"
-            }
-            last = i;
-            if (i == Integer.MAX_VALUE) {
-                break; // or (i+1) would overflow
-            }
-        }
-        BitSet unreadvars = (BitSet)writeVars.clone();
-        unreadvars.andNot(readVars);
-        if (unreadvars.nextSetBit(parmsz) >= 0) {
-            String ranges = rangeString(parmsz,unreadvars);
-             // "local variables [%s ] are written but not read"
-            LOG(M60,ranges);
-        }
-        BitSet unwrittenvars = (BitSet)readVars.clone();
-        unwrittenvars.andNot(writeVars);
-        if (!unwrittenvars.isEmpty()) {
-            String ranges = rangeString(0,unwrittenvars);
-            // "local variables [%s ] are read but not written"
-            LOG(M65,ranges);
-        }
-        unwrittenvars = (BitSet)typedVars.clone();
-        unwrittenvars.andNot(writeVars);
-        if (!unwrittenvars.isEmpty()) {
-            String ranges = rangeString(0,unwrittenvars);
-            // "Annotation for unknown variables [%s ]"
-            LOG(M223,ranges);
-        }
-    }
-    
-    private String rangeString(int start,BitSet bitset) {
-        StringBuilder sb = new StringBuilder();
-        int last = -2;
-        char spacer = ' ';
-        for (int i = bitset.nextSetBit(start); i >= 0; i = bitset.nextSetBit(i+1)) {
-            if (i == last + 1) {
-                spacer = '-';
-            } else {
-                if (last >= 0 && spacer != ' ') {
-                    sb.append(spacer).append(last);
-                }
-                spacer = ' ';
-                sb.append(' ').append(i);
-            }
-            last = i;
-            if (i == Integer.MAX_VALUE) {
-                break; // or (i+1) would overflow
-            }
-        }
-        if (spacer != ' ') {
-            sb.append(spacer).append(last);
-        }
-        return sb.toString();
+        varAccess.visitEnd();
     }
     
     @Override

@@ -3,6 +3,7 @@ package jynx2asm.ops;
 import java.util.stream.Stream;
 
 import static jynx.Message.M278;
+import static jynx.Message.M282;
 import static jynx2asm.ops.JvmOp.*;
 
 import jvm.NumType;
@@ -23,13 +24,7 @@ public enum SelectOps implements SelectOp {
 
     xxx_xreturn(Type.RETURN),
     
-    xxx_dupn(Type.LENGTH,asm_dup, asm_dup2),
-    xxx_popn(Type.LENGTH,asm_pop,asm_pop2),
-    xxx_dupn_xn(Type.LENGTH,asm_dup_x1,asm_dup2_x2),
-    
-    xxx_xload(Type.ABS_LOCAL,asm_iload,asm_lload,asm_fload,asm_dload,asm_aload),
     xxx_xload_rel(Type.REL_LOCAL,asm_iload,asm_lload,asm_fload,asm_dload,asm_aload),
-    xxx_xstore(Type.TYPE,asm_istore,asm_lstore,asm_fstore,asm_dstore,asm_astore),
     xxx_xstore_rel(Type.REL_STACK,asm_istore,asm_lstore,asm_fstore,asm_dstore,asm_astore),
     ;
         
@@ -55,25 +50,29 @@ public enum SelectOps implements SelectOp {
     }
     
     private static enum Type {
-        LENGTH,
-        TYPE,
+        STACK_LENGTH,
+        STACK_TYPE,
         ILDC,
         LLDC,
         FLDC,
         DLDC,
         REL_STACK,
-        ABS_LOCAL,
         REL_LOCAL,
+        ABS_LOCAL,
         RETURN,
         ;
     }
 
     public static SelectOp of12(JynxOp oplen1, JynxOp oplen2) {
-        return new Select(Type.LENGTH, oplen1, oplen2);
+        return new Select(Type.STACK_LENGTH, oplen1, oplen2);
     }
 
     public static SelectOp ofIJFDA(JynxOp opi, JynxOp opj, JynxOp opf, JynxOp opd, JynxOp opa) {
-        return new Select(Type.TYPE, opi, opj, opf, opd, opa);
+        return new Select(Type.STACK_TYPE, opi, opj, opf, opd, opa);
+    }
+
+    public static SelectOp ofIJFD(JynxOp opi, JynxOp opj, JynxOp opf, JynxOp opd) {
+        return new Select(Type.STACK_TYPE, opi, opj, opf, opd);
     }
 
     private static class Select implements SelectOp {
@@ -84,6 +83,8 @@ public enum SelectOps implements SelectOp {
         private Select(SelectOps.Type type, JynxOp... ops) {
             this.type = type;
             this.ops = ops;
+            assert type != Type.STACK_TYPE || ops.length == 4  || ops.length == 5;
+            assert type != Type.STACK_LENGTH || ops.length == 2;
         }
 
         @Override
@@ -92,17 +93,17 @@ public enum SelectOps implements SelectOp {
             switch (type) {
                 case RETURN:
                     return instlist.getReturnOp();
-                case LENGTH:
+                case STACK_LENGTH:
                     index = getLength(line,instlist);
                     break;
-                case TYPE:
-                    index = getType(line,instlist);
-                    break;
-                case REL_STACK:
-                    index = getRelStackType(line,instlist);
+                case STACK_TYPE:
+                    index = getTypeIndex(instlist.peekTOS());
                     break;
                 case ABS_LOCAL:
                     index = getAbsLocal(line,instlist);
+                    break;
+                case REL_STACK:
+                    index = getRelStackType(line,instlist);
                     break;
                 case REL_LOCAL:
                     index = getRelLocal(line,instlist);
@@ -133,22 +134,30 @@ public enum SelectOps implements SelectOp {
             return fe.slots() - 1;
         }
 
-        private int getType(Line line,InstList instlist) {
-            FrameElement fe = instlist.peekTOS();
-            return "IJFDA".indexOf(fe.typeLetter());
+        private final static String ILFDA = "ilfda";
+        
+        private int getTypeIndex(FrameElement fe) {
+            char fetype = fe.instLetter();
+            int index = ILFDA.indexOf(fetype);
+            if (index < 0 || index >= ops.length) {
+                // "element %s (%c) at top of stack is not one of %s"
+                throw new LogIllegalArgumentException(M282,fe,fetype,ILFDA.substring(0,Math.min(ILFDA.length(),ops.length)));
+            }
+            assert ops[index].toString().charAt(0) == fetype:
+                    String.format("%s %c", ops[index],fetype);
+            return index;
         }
-
+        
         private int getRelStackType(Line line,InstList instlist) {
             int num  = line.nextToken().asUnsignedShort();
             num = instlist.absolute(num);
             line.insert(Integer.toString(num));
-            return getType(line,instlist);
+            return getTypeIndex(instlist.peekTOS());
         }
 
         private int getAbsLocal(Line line,InstList instlist) {
             int num  = line.peekToken().asUnsignedShort();
-            FrameElement fe = instlist.peekVar(num);
-            return "IJFDA".indexOf(fe.typeLetter());
+            return getTypeIndex(instlist.peekVar(num));
         }
 
         private int getRelLocal(Line line,InstList instlist) {
@@ -165,14 +174,18 @@ public enum SelectOps implements SelectOp {
                 return ival;
             }
             if (ival == -1) {
+                assert ops[6] == asm_iconst_m1;
                 return 6;
             }
-            line.insert(token);
+            line.insert(Integer.toString(ival));
             if (NumType.t_byte.isInRange(ival)) {
+                assert ops[7] == asm_bipush;
                 return 7;
             } else if (NumType.t_short.isInRange(ival)) {
+                assert ops[8] == asm_sipush;
                 return 8;
             } else {
+                assert ops[9] == asm_ldc;
                 return 9;
             }
         }
@@ -181,11 +194,14 @@ public enum SelectOps implements SelectOp {
             Token token = line.nextToken();
             long lval = token.asLong();
             if (lval == 0L) {
+                assert ops[0] == asm_lconst_0;
                 return 0;
             } else if (lval == 1L) {
+                assert ops[1] == asm_lconst_1;
                 return 1;
             } else {
                 line.insert(Long.toString(lval) + 'L');
+                assert ops[2] == opc_ldc2_w;
                 return 2;
             }
         }
@@ -198,7 +214,7 @@ public enum SelectOps implements SelectOp {
             Token token = line.nextToken();
             String str = token.toString();
             if (str.equals("-nan") || str.equals("nan") || str.equals("+nan")) {
-                str += ":" + Long.toHexString(D_NAN_CANONICAL & ~D_NAN_PREFIX);
+                str += ":" + Integer.toHexString(F_NAN_CANONICAL & ~F_NAN_PREFIX);
             }
             if (str.startsWith("nan:") || str.startsWith("-nan:")  || str.startsWith("+nan:")) {
                 int num = Integer.valueOf(str.substring(str.indexOf(':') + 1),16);
@@ -211,6 +227,7 @@ public enum SelectOps implements SelectOp {
                     num |= 1 << 31; // set sign bit
                 }
                 line.insert("0x" + Integer.toHexString(num));
+                assert ops[4] == ExtendedOps.xxx_fraw;
                 return 4;
             }
             if (str.equals("inf") || str.equals("+inf") || str.equals("-inf")) {
@@ -218,25 +235,28 @@ public enum SelectOps implements SelectOp {
                     str = "+" + str;
                 }
                 line.insert(str.replace("inf","InfinityF"));
+                assert ops[3] == asm_ldc;
                 return 3;
             }
             float fval = token.asFloat();
             if (fval == 0.0F && 1/fval > 0.0F) { // +0.0f not -0.0F
+                assert ops[0] == asm_fconst_0;
                 return 0;
             } else if (fval == 1.0f) {
+                assert ops[1] == asm_fconst_1;
                 return 1;
             } else if (fval == 2.0f) {
+                assert ops[2] == asm_fconst_2;
                 return 2;
             } else {
                 if (Float.isNaN(fval)) {
                     line.insert("+NaNF"); // ldc requires + sign
                 } else if (Float.isInfinite(fval) && fval > 0) {
                     line.insert("+InfinityF");  // ldc requires + sign
-                } else if (!token.asString().endsWith("F")) {
-                    line.insert(token.asString() + 'F');
-                } else {
-                    line.insert(token);
+                } else  {
+                    line.insert(Float.toHexString(fval) + 'F');
                 }
+                assert ops[3] == asm_ldc;
                 return 3;
             }
         }
@@ -263,6 +283,7 @@ public enum SelectOps implements SelectOp {
                     num |= 1L << 63; // set sign bit 
                 }
                 line.insert("0x" + Long.toHexString(num) + "L");
+                assert ops[3] == ExtendedOps.xxx_draw;
                 return 3;
             }
             if (str.equals("inf") || str.equals("+inf") || str.equals("-inf")) {
@@ -270,12 +291,15 @@ public enum SelectOps implements SelectOp {
                     str = "+" + str;
                 }
                 line.insert(str.replace("inf","InfinityF"));
-                return 3;
+                assert ops[2] == opc_ldc2_w;
+                return 2;
             }
             double dval = token.asDouble();
             if (dval == 0.0 && 1/dval > 0.0) { // +0.0 not -0.0
+                assert ops[0] == asm_dconst_0;
                 return 0;
             } else if (dval == 1.0) {
+                assert ops[1] == asm_dconst_1;
                 return 1;
             } else {
                 if (Double.isNaN(dval)) {
@@ -283,8 +307,9 @@ public enum SelectOps implements SelectOp {
                 } else if (Double.isInfinite(dval) && dval > 0) {
                     line.insert("+Infinity"); // ldc requires + sign
                 } else {
-                    line.insert(token);
+                    line.insert(Double.toHexString(dval));
                 }
+                assert ops[2] == opc_ldc2_w;
                 return 2;
             }
         }
