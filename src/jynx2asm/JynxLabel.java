@@ -1,9 +1,7 @@
 package jynx2asm;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import org.objectweb.asm.Label;
@@ -23,8 +21,6 @@ public class JynxLabel {
     private JynxLabelFrame jlf;
     private final List<JynxCatch> catchList;
 
-    private final Map<JynxLabel,Line> startLabels;
-
     public JynxLabel(String name) {
         this.name = name;
         this.defined = null;
@@ -33,7 +29,6 @@ public class JynxLabel {
         this.weakList = new ArrayList<>();
         this.asmlab = new Label();
         this.jlf = new JynxLabelFrame(name);
-        this.startLabels = new LinkedHashMap<>();
         this.catchList = new ArrayList<>();
     }
     
@@ -49,21 +44,8 @@ public class JynxLabel {
         return usedInCode;
     }
 
-    public void addAfter(JynxLabel start, Line line) {
-        startLabels.put(start,line);
-    }
-
     public boolean isLessThan(JynxLabel after) {
         return this.isDefined() && after.isDefined() && this.definedLine().getLinect() < after.definedLine().getLinect();
-    }
-    
-    public void checkPosition() {
-        for (Map.Entry<JynxLabel,Line>  me:startLabels.entrySet()) {
-            if (!me.getKey().isLessThan(this)) {
-                LOG(me.getValue(),M217,me.getKey().name,this.name); // "from label %s is not before to label %s"
-            }
-        }
-        startLabels.clear();
     }
     
     public void define(Line line) {
@@ -72,8 +54,6 @@ public class JynxLabel {
             return;
         }
         defined = line;
-        checkPosition();
-        startLabels.clear();
     }
     
     public Line definedLine() {
@@ -97,6 +77,10 @@ public class JynxLabel {
         return name;
     }
 
+    public String base() {
+        return jlf.name();
+    }
+    
     public Label asmlabel() {
         return asmlab;
     }
@@ -131,7 +115,6 @@ public class JynxLabel {
         base.usedList.addAll(usedList);
         base.weakList.addAll(weakList);
         base.catchList.addAll(catchList);
-        base.startLabels.putAll(startLabels);
     }
     
     public void updateLocal(LocalFrame osfx) {
@@ -181,7 +164,7 @@ public class JynxLabel {
 
     @Override
     public String toString() {
-        return String.format("%s",name);
+        return jlf.getNameAliases();
     }
     
     @Override

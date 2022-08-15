@@ -5,6 +5,7 @@ import org.objectweb.asm.MethodVisitor;
 import static jynx.Global.LOG;
 import static jynx.Message.M106;
 import static jynx.Message.M203;
+import static jynx.Message.M279;
 
 import jynx.Directive;
 
@@ -22,6 +23,9 @@ public class JynxCatch {
         this.usingLab = usingLab;
         if (fromLab.equals(usingLab)) {
                 LOG(M203); // "potential infinite loop - catch using label equals catch from label"
+        }
+        if (fromLab.equals(toLab)) {
+                LOG(M279); // "empty catch block - from label equals to label"
         }
         this.exception = exception;
         this.line = line;
@@ -47,10 +51,11 @@ public class JynxCatch {
             String usingname, String exception,  JynxLabelMap labelmap) {
         JynxLabel fromref = labelmap.useOfJynxLabel(fromname, line);
         JynxLabel toref = labelmap.useOfJynxLabel(toname, line);
-        toref.addAfter(fromref,line);
         JynxLabel usingref = labelmap.codeUseOfJynxLabel(usingname, line);
         if (!fromref.isDefined() && !toref.isDefined() && !usingref.isDefined()) {
-            return new JynxCatch(fromref, toref, usingref,exception,line);
+            JynxCatch jcatch = new JynxCatch(fromref, toref, usingref,exception,line);
+            labelmap.addCatch(jcatch, line);
+            return jcatch;
         } else {
             LOG(M106,Directive.dir_catch); // "labels in %s must not be defined yet"
             return null;

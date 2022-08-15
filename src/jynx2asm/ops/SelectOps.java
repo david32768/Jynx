@@ -4,6 +4,7 @@ import java.util.stream.Stream;
 
 import static jynx.Message.M278;
 import static jynx.Message.M282;
+import static jynx2asm.ops.ExtendedOps.*;
 import static jynx2asm.ops.JvmOp.*;
 
 import jvm.NumType;
@@ -18,9 +19,11 @@ public enum SelectOps implements SelectOp {
     opc_ildc(Type.ILDC,
             asm_iconst_0,asm_iconst_1,asm_iconst_2,asm_iconst_3,asm_iconst_4,asm_iconst_5,
             asm_iconst_m1,asm_bipush,asm_sipush,asm_ldc),
-    opc_lldc(Type.LLDC,asm_lconst_0,asm_lconst_1,opc_ldc2_w),
-    opc_fldc(Type.FLDC,asm_fconst_0,asm_fconst_1,asm_fconst_2,asm_ldc,ExtendedOps.xxx_fraw),
-    opc_dldc(Type.DLDC,asm_dconst_0,asm_dconst_1,opc_ldc2_w,ExtendedOps.xxx_draw),
+    opc_lldc(Type.LLDC,
+            asm_lconst_0,asm_lconst_1,ext_lconst_2,ext_lconst_3,ext_lconst_4,ext_lconst_5,
+            ext_lconst_m1,ext_blpush,ext_slpush,opc_ldc2_w),
+    opc_fldc(Type.FLDC,asm_fconst_0,asm_fconst_1,asm_fconst_2,asm_ldc,xxx_fraw),
+    opc_dldc(Type.DLDC,asm_dconst_0,asm_dconst_1,opc_ldc2_w,xxx_draw),
 
     xxx_xreturn(Type.RETURN),
     
@@ -167,43 +170,45 @@ public enum SelectOps implements SelectOp {
             return getAbsLocal(line,instlist);
         }
 
-        private int getIldc(Line line,InstList instlist) {
-            Token token = line.nextToken();
-            int ival = token.asInt();
-            if (ival >= 0 && ival <= 5) {
-                return ival;
+        private int rangeType(long lval) {
+            if (lval >= 0 && lval <= 5) {
+                return (int)lval;
             }
-            if (ival == -1) {
-                assert ops[6] == asm_iconst_m1;
+            if (lval == -1) {
                 return 6;
             }
-            line.insert(Integer.toString(ival));
-            if (NumType.t_byte.isInRange(ival)) {
-                assert ops[7] == asm_bipush;
+            if (NumType.t_byte.isInRange(lval)) {
                 return 7;
-            } else if (NumType.t_short.isInRange(ival)) {
-                assert ops[8] == asm_sipush;
-                return 8;
-            } else {
-                assert ops[9] == asm_ldc;
-                return 9;
             }
+            if (NumType.t_short.isInRange(lval)) {
+                return 8;
+            } 
+            return 9;
+        }
+        
+        private int getIldc(Line line,InstList instlist) {
+            Token token = line.peekToken();
+            int ival = token.asInt();
+            int rval = rangeType(ival);
+            if (rval <= 6) {
+                line.nextToken();
+            }
+            return rval;
         }
 
         private int getLldc(Line line,InstList instlist) {
             Token token = line.nextToken();
             long lval = token.asLong();
-            if (lval == 0L) {
-                assert ops[0] == asm_lconst_0;
-                return 0;
-            } else if (lval == 1L) {
-                assert ops[1] == asm_lconst_1;
-                return 1;
-            } else {
-                line.insert(Long.toString(lval) + 'L');
-                assert ops[2] == opc_ldc2_w;
-                return 2;
+            int rval = rangeType(lval);
+            if (rval <= 6) {
+                return rval;
             }
+            if (rval == 9) {
+                line.insert(Long.toString(lval) + 'L');
+            } else {
+                line.insert(Long.toString(lval));
+            }
+            return rval;
         }
 
         private final static int F_NAN_PREFIX = 0x7f800000;

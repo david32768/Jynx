@@ -9,6 +9,14 @@ import static jynx2asm.ops.JvmOp.*;
 
 public enum ExtendedOps implements MacroOp {
 
+    ext_lconst_2(asm_iconst_2,asm_i2l),
+    ext_lconst_3(asm_iconst_3,asm_i2l),
+    ext_lconst_4(asm_iconst_4,asm_i2l),
+    ext_lconst_5(asm_iconst_5,asm_i2l),
+    ext_lconst_m1(asm_iconst_m1,asm_i2l),
+    ext_blpush(asm_bipush,asm_i2l),
+    ext_slpush(asm_sipush,asm_i2l),
+    
     ext_isignum(asm_i2l,asm_lconst_0,asm_lcmp),
     // extended stack ops; stack-opcode stack-opcode
     ext_swap2(asm_dup2_x2,asm_pop2),

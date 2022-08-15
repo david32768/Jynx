@@ -356,8 +356,7 @@ public class JynxCodeHdr implements ContextDependent {
         labelmap.end(mnode, line);
         stackLocals.visitEnd();
         acceptVars(mnode);
-        labelmap.stream()
-                .forEach(JynxLabel::checkPosition);
+        labelmap.checkCatch();
         labelmap.stream()
                 .filter(lr->!lr.isDefined())
                 .forEach(this::undefinedLabel);        

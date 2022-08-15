@@ -279,7 +279,7 @@ public enum Message {
     M276("empty element in  array"),
     M277("unexpected reserved word %s found"),
     M278("NaN type %#x is not in (0,%#x)"),
-
+    M279(WARNING,"empty catch block - from label equals to label"),
     M280(BLANK,"program terminated because of severe error(s)"),
     M281("local variables [%s ] are in a frame but not written"),
     M282("element %s (%c) at top of stack is not one of %s"),

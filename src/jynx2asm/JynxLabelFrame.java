@@ -1,6 +1,8 @@
 package jynx2asm;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static jynx.Global.*;
 import static jynx.Message.*;
@@ -11,6 +13,8 @@ import jynx.ReservedWord;
 public class JynxLabelFrame {
 
     private final String name;
+    private final List<String> aliasList;
+    
     private LocalFrame locals;
     private OperandStackFrame stack;
 
@@ -24,6 +28,7 @@ public class JynxLabelFrame {
         this.locals = null;
         this.localsInFrame = null;
         this.localsBefore = null;
+        this.aliasList = new ArrayList<>();
     }
 
     public JynxLabelFrame merge(JynxLabelFrame  alias) {
@@ -32,7 +37,13 @@ public class JynxLabelFrame {
         assert alias.afterframe == null;
         updateLocal(alias.locals);
         updateStack(alias.stack);
+        aliasList.add(alias.name);
+        assert alias.aliasList.isEmpty();
         return this;
+    }
+
+    public String name() {
+        return name;
     }
     
     public LocalFrame locals() {
@@ -41,6 +52,13 @@ public class JynxLabelFrame {
 
     public OperandStackFrame stack() {
         return stack;
+    }
+    
+    public String getNameAliases() {
+        if (aliasList.isEmpty()) {
+            return name;
+        }
+        return String.format("%s ( alias %s )",name,aliasList);
     }
     
     public void updateLocal(LocalFrame osfx) {
