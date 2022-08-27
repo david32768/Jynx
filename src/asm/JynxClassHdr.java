@@ -249,6 +249,18 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
                     csuperx = Constants.RECORD_SUPER.toString();
                 }
                 break;
+            case ENUM :
+                //super for enum does not have to be Constants.ENUM_SUPER
+                break;
+            default:
+                if (Constants.RECORD_SUPER.equalString(csuperx)) {
+                    //"class is not a %s but %s is %s"
+                    LOG(M283,ClassType.RECORD,Directive.dir_super,Constants.RECORD_SUPER);
+                } else if (Constants.ENUM_SUPER.equalString(csuperx)) {
+                    //"class is not a %s but %s is %s"
+                    LOG(M283,ClassType.ENUM,Directive.dir_super,Constants.ENUM_SUPER);
+                }
+                break;
         }
         csuper = csuperx;
     }

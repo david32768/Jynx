@@ -160,8 +160,7 @@ public class Insn2Jynx {
             jop = JvmOp.opc_ldc2_w;
             CHECK_SUPPORTS(jop);
         }
-        ConstType ct = ConstType.getFromASM(cst,Context.JVMCONSTANT);
-        String cststr = o2s.asm2String(ct,cst);
+        String cststr = o2s.asm2String(cst);
         lb.append(jop).appendRaw(cststr).nl();
     }
 

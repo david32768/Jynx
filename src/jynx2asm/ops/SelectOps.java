@@ -51,7 +51,12 @@ public enum SelectOps implements SelectOp {
         return Stream.of(values())
             .filter(SelectOps::isExternal);
     }
-    
+
+    @Override
+    public String toString() {
+        return name().substring(4);
+    }
+
     private static enum Type {
         STACK_LENGTH,
         STACK_TYPE,

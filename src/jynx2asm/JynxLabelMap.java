@@ -8,7 +8,9 @@ import org.objectweb.asm.MethodVisitor;
 
 import static jynx.Global.LOG;
 import static jynx.Message.M217;
+import static jynx.Message.M284;
 
+import jynx.LogIllegalArgumentException;
 
 public class JynxLabelMap {
     
@@ -51,13 +53,14 @@ public class JynxLabelMap {
         return lab;
     }
     
-    public void printJynxlabel(String name,Line line) {
+    public String printJynxlabelFrame(String name,Line line) {
         NameDesc.LABEL.validate(name);
         JynxLabel lab = labelmap.get(name);
         if (lab == null) {
-            System.err.format("label %s is not found%n", name);
+            //"label %s is not (yet?) known"
+            throw new LogIllegalArgumentException(M284,name);
         } else {
-            lab.print();
+            return lab.printLabelFrame();
         }
     }
 

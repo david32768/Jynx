@@ -52,8 +52,8 @@ public class LookupInstruction extends Instruction {
     @Override
     public String toString() {
         String brlabels = intlabels.entrySet().stream()
-                .map(me-> me.getKey().toString() + " : " + me.getValue().name())
-                .collect(Collectors.joining(" "));
+                .map(me-> me.getKey().toString() + " -> " + me.getValue().name())
+                .collect(Collectors.joining(" , "));
         return String.format("%s default %s %s %s %s",
                 jvmop,dflt,ReservedWord.left_array,brlabels,ReservedWord.right_array);
     }

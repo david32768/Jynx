@@ -27,7 +27,7 @@ public class LabelInstruction extends Instruction {
 
     @Override
     public String toString() {
-        return String.format("%s:",jlab.name());
+        return String.format("label %s",jlab.name());
     }
 
 }

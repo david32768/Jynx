@@ -1,7 +1,9 @@
 package asm;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.function.Consumer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +39,7 @@ import jynx2asm.LinesIterator;
 import jynx2asm.ops.JvmOp;
 import jynx2asm.ops.JynxOps;
 import jynx2asm.OwnerNameDesc;
+import jynx2asm.PrintOption;
 import jynx2asm.StackLocals;
 import jynx2asm.String2Insn;
 import jynx2asm.Token;
@@ -50,8 +53,8 @@ public class JynxCodeHdr implements ContextDependent {
 
     private final StackLocals stackLocals;
 
-    private int printFlag;
-    private int expandMacro;
+    private final EnumMap<PrintOption,Integer> options = new EnumMap<>(PrintOption.class);
+    private int printFlag = 0;
     
     private int tryct = 0;
     private final JynxLabelMap labelmap;
@@ -60,9 +63,11 @@ public class JynxCodeHdr implements ContextDependent {
     private final MethodNode mnode;
 
     private final String2Insn s2a;
-    private int endif;
+    private int endif = 0;
     
     private final Map<Directive,Line> unique_directives;
+    
+    private final Consumer<String> debugPrint = System.out::println;
     
     private JynxCodeHdr(MethodNode mv, JynxScanner js, ClassChecker checker,
             OwnerNameDesc cmd, JynxLabelMap labelmap, boolean isStatic, JynxOps opmap) {
@@ -77,9 +82,6 @@ public class JynxCodeHdr implements ContextDependent {
         JvmOp returnop = getReturnOp(rtype);
         this.stackLocals = StackLocals.getInstance(localStack,labelmap,returnop,isStatic);
         this.s2a = new String2Insn(js, labelmap, checker, opmap);
-        this.printFlag = 0;
-        this.expandMacro = 0;
-        this.endif = 0;
         this.unique_directives = new HashMap<>();
     }
 
@@ -177,30 +179,54 @@ public class JynxCodeHdr implements ContextDependent {
     }
 
     private void setPrint(Line line) {
-        ReservedWord rw  = line.nextToken().expectOneOf(res_stack, res_locals, res_on, res_off,res_label);
+        ReservedWord rw  = line.nextToken().expectOneOf(res_method,res_stack, res_locals, res_on, res_off,res_label);
         switch (rw) {
+            case res_method:
+                debugPrint.accept(String.format("; method %s",mnode.name));
+                break;
             case res_stack:
-                System.out.format("%s; = %s%n", line, stackLocals.stringStack());
+                debugPrint.accept(String.format("%s; = %s", line, stackLocals.stringStack()));
                 break;
             case res_locals:
-                System.out.format("%s; = %s%n", line, stackLocals.stringLocals());
+                debugPrint.accept(String.format("%s; = %s", line, stackLocals.stringLocals()));
                 break;
             case res_label:
                 String lab = line.nextToken().asString();
-                labelmap.printJynxlabel(lab, line);
+                String labelframe = labelmap.printJynxlabelFrame(lab, line);
+                debugPrint.accept(labelframe);
                 break;
             case res_on:
+                if (printFlag == 0) {
+                    debugPrint.accept(String.format("; method %s",mnode.name));
+                }
+                debugPrint.accept(line.toString());
                 ++printFlag;
-                if (line.nextToken().is(res_expand)) {
-                    expandMacro = printFlag;
+                Token token = line.nextToken();
+                if (token == Token.END_TOKEN) {
+                    options.putIfAbsent(PrintOption.EXPAND,printFlag);
+                    options.putIfAbsent(PrintOption.STACK,printFlag);
+                    options.putIfAbsent(PrintOption.LOCALS,printFlag);
+                } else {
+                    while (token != Token.END_TOKEN) {
+                        PrintOption po = PrintOption.getInstance(token);
+                        options.putIfAbsent(po,printFlag);
+                        token = line.nextToken();
+                    }
                 }
                 break;
             case res_off:
-                if (expandMacro == printFlag) {
-                    expandMacro = 0;
+                if (options.containsKey(PrintOption.EXPAND) && options.get(PrintOption.EXPAND) == printFlag) {
+                    options.remove(PrintOption.EXPAND);
+                }
+                if (options.containsKey(PrintOption.STACK) && options.get(PrintOption.STACK) == printFlag) {
+                    options.remove(PrintOption.STACK);
+                }
+                if (options.containsKey(PrintOption.LOCALS) && options.get(PrintOption.LOCALS) == printFlag) {
+                    options.remove(PrintOption.EXPAND);
                 }
                 --printFlag;
                 assert printFlag >= 0;
+                debugPrint.accept(line.toString());
                 break;
             default:
                 throw new AssertionError();
@@ -224,7 +250,7 @@ public class JynxCodeHdr implements ContextDependent {
     }
 
     private void visitInsn(Line line) {
-        InstList instlist = new InstList(stackLocals,line,printFlag > 0,expandMacro > 0);
+        InstList instlist = new InstList(stackLocals,line,options);
         s2a.getInsts(line,instlist);
         instlist.accept(mnode);
     }

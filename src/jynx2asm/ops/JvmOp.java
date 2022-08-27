@@ -243,7 +243,7 @@ public enum JvmOp implements JynxOp {
     opc_ret_w(169, 4, "()V", arg_var, RET, Feature.subroutines),
 
     opc_wide(196, null, "()V", arg_none, NOP),
-    xxx_catch(-4, 0, "()V", arg_dir, -4),
+
     xxx_label(-1, 0, "()V", arg_dir, -1),
     xxx_labelweak(-1, 0, "()V", arg_dir, -1),
     ;
@@ -370,7 +370,7 @@ public enum JvmOp implements JynxOp {
 
     @Override
     public boolean isExternal() {
-        return name().startsWith("asm_") || name().startsWith("opc_");
+        return true;
     }
 
     public boolean isReturn() {

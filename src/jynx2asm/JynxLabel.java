@@ -158,8 +158,8 @@ public class JynxLabel {
         jlf.freeze();
     }
 
-    public void print() {
-        System.err.println(jlf.print());
+    public String printLabelFrame() {
+        return jlf.print();
     }
 
     @Override

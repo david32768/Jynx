@@ -44,8 +44,7 @@ public class Object2String {
                 .append(handle2String(dyncst.getBootstrapMethod()));
         for (int i = 0, n = dyncst.getBootstrapMethodArgumentCount(); i < n;++i) {
             value = dyncst.getBootstrapMethodArgument(i);
-            ConstType ct = ConstType.getFromASM(value,Context.JVMCONSTANT);
-            String cststr = asm2String(ct,value);
+            String cststr = asm2String(value);
             sb.append(' ')
                     .append(cststr);
         }
@@ -101,7 +100,8 @@ public class Object2String {
         return Boolean.TRUE.toString();
     }
     
-    public String asm2String(ConstType ct,Object value) {
+    public String asm2String(Object value) {
+        ConstType ct = ConstType.getFromASM(value,Context.JVMCONSTANT);
         if (ct == ConstType.ct_object) {
             ct = ConstType.getFromASM(value,Context.JVMCONSTANT);
             if (ct == ConstType.ct_object) {

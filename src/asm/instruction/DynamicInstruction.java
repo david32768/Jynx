@@ -3,6 +3,7 @@ package asm.instruction;
 import org.objectweb.asm.ConstantDynamic;
 import org.objectweb.asm.MethodVisitor;
 
+import asm2jynx.Object2String;
 import jynx2asm.ops.JvmOp;
 import jynx2asm.StackLocals;
 
@@ -32,7 +33,8 @@ public class DynamicInstruction extends Instruction {
 
     @Override
     public String toString() {
-        return String.format("%s %s", jvmop, cd);
+        Object2String o2s = new Object2String();
+        return String.format("%s %s", jvmop, o2s.constDynamic2String(cd));
     }
 
 }

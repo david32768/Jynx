@@ -54,7 +54,7 @@ public class TableInstruction extends Instruction {
     public String toString() {
         String brlabels = labels.stream()
                 .map(JynxLabel::name)
-                .collect(Collectors.joining(" "));
+                .collect(Collectors.joining(" , "));
         return String.format("%s %d default %s %s %s %s",
                 jvmop,min, dflt,ReservedWord.left_array,brlabels,ReservedWord.right_array);
     }

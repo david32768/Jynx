@@ -283,7 +283,9 @@ public enum Message {
     M280(BLANK,"program terminated because of severe error(s)"),
     M281("local variables [%s ] are in a frame but not written"),
     M282("element %s (%c) at top of stack is not one of %s"),
-    
+    M283("class is not a %s but %s is %s"),
+    M284("label %s is not (yet?) known"),
+    //
     M289("A nest member has already been defined"),
 
     M298(WARNING,"%s of %s failed"),

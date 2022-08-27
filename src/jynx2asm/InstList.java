@@ -2,6 +2,7 @@ package jynx2asm;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.List;
 
 import org.objectweb.asm.tree.MethodNode;
@@ -16,43 +17,54 @@ public class InstList {
     private final List<Instruction> instructions;
     private final StackLocals stackLocals;
     private final Line line;
-    private final boolean print;
-    private final boolean expand;
     private final String spacer;
+
+    private final boolean expand;
+    private final boolean stack;
+    private final boolean locals;
     
     private String stackb;
     private String localsb;
     
-    public InstList(StackLocals stacklocals, Line line,boolean print, boolean expand) {
+    public InstList(StackLocals stacklocals, Line line, EnumMap<PrintOption, Integer> options) {
         this.instructions = new ArrayList<>();
         this.stackLocals = stacklocals;
         this.line = line;
-        this.print = print;
-        this.expand = expand;
         int indent = line.getIndent();
         char[] chars = new char[indent];
         Arrays.fill(chars, ' ');
         this.spacer = String.valueOf(chars);
-        if (print) {
-            this.stackb = stackLocals.stringStack();
-            this.localsb = stackLocals.stringLocals();
+        this.expand = options.containsKey(PrintOption.EXPAND);
+        this.stack = options.containsKey(PrintOption.STACK);
+        this.locals = options.containsKey(PrintOption.LOCALS);
+        this.stackb = this.stack? stackLocals.stringStack(): "";
+        this.localsb = this.locals? stackLocals.stringStack(): "";
+        if (!options.isEmpty()) {
             System.out.println(line);
-        } else {
-            this.stackb = "";
-            this.localsb = "";
         }
     }
 
-    private void printStackLocals() {
+    private void printStack() {
         String stacka = stackLocals.stringStack();
-        String localsa = stackLocals.stringLocals();
-        System.out.format(";%s  %s -> %s", spacer,stackb,stacka);
-        if (!localsa.equals(localsb)) {
-            System.out.format(";%s %s = %s",spacer,res_locals,localsa);
-        }
-        System.out.println();
+        System.out.format(";%s  %s -> %s%n", spacer,stackb,stacka);
         stackb = stacka;
+    }
+    
+    private void printLocals() {
+        String localsa = stackLocals.stringLocals();
+        if (!localsa.equals(localsb)) {
+            System.out.format(";%s %s = %s%n",spacer,res_locals,localsa);
+        }
         localsb = localsa;
+    }
+    
+    private void printStackLocals() {
+        if (stack) {
+            printStack();
+        }
+        if (locals) {
+            printLocals();
+        }
     }
     
     public void add(Instruction insn) {
@@ -77,13 +89,12 @@ public class InstList {
     }
     
     public void accept(MethodNode mnode) {
-        if (print && !expand) {
-            printStackLocals();
-        }
         for (Instruction in:instructions) {
             in.accept(mnode);
         }
-        
+        if (!expand) {
+            printStackLocals();
+        }
     }
     
     public FrameElement peekTOS() {

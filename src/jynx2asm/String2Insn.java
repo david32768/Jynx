@@ -27,7 +27,6 @@ import asm.instruction.MarrayInstruction;
 import asm.instruction.MethodInstruction;
 import asm.instruction.StackInstruction;
 import asm.instruction.TableInstruction;
-import asm.instruction.TryInstruction;
 import asm.instruction.TypeInstruction;
 import asm.instruction.VarInstruction;
 
@@ -286,13 +285,6 @@ public class String2Insn {
             String labstr = line.nextToken().asString();
             JynxLabel target = labmap.defineWeakJynxLabel(labstr, line);
             return target == null?null:new LabelInstruction(jvmop,target);
-        }
-        if (jvmop == JvmOp.xxx_catch) {
-            String fromname = line.nextToken().toString();
-            String toname = line.nextToken().toString();
-            String usingname = line.nextToken().toString();
-            JynxCatch jcatch = JynxCatch.getInstance(line, fromname, toname, usingname, null, labmap);
-            return new TryInstruction(JvmOp.xxx_catch,jcatch);
         }
         throw new AssertionError();
     }

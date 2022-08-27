@@ -18,7 +18,6 @@ import static jynx.Message.M267;
 import jvm.Feature;
 import jvm.JvmVersion;
 import jvm.JvmVersionRange;
-import jynx.GlobalOption;
 import jynx.LogAssertionError;
 
 public class JynxOps {
