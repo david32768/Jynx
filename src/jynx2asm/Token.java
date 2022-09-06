@@ -240,7 +240,7 @@ public class Token {
     public void mustBe(ReservedWord res) {
         checkNotEnd();
         if (!is(res)) {
-            throw new LogIllegalStateException(M109,res, token); // "reserved word %s expected but found %s"
+            throw new LogIllegalArgumentException(M109,res, token); // "reserved word %s expected but found %s"
         }
     }
     
@@ -249,7 +249,7 @@ public class Token {
         EnumSet<ReservedWord> rwset = EnumSet.of(res1,res);
         return mayBe(rwset)
                  // "reserved word %s expected but found %s"
-                .orElseThrow(()->new LogIllegalStateException(M109,rwset, token));
+                .orElseThrow(()->new LogIllegalArgumentException(M109,rwset, token));
     }
     
     public void noneOf(ReservedWord res1,ReservedWord... res) {

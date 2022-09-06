@@ -113,10 +113,6 @@ public class Logger {
                 break;
             case ERROR:
                 printError(msg,objs);
-                if (OPTION(GlobalOption.__EXIT_IF_ERROR)) {
-                    Thread.dumpStack();
-                    System.exit(1);
-                }
                 if (errct > MAX_ERRORS) {
                     printInfo(M85,type); // "%s terminated because of too many errors"
                     throw new SevereError();
@@ -142,14 +138,6 @@ public class Logger {
         setLine(line);
         log(logtype,msg,objs);
         currentLine = savedline;
-    }
-
-    void log(Exception ex) {
-        printError(M999,ex.toString()); // "%s"
-        if (OPTION(GlobalOption.__EXIT_IF_ERROR)) {
-            ex.printStackTrace();
-            System.exit(1);
-        }
     }
 
 }

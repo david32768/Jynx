@@ -8,6 +8,8 @@ import org.objectweb.asm.Opcodes;
 import static jynx.Global.LOG;
 import static jynx.Message.*;
 
+import asm.CheckOpcodes;
+
 public enum JvmVersion {
 
     // MUST BE IN RELEASE ORDER for compareTo
@@ -88,7 +90,7 @@ public enum JvmVersion {
     public final static JvmVersion MIN_VERSION = V1_0_2;
     public final static JvmVersion DEFAULT_VERSION = V18;
     public final static JvmVersion SUPPORTED_VERSION = V18;
-    public final static JvmVersion MAX_VERSION = V19_PREVIEW;
+    public final static JvmVersion MAX_VERSION;
 
     static {
         PARSE_MAP = new HashMap<>();
@@ -103,6 +105,12 @@ public enum JvmVersion {
             last = version;
         }
         assert PREVIEW == Opcodes.V_PREVIEW >>> 16;
+        int maxasm = CheckOpcodes.getMaxJavaVersion();
+        JvmVersion asmversion = PARSE_MAP.get(String.format("V%d_PREVIEW", maxasm));
+        if (asmversion == null) {
+            asmversion = SUPPORTED_VERSION;
+        }
+        MAX_VERSION = asmversion;
     }
 
     public static JvmVersion getVersionInstance(String verstr) {
@@ -111,13 +119,12 @@ public enum JvmVersion {
             version = DEFAULT_VERSION;
             LOG(M147,verstr, version);   // "unknown Java version %s - %s used"
         }
-        JvmVersion maxversion = MAX_VERSION;
         if (version.compareTo(MIN_VERSION) < 0) {
-            LOG(M171,version,MIN_VERSION,maxversion,MIN_VERSION);  // "version %s outside range [%s,%s] - %s used"
+            LOG(M171,version,MIN_VERSION,MAX_VERSION,MIN_VERSION);  // "version %s outside range [%s,%s] - %s used"
             version = MIN_VERSION;
-        } else if (version.compareTo(maxversion) > 0) {
-            LOG(M171,version,MIN_VERSION,maxversion, maxversion);  // "version %s outside range [%s,%s] - %s used"
-            version = maxversion;
+        } else if (version.compareTo(MAX_VERSION) > 0) {
+            LOG(M171,version,MIN_VERSION,MAX_VERSION, MAX_VERSION);  // "version %s outside range [%s,%s] - %s used"
+            version = MAX_VERSION;
         }
         version.checkSupported();
         return version;
@@ -137,7 +144,6 @@ public enum JvmVersion {
                 break;
             }
         }
-        version.checkSupported();
         return version;
     }
     

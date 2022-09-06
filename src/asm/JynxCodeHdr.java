@@ -3,10 +3,10 @@ package asm;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.EnumSet;
-import java.util.function.Consumer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.objectweb.asm.AnnotationVisitor;
@@ -39,7 +39,6 @@ import jynx2asm.LinesIterator;
 import jynx2asm.ops.JvmOp;
 import jynx2asm.ops.JynxOps;
 import jynx2asm.OwnerNameDesc;
-import jynx2asm.PrintOption;
 import jynx2asm.StackLocals;
 import jynx2asm.String2Insn;
 import jynx2asm.Token;
@@ -53,7 +52,7 @@ public class JynxCodeHdr implements ContextDependent {
 
     private final StackLocals stackLocals;
 
-    private final EnumMap<PrintOption,Integer> options = new EnumMap<>(PrintOption.class);
+    private final EnumMap<ReservedWord,Integer> options;
     private int printFlag = 0;
     
     private int tryct = 0;
@@ -66,8 +65,6 @@ public class JynxCodeHdr implements ContextDependent {
     private int endif = 0;
     
     private final Map<Directive,Line> unique_directives;
-    
-    private final Consumer<String> debugPrint = System.out::println;
     
     private JynxCodeHdr(MethodNode mv, JynxScanner js, ClassChecker checker,
             OwnerNameDesc cmd, JynxLabelMap labelmap, boolean isStatic, JynxOps opmap) {
@@ -83,6 +80,7 @@ public class JynxCodeHdr implements ContextDependent {
         this.stackLocals = StackLocals.getInstance(localStack,labelmap,returnop,isStatic);
         this.s2a = new String2Insn(js, labelmap, checker, opmap);
         this.unique_directives = new HashMap<>();
+        this.options = new EnumMap<>(ReservedWord.class);
     }
 
     public static JynxCodeHdr getInstance(MethodNode mv, JynxScanner js, OwnerNameDesc cmd,
@@ -179,54 +177,54 @@ public class JynxCodeHdr implements ContextDependent {
     }
 
     private void setPrint(Line line) {
-        ReservedWord rw  = line.nextToken().expectOneOf(res_method,res_stack, res_locals, res_on, res_off,res_label);
+        ReservedWord rw  = line.nextToken().expectOneOf(res_stack, res_locals, res_on, res_off,res_label);
         switch (rw) {
-            case res_method:
-                debugPrint.accept(String.format("; method %s",mnode.name));
-                break;
             case res_stack:
-                debugPrint.accept(String.format("%s; = %s", line, stackLocals.stringStack()));
+                LOG(M294,res_stack, stackLocals.stringStack()); // "%s = %s"
                 break;
             case res_locals:
-                debugPrint.accept(String.format("%s; = %s", line, stackLocals.stringLocals()));
+                LOG(M294, res_locals, stackLocals.stringLocals()); // "%s = %s"
                 break;
             case res_label:
                 String lab = line.nextToken().asString();
                 String labelframe = labelmap.printJynxlabelFrame(lab, line);
-                debugPrint.accept(labelframe);
+                LOG(M995,labelframe); // "%s"
                 break;
             case res_on:
-                if (printFlag == 0) {
-                    debugPrint.accept(String.format("; method %s",mnode.name));
-                }
-                debugPrint.accept(line.toString());
                 ++printFlag;
                 Token token = line.nextToken();
                 if (token == Token.END_TOKEN) {
-                    options.putIfAbsent(PrintOption.EXPAND,printFlag);
-                    options.putIfAbsent(PrintOption.STACK,printFlag);
-                    options.putIfAbsent(PrintOption.LOCALS,printFlag);
+                    options.putIfAbsent(res_expand,printFlag);
+                    options.putIfAbsent(res_stack,printFlag);
+                    options.putIfAbsent(res_locals,printFlag);
                 } else {
                     while (token != Token.END_TOKEN) {
-                        PrintOption po = PrintOption.getInstance(token);
-                        options.putIfAbsent(po,printFlag);
+                        ReservedWord optrw = token.expectOneOf(res_expand, res_stack,res_locals);
+                        options.putIfAbsent(optrw,printFlag);
                         token = line.nextToken();
                     }
                 }
+                if (printFlag == 0+1) {
+                    LOG(M293,options); // "print options = %s"
+                } else {
+                    LOG(M990,line); //"%s"
+                    LOG(M293,options); // "print options = %s"
+                }
                 break;
             case res_off:
-                if (options.containsKey(PrintOption.EXPAND) && options.get(PrintOption.EXPAND) == printFlag) {
-                    options.remove(PrintOption.EXPAND);
+                if (Objects.equals(printFlag, options.get(res_expand))) {
+                    options.remove(res_expand);
                 }
-                if (options.containsKey(PrintOption.STACK) && options.get(PrintOption.STACK) == printFlag) {
-                    options.remove(PrintOption.STACK);
+                if (Objects.equals(printFlag, options.get(res_stack))) {
+                    options.remove(res_stack);
                 }
-                if (options.containsKey(PrintOption.LOCALS) && options.get(PrintOption.LOCALS) == printFlag) {
-                    options.remove(PrintOption.EXPAND);
+                if (Objects.equals(printFlag, options.get(res_locals))) {
+                    options.remove(res_locals);
                 }
                 --printFlag;
                 assert printFlag >= 0;
-                debugPrint.accept(line.toString());
+                LOG(M990,line); // "%s"
+                LOG(M293,options); // "print options = %s"
                 break;
             default:
                 throw new AssertionError();

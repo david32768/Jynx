@@ -7,9 +7,15 @@ import java.util.List;
 
 import org.objectweb.asm.tree.MethodNode;
 
-import static jynx.ReservedWord.res_locals;
+import static jynx.Global.LOG;
+import static jynx.Message.M290;
+import static jynx.Message.M291;
+import static jynx.Message.M292;
+import static jynx.Message.M990;
+import static jynx.ReservedWord.*;
 
 import asm.instruction.Instruction;
+import jynx.ReservedWord;
 import jynx2asm.ops.JvmOp;
 
 public class InstList {
@@ -26,7 +32,7 @@ public class InstList {
     private String stackb;
     private String localsb;
     
-    public InstList(StackLocals stacklocals, Line line, EnumMap<PrintOption, Integer> options) {
+    public InstList(StackLocals stacklocals, Line line, EnumMap<ReservedWord, Integer> options) {
         this.instructions = new ArrayList<>();
         this.stackLocals = stacklocals;
         this.line = line;
@@ -34,26 +40,26 @@ public class InstList {
         char[] chars = new char[indent];
         Arrays.fill(chars, ' ');
         this.spacer = String.valueOf(chars);
-        this.expand = options.containsKey(PrintOption.EXPAND);
-        this.stack = options.containsKey(PrintOption.STACK);
-        this.locals = options.containsKey(PrintOption.LOCALS);
+        this.expand = options.containsKey(res_expand);
+        this.stack = options.containsKey(res_stack);
+        this.locals = options.containsKey(res_locals);
         this.stackb = this.stack? stackLocals.stringStack(): "";
-        this.localsb = this.locals? stackLocals.stringStack(): "";
+        this.localsb = this.locals? stackLocals.stringLocals(): "";
         if (!options.isEmpty()) {
-            System.out.println(line);
+            LOG(M990,line); // "%s"
         }
     }
 
     private void printStack() {
         String stacka = stackLocals.stringStack();
-        System.out.format(";%s  %s -> %s%n", spacer,stackb,stacka);
+        LOG(M290, spacer,stackb,stacka); // ";%s  %s -> %s"
         stackb = stacka;
     }
     
     private void printLocals() {
         String localsa = stackLocals.stringLocals();
         if (!localsa.equals(localsb)) {
-            System.out.format(";%s %s = %s%n",spacer,res_locals,localsa);
+            LOG(M291,spacer,res_locals,localsa); // ";%s  %s = %s"
         }
         localsb = localsa;
     }
@@ -69,7 +75,7 @@ public class InstList {
     
     public void add(Instruction insn) {
         if (expand) {
-            System.out.format("%s  +%s%n",spacer,insn);
+            LOG(M292,spacer,insn); // "%s  +%s"
         }
         boolean ok = stackLocals.visitInsn(insn, line);
         if (ok) {

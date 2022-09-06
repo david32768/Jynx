@@ -31,15 +31,20 @@ public enum GlobalOption {
     SKIP_CODE(M39,DISASSEMBLY), // "do not produce code"
     SKIP_DEBUG(M29,DISASSEMBLY), // "do not produce debug info"
     SKIP_FRAMES(M30,DISASSEMBLY), // "do not produce stack map"
-
-    // DEBUG options - may change
-    __EXIT_IF_ERROR(M13,ASSEMBLY), // "exit if error"
+    DOWN_CAST(M14,DISASSEMBLY), // "reduce release if greater than ASM support"
+    
+    DEBUG(M13,ASSEMBLY,DISASSEMBLY), // "exit with stack trace if error"
+    
+    // may change
     __TREAT_WARNINGS_AS_ERRORS(M25,ASSEMBLY), // "treat warnings as errors"
-    __PRINT_STACK_TRACES(M23,ASSEMBLY), // "print stack trace of exceptions"
-
+    
     // internal
+    __EXIT_IF_ERROR(null,ASSEMBLY), // "exit if error"
+    __PRINT_STACK_TRACES(null,ASSEMBLY), // "print stack trace of exceptions"
+
+
     __STRUCTURED_LABELS(null,ASSEMBLY), // labels are numeric level
-    __UNSIGNED_LONG(null,ASSEMBLY),
+    __UNSIGNED_LONG(null,ASSEMBLY), // allow unsigned long i.e. > Long.MAX_VALUE
     __WARN_INDENT(null,ASSEMBLY), // "check indent for structured code"
     ;
 

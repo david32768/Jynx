@@ -143,7 +143,7 @@ public class String2Object {
             case '\"':
                 return token.asQuoted();
             case '0':
-                Long lval = ulong && first != '-'?token.asLong():token.asLong();
+                Long lval = ulong && first != '-'?token.asUnsignedLong():token.asLong();
                 if (last != 'L') {
                     boolean unsigned = constant.toUpperCase().startsWith("0X");
                     if (NumType.t_int.isInRange(lval)

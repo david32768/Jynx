@@ -52,7 +52,7 @@ public class CheckOpcodes {
         throw new AssertionError();
     }
     
-    private static int getMaxJavaVersion() {
+    public static int getMaxJavaVersion() {
         for (int i = 9;i < 32768; ++i) {
             try {
                 getStatic("V" + i);

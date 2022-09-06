@@ -46,7 +46,7 @@ public enum Directive implements JvmVersioned {
     dir_nestmember(HEADER, EnumSet.of(CLASSHDR), NestMembers),
     dir_permittedSubclass(HEADER, EnumSet.of(CLASSHDR), PermittedSubclasses),
     dir_enclosing_method(HEADER, EnumSet.of(CLASSHDR), EnclosingMethod),
-    dir_enclosing_class(HEADER, EnumSet.of(CLASSHDR), EnclosingMethod),
+    dir_outer_class(HEADER, EnumSet.of(CLASSHDR), EnclosingMethod),
     dir_hints(HEADER, EnumSet.of(CLASSHDR)),
     
     dir_annotation(COMMON, EnumSet.of(CLASSHDR,FIELD_BLOCK, METHOD_BLOCK, MODULEHDR,COMPONENT_BLOCK,PACKAGEHDR),
@@ -172,7 +172,7 @@ public enum Directive implements JvmVersioned {
             case dir_signature:
             case dir_nesthost:
             case dir_enclosing_method:
-            case dir_enclosing_class:
+            case dir_outer_class:
             case dir_default_annotation:
             case dir_packages:
             case dir_main:

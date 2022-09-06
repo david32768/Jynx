@@ -37,6 +37,7 @@ import jvm.NumType;
 import jvm.OpArg;
 import jynx.Directive;
 import jynx.LogAssertionError;
+import jynx.LogIllegalStateException;
 import jynx.ReservedWord;
 import jynx2asm.Line;
 import jynx2asm.NameDesc;
@@ -97,30 +98,23 @@ public class Insn2Jynx {
         return  getLabelName(label);
     }
 
-    public void setLabelName(Label label, String labname) {
-        if (labname.charAt(0) == NameDesc.GENERATED_LABEL_MARKER ) {
-            LOG(M27,labname); // "cannot set label to generated name - %s"
-            return;
-        }
-        int ct = 0;
-        while (label.info instanceof LabelNode && ++ct < 255) {
-            label = ((LabelNode)label.info).getLabel();
-        }
-        labelMap.put(label,labname);
-    }
-    
     public String getLabelName(Label label) {
-        String labref = labelMap.get(label);
-        int ct = 0;
-        while (labref == null && label.info instanceof LabelNode && ++ct < 255) {
-            label = ((LabelNode)label.info).getLabel();
-            labref = labelMap.get(label);
+        int maxchain = 256;
+        int ct = maxchain;
+        while(ct-- > 0) {
+            String labref = labelMap.get(label);
+            if (labref != null) {
+                return labref;
+            } else if (label.info instanceof LabelNode) {
+                label = ((LabelNode)label.info).getLabel();
+            } else {
+                labref = NameDesc.GENERATED_LABEL_MARKER + "L" + labelMap.size();
+                labelMap.put(label,labref);
+                return labref;
+            }
         }
-        if (labref == null) {
-            labref = NameDesc.GENERATED_LABEL_MARKER + "L" + labelMap.size();
-            labelMap.put(label,labref);
-        }
-        return  labref;
+        // "length of label node chain exceeds %d"
+        throw new LogIllegalStateException(M27, maxchain);
     }
     
     

@@ -24,5 +24,15 @@ public enum LogMsgType {
         }
         return abbrev + msgname.substring(1) + ": ";
     }
-    
+
+    public LogMsgType up() {
+        switch(this) {
+            case SEVERE:
+                return this;
+            case INFO:
+                return WARNING;
+            default:
+                return values()[ordinal() + 1];
+        }
+    }
 }

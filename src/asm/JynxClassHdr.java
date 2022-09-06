@@ -166,7 +166,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
                 setInnerClass(dir,line);
                 break;
             case dir_enclosing_method:
-            case dir_enclosing_class:
+            case dir_outer_class:
                 setOuterClass(dir,line);
                 break;
             case dir_nesthost:
@@ -318,7 +318,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         line.noMoreTokens();
         OwnerNameDesc cmd;
         switch(dir) {
-            case dir_enclosing_class:
+            case dir_outer_class:
                 if (!cname.startsWith(mspec)) {    // jls 13.1
                     // "enclosing class name(%s) is not a prefix of class name(%s)"
                     LOG(M261,mspec,cname);
@@ -334,8 +334,8 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         if (outer == null) {
             outer = new ObjectLine<>(cmd,line);
         } else {
-            // "enclosing instance has already been defined"
-            LOG(M268);
+            // "enclosing instance has already been defined%n   %s"
+            LOG(M268,outer.line());
         }
     }
 

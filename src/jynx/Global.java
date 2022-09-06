@@ -11,6 +11,7 @@ import static jynx.Message.M219;
 import static jynx.Message.M24;
 import static jynx.Message.M32;
 import static jynx.Message.M4;
+import static jynx.Message.M999;
 
 import com.github.david32768.jynx.Main;
 import jvm.ConstantPoolType;
@@ -139,6 +140,10 @@ public class Global {
                 if (opt.isPresent()) {
                     GlobalOption option = opt.get();
                     ADD_OPTION(option);
+                    if (option == GlobalOption.DEBUG) {
+                        ADD_OPTION(GlobalOption.__EXIT_IF_ERROR);
+                        ADD_OPTION(GlobalOption.__PRINT_STACK_TRACES);
+                    }
                 } else {
                     LOG(M32,argi); // "%s is not a valid option"
                 }
@@ -160,8 +165,11 @@ public class Global {
 
     private static LogMsgType msgType(Message msg) {
         LogMsgType logtype = msg.getLogtype();
-        if (logtype.compareTo(LogMsgType.STYLE) >= 0 && OPTION(GlobalOption.__TREAT_WARNINGS_AS_ERRORS)) {
+        if (logtype == LogMsgType.WARNING && OPTION(GlobalOption.__TREAT_WARNINGS_AS_ERRORS)) {
             logtype = LogMsgType.ERROR;
+        }
+        if (logtype == LogMsgType.ERROR && OPTION(GlobalOption.__EXIT_IF_ERROR)) {
+            logtype = LogMsgType.SEVERE; //logtype.up();
         }
         return logtype;
     }
@@ -188,7 +196,7 @@ public class Global {
         if (ex instanceof LogIllegalStateException) {
             return; // already logged
         }
-        global.logger.log(ex);
+        LOG(M999,ex.toString()); // "%s"
     }
 
     public static boolean END_MESSAGES(String classname) {

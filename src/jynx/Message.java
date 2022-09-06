@@ -17,8 +17,8 @@ public enum Message {
     M10(BLANK,"warn if label unreferenced or alias"),
     M11(BLANK,"let simple verifier use Class.forName()"),
     M12(BLANK,"%nUsage:%n"),
-    M13(BLANK,"exit if error"),
-
+    M13(BLANK,"exit with stack trace if error"),
+    M14(BLANK,"reduce release if greater than ASM support"),
     M15(BLANK,"warn if names non-standard"),
     M16(BLANK,"use ASM BasicVerifier"),
     M17(BLANK,"use ASM SimpleVerifier (default)"),
@@ -27,11 +27,11 @@ public enum Message {
     M20("invalid major version(%d)"),
     M21("invalid minor version(%d) - spec table 4.1A"),
     M22(WARNING,"value required (%d) for %s is more than limit value (%d)"),    
-    M23(BLANK,"print stack trace of exceptions"),
+//    M23(BLANK,"print stack trace of exceptions"),
     M24(INFO,"ambiguous option %s: %s assumed"),
     M25(BLANK,"treat warnings as errors"),
     M26(BLANK,"invalid main-option name - %s"),
-    M27("cannot set label to generated name - %s"),
+    M27("length of label node chain exceeds %d"),
     M28("no args have been specified for main option %s"),
     M29(BLANK,"do not produce debug info"),
     M30(BLANK,"do not produce stack map"),
@@ -268,7 +268,7 @@ public enum Message {
     M265("structured op mismatch: label stack is empty"),
     M266("Label %s not defined; used in%n%s"),
     M267("%s has %d simple ops which exceeds maximum of %d"),
-    M268("enclosing instance has already been defined"),
+    M268("enclosing instance has already been defined%n   %s"),
     M269("component %s description %s differs from field description %s"),
     M270(WARNING,"%s directive missing but assumed"),
     M271("incomplete quoted string %s"),
@@ -285,9 +285,17 @@ public enum Message {
     M282("element %s (%c) at top of stack is not one of %s"),
     M283("class is not a %s but %s is %s"),
     M284("label %s is not (yet?) known"),
-    //
+    M285(SEVERE,"magic number is %#x; should be 0xcafebabe"),
+    M286(SEVERE,"%s is not (a known) class"),
+    M287(WARNING,"JVM version %s is not supported by the version of ASM used; %s substituted"),
+    M288(SEVERE,"JVM version %s is not supported by the version of ASM used; maximum version is %s "),
     M289("A nest member has already been defined"),
-
+    M290(BLANK,";%s  %s -> %s"),
+    M291(BLANK,";%s  %s = %s"),
+    M292(BLANK,"%s  +%s"),
+    M293(INFO,"print options = %s"),
+    M294(WARNING,"%s = %s"),
+    //
     M298(WARNING,"%s of %s failed"),
 
     M302("%s is null or has different feature requirement than %s"),
@@ -327,7 +335,12 @@ public enum Message {
     M909("unknown ASM Node %s in instruction list"),
     M910("indent depth is now negative"),
     
-    M999("%s"), // for debugging
+    // for debugging
+    M990(BLANK,"%s"),
+    M993(INFO,"%s"),
+    M995(WARNING,"%s"),
+    M997("%s"),
+    M999(SEVERE,"%s"),
     ;
 
     private final LogMsgType logtype;

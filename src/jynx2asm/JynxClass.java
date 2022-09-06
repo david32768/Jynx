@@ -71,7 +71,9 @@ public class JynxClass {
             }
             return jclass.toByteArray();
         } catch (RuntimeException rtex) {
-            rtex.printStackTrace();
+            if (OPTION(GlobalOption.__PRINT_STACK_TRACES)) {
+                rtex.printStackTrace();;
+            }
             LOG(M123,default_source,rtex); // "compilation of %s failed because of %s"
             return null;
         }

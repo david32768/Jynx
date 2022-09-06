@@ -3,6 +3,8 @@ package asm;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,24 +14,20 @@ import java.util.Optional;
 import org.objectweb.asm.ClassReader;
 
 import static jynx.Global.LOG;
+import static jynx.Global.OPTION;
+import static jynx.GlobalOption.DOWN_CAST;
 import static jynx.Message.M238;
+import static jynx.Message.M285;
+import static jynx.Message.M286;
+import static jynx.Message.M287;
+import static jynx.Message.M288;
+
+import jvm.JvmVersion;
+import jynx.LogIllegalArgumentException;
 
 public class JynxClassReader extends ClassReader {
 
-    public JynxClassReader(final String className) throws IOException {
-        this(bytes4Class(className));
-    }
-
-    public JynxClassReader(final Path path) throws IOException {
-        this(Files.readAllBytes(path));
-    }
-
-    public JynxClassReader(final byte[] classFileBuffer, final int classFileOffset, final int classFileLength) {
-        this(Arrays.copyOfRange(classFileBuffer, classFileOffset, classFileOffset + classFileLength));
-    }
-
-    // main constructor
-    public JynxClassReader(final byte[] classFile) {
+    private JynxClassReader(final byte[] classFile) {
         super(classFile, 0, classFile.length);
         int expectedLength = classFile.length;
         int actualLength;
@@ -60,7 +58,7 @@ public class JynxClassReader extends ClassReader {
     public static Optional<ClassReader> getClassReader(String name) {
         try {
             byte[] ba = getClassBytes(name);
-            ClassReader cr = new JynxClassReader(ba);
+            ClassReader cr = getClassReader(ba);
             return Optional.of(cr);
         } catch (IOException ex) {
             LOG(M238,ex.getMessage()); // "error reading class file: %s"
@@ -68,11 +66,49 @@ public class JynxClassReader extends ClassReader {
         }
     }
 
+    public static ClassReader getClassReader(byte[] ba) {
+            ba = checkVersion(ba);
+            ClassReader cr = new JynxClassReader(ba);
+            return cr;
+    }
+
+    private static byte[] checkVersion(byte[] ba) {
+        ByteBuffer bb = ByteBuffer.wrap(ba);
+        bb = bb.asReadOnlyBuffer();
+        bb.order(ByteOrder.BIG_ENDIAN);
+        int magic = bb.getInt();
+        if (magic != 0xcafebabe) {
+            // "magic number is %#x; should be 0xcafebabe"
+            throw new LogIllegalArgumentException(M285,magic);
+        }
+        int release = bb.getInt();
+        JvmVersion jvmversion = JvmVersion.getInstance(release);
+        if (jvmversion.compareTo(JvmVersion.MAX_VERSION) > 0) {
+            if (OPTION(DOWN_CAST)) {
+                // "JVM version %s is not supported by the version of ASM used; %s substituted"
+                LOG(M287,jvmversion,JvmVersion.MAX_VERSION);
+                bb = ByteBuffer.wrap(ba);
+                bb.order(ByteOrder.BIG_ENDIAN);
+                bb.getInt(); // magic
+                bb.putInt(JvmVersion.MAX_VERSION.getRelease());
+            } else {
+                // "JVM version %s is not supported by the version of ASM used; maximum version is %s "
+                throw new LogIllegalArgumentException(M288,jvmversion,JvmVersion.MAX_VERSION);
+            }
+        }
+        return ba;
+    }
+    
     private static int BUFFER_SIZE = 1<<14;
     
     private static byte[] bytes4Class(String name) throws IOException {
         assert !name.endsWith(".class");
-        try (InputStream is = ClassLoader.getSystemResourceAsStream(name.replace('.', '/') + ".class")) {
+        InputStream isx = ClassLoader.getSystemResourceAsStream(name.replace('.', '/') + ".class");
+        if (isx == null) {
+            //"%s is not (a known) class"
+            throw new LogIllegalArgumentException(M286, name);
+        }
+        try (InputStream is = isx) {
             byte[] ba = new byte[BUFFER_SIZE];
             int readct = is.read(ba, 0, BUFFER_SIZE >> 1);
             if (readct < 0) {

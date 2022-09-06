@@ -77,6 +77,7 @@ public class JynxDisassemble {
         }
         cr.accept(cn, crflag);
         JvmVersion jvmversion = JvmVersion.getInstance(cn.version);
+        jvmversion.checkSupported();
         if (jvmversion == JvmVersion.V1_6JSR && !OPTION(GlobalOption.SKIP_FRAMES)) {
             jvmversion = JvmVersion.V1_6;
         }
@@ -142,7 +143,7 @@ public class JynxDisassemble {
                     .nl();
             
         } else if (outerClass != null) {
-            jp.appendDirective(dir_enclosing_class)
+            jp.appendDirective(dir_outer_class)
                     .append(outerClass)
                     .nl();
         }
@@ -226,7 +227,7 @@ public class JynxDisassemble {
         if (cn.outerMethod != null || cn.outerMethodDesc != null) {
             result.add(dir_enclosing_method);
         } else if (cn.outerClass != null) {
-            result.add(dir_enclosing_class);
+            result.add(dir_outer_class);
         }
         if (cn.nestHostClass != null) result.add(dir_nesthost);
         if (isPresent(cn.nestMembers)) result.add(dir_nestmember);

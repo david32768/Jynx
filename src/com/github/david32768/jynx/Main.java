@@ -17,6 +17,7 @@ import static jynx.Message.*;
 import asm2jynx.JynxDisassemble;
 import jvm.JvmVersion;
 import jynx.GlobalOption;
+import jynx.SevereError;
 import jynx2asm.JynxClass;
 import jynx2asm.JynxScanner;
 
@@ -27,7 +28,7 @@ public class Main {
 
     private final static int JYNX_VERSION = 0;
     private final static int JYNX_RELEASE = 12;
-    private final static int JYNX_BUILD = 24;
+    private final static int JYNX_BUILD = 26;
     
     private static String version() {
         return String.format("%d+%d-%d",JYNX_VERSION,JYNX_RELEASE,JYNX_BUILD);
@@ -183,9 +184,21 @@ public class Main {
             appUsage();
             return false;
         }
-        boolean success = main.fn.test(optname);
+        boolean success;
+        try {
+            success = main.fn.test(optname);
+        } catch (SevereError ex) {
+            if (OPTION(GlobalOption.__PRINT_STACK_TRACES)) {
+                ex.printStackTrace();;
+            }
+            success = false;
+        }
         if (!success) {
-            LOG(M298,main.name(),CLASS_NAME()); // "%s of %s failed"
+            String classname = CLASS_NAME();
+            if (classname == null) {
+                classname = optname.orElse("SYSIN");
+            }
+            LOG(M298,main.name(),classname); // "%s of %s failed"
         }
         return success;
     }
