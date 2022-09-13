@@ -43,6 +43,7 @@ import jynx.LogIllegalStateException;
 import jynx2asm.ClassChecker;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
+import jynx2asm.MethodDesc;
 import jynx2asm.NameDesc;
 import jynx2asm.ObjectLine;
 import jynx2asm.ONDRecord;
@@ -326,7 +327,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
                 cmd = OwnerNameDesc.getClass(mspec);
                 break;
             case dir_enclosing_method:
-                cmd = OwnerNameDesc.getOwnerMethodDesc(mspec);
+                cmd = MethodDesc.getInstance(mspec);
                 break;
             default:
                 throw new EnumConstantNotPresentException(dir.getClass(), dir.name());

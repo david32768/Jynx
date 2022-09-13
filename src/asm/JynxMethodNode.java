@@ -60,7 +60,7 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
     public static JynxMethodNode getInstance(Line line, ClassChecker checker) {
         Access accessname = checker.getAccess(METHOD,line);
         line.noMoreTokens();
-        MethodDesc md = MethodDesc.getInstance(accessname.getName());
+        MethodDesc md = MethodDesc.getLocalInstance(accessname.getName());
         if (md.isInit()) {
             accessname.check4InitMethod();
         } else {

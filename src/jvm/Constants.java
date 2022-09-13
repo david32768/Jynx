@@ -70,7 +70,7 @@ public enum Constants {
 
     public MethodDesc methodDesc() {
         assert str.contains("(");
-        return MethodDesc.getInstance(str);
+        return MethodDesc.getLocalInstance(str);
     }
     
     @Override

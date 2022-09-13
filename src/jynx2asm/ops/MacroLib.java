@@ -1,6 +1,7 @@
 package jynx2asm.ops;
 
 import java.util.EnumSet;
+import java.util.function.BinaryOperator;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
@@ -14,5 +15,9 @@ public abstract class MacroLib {
     public UnaryOperator<String> parmTranslator() {
         return null;
     }
-    
+
+    public BinaryOperator<String> ownerTranslator() {
+        return null;
+    }
+
 }

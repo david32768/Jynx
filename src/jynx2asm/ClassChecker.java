@@ -82,9 +82,9 @@ public class ClassChecker {
             ObjectLine<HandleType> virtual = new ObjectLine<>(REF_invokeVirtual, Line.EMPTY);
             Constants.FINAL_ENUM_METHODS.stream()
                     .map(Constants::toString)
-                    .map(MethodDesc::getInstance)
+                    .map(MethodDesc::getLocalInstance)
                     .forEach(ond -> checker.ownMethods.put(ond,virtual));
-            MethodDesc compare = MethodDesc.getInstance(String.format(Constants.COMPARETO_FORMAT.toString(),cname));
+            MethodDesc compare = MethodDesc.getLocalInstance(String.format(Constants.COMPARETO_FORMAT.toString(),cname));
             checker.ownMethods.put(compare,virtual);
         }
         if (!Constants.OBJECT_CLASS.equalString(cname)
@@ -92,7 +92,7 @@ public class ClassChecker {
             ObjectLine<HandleType> virtual = new ObjectLine<>(REF_invokeVirtual, Line.EMPTY);
             Constants.FINAL_OBJECT_METHODS.stream()
                     .map(Constants::toString)
-                    .map(MethodDesc::getInstance)
+                    .map(MethodDesc::getLocalInstance)
                     .forEach(ond ->checker.ownMethods.put(ond,virtual));
         }
         return checker;
@@ -102,10 +102,10 @@ public class ClassChecker {
         if (classType == ClassType.ENUM && Constants.ENUM_SUPER.equalString(csuper)) {
             ObjectLine<HandleType> objline = new ObjectLine<>(REF_invokeStatic,Line.EMPTY);
             String str = String.format(Constants.VALUES_FORMAT.toString(),className);
-            OwnerNameDesc values = OwnerNameDesc.getOwnerMethodDescAndCheck(str,REF_invokeStatic);
+            OwnerNameDesc values = OwnerNameDesc.getInstance(str,REF_invokeStatic);
             ownMethodsUsed.put(values,objline);
             str = String.format(Constants.VALUEOF_FORMAT.toString(),className);
-            OwnerNameDesc valueof = OwnerNameDesc.getOwnerMethodDescAndCheck(str,REF_invokeStatic);
+            OwnerNameDesc valueof = OwnerNameDesc.getInstance(str,REF_invokeStatic);
             ownMethodsUsed.put(valueof,objline);
         }
     }
@@ -350,7 +350,7 @@ public class ClassChecker {
     }
 
     private boolean isMethodDefined(OwnerNameDesc cnd, HandleType ht) {
-        MethodDesc nd = MethodDesc.getInstance(cnd.getNameDesc());
+        MethodDesc nd = MethodDesc.getLocalInstance(cnd.getNameDesc());
         ObjectLine<HandleType> objline = ownMethods.get(nd);
         return objline != null && objline.object() == ht;
     }

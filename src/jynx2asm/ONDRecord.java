@@ -6,15 +6,12 @@ import org.objectweb.asm.Handle;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
-import static jynx.Global.CLASS_NAME;
-import static jynx.Global.LOG;
-import static jynx.Global.OPTION;
-import static jynx.Global.TRANSLATE;
-import static jynx.Message.M255;
+
+import static jynx.Global.TRANSLATE_DESC;
 import static jynx2asm.NameDesc.PACKAGE_NAME;
 
 import jvm.Constants;
-import jynx.GlobalOption;
+import jynx.Global;
 import jynx2asm.ops.JvmOp;
 
 public class ONDRecord {
@@ -27,7 +24,7 @@ public class ONDRecord {
     private ONDRecord(String owner, String name, String desc, boolean ownerInterface) {
         this.owner = owner;
         this.name = name;
-        this.desc = TRANSLATE(desc);
+        this.desc = TRANSLATE_DESC(desc);
         this.ownerInterface = ownerInterface;
     }
 
@@ -78,6 +75,12 @@ public class ONDRecord {
         return new ONDRecord(mclass, mname, mdesc, itf);
     }
 
+    public static ONDRecord getInstance(String spec, String desc) {
+        ONDRecord result = getInstance(spec);
+        assert result.desc == null;
+        return new ONDRecord(result.owner, result.name, desc, result.ownerInterface);
+    }
+    
     public String desc() {
         return desc;
     }
@@ -142,18 +145,13 @@ public class ONDRecord {
     }
     
     public ONDRecord addClassName(JvmOp op) {
-        if (owner == null && OPTION(GlobalOption.PREPEND_CLASSNAME)) {
-            LOG(M255,op); // "classname has been added to argument of some %s instruction(s)"
-            return new ONDRecord(CLASS_NAME(), name, desc, ownerInterface);
+        String ownerx = Global.TRANSLATE_OWNER(owner);
+        if (!ownerx.equals(owner)) {
+            return new ONDRecord(ownerx, name, desc, ownerInterface);
         }
         return this;
     }
     
-    public ONDRecord changeDesc(String newdesc) {
-        assert desc == null;
-        return new ONDRecord(owner, name, newdesc, ownerInterface);
-    }
-
     public ONDRecord setInterface(boolean itf) {
         return new ONDRecord(owner, name, desc, itf);
     }

@@ -2,6 +2,7 @@ package jynx;
 
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.function.BinaryOperator;
 import java.util.function.UnaryOperator;
 import java.util.Objects;
 import java.util.Optional;
@@ -27,6 +28,7 @@ public class Global {
     private String classname;
     private final Main.MainOption main;
     private UnaryOperator<String> parmtrans;
+    private BinaryOperator<String> ownertrans;
     
     private Global() {
         this.options = EnumSet.noneOf(GlobalOption.class);
@@ -46,6 +48,12 @@ public class Global {
     }
     
     private static Global global = new Global();
+    
+    public static void newGlobal(Main.MainOption type, EnumSet<GlobalOption> options) {
+        global = new Global(options,type);
+        // "%n%s; Java runtime version %s"
+        LOG(M4,type.version(),javaRuntimeVersion());
+    }
     
     public static Logger LOGGER() {
         return global.logger;
@@ -68,10 +76,14 @@ public class Global {
     }
 
 
-    public static void newGlobal(Main.MainOption type, EnumSet<GlobalOption> options) {
-        global = new Global(options,type);
-        // "%n%s; Java runtime version %s"
-        LOG(M4,type.version(),System.getProperty("java.runtime.version"));
+    public static String javaRuntimeVersion() {
+        String result = System.getProperty("java.runtime.version");
+        int plus = result.indexOf('+');
+        if (OPTION(GlobalOption.DEBUG) || plus < 0) {
+            return result;
+        } else {
+            return result.substring(0,plus);
+        }
     }
     
     public static void setJvmVersion(JvmVersion jvmversion) {
@@ -163,27 +175,16 @@ public class Global {
         return Optional.empty();
     }
 
-    private static LogMsgType msgType(Message msg) {
-        LogMsgType logtype = msg.getLogtype();
-        if (logtype == LogMsgType.WARNING && OPTION(GlobalOption.__TREAT_WARNINGS_AS_ERRORS)) {
-            logtype = LogMsgType.ERROR;
-        }
-        if (logtype == LogMsgType.ERROR && OPTION(GlobalOption.__EXIT_IF_ERROR)) {
-            logtype = LogMsgType.SEVERE; //logtype.up();
-        }
-        return logtype;
-    }
-    
     public static void LOG(Message msg,Object... objs) {
-        global.logger.log(msgType(msg),msg,objs);
+        global.logger.log(msg,objs);
     }
 
     public static void LOG(Line line, Message msg, Object... objs) {
-        global.logger.log(line.toString(),msgType(msg),msg, objs);
+        global.logger.log(line.toString(),msg, objs);
     }
 
     public static void LOG(String linestr, Message msg, Object... objs) {
-        global.logger.log(linestr,msgType(msg),msg, objs);
+        global.logger.log(linestr,msg, objs);
     }
 
     public static void LOG(Exception ex) {
@@ -212,11 +213,24 @@ public class Global {
         global.parmtrans = parmtrans;
     }
     
-    public static String TRANSLATE(String string) {
-        if (string == null || global.parmtrans == null || !string.startsWith("(") || !string.contains("->")) {
-            return string;
+    public static void setOwnerTrans(BinaryOperator<String> ownertrans) {
+        assert global.ownertrans == null;
+        global.ownertrans = ownertrans;
+    }
+    
+    public static String TRANSLATE_DESC(String str) {
+        if (str == null || global.parmtrans == null || !str.startsWith("(")) {
+            return str;
         } else {
-            return global.parmtrans.apply(string);
+            return global.parmtrans.apply(str);
+        }
+    }
+    
+    public static String TRANSLATE_OWNER(String str) {
+        if (global.ownertrans == null) {
+            return str;
+        } else {
+            return global.ownertrans.apply(CLASS_NAME(),str);
         }
     }
 }

@@ -116,7 +116,7 @@ public enum LineOps implements LineOp {
     }
     
     public static LineOp translateDesc() {
-        return new AdjustLine(Adjustment.TRANSFORM,jynx.Global::TRANSLATE);
+        return new AdjustLine(Adjustment.TRANSFORM,jynx.Global::TRANSLATE_DESC);
     }
     
     public static LineOp check(String str) {

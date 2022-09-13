@@ -40,10 +40,12 @@ public enum JvmVersion {
     V16_PREVIEW(Opcodes.V16 | Opcodes.V_PREVIEW),
     V17(Opcodes.V17),
     V17_PREVIEW(Opcodes.V17 | Opcodes.V_PREVIEW),
-    V18(Opcodes.V18),
-    V18_PREVIEW(Opcodes.V18 | Opcodes.V_PREVIEW),
+    V18(62),    // Opcode.V18
+    V18_PREVIEW(62 | Opcodes.V_PREVIEW),    // Opcode.V18
     V19(63), // Opcodes.V19
     V19_PREVIEW(63 | Opcodes.V_PREVIEW),  // Opcodes.V19
+    V20(64), // Opcodes.V20
+    V20_PREVIEW(64 | Opcodes.V_PREVIEW),  // Opcodes.V20
     
     NEVER(-1); // must be last 0xffff ffff
     
@@ -88,7 +90,7 @@ public enum JvmVersion {
     private static final Map<String,JvmVersion> PARSE_MAP;
     
     public final static JvmVersion MIN_VERSION = V1_0_2;
-    public final static JvmVersion DEFAULT_VERSION = V18;
+    public final static JvmVersion DEFAULT_VERSION = V17;
     public final static JvmVersion SUPPORTED_VERSION = V18;
     public final static JvmVersion MAX_VERSION;
 

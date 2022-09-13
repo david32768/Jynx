@@ -19,8 +19,7 @@ public class FieldDesc extends OwnerNameDesc {
     }
     
     public static FieldDesc getInstance(String mname, String desc, JvmOp asmop) {
-        ONDRecord ond = ONDRecord.getInstance(mname);
-        ond = ond.changeDesc(desc);
+        ONDRecord ond = ONDRecord.getInstance(mname,desc);
         ond = ond.addClassName(asmop);
         CLASS_NAME.validate(ond.owner());
         FIELD_NAME.validate(ond.name());
@@ -28,9 +27,8 @@ public class FieldDesc extends OwnerNameDesc {
         return new FieldDesc(ond);
     }
     
-    public static FieldDesc getInstance(String name, String desc) {
-        ONDRecord ond = ONDRecord.getInstance(name);
-        ond = ond.changeDesc(desc);
+    public static FieldDesc getLocalInstance(String name, String desc) {
+        ONDRecord ond = ONDRecord.getInstance(name,desc);
         if (ond.desc() == null || ond.name() == null || ond.name().isEmpty() || ond.owner() != null) {
             // "invalid %s description %s %s"
             throw new LogIllegalArgumentException(M137,Context.FIELD,name,desc);

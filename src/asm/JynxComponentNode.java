@@ -52,8 +52,8 @@ public class JynxComponentNode implements ContextDependent {
         }
         String name = line.nextToken().asName();
         String descriptor = line.nextToken().asString();
-        FieldDesc compfd = FieldDesc.getInstance(name, descriptor);
-        MethodDesc compmd = MethodDesc.getInstance(compfd.getName() + "()" + compfd.getDesc());
+        FieldDesc compfd = FieldDesc.getLocalInstance(name, descriptor);
+        MethodDesc compmd = MethodDesc.getLocalInstance(compfd.getName() + "()" + compfd.getDesc());
         if (Constants.isNameIn(compmd.getName(),Constants.INVALID_COMPONENTS)) {
             LOG(M47,compfd.getName());   // "Invalid component name - %s"
         }

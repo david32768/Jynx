@@ -24,7 +24,7 @@ public class Logger {
     
     private int errct = 0;
 
-    public Logger(String type) {
+    Logger(String type) {
         this.contexts = new ArrayDeque<>();
         this.lines = new ArrayDeque<>();
         this.endinfo = new LinkedHashSet<>(); // so order of info messages is reproducible
@@ -100,7 +100,19 @@ public class Logger {
         return errct == 0;
     }
 
-    void log(LogMsgType logtype, Message msg, Object... objs) {
+    private static LogMsgType msgType(Message msg) {
+        LogMsgType logtype = msg.getLogtype();
+        if (logtype == LogMsgType.WARNING && OPTION(GlobalOption.__TREAT_WARNINGS_AS_ERRORS)) {
+            logtype = LogMsgType.ERROR;
+        }
+        if (logtype == LogMsgType.ERROR && OPTION(GlobalOption.__EXIT_IF_ERROR)) {
+            logtype = LogMsgType.SEVERE;
+        }
+        return logtype;
+    }
+    
+    void log(Message msg, Object... objs) {
+       LogMsgType logtype = msgType(msg);
         switch (logtype) {
             case SEVERE:
                 printError(msg,objs);
@@ -133,10 +145,10 @@ public class Logger {
         
     }
 
-    void log(String line, LogMsgType logtype, Message msg, Object... objs) {
+    void log(String line, Message msg, Object... objs) {
         String savedline = currentLine;
         setLine(line);
-        log(logtype,msg,objs);
+        log(msg,objs);
         currentLine = savedline;
     }
 

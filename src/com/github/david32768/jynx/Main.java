@@ -24,14 +24,17 @@ import jynx2asm.JynxScanner;
 public class Main {
     
     private final static String SUFFIX = ".jx";
-    private final static String JAVA_SUFFIX = ".java";
 
     private final static int JYNX_VERSION = 0;
-    private final static int JYNX_RELEASE = 12;
-    private final static int JYNX_BUILD = 26;
+    private final static int JYNX_RELEASE = 18;
+    private final static int JYNX_BUILD = 0;
     
     private static String version() {
-        return String.format("%d+%d-%d",JYNX_VERSION,JYNX_RELEASE,JYNX_BUILD);
+        if (OPTION(DEBUG)) {
+            return String.format("%d+%d-%d",JYNX_VERSION,JYNX_RELEASE,JYNX_BUILD);
+        } else {
+            return String.format("%d+%d",JYNX_VERSION,JYNX_RELEASE);
+        }
     }
 
     private static void outputVersion() {
@@ -94,12 +97,12 @@ public class Main {
         try {
             JynxScanner scanner;
             if (optfname.isPresent()) {
-                if (!fname.endsWith(SUFFIX) && !fname.endsWith(JAVA_SUFFIX)) {
+                if (!fname.endsWith(SUFFIX)) {
                     LOG(M97,fname,SUFFIX); // "file(%s) does not have %s suffix"
                     return false;
                 }
                 Path pathj = Paths.get(fname);
-                scanner = JynxScanner.getInstance(pathj,fname.endsWith(JAVA_SUFFIX));
+                scanner = JynxScanner.getInstance(pathj);
             } else {
                 scanner = JynxScanner.getInstance(System.in);
             }

@@ -99,7 +99,7 @@ public class String2Object {
         String htag = token.substring(0,colon);
         HandleType ht = HandleType.fromMnemonic(htag);
         String handle = token.substring(colon + 1);
-        OwnerNameDesc ond = OwnerNameDesc.getOwnerMethodDescAndCheck(handle,ht);
+        OwnerNameDesc ond = OwnerNameDesc.getInstance(handle,ht);
         
         String desc = ond.getDesc();
         if (!ht.isField() && ond.isStaticInit() || (ht == REF_newInvokeSpecial) != ond.isInit()) {

@@ -199,12 +199,9 @@ public class String2Insn {
     
     private Instruction arg_class(JvmOp jvmop) {
         addDotLine |= generateDotLine;
-        String type = line.nextToken().asString();
-        if (jvmop == JvmOp.asm_new && OPTION(GlobalOption.PREPEND_CLASSNAME)) {
-            if (type.equals("/")) {
-                type = className;
-                LOG(M255,jvmop); // "classname has been added to argument of some %s instruction(s)"
-            }
+        String typeo = line.nextToken().asString();
+        String type = TRANSLATE_OWNER(typeo);
+        if (jvmop == JvmOp.asm_new) {
             CLASS_NAME.validate(type);
         } else {
             OBJECT_NAME.validate(type);
@@ -357,7 +354,7 @@ public class String2Insn {
     private Instruction arg_method(JvmOp jvmop) {
         addDotLine |= generateDotLine;
         String mspec = line.nextToken().asString();
-        OwnerNameDesc cmd = OwnerNameDesc.getOwnerMethodDescAndCheck(mspec,jvmop);
+        OwnerNameDesc cmd = MethodDesc.getInstance(mspec,jvmop);
         checker.usedMethod(cmd, jvmop, line);
         return new MethodInstruction(jvmop, cmd);
     }

@@ -28,7 +28,7 @@ public class JynxClassWriter extends ClassWriter {
     protected String getCommonSuperClass(final String type1, final String type2) {
         if (forname) {
             // "class %s has used Class.forName(); java.runtime.version = %s"
-           LOG(M157,this.getClass().getSimpleName(),System.getProperty("java.runtime.version"));
+           LOG(M157,this.getClass().getSimpleName(),Global.javaRuntimeVersion());
            return super.getCommonSuperClass(type1, type2);
         }
         String common = hints.getCommonSuperClass(type1, type2);

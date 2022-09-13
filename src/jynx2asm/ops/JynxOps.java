@@ -3,6 +3,7 @@ package jynx2asm.ops;
 import java.io.PrintWriter;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.function.BinaryOperator;
 import java.util.function.UnaryOperator;
 import java.util.HashMap;
 import java.util.List;
@@ -89,6 +90,10 @@ public class JynxOps {
                 UnaryOperator<String> parmtrans = lib.parmTranslator();
                 if (parmtrans != null) {
                     jynx.Global.setParmTrans(parmtrans);
+                }
+                BinaryOperator<String> ownertrans = lib.ownerTranslator();
+                if (ownertrans != null) {
+                    jynx.Global.setOwnerTrans(ownertrans);
                 }
                 for (MacroOption opt:lib.getOptions()) {
                     ADD_OPTION(opt.option());

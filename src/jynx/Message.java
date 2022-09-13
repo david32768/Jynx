@@ -22,7 +22,7 @@ public enum Message {
     M15(BLANK,"warn if names non-standard"),
     M16(BLANK,"use ASM BasicVerifier"),
     M17(BLANK,"use ASM SimpleVerifier (default)"),
-    M18(BLANK,"prepend class name to methods and fields if necessary"),
+    //
     M19(BLANK,"use user stack map instead of ASM generated"),
     M20("invalid major version(%d)"),
     M21("invalid minor version(%d) - spec table 4.1A"),
@@ -255,7 +255,7 @@ public enum Message {
     M252("own init method %s not found"),
     M253("illegal number of dimensions %d; must be in range [0,%d]"),
     M254("%s is used in a macro after a mulit-line op"),
-    M255(ENDINFO,"classname has been added to argument of some %s instruction(s)"),
+
     M256("%s has %d entries, maximum possible is %d"),
     M257("argument count %d is not in range [0,%d]"),
     M258(WARNING,"%s is a reserved word and cannot be a Java Id"),

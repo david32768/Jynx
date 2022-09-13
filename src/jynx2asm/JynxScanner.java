@@ -50,7 +50,7 @@ public class JynxScanner implements Iterator<Line> {
         return new JynxScanner(new BufferedReader(new StringReader(str)));
     }
     
-    public static JynxScanner getInstance(Path path, boolean javafile) throws IOException {
+    public static JynxScanner getInstance(Path path) throws IOException {
         JynxScanner js = new JynxScanner(Files.newBufferedReader(path));
         js.skipPreComments();
         return js;

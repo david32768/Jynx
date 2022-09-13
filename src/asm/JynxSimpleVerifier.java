@@ -39,7 +39,7 @@ public class JynxSimpleVerifier extends SimpleVerifier {
             throw new TypeNotPresentException(name, null);
         }
          // "class %s has used Class.forName(); java.runtime.version = %s"
-        LOG(M157,this.getClass().getSimpleName(),System.getProperty("java.runtime.version"));
+        LOG(M157,this.getClass().getSimpleName(),Global.javaRuntimeVersion());
         return super.getClass(type);
     }
 
