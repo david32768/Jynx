@@ -189,15 +189,24 @@ Changes are
 
 ## Additions
 
-*	.nesthost <host-class-name>
+*	.nesthost
 ```
 	; .nesthost <host-class-name>
 	.nesthost x/y
 ```
-*	.nestmember <class-name>
-*	.permittedSubclass <class-name>
-*	ldc <method-handle>
+*	.nestmember
 ```
+	; .nestmember <member-class-name>
+	.nestmember x/y
+```
+*	.permittedSubclass
+```
+	; .permittedSubclass <subclass-name>
+	.permittedSubclass x/y
+```
+*	add support for method-handle to ldc
+```
+	; ldc <method-handle>
 	; grammar for method-handle
 	<handle-type>:<method-name-desc>
 	<handle-type> = [VL|ST|SP|NW|IN]
