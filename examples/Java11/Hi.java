@@ -9,12 +9,12 @@ public class Hi {
 }
 /*
 ; options = [SKIP_FRAMES]
-; Jynx DISASSEMBLY 0+12-22
+; Jynx DISASSEMBLY 0+18
 .version V11
 .source Hi.java
 .class public Hi
-  .super java/lang/Object ; assumed if not supplied
-  .inner_class public static final java/lang/invoke/MethodHandles$Lookup innername Lookup outer java/lang/invoke/MethodHandles
+  .super java/lang/Object
+  .inner_class public static final java/lang/invoke/MethodHandles$Lookup outer java/lang/invoke/MethodHandles innername Lookup
 
 .method public <init>()V
     @L0:

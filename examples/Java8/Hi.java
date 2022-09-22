@@ -9,7 +9,7 @@ public class Hi {
 }
 /*
 ; options = [SKIP_FRAMES]
-; Jynx DISASSEMBLY 0+12-22
+; Jynx DISASSEMBLY 0+18
 .version V1_8
 .source Hi.java
 .class public Hi

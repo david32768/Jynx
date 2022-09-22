@@ -1,15 +1,16 @@
 .version V9
 .source module-info.java
-.module com.github.david32768.jynx 0.12
+.module com.github.david32768.jynx 0.18
 .main com/github/david32768/jynx/Main
 .exports com/github/david32768/jynx
+.exports jynx2asm/ops
 .requires mandated java.base 9
 .requires org.objectweb.asm 9.2.0
 .requires org.objectweb.asm.tree 9.2.0
 .requires org.objectweb.asm.tree.analysis 9.2.0
 .requires org.objectweb.asm.util 9.2.0
 .uses com/github/david32768/jynx/MacroLib
-.provides com/github/david32768/jynx/MacroLib with .array
+.provides jynx2asm/ops/MacroLib with .array
   jynx2asm/ops/StructuredMacroLib
 .end_array
 .packages .array
