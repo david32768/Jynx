@@ -18,7 +18,7 @@ public enum Message {
     M11(BLANK,"let simple verifier use Class.forName()"),
     M12(BLANK,"%nUsage:%n"),
     M13(BLANK,"exit with stack trace if error"),
-    M14(BLANK,"reduce release if greater than ASM support"),
+    M14(BLANK,"if necessary reduces JVM release to maximum supported by ASM version"),
     M15(BLANK,"warn if names non-standard"),
     M16(BLANK,"use ASM BasicVerifier"),
     M17(BLANK,"use ASM SimpleVerifier (default)"),
@@ -233,7 +233,7 @@ public enum Message {
     M230(WARNING,"keys must be in ascending order; key = %d; previous key = %s"),
 
     M232("Last instruction was %s: expected %s"),
-    M233("Duplicate entry %s in %s"),
+    M233("Duplicate entry %s in %s: previous entry at line %d"),
     M234("invalid parameter number %d; bounds are [0 - %d)"),
     M235("%s method appears in an interface"),
     M236(STYLE,"%s (%s) starts with uppercase letter and is not all uppercase"),

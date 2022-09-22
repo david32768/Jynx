@@ -39,22 +39,21 @@ public class TypeHints {
             NameDesc.CLASS_NAME.validate(sub);
             ReservedWord rw = dotarray.nextToken()
                     .expectOneOf(res_common,res_subtypes);
-            String base;
             switch (rw) {
                 case res_common:
                     String common = sub;
-                    base = dotarray.nextToken().asString();
-                    NameDesc.CLASS_NAME.validate(base);
+                    String base1 = dotarray.nextToken().asString();
+                    NameDesc.CLASS_NAME.validate(base1);
                     String base2 = dotarray.nextToken().asString();
-                    NameDesc.CLASS_NAME.validate(base);
-                    addCommon(common, base, base2);
+                    NameDesc.CLASS_NAME.validate(base1);
+                    addCommon(common, base1, base2);
                     addCommon(common, common, base2);
-                    addCommon(common, common, base);
-                    addSubtype(base,common);
+                    addCommon(common, common, base1);
+                    addSubtype(base1,common);
                     addSubtype(base2,common);
                     break;
                 case res_subtypes:
-                    base = dotarray.nextToken().asString();
+                    String base = dotarray.nextToken().asString();
                     NameDesc.CLASS_NAME.validate(base);
                     addSubtype(sub, base);
                     addCommon(base,base,sub);

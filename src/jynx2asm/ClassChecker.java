@@ -98,7 +98,25 @@ public class ClassChecker {
         return checker;
     }
     
-    public void setSuper(String csuper) {
+    public String checkSuper(String csuper) {
+        if (csuper == null && !Constants.OBJECT_CLASS.equalString(className)) {
+            switch(classType) {
+                case MODULE_CLASS:
+                    break;
+                case RECORD:
+                    csuper = Constants.RECORD_SUPER.toString();
+                    break;
+                case ENUM:
+                    csuper = Constants.ENUM_SUPER.toString();
+                    break;
+                default:
+                    csuper = Constants.OBJECT_CLASS.toString();
+                    break;
+            }
+            if (csuper != null) {
+                LOG(M327,Directive.dir_super,csuper); // "added: %s %s"
+            }
+        }
         if (classType == ClassType.ENUM && Constants.ENUM_SUPER.equalString(csuper)) {
             ObjectLine<HandleType> objline = new ObjectLine<>(REF_invokeStatic,Line.EMPTY);
             String str = String.format(Constants.VALUES_FORMAT.toString(),className);
@@ -108,6 +126,7 @@ public class ClassChecker {
             OwnerNameDesc valueof = OwnerNameDesc.getInstance(str,REF_invokeStatic);
             ownMethodsUsed.put(valueof,objline);
         }
+        return csuper;
     }
     
     public String getClassName() {

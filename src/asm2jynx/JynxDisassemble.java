@@ -307,7 +307,7 @@ public class JynxDisassemble {
     private void printModuleInfo(ModuleNode module) {
         jp.printDirective(dir_main,module.mainClass);
         EnumSet<AccessFlag> accflags;
-        if (module.packages != null) {
+        if (isPresent(module.packages)) {
             jp.appendDirective(dir_packages);
             printArray(module.packages);
         }
@@ -318,7 +318,7 @@ public class JynxDisassemble {
             accflags = AccessFlag.getEnumSet(men.access, MODULE,jvmVersion);
             jp.appendDirective(dir_exports)
                     .append(accflags, men.packaze);
-            if(men.modules == null || men.modules.isEmpty()) {
+            if(isAbsent(men.modules)) {
                 jp.nl();
             } else {
                 jp.append(res_to);
@@ -329,7 +329,7 @@ public class JynxDisassemble {
             accflags = AccessFlag.getEnumSet(mon.access, MODULE,jvmVersion);
             jp.appendDirective(dir_opens)
                     .append(accflags, mon.packaze);
-            if(mon.modules == null || mon.modules.isEmpty()) {
+            if(isAbsent(mon.modules)) {
                 jp.nl();
             } else {
                 jp.append(res_to);

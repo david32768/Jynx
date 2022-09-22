@@ -3,7 +3,6 @@ package asm;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,7 +26,6 @@ import jynx.LogIllegalStateException;
 import jynx.ReservedWord;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
-import jynx2asm.NameDesc;
 import jynx2asm.ONDRecord;
 import jynx2asm.Token;
 import jynx2asm.TokenArray;
@@ -39,7 +37,7 @@ public class JynxModule {
     private final JvmVersion jvmVersion;
     private final Map<String,EnumSet<Directive>> packageUse;
     private final Map<String,Line> providerUse;
-    private final Set<String> services;
+    private final Map<String,Line> services;
 
     private boolean javaBase;
     private boolean packagesVisited;
@@ -52,7 +50,7 @@ public class JynxModule {
         this.jvmVersion = jvmversion;
         this.packageUse = new HashMap<>();
         this.providerUse = new HashMap<>();
-        this.services = new HashSet<>();
+        this.services = new HashMap<>();
         this.javaBase = false;
         this.packagesVisited = false;
         this.unique_directives = new HashMap<>();
@@ -117,27 +115,6 @@ public class JynxModule {
         }
     }
     
-    private String[] arrayString(Directive dir, Line line,NameDesc nd) {
-        TokenArray array = TokenArray.getInstance(js, line);
-        Set<String> modlist = new LinkedHashSet<>();
-        while(true) {
-            Token token = array.firstToken();
-            if (token.is(ReservedWord.right_array)) {
-                break;
-            }
-            String mod = token.asString();
-            boolean ok = nd.validate(mod);
-            if (ok) {
-                ok = modlist.add(mod);
-                if (!ok) {
-                    LOG(M233,mod,dir); // "Duplicate entry %s in %s"
-                }
-            }
-            array.noMoreTokens();
-        }
-        return modlist.toArray(new String[0]);
-    }
-
     private void visitMain(Line line) {
         String main = line.nextToken().asString();
         CHECK_SUPPORTS(AttributeName.ModuleMainClass);
@@ -148,7 +125,7 @@ public class JynxModule {
     
     private void visitPackages(Line line) {
         packagesVisited = true;
-        String[] packages = arrayString(Directive.dir_packages,line, PACKAGE_NAME);
+        String[] packages = TokenArray.arrayString(Directive.dir_packages,js,line, PACKAGE_NAME);
         for (String pkg:packages) {
             checkPackage(pkg, Directive.dir_packages);
             modNode.visitPackage(pkg);
@@ -159,11 +136,11 @@ public class JynxModule {
         String service = line.lastToken().asString();
         boolean ok = CLASS_NAME_IN_MODULE.validate(service);
         if (ok) {
-            ok = services.add(service);
-            if (ok) {
+            Line previous = services.put(service, line);
+            if (previous == null) {
                 modNode.visitUse(service);
             } else {
-                LOG(M233,service,Directive.dir_uses); // "Duplicate entry %s in %s"
+                LOG(M233,service,Directive.dir_uses, previous.getLinect()); // "Duplicate entry %s in %s: previous entry at line %d"
             }
         }
     }
@@ -185,7 +162,7 @@ public class JynxModule {
         Token to = line.nextToken();
         if (to != Token.END_TOKEN) {
             to.mustBe(ReservedWord.res_to);
-            modarr = arrayString(Directive.dir_exports,line,MODULE_NAME);
+            modarr = TokenArray.arrayString(Directive.dir_exports,js,line,MODULE_NAME);
         }
         modNode.visitExport(packaze,access,modarr);
     }
@@ -201,7 +178,7 @@ public class JynxModule {
         Token to = line.nextToken();
         if (to != Token.END_TOKEN) {
             to.mustBe(ReservedWord.res_to);
-            modarr = arrayString(Directive.dir_opens,line,MODULE_NAME);
+            modarr = TokenArray.arrayString(Directive.dir_opens,js,line,MODULE_NAME);
         }
         line.noMoreTokens();
         modNode.visitOpen(packaze,access,modarr);
@@ -225,7 +202,7 @@ public class JynxModule {
         CLASS_NAME_IN_MODULE.validate(service);
         Line linex = providerUse.put(service, line);
         line.nextToken().mustBe(ReservedWord.res_with);
-        String[] modarr = arrayString(Directive.dir_provides,line, CLASS_NAME_IN_MODULE);
+        String[] modarr = TokenArray.arrayString(Directive.dir_provides,js,line, CLASS_NAME_IN_MODULE);
         if (linex == null) {
             if (modarr.length == 0) {
                 LOG(M225,Directive.dir_provides); // "empty %s ignored"

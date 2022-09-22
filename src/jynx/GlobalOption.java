@@ -30,7 +30,7 @@ public enum GlobalOption {
     SKIP_CODE(M39,DISASSEMBLY), // "do not produce code"
     SKIP_DEBUG(M29,DISASSEMBLY), // "do not produce debug info"
     SKIP_FRAMES(M30,DISASSEMBLY), // "do not produce stack map"
-    DOWN_CAST(M14,DISASSEMBLY), // "reduce release if greater than ASM support"
+    DOWN_CAST(M14,DISASSEMBLY), // "if necessary reduces JVM release to maximum supported by ASM version"
     
     DEBUG(M13,ASSEMBLY,DISASSEMBLY), // "exit with stack trace if error"
     

@@ -3,6 +3,7 @@ package asm;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -73,13 +74,13 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     private ObjectLine<OwnerNameDesc> outer;
     private String host;
 
-    private final List<String> cimplements;
-    private final List<InnerClassNode> innerClasses;
-    private final List<String> members;
+    private final Map<String,Line> cimplements;
+    private final Map<String,ObjectLine<InnerClassNode>> innerClasses;
+    private final Map<String,Line> members;
 
     private final List<AcceptsVisitor> annotations;
 
-    private final List<String> permittedSubclasses;
+    private final Map<String,Line> permittedSubclasses;
     
     private VerifierFactory verifierFactory;
     
@@ -95,12 +96,12 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         this.source = source;
         this.cname = cname;
         this.accessName = accessname;
-        this.cimplements = new ArrayList<>();
-        this.innerClasses = new ArrayList<>();
+        this.cimplements = new LinkedHashMap<>();
+        this.innerClasses = new LinkedHashMap<>();
         this.classType = classtype;
         this.checker = ClassChecker.getInstance(cname,accessname,classtype,version);
-        this.members = new ArrayList<>();
-        this.permittedSubclasses = new ArrayList<>();
+        this.members = new LinkedHashMap<>();
+        this.permittedSubclasses = new LinkedHashMap<>();
         this.annotations = new ArrayList<>();
         this.csignature = null;
         this.csuper = null;
@@ -266,10 +267,13 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         csuper = csuperx;
     }
 
-    public void setImplements(Line line) {
+    private void setImplements(Line line) {
         String token = line.lastToken().asString();
         CLASS_NAME.validate(token);
-        this.cimplements.add(token);
+        Line previous = this.cimplements.putIfAbsent(token,line);
+        if (previous != null) {
+            LOG(M233,token,Directive.dir_implements,previous.getLinect()); // "Duplicate entry %s in %s: previous entry at line %d"
+        }
     }
 
     private void setInnerClass(Directive dir,Line line) {
@@ -311,7 +315,12 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         }
         if (outerclass != null) CLASS_NAME.validate(outerclass);
         InnerClassNode in = new InnerClassNode(innerclass, outerclass,innername, flags);
-        innerClasses.add(in);
+        ObjectLine<InnerClassNode> inline = new ObjectLine<>(in,line);
+        ObjectLine<InnerClassNode> previous = innerClasses.putIfAbsent(innerclass, inline);
+        if (previous != null) {
+            LOG(M233,innerclass,dir,previous.line().getLinect()); // "Duplicate entry %s in %s: previous entry at line %d"
+            return;
+        }
     }
 
     private void setOuterClass(Directive dir, Line line) {
@@ -349,8 +358,8 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     }
     
     private void setHostClass(Line line) {
-        String hostx = line.nextToken().asName();
-        line.noMoreTokens();
+        String hostx = line.lastToken().asName();
+        CLASS_NAME.validate(hostx);
         sameOwnerAsClass(hostx);
         if (!members.isEmpty()) {
             LOG(M289);   // "A nest member has already been defined"
@@ -361,13 +370,17 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
 
     private void setMemberClass(Line line) {
         String member = line.lastToken().asName();
+        CLASS_NAME.validate(member);
         sameOwnerAsClass(member);
         Line hostline = unique_directives.get(Directive.dir_nesthost);
         if (hostline != null) {
             LOG(M304,hostline); // "Nest host already defined%n  %s"
             return;
         }
-        members.add(member);
+        Line previous = members.putIfAbsent(member,line);
+        if (previous != null) {
+            LOG(M233,member,Directive.dir_nestmember,previous.getLinect()); // "Duplicate entry %s in %s: previous entry at line %d"
+        }
     }
 
     private void setPermittedSubclass(Line line) {
@@ -377,7 +390,10 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         }
         String subclass = line.lastToken().asString();
         CLASS_NAME.validate(subclass);
-        permittedSubclasses.add(subclass);
+        Line previous = permittedSubclasses.putIfAbsent(subclass,line);
+        if (previous != null) {
+            LOG(M233,subclass,Directive.dir_permittedSubclass,previous.getLinect()); // "Duplicate entry %s in %s: previous entry at line %d"
+        }
     }
     
     private void setHints(JynxScanner js, Line line) {
@@ -406,26 +422,8 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         if (hasBeenVisited) {
             throw new IllegalStateException();
         }
-        if (csuper == null && !Constants.OBJECT_CLASS.equalString(cname)) {
-            switch(classType) {
-                case MODULE_CLASS:
-                    break;
-                case RECORD:
-                    csuper = Constants.RECORD_SUPER.toString();
-                    break;
-                case ENUM:
-                    csuper = Constants.ENUM_SUPER.toString();
-                    break;
-                default:
-                    csuper = Constants.OBJECT_CLASS.toString();
-                    break;
-            }
-            if (csuper != null) {
-                LOG(M327,Directive.dir_super,csuper); // "added: %s %s"
-            }
-        }
-        checker.setSuper(csuper);
-        String[] interfaces = cimplements.toArray(new String[0]);
+        csuper = checker.checkSuper(csuper);
+        String[] interfaces = cimplements.keySet().toArray(new String[0]);
         int cflags = accessName.getAccess();
         cv.visit(jvmVersion.getRelease(), cflags, cname, csignature, csuper, interfaces);
         hasBeenVisited = true;
@@ -457,13 +455,14 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         }
         annotations.stream()
                 .forEach(jan -> jan.accept(cv));
-        for (String  member:members) {
+        for (String  member:members.keySet()) {
             cv.visitNestMember(member);
         }
-        for (String subclass:permittedSubclasses) {
+        for (String subclass:permittedSubclasses.keySet()) {
             cv.visitPermittedSubclass(subclass);
         }
-        for (InnerClassNode in:innerClasses) {
+        for (ObjectLine<InnerClassNode> inline:innerClasses.values()) {
+            InnerClassNode in = inline.object();
             in.accept(cv);
             if (in.name.equals(cname)) {
                 inner = true;
@@ -472,7 +471,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         if (cname.contains("$") && !inner) {
             LOG(M52); // "class name contains '$' but is not an internal class"
         }
-        verifierFactory = new VerifierFactory(cname, csuper, cimplements, permittedSubclasses, hints);
+        verifierFactory = new VerifierFactory(cname, csuper, cimplements.keySet(), permittedSubclasses.keySet(), hints);
 
     }
 
