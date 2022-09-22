@@ -2,7 +2,8 @@
 
 This is a rewritten version of [Jasmin](https://github.com/davidar/jasmin)
  using [ASM](https://asm.ow2.io) version 9.2 as a back end.
-It is written in Java V1_8 and supports all features up to V18 except user attributes.
+It is written in Java V1_8 (apart from module-info.java)
+ and supports all features up to V18 except user attributes.
 
 More checking is done before using ASM. For example
  stack and local variables types are checked assuming
@@ -39,9 +40,9 @@ Options are:
 *	--SIMPLE_VERIFIER use ASM SimpleVerifier (default)
 *	--ALLOW_CLASS_FORNAME let simple verifier use Class.forName()
 *	--CHECK_METHOD_REFERENCES check that called methods exist (on class path)
-*	--PREPEND_CLASSNAME prepend class name to methods and fields if necessary
 *	--VALIDATE_ONLY do not output class file
 *	--JVM_OPS_ONLY only JVM specified ops
+*	--DEBUG exit with stack trace if error
 
  2jynx {options}  class-name|class_file > .jx_file
    (produces a .jx file from a class)
@@ -51,6 +52,7 @@ Options are:
 *	--SKIP_CODE do not produce code
 *	--SKIP_DEBUG do not produce debug info
 *	--SKIP_FRAMES do not produce stack map
+*	--DOWN_CAST if necessary reduces JVM release to maximum supported by ASM version
 
 ## Jasmin 1.0
 
@@ -94,7 +96,7 @@ Changes are:
 *	if .var labels are omitted then from start_method to end_method is assumed
 *	float constants must be suffixed by 'F' and long constants by 'L'
 *	hexadecimal constants are supported
-*	default version is V18(62.0)
+*	default version is V17(61.0)
   
 ## Jasmin 2.4
 
@@ -109,7 +111,7 @@ Changes are
 ```
 *	options (without -- prefix) can be on .version directive
 ```
-	.version V17 GENERATE_LINE_NUMBERS PREPEND_CLASSNAME
+	.version V17 GENERATE_LINE_NUMBERS JVM_OPS_ONLY
 ```
 *	.deprecated removed; use deprecated pseudo-access_flag
 ```
@@ -130,7 +132,7 @@ Changes are
 ```
 *	.inner class -> .inner_class, .inner interface -> .inner_interface etc.
 ```
-	; .class file (jvms 4.7.6)
+	; class file (jvms 4.7.6)
 	; InnerClass Attribute is inner_class, outer_class, inner_name, inner_class_flags
 	;	inner_class must be present but outer_class and inner_name may be absent
 
@@ -150,11 +152,12 @@ Changes are
 	; .inner class x inner y$z outer w ; Jasmin 2.4
 	.inner_class y$z outer w innername x ; Jynx
 ```
-*	.enclosing method -> .enclosing_method or .enclosing_class
+*	.enclosing method -> .enclosing_method or .outer_class
 *	invokedynamic boot method and parameters must be specified
 ```
 	; (a boot method parameter may be dynamic) 
 	; invokedynamic { name desc  boot_method_and_parameters }
+	; see examples/Java11/Hi.java
 ```
 *	An interface method name should be preceded with a '@' in invoke ops and handles
 ```
@@ -186,22 +189,56 @@ Changes are
 
 ## Additions
 
-*	type_annotations
-*	.nesthost
-*	.nestmember
-*	.record
-*	.component
-*	.module
-*	.hint
-*	.permittedSubclass
+*	.nesthost <host-class-name>
+```
+	; .nesthost <host-class-name>
+	.nesthost x/y
+```
+*	.nestmember <class-name>
+*	.permittedSubclass <class-name>
+*	ldc <method-handle>
+```
+	; grammar for method-handle
+	<handle-type>:<method-name-desc>
+	<handle-type> = [VL|ST|SP|NW|IN]
+
+	<handle-type>:<field-name-desc>
+	<handle-type> = [GF|GS|PF|PS]
+	<field-nam-desc> = <field-name>()<field-desc>
+	
+```
 *	dynamic ldc
 ```
 	; (a boot method parameter may be dynamic) 
 	; ldc { name desc boot_method_and_parameters } 
 ```
+*	.record
+```
+	; grammar
+	.record <access-flags> <record-name>
+	[class-hdr-directive]*
+	[component]*
+	[field]* ; .field for each component must be present
+	[method]* ; .method for each component must be present
+```
+*	.component
+```
+	; grammar
+	.component <component-name> <desc>
+	[annotation|type-annotation]*
+	.end_component ; only necessary if any annotations or type annotations
+```
+*	.module ; see examples/Java11/module-info.java
 *	alias ops e.g. ildc 3 ; load integer 3
 *	extended ops e.g. if_fcmpge label
 *	call common java methods e.g. iabs instead of invokestatic java/lang/Math/iabs(I)I
-*	.macrolib
+*	.macrolib <macro-library-name>
 *	.macrolib structured ; gives access to structured ops e.g. BLOCK, LOOP, END
-*	.catch block if it has .except_type_annotation
+*	type_annotations
+*	.catch block (.catch .end_catch) is required if it has an .except_type_annotation
+*	.hint ; used to help verification if class(es) not available
+```
+	; grammar
+	.hint <subtype-class-name> subtype <class_name>
+	.hint <common-class_name> common <class-name1> class_name2>
+```
