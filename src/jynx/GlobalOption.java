@@ -23,7 +23,7 @@ public enum GlobalOption {
     BASIC_VERIFIER(M16,ASSEMBLY), // "use ASM BasicVerifier"
     SIMPLE_VERIFIER(M17,ASSEMBLY), // "use ASM SimpleVerifier (default)"
     ALLOW_CLASS_FORNAME(M11,ASSEMBLY), // "let simple verifier use Class.forName()"
-    CHECK_METHOD_REFERENCES(M8,ASSEMBLY), // "check that called methods exist (on class path)"
+    CHECK_REFERENCES(M8,ASSEMBLY), // "check that called methods or used fields exist (on class path)"
     VALIDATE_ONLY(M51,ASSEMBLY), // "do not output class file"
     JVM_OPS_ONLY(M5,ASSEMBLY), // "only JVM specified ops"
     

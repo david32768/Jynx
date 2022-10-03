@@ -497,6 +497,9 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     
     public void acceptMethod(JynxMethodNode jmethodnode) {
         MethodNode mv = jmethodnode.visitEnd();
+        if (mv == null) {
+            return;
+        }
         boolean verified = false;
         Interpreter<BasicValue> verifier;
         if (OPTION(GlobalOption.SIMPLE_VERIFIER)) {

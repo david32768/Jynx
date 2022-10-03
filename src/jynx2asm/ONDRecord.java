@@ -6,13 +6,10 @@ import org.objectweb.asm.Handle;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
-
-import static jynx.Global.TRANSLATE_DESC;
 import static jynx2asm.NameDesc.PACKAGE_NAME;
 
 import jvm.Constants;
 import jynx.Global;
-import jynx2asm.ops.JvmOp;
 
 public class ONDRecord {
     
@@ -24,7 +21,7 @@ public class ONDRecord {
     private ONDRecord(String owner, String name, String desc, boolean ownerInterface) {
         this.owner = owner;
         this.name = name;
-        this.desc = TRANSLATE_DESC(desc);
+        this.desc = desc;
         this.ownerInterface = ownerInterface;
     }
 
@@ -47,7 +44,6 @@ public class ONDRecord {
     protected static final char INTERFACE_PREFIX = '@';
     private static final char LEFT_BRACKET = '(';
     private static final char ARRAY_MARKER = '[';
-    private static final char DOT = '.';
     private static final char FORWARD_SLASH = '/';
 
     private static final String EMPTY_PARM = "()";
@@ -72,12 +68,18 @@ public class ONDRecord {
             mclass = mname.substring(0,slindex);
             mname = mname.substring(slindex+1);
         }
+        if (mdesc != null && !NameDesc.DESC.isValid(mdesc)) {
+            mdesc = Global.TRANSLATE_DESC(mdesc);
+        }
         return new ONDRecord(mclass, mname, mdesc, itf);
     }
 
     public static ONDRecord getInstance(String spec, String desc) {
         ONDRecord result = getInstance(spec);
         assert result.desc == null;
+        if (desc != null && !NameDesc.FIELD_DESC.isValid(desc)) {
+            desc = Global.TRANSLATE_DESC(desc);
+        }
         return new ONDRecord(result.owner, result.name, desc, result.ownerInterface);
     }
     
@@ -85,6 +87,38 @@ public class ONDRecord {
         return desc;
     }
 
+    private boolean hasDesc() {
+        return desc != null && !desc.isEmpty();
+    }
+    
+    private boolean hasName() {
+        return name != null && !name.isEmpty();
+    }
+
+    private boolean hasNameAndDesc() {
+        return hasName() && hasDesc();
+    }
+    
+    public boolean isField() {
+        return !isInterface() && hasNameAndDesc() && desc.charAt(0) != LEFT_BRACKET;
+    }
+    
+    public boolean isMethod() {
+        return hasNameAndDesc() && desc.charAt(0) == LEFT_BRACKET;
+    }
+    
+    public boolean hasEmptyParm() {
+        return isMethod() && desc.startsWith(EMPTY_PARM);
+    }
+    
+    public String handleDesc() {
+        if (isField()) {
+            return EMPTY_PARM + desc;
+        }
+        assert isMethod();
+        return desc;
+    }
+    
     public String name() {
         return name;
     }
@@ -101,12 +135,8 @@ public class ONDRecord {
         return owner != null && owner.charAt(0) == ARRAY_MARKER;
     }
     
-    public boolean hasParameters() {
-        return desc != null && !desc.isEmpty() && desc.charAt(0) == LEFT_BRACKET;
-    }
-    
     public String nameDesc() {
-        assert desc != null && desc.charAt(0) == '(';
+        assert isMethod();
         return name + desc;
     }
     
@@ -144,7 +174,7 @@ public class ONDRecord {
         return pkgname;
     }
     
-    public ONDRecord addClassName(JvmOp op) {
+    public ONDRecord translateOwner() {
         String ownerx = Global.TRANSLATE_OWNER(owner);
         if (!ownerx.equals(owner)) {
             return new ONDRecord(ownerx, name, desc, ownerInterface);

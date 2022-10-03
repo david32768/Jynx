@@ -9,18 +9,21 @@ import static jynx2asm.NameDesc.FIELD_NAME;
 import jvm.Context;
 import jvm.HandleType;
 import jynx.LogIllegalArgumentException;
-import jynx2asm.ops.JvmOp;
 
 public class FieldDesc extends OwnerNameDesc {
 
     private FieldDesc(ONDRecord ond) {
         super(ond);
-        assert !ond.isInterface() && ond.desc() != null && !ond.hasParameters();
+        assert ond.isField();
     }
     
-    public static FieldDesc getInstance(String mname, String desc, JvmOp asmop) {
-        ONDRecord ond = ONDRecord.getInstance(mname,desc);
-        ond = ond.addClassName(asmop);
+    public static FieldDesc getInstance(String name, String desc) {
+        ONDRecord ond = ONDRecord.getInstance(name,desc);
+        ond = ond.translateOwner();
+        if (ond.owner() == null || !ond.isField()) {
+            // "invalid %s description %s %s"
+            throw new LogIllegalArgumentException(M137,Context.FIELD,name,desc);
+        }
         CLASS_NAME.validate(ond.owner());
         FIELD_NAME.validate(ond.name());
         FIELD_DESC.validate(ond.desc());
@@ -29,7 +32,7 @@ public class FieldDesc extends OwnerNameDesc {
     
     public static FieldDesc getLocalInstance(String name, String desc) {
         ONDRecord ond = ONDRecord.getInstance(name,desc);
-        if (ond.desc() == null || ond.name() == null || ond.name().isEmpty() || ond.owner() != null) {
+        if (ond.owner() != null || !ond.isField()) {
             // "invalid %s description %s %s"
             throw new LogIllegalArgumentException(M137,Context.FIELD,name,desc);
         }
@@ -41,11 +44,11 @@ public class FieldDesc extends OwnerNameDesc {
     public static FieldDesc getInstance(String mspec, HandleType ht) {
         ONDRecord ond = ONDRecord.getInstance(mspec);
         String desc = ond.desc();
-        if (!desc.startsWith("()")) {
+        if (!ond.hasEmptyParm()) {
             // "descriptor '%s' for %s must start with '()'"
             throw new LogIllegalArgumentException(M275, desc , ht);
         }
         desc = desc.substring(2);
-        return getInstance(ond.ownerName(),desc,ht.op());
+        return getInstance(ond.ownerName(),desc);
     }
 }

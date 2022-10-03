@@ -25,7 +25,6 @@ import jynx2asm.JynxScanner;
 import jynx2asm.Line;
 import jynx2asm.MethodDesc;
 import jynx2asm.NameDesc;
-import jynx2asm.ops.JynxOp;
 import jynx2asm.ops.JynxOps;
 
 public class JynxMethodNode implements ContextDependent, HasAccessFlags {
@@ -44,10 +43,13 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
 
     private final ClassChecker checker;
     
-    private JynxMethodNode(Line line, Access accessname, MethodDesc cmd,  ClassChecker checker) {
-        this.md = cmd;
+    private final int errorsAtStart;
+    
+    private JynxMethodNode(Line line, Access accessname, MethodDesc md,  ClassChecker checker) {
+        this.errorsAtStart = LOGGER().numErrors();
+        this.md = md;
         this.accessName = accessname;
-        this.numparms = Type.getArgumentTypes(cmd.getDesc()).length;
+        this.numparms = Type.getArgumentTypes(md.getDesc()).length;
         this.methodLine = line;
         this.exceptions = new ArrayList<>();
         this.annotationLists = new MethodAnnotationLists(numparms);
@@ -214,7 +216,13 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
         } catch (Exception ex) {
             LOG(ex);
         }
-        return mnode;
+        boolean ok = LOGGER().numErrors() == errorsAtStart;
+        if (ok) {
+            return mnode;
+        } else {
+            LOG(M296,getName(),getDesc()); // "method %s%s not added as contains errors"
+            return null;
+        }
     }
 
 }

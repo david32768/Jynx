@@ -111,6 +111,7 @@ public class Logger {
         return logtype;
     }
     
+    @SuppressWarnings("fallthrough")
     void log(Message msg, Object... objs) {
        LogMsgType logtype = msgType(msg);
         switch (logtype) {

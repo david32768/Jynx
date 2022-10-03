@@ -23,6 +23,7 @@ public class MethodDesc extends OwnerNameDesc {
 
     private MethodDesc(ONDRecord ond) {
         super(ond);
+        assert ond.isMethod();
     }
 
    
@@ -32,18 +33,12 @@ public class MethodDesc extends OwnerNameDesc {
     
     public static MethodDesc getLocalInstance(String mspec) {
         ONDRecord ond = ONDRecord.getInstance(mspec);
-        if (ond.isInterface()
-                || ond.owner() != null
-                || ond.name() == null || ond.name().isEmpty() 
-                || ond.desc() == null || !ond.hasParameters()
-                ) {
+        if (ond.isInterface() || ond.owner() != null || !ond.isMethod()) {
             // "Invalid method description %s"
             throw new LogIllegalArgumentException(M145,mspec);
         }
-        boolean ok = METHOD_NAME.validate(ond.name());
-        if (ok) {
-            METHOD_NAME_DESC.validate(ond.nameDesc());
-        }
+        METHOD_NAME.validate(ond.name());
+        METHOD_NAME_DESC.validate(ond.nameDesc());
         return new MethodDesc(ond);
     }
     
@@ -82,10 +77,9 @@ public class MethodDesc extends OwnerNameDesc {
         return ond.setInterface(ownerInterface);
     }
     
-    public static OwnerNameDesc getInstance(String mspec, JvmOp op) {
+    public static MethodDesc getInstance(String mspec, JvmOp op) {
         ONDRecord ond = ONDRecord.getInstance(mspec);
         ond = checkInterface(op, ond);
-        ond = ond.addClassName(op);
         if (ond.isStaticInit() || ond.isInit() && op != JvmOp.asm_invokespecial) {
             // "either init method %s is static or op  is not %s"
             throw new LogIllegalArgumentException(M242,ond.toJynx(),JvmOp.asm_invokespecial);
@@ -93,13 +87,14 @@ public class MethodDesc extends OwnerNameDesc {
         return getInstanceOfObjectMethod(ond);
     }
     
-    public static OwnerNameDesc getInstance(String mspec) {
+    public static MethodDesc getInstance(String mspec) {
         ONDRecord ond = ONDRecord.getInstance(mspec);
         return getInstanceOfObjectMethod(ond);
     }
 
-    private static OwnerNameDesc getInstanceOfObjectMethod(ONDRecord ond) {
-        if (ond.desc() == null || ond.owner() == null) {
+    private static MethodDesc getInstanceOfObjectMethod(ONDRecord ond) {
+        ond = ond.translateOwner();
+        if (ond.owner() == null || !ond.isMethod()) {
             // "Invalid method description %s"
             throw new LogIllegalArgumentException(M145,ond.toJynx());
         }
@@ -112,18 +107,14 @@ public class MethodDesc extends OwnerNameDesc {
         } else {
             CLASS_NAME.validate(ond.owner());
             if (ond.isInterface()) {
-                boolean ok = INTERFACE_METHOD_NAME.validate(ond.name());
-                if (ok) {
-                    INTERFACE_METHOD_NAME_DESC.validate(ond.nameDesc());
-                }
+                INTERFACE_METHOD_NAME.validate(ond.name());
+                INTERFACE_METHOD_NAME_DESC.validate(ond.nameDesc());
             } else {
-                boolean ok = METHOD_NAME.validate(ond.name());
-                if (ok) {
-                    METHOD_NAME_DESC.validate(ond.nameDesc());
-                }
+                METHOD_NAME.validate(ond.name());
+                METHOD_NAME_DESC.validate(ond.nameDesc());
             }
         }
-        return new OwnerNameDesc(ond);
+        return new MethodDesc(ond);
     }
     
 }

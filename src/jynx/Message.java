@@ -12,7 +12,7 @@ public enum Message {
     M5(BLANK,"only JVM specified ops"),
     M6(BLANK,"Options are:%n"),
     M7(BLANK,"use SYSIN as input file"),
-    M8(BLANK,"check that called methods exist (on class path)"),
+    M8(BLANK,"check that called methods or used fields exist (on class path)"),
     M9(BLANK,"generate line numbers"),
     M10(BLANK,"warn if label unreferenced or alias"),
     M11(BLANK,"let simple verifier use Class.forName()"),
@@ -295,6 +295,8 @@ public enum Message {
     M292(BLANK,"%s  +%s"),
     M293(INFO,"print options = %s"),
     M294(WARNING,"%s = %s"),
+    M295("%s is invalid: %s"),
+    M296(WARNING,"method %s%s not added as contains errors"),
     //
     M298(WARNING,"%s of %s failed"),
 
@@ -312,7 +314,7 @@ public enum Message {
     M370("Type annotations not allowed for Module"),
     M394("END OF CLASS HEADER - SHOULD NOT APPEAR!; %s"),
     
-    M400(ENDINFO,"unable to find method %s because of %s"),
+    M400(ENDINFO,"unable to find %s %s because of %s"),
     M401(ENDINFO,"%s is a contextual reserved word"),
     M402("cannot insert end_token"),
     M403("(redundant?) checkcast or hint needed if %s is subtype of %s"),

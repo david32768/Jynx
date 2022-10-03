@@ -8,6 +8,7 @@ import org.objectweb.asm.tree.MethodInsnNode;
 import static jynx2asm.NameDesc.*;
 
 import jvm.HandleType;
+import jynx.Global;
 
 public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
 
@@ -31,6 +32,10 @@ public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
 
     public String getDesc() {
         return ond.desc();
+    }
+
+    public String getHandleDesc() {
+        return ond.handleDesc();
     }
 
     public String getName() {
@@ -76,8 +81,9 @@ public class OwnerNameDesc implements Comparable<OwnerNameDesc> {
     }
 
     public static OwnerNameDesc getClass(String mspec) {
-        CLASS_NAME.validate(mspec);
-        return new OwnerNameDesc(ONDRecord.classInstance(mspec));
+        String mspecx = Global.TRANSLATE_OWNER(mspec);
+        CLASS_NAME.validate(mspecx);
+        return new OwnerNameDesc(ONDRecord.classInstance(mspecx));
     }
 
     public static OwnerNameDesc getInstance(String mspec, HandleType ht) {

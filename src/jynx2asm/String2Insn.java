@@ -209,6 +209,7 @@ public class String2Insn {
         return new TypeInstruction(jvmop, type);
     }
   
+    @SuppressWarnings("fallthrough")
     private Instruction simpleConstant(JvmOp jvmop) {
         Token token = line.nextToken();
         Object value = token.getConst();
@@ -289,7 +290,7 @@ public class String2Insn {
     private Instruction arg_field(JvmOp jvmop) {
         String fname = line.nextToken().asString();
         String desc = line.nextToken().asString();
-        FieldDesc fd = FieldDesc.getInstance(fname, desc,jvmop);
+        FieldDesc fd = FieldDesc.getInstance(fname, desc);
         checker.usedField(fd,jvmop);
         return new FieldInstruction(jvmop,fd);
     }
@@ -354,9 +355,9 @@ public class String2Insn {
     private Instruction arg_method(JvmOp jvmop) {
         addDotLine |= generateDotLine;
         String mspec = line.nextToken().asString();
-        OwnerNameDesc cmd = MethodDesc.getInstance(mspec,jvmop);
-        checker.usedMethod(cmd, jvmop, line);
-        return new MethodInstruction(jvmop, cmd);
+        MethodDesc md = MethodDesc.getInstance(mspec,jvmop);
+        checker.usedMethod(md, jvmop, line);
+        return new MethodInstruction(jvmop, md);
     }
 
     private Instruction arg_none(JvmOp jvmop) {

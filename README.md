@@ -1,6 +1,7 @@
 # Jynx
 [Jynx(bird)](https://en.wikipedia.org/wiki/Wryneck)
 
+
 This is a rewritten version of [Jasmin](https://github.com/davidar/jasmin)
  using [ASM](https://asm.ow2.io) version 9.2 as a back end.
 It is written in Java V1_8 (apart from module-info.java)
@@ -40,7 +41,7 @@ Options are:
 *	--BASIC_VERIFIER use ASM BasicVerifier
 *	--SIMPLE_VERIFIER use ASM SimpleVerifier (default)
 *	--ALLOW_CLASS_FORNAME let simple verifier use Class.forName()
-*	--CHECK_METHOD_REFERENCES check that called methods exist (on class path)
+*	--CHECK_REFERENCES check that called methods or used fields exist (on class path)
 *	--VALIDATE_ONLY do not output class file
 *	--JVM_OPS_ONLY only JVM specified ops
 *	--DEBUG exit with stack trace if error

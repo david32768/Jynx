@@ -32,7 +32,7 @@ public class FieldInstruction extends Instruction {
                 stackdesc = String.format("(L%s;)%s",fd.getOwner(),desc);
                 break;
             case asm_getstatic:
-                stackdesc = "()" + desc;
+                stackdesc = fd.getHandleDesc(); // adds () to desc
                 break;
             case asm_putfield:
                 stackdesc = String.format("(L%s;%s)V",fd.getOwner(),desc);

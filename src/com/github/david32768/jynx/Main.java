@@ -26,8 +26,8 @@ public class Main {
     private final static String SUFFIX = ".jx";
 
     private final static int JYNX_VERSION = 0;
-    private final static int JYNX_RELEASE = 19;
-    private final static int JYNX_BUILD = 0;
+    private final static int JYNX_RELEASE = 18;
+    private final static int JYNX_BUILD = 1;
     
     private static String version() {
         if (OPTION(DEBUG)) {

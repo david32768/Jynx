@@ -1,7 +1,5 @@
 package jynx2asm;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -156,59 +154,8 @@ public class ClassChecker {
                 // "%s has different type %s from previous %s at line %d"
                 LOG(M405,cmd.toJynx(),ht, previous.object(),previous.line().getLinect());
             }
-        } else if (OPTION(GlobalOption.CHECK_METHOD_REFERENCES)) {
-            checkMethodExists(cmd, ht);
-        }
-    }
-    
-    private final static MethodHandles.Lookup LOOKUP = MethodHandles.publicLookup();
-    
-    private void checkMethodExists(OwnerNameDesc ond, HandleType ht) {
-        assert !ht.isField();
-        String owner = ond.getOwner();
-        assert !owner.equals(className);
-        String mname = ond.getName();
-        String desc = ond.getDesc();
-        try {
-            MethodType mt = MethodType.fromMethodDescriptorString(desc, null);
-            Class<?> klass = Class.forName(owner.replace('/', '.'),false,
-                    ClassLoader.getSystemClassLoader());
-            switch (ht) {
-                case REF_invokeStatic:
-                    LOOKUP.findStatic(klass, mname, mt);
-                    break;
-                case REF_invokeSpecial:
-                case REF_invokeInterface:
-                case REF_invokeVirtual:
-                    LOOKUP.findVirtual(klass, mname, mt);
-                    break;
-                case REF_newInvokeSpecial:
-                    LOOKUP.findConstructor(klass, mt);
-                    break;
-                default: 
-                    throw new EnumConstantNotPresentException(ht.getClass(), ht.name());
-            }
-        } catch (ClassNotFoundException
-                | IllegalArgumentException
-                | NoSuchMethodException ex) {
-             // "unable to find method %s because of %s"
-            LOG(M400,ond.toJynx(),ex.getClass().getSimpleName());
-        } catch (IllegalAccessException iaex) {
-            if (ht == REF_invokeSpecial) { // maybe protected
-                return;
-            } else if (ond.isSamePackage(className)) { // maybe package-private
-                return;
-            }
-             // "unable to find method %s because of %s"
-            LOG(M400,ond.toJynx(),iaex.getClass().getSimpleName());
-        } catch (TypeNotPresentException typex) {
-            String typename = typex.typeName().replace(".","/");
-            if (typename.equals(className))  {
-                return;
-            }
-            String cause = typex.getClass().getSimpleName() + " " + typename;
-             // "unable to find method %s because of %s"
-            LOG(M400,ond.toJynx(),cause);
+        } else if (OPTION(GlobalOption.CHECK_REFERENCES)) {
+            CheckPresent.method(cmd, ht);
         }
     }
     
@@ -252,7 +199,7 @@ public class ClassChecker {
         }
         switch (classType) {
             case ANNOTATION_CLASS:
-                if (jmn.isStatic() || !jmn.isAbstract() || !md.getDesc().contains("()")) {
+                if (jmn.isStatic() || !jmn.isAbstract() || !md.getDesc().startsWith("()")) {
                     // "method %s in %s class must be %s, not %s and have no parameters"
                     LOG(M406,md.toJynx(),classType,AccessFlag.acc_abstract,AccessFlag.acc_static);
                 }
@@ -339,6 +286,9 @@ public class ClassChecker {
                 String optype = instance?"instance":"static";
                 LOG(M215,fieldtype,fd.getName(),optype,jvmop); // " %s field %s accessed by %s op %s"
             }
+        } else if (OPTION(GlobalOption.CHECK_REFERENCES)) {
+            HandleType ht = fromOp(jvmop, false);
+            CheckPresent.field(fd, ht);
         }
     }
     

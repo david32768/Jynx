@@ -36,9 +36,9 @@ import jynx2asm.JynxLabelMap;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
 import jynx2asm.LinesIterator;
+import jynx2asm.MethodDesc;
 import jynx2asm.ops.JvmOp;
 import jynx2asm.ops.JynxOps;
-import jynx2asm.OwnerNameDesc;
 import jynx2asm.StackLocals;
 import jynx2asm.String2Insn;
 import jynx2asm.Token;
@@ -48,7 +48,7 @@ public class JynxCodeHdr implements ContextDependent {
 
     private final JynxScanner js;
     private List<Object> localStack;
-    private final int errct_at_start;
+    private final int errorsAtStart;
 
     private final StackLocals stackLocals;
 
@@ -64,29 +64,29 @@ public class JynxCodeHdr implements ContextDependent {
     private final String2Insn s2a;
     private int endif = 0;
     
-    private final Map<Directive,Line> unique_directives;
+    private final Map<Directive,Line> uniqueDirectives;
     
     private JynxCodeHdr(MethodNode mv, JynxScanner js, ClassChecker checker,
-            OwnerNameDesc cmd, JynxLabelMap labelmap, boolean isStatic, JynxOps opmap) {
+            MethodDesc md, JynxLabelMap labelmap, boolean isStatic, JynxOps opmap) {
+        this.errorsAtStart = LOGGER().numErrors();
         this.js = js;
         String clname = isStatic?null:checker.getClassName();
-        this.localStack = FrameType.getInitFrame(clname, cmd); // classname set non null for virtual methods
+        this.localStack = FrameType.getInitFrame(clname, md); // classname set non null for virtual methods
         this.mnode = mv;
-        this.errct_at_start = LOGGER().numErrors();
         this.labelmap = labelmap;
         this.vars = new ArrayList<>();
-        Type rtype = Type.getReturnType(cmd.getDesc());
+        Type rtype = Type.getReturnType(md.getDesc());
         JvmOp returnop = getReturnOp(rtype);
         this.stackLocals = StackLocals.getInstance(localStack,labelmap,returnop,isStatic);
         this.s2a = new String2Insn(js, labelmap, checker, opmap);
-        this.unique_directives = new HashMap<>();
+        this.uniqueDirectives = new HashMap<>();
         this.options = new EnumMap<>(ReservedWord.class);
     }
 
-    public static JynxCodeHdr getInstance(MethodNode mv, JynxScanner js, OwnerNameDesc cmd,
+    public static JynxCodeHdr getInstance(MethodNode mv, JynxScanner js, MethodDesc md,
             JynxLabelMap labelmap, boolean isStatic, ClassChecker checker, JynxOps opmap) {
         CHECK_SUPPORTS(Code);
-        return new JynxCodeHdr(mv, js, checker, cmd, labelmap, isStatic ,opmap);
+        return new JynxCodeHdr(mv, js, checker, md, labelmap, isStatic ,opmap);
     }
 
     private static JvmOp getReturnOp(Type rtype) {
@@ -119,7 +119,7 @@ public class JynxCodeHdr implements ContextDependent {
     @Override
     public void visitDirective(Directive dir, JynxScanner js) {
         Line line = js.getLine();
-        dir.checkUnique(unique_directives, line);
+        dir.checkUnique(uniqueDirectives, line);
         switch(dir) {
             case dir_limit:
                 setLimit(line);
@@ -389,7 +389,7 @@ public class JynxCodeHdr implements ContextDependent {
                     .filter(lr->lr.isUnused())
                     .forEach(this::unusedLabel); 
         }
-        boolean ok = LOGGER().numErrors() == errct_at_start;
+        boolean ok = LOGGER().numErrors() == errorsAtStart;
         if (ok) {
             // must be called to generate stackmap etc.
             mnode.visitMaxs(stackLocals.stack().max(), stackLocals.locals().max());

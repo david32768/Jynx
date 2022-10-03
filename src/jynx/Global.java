@@ -59,6 +59,7 @@ public class Global {
         return global.logger;
     }
 
+    @SuppressWarnings("fallthrough")
     public static GlobalOption resolveAmbiguity(GlobalOption defaultopt, GlobalOption... otheropt) {
         EnumSet<GlobalOption> optpos = EnumSet.of(defaultopt,otheropt);
         optpos.retainAll(global.options);

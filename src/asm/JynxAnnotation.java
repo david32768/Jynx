@@ -55,6 +55,7 @@ public class JynxAnnotation {
         visitAnnotationValues(av);
     }
     
+    @SuppressWarnings("fallthrough")
     private AnnotationVisitor getAnnotationVisitor() {
         AnnotationVisitor av;
         int paramStart = 0;

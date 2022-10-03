@@ -145,6 +145,7 @@ public class StringUtil {
         return '\"' + StringEscape(token) + '\"';
     }
     
+    @SuppressWarnings("fallthrough")
     public static String[] tokenise(String line) {
         // remove comments which start with " ;"
         ArrayList<String> tokens = new ArrayList<>();
@@ -215,7 +216,7 @@ public class StringUtil {
             case QUOTE:
             case SLASH:
                 LOG(M271,sb.toString()); // "incomplete quoted string %s"
-                // falllthrough
+                // fallthrough
             case BLANK:
             case COMMENT:
             case ENDQUOTE:

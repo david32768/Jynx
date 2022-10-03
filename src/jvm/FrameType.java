@@ -12,7 +12,7 @@ import static jynx.Global.LOG;
 import static jynx.Message.*;
 
 import jynx.LogAssertionError;
-import jynx2asm.OwnerNameDesc;
+import jynx2asm.MethodDesc;
 
 public enum FrameType {
 
@@ -94,6 +94,7 @@ public enum FrameType {
                 return FrameType.ft_Double.asmType();
             case 'L':
                 tdesc = tdesc.substring(1,tdesc.length() - 1);
+                return tdesc;
             case '[':
                 return tdesc;    
             default:
@@ -115,16 +116,16 @@ public enum FrameType {
     }
     
     // set classname == null for static method
-    public static ArrayList<Object> getInitFrame(String classname, OwnerNameDesc ond) {
+    public static ArrayList<Object> getInitFrame(String classname, MethodDesc md) {
         ArrayList<Object> localStack = new ArrayList<>();
         if (classname != null) {
-            if (ond.isInit()) {
+            if (md.isInit()) {
                 localStack.add(ft_UninitializedThis.asmType());
             } else {
                 localStack.add(classname);
             }
         }
-        Type[] parmtypes = Type.getArgumentTypes(ond.getDesc());
+        Type[] parmtypes = Type.getArgumentTypes(md.getDesc());
         for (Type type:parmtypes) {
             String tdesc = type.getDescriptor();
             localStack.add(objectFrom(tdesc));
