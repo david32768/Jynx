@@ -6,7 +6,7 @@ module com.github.david32768.jynx {
 	requires org.objectweb.asm.tree.analysis;
 	requires org.objectweb.asm.util;
 	uses jynx2asm.ops.MacroLib;
-	provides com.github.david32768.jynx.MacroLib
+	provides jynx2asm.ops.MacroLib
 		with jynx2asm.ops.StructuredMacroLib;
 }
 // javac -p asmmods -d build\classes module-info.java
@@ -23,7 +23,7 @@ module com.github.david32768.jynx {
 .requires org.objectweb.asm.tree 9.2.0
 .requires org.objectweb.asm.tree.analysis 9.2.0
 .requires org.objectweb.asm.util 9.2.0
-.uses com/github/david32768/jynx/MacroLib
+.uses jynx2asm/ops/MacroLib
 .provides jynx2asm/ops/MacroLib with .array
   jynx2asm/ops/StructuredMacroLib
 .end_array
