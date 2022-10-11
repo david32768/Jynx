@@ -106,7 +106,6 @@ public enum Message {
     M99("Separator \'%s\' not found in %s"),
 
     M101("unknown handle mnemonic: %s"),
-    M102("method %s invalid for %s"),
 
     M104(BLANK,"class %s %s completed successfully"),
     M105("unknown option %s - ignored"),
@@ -141,7 +140,7 @@ public enum Message {
     M134("boolean value is neither Boolean or Integer 0/1: value = %s class = %s"),
     M135(ENDINFO,"for consistency add %s prefix to method name for %s"),
     M136("Extraneous directive %s"),
-    M137("invalid %s description %s %s"),
+
     M138("%s cannot be used for constant - %s"),
     M139("%s prefix is invalid for %s"),
     M140("reading next token after reaching last"),
@@ -172,7 +171,7 @@ public enum Message {
     M166("top of stack('%c') is not a 32 bit type"),
 
     M168("unexpected directive(%s) in annotation"),
-    M169(ENDINFO,"package(s) used in %s are not in %s"),
+    M169(WARNING,"package %s used in %s has been added to %s"),
     M170("invalid type annotation directive - %s"),
     M171(WARNING,"version %s outside range [%s,%s] - %s used"),
 
@@ -297,16 +296,20 @@ public enum Message {
     M294(WARNING,"%s = %s"),
     M295("%s is invalid: %s"),
     M296(WARNING,"method %s%s not added as contains errors"),
-    //
+    M297(ENDINFO,"package %s used in %s is not in %s (OK if package not in module)"),
     M298(WARNING,"%s of %s failed"),
-
+    M299("Unexpected %s %s removed"),
+    M300("required %s is missing"),
     M302("%s is null or has different feature requirement than %s"),
+    M303("Enclosing method cannot be in enclosed class"),
     M304("Nest host already defined%n  %s"),
-
+    //
     M306("nested class have different owners; class = %s token = %s"),
-    M313("final class cannot have %s"),
 
+    M313("final class cannot have %s"),
+    //
     M327(INFO,"added: %s %s"),
+    //
     M335("index (%d) is not zero and does not refer to last %s directive (%d)"),
 
     M362("expected arg %s but was %s"),
@@ -321,7 +324,7 @@ public enum Message {
     M404("(redundant?) checkcasts or hint needed to obtain common supertype of%n    %s and %s"),
     M405("%s has different type %s from previous %s at line %d"),
     M406("method %s in %s class must be %s, not %s and have no parameters"),
-
+    M407(ENDINFO,"%s %s is deprecated"),
     M408("expected %s but found %s"),
     M409("illegal operation on END_TOKEN"),
     M410("cannot amend quoted token"),

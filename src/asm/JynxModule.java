@@ -2,9 +2,7 @@ package asm;
 
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.objectweb.asm.tree.ModuleNode;
 
@@ -26,7 +24,6 @@ import jynx.LogIllegalStateException;
 import jynx.ReservedWord;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
-import jynx2asm.ONDRecord;
 import jynx2asm.Token;
 import jynx2asm.TokenArray;
 
@@ -84,6 +81,19 @@ public class JynxModule {
         }
     }
     
+    private void checkClassPackage(String classname, Directive dir) {
+        int index = classname.lastIndexOf("/"); // >= 0 as checked to be CLASS_NAME_IN_MODULE
+        String packaze = classname.substring(0,index);
+        packageUse.computeIfAbsent(packaze, v -> EnumSet.noneOf(Directive.class))
+                .add(dir);
+    }
+    
+    private Access getAccess(Line line) {
+        EnumSet<AccessFlag> flags = line.getAccFlags();
+        String name = line.nextToken().asName();
+        return Access.getInstance(flags, jvmVersion, name, MODULE_CLASS);
+    }
+    
     public void visitDirective(Directive dir, JynxScanner js) {
         Line line = js.getLine();
         dir.checkUnique(unique_directives, line);
@@ -120,37 +130,22 @@ public class JynxModule {
         CHECK_SUPPORTS(AttributeName.ModuleMainClass);
         CLASS_NAME_IN_MODULE.validate(main);
         modNode.visitMainClass(main);
-        checkPackage(ONDRecord.packageNameOf(main), Directive.dir_main);
+        checkClassPackage(main, Directive.dir_main);
     }
     
-    private void visitPackages(Line line) {
-        packagesVisited = true;
-        String[] packages = TokenArray.arrayString(Directive.dir_packages,js,line, PACKAGE_NAME);
-        for (String pkg:packages) {
-            checkPackage(pkg, Directive.dir_packages);
-            modNode.visitPackage(pkg);
-        }
+    private void visitRequires(Line line) {
+        Access accessname = getAccess(line);
+        String mod = accessname.getName();
+        MODULE_NAME.validate(mod);
+        javaBase |= Constants.JAVA_BASE_MODULE.equalString(mod);
+        accessname.check4Require();
+        int access = accessname.getAccess();
+        Token token = line.nextToken();
+        String version = token == Token.END_TOKEN?null:token.asString();
+        line.noMoreTokens();
+        modNode.visitRequire(mod, access, version);
     }
 
-    private void visitUses(Line line) {
-        String service = line.lastToken().asString();
-        boolean ok = CLASS_NAME_IN_MODULE.validate(service);
-        if (ok) {
-            Line previous = services.put(service, line);
-            if (previous == null) {
-                modNode.visitUse(service);
-            } else {
-                LOG(M233,service,Directive.dir_uses, previous.getLinect()); // "Duplicate entry %s in %s: previous entry at line %d"
-            }
-        }
-    }
-
-    private Access getAccess(Line line) {
-        EnumSet<AccessFlag> flags = line.getAccFlags();
-        String name = line.nextToken().asName();
-        return Access.getInstance(flags, jvmVersion, name, MODULE_CLASS);
-    }
-    
     private void visitExports(Line line) {
         Access accessname = getAccess(line);
         String packaze = accessname.getName();
@@ -184,17 +179,18 @@ public class JynxModule {
         modNode.visitOpen(packaze,access,modarr);
     }
 
-    private void visitRequires(Line line) {
-        Access accessname = getAccess(line);
-        String mod = accessname.getName();
-        MODULE_NAME.validate(mod);
-        javaBase |= Constants.JAVA_BASE_MODULE.equalString(mod);
-        accessname.check4Require();
-        int access = accessname.getAccess();
-        Token token = line.nextToken();
-        String version = token == Token.END_TOKEN?null:token.asString();
-        line.noMoreTokens();
-        modNode.visitRequire(mod, access, version);
+    private void visitUses(Line line) {
+        String service = line.lastToken().asString();
+        boolean ok = CLASS_NAME_IN_MODULE.validate(service);
+        if (ok) {
+            Line previous = services.put(service, line);
+            if (previous == null) {
+                checkClassPackage(service,Directive.dir_uses);
+                modNode.visitUse(service);
+            } else {
+                LOG(M233,service,Directive.dir_uses, previous.getLinect()); // "Duplicate entry %s in %s: previous entry at line %d"
+            }
+        }
     }
 
     private void visitProviders(Line line) {
@@ -209,13 +205,20 @@ public class JynxModule {
                 return;
             }
             for (String mod:modarr) {
-                int index = mod.lastIndexOf("/"); // >= 0 as checked to be CLASS_NAME_IN_MODULE
-                String pkg = mod.substring(0,index);
-                checkPackage(pkg, Directive.dir_provides);
+                checkClassPackage(mod, Directive.dir_provides);
             }
             modNode.visitProvide(service,modarr);
         } else {
             LOG(M40,Directive.dir_provides,service,linex.getLinect()); // "duplicate %s: %s already defined at line %d"
+        }
+    }
+
+    private void visitPackages(Line line) {
+        packagesVisited = true;
+        String[] packages = TokenArray.arrayString(Directive.dir_packages,js,line, PACKAGE_NAME);
+        for (String pkg:packages) {
+            checkPackage(pkg, Directive.dir_packages);
+            modNode.visitPackage(pkg);
         }
     }
 
@@ -230,10 +233,13 @@ public class JynxModule {
                 String pkg = me.getKey();
                 EnumSet<Directive> dirs = me.getValue();
                 if (!dirs.contains(Directive.dir_packages)) {
-                    for (Directive dir:dirs) {
-                        LOG(M169,dir,Directive.dir_packages); // "package(s) used in %s are not in %s"
+                    if (dirs.size() == 1 && dirs.contains(Directive.dir_uses)) {
+                        // "package %s used in %s is not in %s (OK if package not in module)"
+                        LOG(M297,pkg,Directive.dir_uses,Directive.dir_packages);
+                    } else {
+                        LOG(M169,pkg,dirs,Directive.dir_packages); // "package %s used in %s has been added to %s"
+                        modNode.visitPackage(pkg);
                     }
-                    modNode.visitPackage(pkg);
                 }
             }
         }

@@ -14,7 +14,7 @@ public enum Context {
     OPEN(true),
     REQUIRE(true),
     
-    INIT_METHOD,    // used in AccessFlag and Access
+    INIT_METHOD,    // used in AccessFlag, Access and CheckPresent
 
     // do not use access flags
     COMPONENT,

@@ -307,12 +307,12 @@ public class JynxDisassemble {
     private void printModuleInfo(ModuleNode module) {
         jp.printDirective(dir_main,module.mainClass);
         EnumSet<AccessFlag> accflags;
-        if (isPresent(module.packages)) {
-            jp.appendDirective(dir_packages);
-            printArray(module.packages);
-        }
-        for (String use:nonNullList(module.uses)) {
-            jp.appendDirective(dir_uses).append(use).nl();
+        for (ModuleRequireNode mrn: nonNullList(module.requires)) {
+            accflags = AccessFlag.getEnumSet(mrn.access, REQUIRE,jvmVersion);
+            jp.appendDirective(dir_requires)
+                    .append(accflags, mrn.module)
+                    .appendNonNull(mrn.version)
+                    .nl();
         }
         for (ModuleExportNode men: nonNullList(module.exports)) {
             accflags = AccessFlag.getEnumSet(men.access, MODULE,jvmVersion);
@@ -336,18 +336,19 @@ public class JynxDisassemble {
                 printArray(mon.modules);
             }
         }
-        for (ModuleRequireNode mrn: nonNullList(module.requires)) {
-            accflags = AccessFlag.getEnumSet(mrn.access, REQUIRE,jvmVersion);
-            jp.appendDirective(dir_requires)
-                    .append(accflags, mrn.module)
-                    .appendNonNull(mrn.version)
-                    .nl();
+        for (String use:nonNullList(module.uses)) {
+            jp.appendDirective(dir_uses).append(use).nl();
         }
         for (ModuleProvideNode mpn: nonNullList(module.provides)) {
             jp.appendDirective(dir_provides)
                     .append(mpn.service)
                     .append(res_with);
             printArray(mpn.providers);
+        }
+
+        if (isPresent(module.packages)) {
+            jp.appendDirective(dir_packages);
+            printArray(module.packages);
         }
     }
 

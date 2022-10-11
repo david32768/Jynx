@@ -20,26 +20,26 @@ import jvm.Context;
 import jynx.ClassType;
 import jynx.Directive;
 import jynx2asm.ClassChecker;
-import jynx2asm.FieldDesc;
+import jynx2asm.handles.LocalFieldHandle;
+import jynx2asm.handles.LocalMethodHandle;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
-import jynx2asm.MethodDesc;
 
 public class JynxComponentNode implements ContextDependent {
 
     private final Line line;
     private final List<AcceptsVisitor> annotations;
-    private final FieldDesc compfd;
-    private final MethodDesc compmd;
+    private final LocalFieldHandle compfh;
+    private final LocalMethodHandle compmh;
     private String signature;
     private boolean endVisited;
    
     private final Map<Directive,Line> unique_directives;
 
-    private JynxComponentNode(Line line, FieldDesc compfd, MethodDesc compmd) {
+    private JynxComponentNode(Line line, LocalFieldHandle compfh, LocalMethodHandle compmh) {
         this.annotations = new ArrayList<>();
-        this.compfd = compfd;
-        this.compmd = compmd;
+        this.compfh = compfh;
+        this.compmh = compmh;
         this.line = line;
         this.endVisited = false;
         this.unique_directives = new HashMap<>();
@@ -52,12 +52,12 @@ public class JynxComponentNode implements ContextDependent {
         }
         String name = line.nextToken().asName();
         String descriptor = line.nextToken().asString();
-        FieldDesc compfd = FieldDesc.getLocalInstance(name, descriptor);
-        MethodDesc compmd = MethodDesc.getLocalInstance(compfd.getName() + compfd.getHandleDesc());
-        if (Constants.isNameIn(compmd.getName(),Constants.INVALID_COMPONENTS)) {
-            LOG(M47,compfd.getName());   // "Invalid component name - %s"
+        LocalFieldHandle compfh = LocalFieldHandle.getInstance(name, descriptor);
+        LocalMethodHandle compmh = LocalMethodHandle.getInstance(compfh.ond());
+        if (Constants.isNameIn(compmh.name(),Constants.INVALID_COMPONENTS)) {
+            LOG(M47,compfh.name());   // "Invalid component name - %s"
         }
-        JynxComponentNode jcn = new JynxComponentNode(line, compfd, compmd);
+        JynxComponentNode jcn = new JynxComponentNode(line, compfh, compmh);
         checker.checkComponent(jcn);
         return jcn;
     }
@@ -86,19 +86,16 @@ public class JynxComponentNode implements ContextDependent {
     }
     
     public String getName() {
-        return compfd.getName();
+        return compfh.name();
     }
 
     public String getDesc() {
-        return compfd.getDesc();
+        return compfh.desc();
     }
     
-    public FieldDesc getFieldDesc() {
-        return compfd;
-    }
-
-    public MethodDesc getMethodDesc() {
-        return compmd;
+    
+    public LocalMethodHandle getLocalMethodHandle() {
+        return compmh;
     }
     
     public void checkSignature(String fsignature, Context context) {
@@ -140,7 +137,7 @@ public class JynxComponentNode implements ContextDependent {
 
     public void visitEnd(JynxClassHdr jclasshdr, Directive dir) {
         RecordComponentVisitor rcv;
-        rcv = jclasshdr.visitRecordComponent(compfd.getName(), compfd.getDesc(), signature);
+        rcv = jclasshdr.visitRecordComponent(compfh.name(), compfh.desc(), signature);
         if (dir ==  null && !annotations.isEmpty()) {
             LOG(M270, Directive.end_component); // "%s directive missing but assumed"
         }
@@ -152,7 +149,7 @@ public class JynxComponentNode implements ContextDependent {
     
     @Override
     public String toString() {
-        return String.format("[%s %s %s]",compfd.getName(), compfd.getDesc(),signature);
+        return String.format("[%s %s %s]",compfh.name(), compfh.desc(),signature);
     }
     
 }

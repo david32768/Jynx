@@ -42,13 +42,12 @@ import jynx.Directive;
 import jynx.GlobalOption;
 import jynx.LogIllegalStateException;
 import jynx2asm.ClassChecker;
+import jynx2asm.handles.EnclosingMethodHandle;
+import jynx2asm.handles.HandlePart;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
-import jynx2asm.MethodDesc;
 import jynx2asm.NameDesc;
 import jynx2asm.ObjectLine;
-import jynx2asm.ONDRecord;
-import jynx2asm.OwnerNameDesc;
 import jynx2asm.TokenArray;
 import jynx2asm.TypeHints;
 
@@ -71,7 +70,9 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
 
     private String csignature;
     private String csuper;
-    private ObjectLine<OwnerNameDesc> outer;
+    private String outerClass;
+    private EnclosingMethodHandle encloseMethod;
+    private Line outerLine;
     private String host;
 
     private final Map<String,Line> cimplements;
@@ -105,7 +106,9 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         this.annotations = new ArrayList<>();
         this.csignature = null;
         this.csuper = null;
-        this.outer = null;
+        this.outerClass = null;
+        this.encloseMethod = null;
+        this.outerLine = null;
         this.host = null;
         this.unique_directives = new HashMap<>();
         LOGGER().pushContext();
@@ -117,7 +120,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         EnumSet<AccessFlag> flags;
         switch (classtype) {
             case MODULE_CLASS:
-                flags = EnumSet.noneOf(AccessFlag.class);
+                flags = EnumSet.noneOf(AccessFlag.class); // read in JynxModule
                 cname = Constants.MODULE_CLASS_NAME.toString();
                 break;
             case PACKAGE:
@@ -326,34 +329,37 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     private void setOuterClass(Directive dir, Line line) {
         String mspec = line.nextToken().asString();
         line.noMoreTokens();
-        OwnerNameDesc cmd;
         switch(dir) {
             case dir_outer_class:
                 if (!cname.startsWith(mspec)) {    // jls 13.1
                     // "enclosing class name(%s) is not a prefix of class name(%s)"
                     LOG(M261,mspec,cname);
                 }
-                cmd = OwnerNameDesc.getClass(mspec);
+                if (outerLine == null) {
+                    outerLine = line;
+                    outerClass = mspec;
+                } else {
+                    // "enclosing instance has already been defined%n   %s"
+                    LOG(M268,outerLine);
+        }
                 break;
             case dir_enclosing_method:
-                cmd = MethodDesc.getInstance(mspec);
+                if (outerLine == null) {
+                    encloseMethod = EnclosingMethodHandle.getInstance(mspec);
+                    outerLine = line;
+                } else {
+                    // "enclosing instance has already been defined%n   %s"
+                    LOG(M268,outerLine);
+                }
                 break;
             default:
                 throw new EnumConstantNotPresentException(dir.getClass(), dir.name());
         }
-        if (outer == null) {
-            outer = new ObjectLine<>(cmd,line);
-        } else {
-            // "enclosing instance has already been defined%n   %s"
-            LOG(M268,outer.line());
-        }
     }
 
     private void sameOwnerAsClass(String token) {
-        String classOwner = ONDRecord.packageNameOf(cname);
-        String tokenOwner = ONDRecord.packageNameOf(token);
-        if (!classOwner.equals(tokenOwner)) {
-            LOG(M306,classOwner,tokenOwner); // "nested class have different owners; class = %s token = %s",
+        if (!HandlePart.isSamePackage(cname, token)) {
+            LOG(M306,cname,token); // "nested class have different owners; class = %s token = %s",
         }
     }
     
@@ -448,9 +454,11 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
             cv.visitNestHost(host);
             inner = true;
         }
-        if (outer != null) {
-            OwnerNameDesc ond = outer.object();
-            cv.visitOuterClass(ond.getOwner(),ond.getName(),ond.getDesc());
+        if (outerClass != null) {
+            cv.visitOuterClass(outerClass,null,null);
+            inner = true;
+        } else if(encloseMethod != null) {
+            cv.visitOuterClass(encloseMethod.owner(), encloseMethod.name(), encloseMethod.desc());
             inner = true;
         }
         annotations.stream()

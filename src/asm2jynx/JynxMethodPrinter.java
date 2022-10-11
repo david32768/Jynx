@@ -22,7 +22,7 @@ import jvm.AccessFlag;
 import jvm.FrameType;
 import jvm.JvmVersion;
 import jynx.GlobalOption;
-import jynx2asm.MethodDesc;
+import jynx2asm.handles.LocalMethodHandle;
 
 public class JynxMethodPrinter {
 
@@ -99,8 +99,8 @@ public class JynxMethodPrinter {
             jp.appendComment(GlobalOption.SKIP_CODE).nl();
             return;
         }
-        MethodDesc md = MethodDesc.of(mn);
-        Object[] initstack = FrameType.getInitFrame(classname, md).toArray(new Object[0]);
+        LocalMethodHandle lmh = LocalMethodHandle.of(mn);
+        Object[] initstack = FrameType.getInitFrame(classname, lmh).toArray(new Object[0]);
         Insn2Jynx i2s = new Insn2Jynx(jp,jvmVersion,o2s,initstack);
         printCatchBlocks(mn, i2s);
         printInstructions(mn.instructions, i2s);

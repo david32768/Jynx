@@ -3,8 +3,6 @@ package jynx2asm;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
 
-import static jvm.HandleType.REF_newInvokeSpecial;
-import static jvm.HandleType.SEP;
 import static jvm.NumType.*;
 import static jynx.Global.*;
 import static jynx.Message.*;
@@ -13,8 +11,8 @@ import jvm.ConstType;
 import jvm.HandleType;
 import jvm.NumType;
 import jynx.GlobalOption;
-import jynx.LogIllegalArgumentException;
 import jynx.StringUtil;
+import jynx2asm.handles.JynxHandle;
 
 public class String2Object {
 
@@ -91,22 +89,7 @@ public class String2Object {
     }
 
     public Handle parseHandle(String token) {
-        int colon = token.indexOf(SEP);
-        if (colon < 0) {
-            // "Separator '%s' not found in %s"
-            throw new LogIllegalArgumentException(M99,SEP,token);
-        }
-        String htag = token.substring(0,colon);
-        HandleType ht = HandleType.fromMnemonic(htag);
-        String handle = token.substring(colon + 1);
-        OwnerNameDesc ond = OwnerNameDesc.getInstance(handle,ht);
-        
-        String desc = ond.getDesc();
-        if (!ht.isField() && ond.isStaticInit() || (ht == REF_newInvokeSpecial) != ond.isInit()) {
-            // "method %s invalid for %s"
-            throw new LogIllegalArgumentException(M102,ond.getName(),ht);
-        }
-        return new Handle(ht.reftype(),ond.getOwner(), ond.getName(), desc, ond.isOwnerInterface());
+        return JynxHandle.getHandle(token);
     }
     
     public Object getConst(Token token) {

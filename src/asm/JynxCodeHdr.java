@@ -29,6 +29,7 @@ import jvm.TypeRef;
 import jynx.Directive;
 import jynx.ReservedWord;
 import jynx2asm.ClassChecker;
+import jynx2asm.handles.LocalMethodHandle;
 import jynx2asm.InstList;
 import jynx2asm.JynxCatch;
 import jynx2asm.JynxLabel;
@@ -36,7 +37,6 @@ import jynx2asm.JynxLabelMap;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
 import jynx2asm.LinesIterator;
-import jynx2asm.MethodDesc;
 import jynx2asm.ops.JvmOp;
 import jynx2asm.ops.JynxOps;
 import jynx2asm.StackLocals;
@@ -67,15 +67,15 @@ public class JynxCodeHdr implements ContextDependent {
     private final Map<Directive,Line> uniqueDirectives;
     
     private JynxCodeHdr(MethodNode mv, JynxScanner js, ClassChecker checker,
-            MethodDesc md, JynxLabelMap labelmap, boolean isStatic, JynxOps opmap) {
+            LocalMethodHandle lmh, JynxLabelMap labelmap, boolean isStatic, JynxOps opmap) {
         this.errorsAtStart = LOGGER().numErrors();
         this.js = js;
         String clname = isStatic?null:checker.getClassName();
-        this.localStack = FrameType.getInitFrame(clname, md); // classname set non null for virtual methods
+        this.localStack = FrameType.getInitFrame(clname, lmh); // classname set non null for virtual methods
         this.mnode = mv;
         this.labelmap = labelmap;
         this.vars = new ArrayList<>();
-        Type rtype = Type.getReturnType(md.getDesc());
+        Type rtype = Type.getReturnType(lmh.desc());
         JvmOp returnop = getReturnOp(rtype);
         this.stackLocals = StackLocals.getInstance(localStack,labelmap,returnop,isStatic);
         this.s2a = new String2Insn(js, labelmap, checker, opmap);
@@ -83,10 +83,10 @@ public class JynxCodeHdr implements ContextDependent {
         this.options = new EnumMap<>(ReservedWord.class);
     }
 
-    public static JynxCodeHdr getInstance(MethodNode mv, JynxScanner js, MethodDesc md,
+    public static JynxCodeHdr getInstance(MethodNode mv, JynxScanner js, LocalMethodHandle lmh,
             JynxLabelMap labelmap, boolean isStatic, ClassChecker checker, JynxOps opmap) {
         CHECK_SUPPORTS(Code);
-        return new JynxCodeHdr(mv, js, checker, md, labelmap, isStatic ,opmap);
+        return new JynxCodeHdr(mv, js, checker,lmh, labelmap, isStatic ,opmap);
     }
 
     private static JvmOp getReturnOp(Type rtype) {

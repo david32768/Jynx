@@ -16,7 +16,7 @@ import jvm.NumType;
 import jynx.Global;
 import jynx.ReservedWord;
 import jynx.StringUtil;
-import jynx2asm.OwnerNameDesc;
+import jynx2asm.handles.JynxHandle;
 
 public class Object2String {
 
@@ -28,8 +28,8 @@ public class Object2String {
         Handle handle = (Handle) value;
         int tag = handle.getTag();
         String prefix = HandleType.getPrefix(tag);
-        OwnerNameDesc ond = OwnerNameDesc.of(handle);
-        return prefix + ond.toJynx();
+        JynxHandle jh = JynxHandle.of(handle);
+        return prefix + jh.iond();
     }
     
     public String constDynamic2String(Object value) {

@@ -5,29 +5,29 @@ import org.objectweb.asm.MethodVisitor;
 import static jynx.Message.M908;
 
 import jynx.LogAssertionError;
-import jynx2asm.MethodDesc;
+import jynx2asm.handles.MethodHandle;
 import jynx2asm.ops.JvmOp;
 import jynx2asm.StackLocals;
 
 public class MethodInstruction extends Instruction {
 
-    private final MethodDesc md;
+    private final MethodHandle mh;
 
-    public MethodInstruction(JvmOp jop, MethodDesc md) {
+    public MethodInstruction(JvmOp jop, MethodHandle mh) {
         super(jop);
-        this.md = md;
+        this.mh = mh;
     }
 
     @Override
     public void accept(MethodVisitor mv) {
-        mv.visitMethodInsn(jvmop.opcode(),md.getOwner(), md.getName(), md.getDesc(), md.isOwnerInterface());
+        mv.visitMethodInsn(jvmop.opcode(),mh.owner(), mh.name(), mh.desc(), mh.isInterface());
     }
 
     @Override
     public void adjust(StackLocals stackLocals) {
-        String owner = md.getOwner();
+        String owner = mh.owner();
         owner = owner.charAt(0) == '['?owner:"L" + owner + ";";
-        String desc = md.getDesc();
+        String desc = mh.desc();
         String stackdesc;
         switch (jvmop) {
             case asm_invokestatic:
@@ -49,7 +49,7 @@ public class MethodInstruction extends Instruction {
 
     @Override
     public String toString() {
-        return String.format("%s %s",jvmop,md.toJynx());
+        return String.format("%s %s",jvmop,mh.iond());
     }
 
 }

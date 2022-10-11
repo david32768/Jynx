@@ -33,8 +33,11 @@ import asm.instruction.VarInstruction;
 import jvm.ConstantPoolType;
 import jvm.ConstType;
 import jvm.Context;
+import jvm.HandleType;
 import jvm.OpArg;
 import jynx.GlobalOption;
+import jynx2asm.handles.FieldHandle;
+import jynx2asm.handles.MethodHandle;
 import jynx2asm.ops.DynamicOp;
 import jynx2asm.ops.JvmOp;
 import jynx2asm.ops.JynxOp;
@@ -290,9 +293,9 @@ public class String2Insn {
     private Instruction arg_field(JvmOp jvmop) {
         String fname = line.nextToken().asString();
         String desc = line.nextToken().asString();
-        FieldDesc fd = FieldDesc.getInstance(fname, desc);
-        checker.usedField(fd,jvmop);
-        return new FieldInstruction(jvmop,fd);
+        FieldHandle fh = FieldHandle.getInstance(fname, desc,HandleType.fromOp(jvmop, false));
+        checker.usedField(fh);
+        return new FieldInstruction(jvmop,fh);
     }
     
     private Instruction arg_incr(JvmOp jvmop) {
@@ -355,9 +358,9 @@ public class String2Insn {
     private Instruction arg_method(JvmOp jvmop) {
         addDotLine |= generateDotLine;
         String mspec = line.nextToken().asString();
-        MethodDesc md = MethodDesc.getInstance(mspec,jvmop);
-        checker.usedMethod(md, jvmop, line);
-        return new MethodInstruction(jvmop, md);
+        MethodHandle mh = MethodHandle.getInstance(mspec,jvmop);
+        checker.usedMethod(mh, jvmop, line);
+        return new MethodInstruction(jvmop, mh);
     }
 
     private Instruction arg_none(JvmOp jvmop) {

@@ -30,7 +30,6 @@ import static jynx.Message.*;
 
 import jvm.AttributeName;
 import jvm.ConstType;
-import jvm.Context;
 import jvm.Feature;
 import jvm.JvmVersion;
 import jvm.NumType;
@@ -39,10 +38,10 @@ import jynx.Directive;
 import jynx.LogAssertionError;
 import jynx.LogIllegalStateException;
 import jynx.ReservedWord;
+import jynx2asm.handles.MethodHandle;
 import jynx2asm.Line;
 import jynx2asm.NameDesc;
 import jynx2asm.ops.JvmOp;
-import jynx2asm.OwnerNameDesc;
 
 public class Insn2Jynx {
     
@@ -175,8 +174,8 @@ public class Insn2Jynx {
     
     public void arg_interface(AbstractInsnNode in) {
         MethodInsnNode min = (MethodInsnNode)in;
-        OwnerNameDesc ond = OwnerNameDesc.of(min);
-        lb.append(asmop).append(ond.toJynx()).nl();
+        MethodHandle mh = MethodHandle.of(min);
+        lb.append(asmop).append(mh.iond()).nl();
     }
 
     
@@ -225,8 +224,8 @@ public class Insn2Jynx {
     
     public void arg_method(AbstractInsnNode in) {
         MethodInsnNode min = (MethodInsnNode)in;
-        OwnerNameDesc ond = OwnerNameDesc.of(min);
-        lb.append(asmop).append(ond.toJynx()).nl();
+        MethodHandle mh = MethodHandle.of(min);
+        lb.append(asmop).append(mh.iond()).nl();
     }
 
     

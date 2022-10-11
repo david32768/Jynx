@@ -12,7 +12,7 @@ import static jynx.Global.LOG;
 import static jynx.Message.*;
 
 import jynx.LogAssertionError;
-import jynx2asm.MethodDesc;
+import jynx2asm.handles.LocalMethodHandle;
 
 public enum FrameType {
 
@@ -116,16 +116,16 @@ public enum FrameType {
     }
     
     // set classname == null for static method
-    public static ArrayList<Object> getInitFrame(String classname, MethodDesc md) {
+    public static ArrayList<Object> getInitFrame(String classname, LocalMethodHandle lmh) {
         ArrayList<Object> localStack = new ArrayList<>();
         if (classname != null) {
-            if (md.isInit()) {
+            if (lmh.isInit()) {
                 localStack.add(ft_UninitializedThis.asmType());
             } else {
                 localStack.add(classname);
             }
         }
-        Type[] parmtypes = Type.getArgumentTypes(md.getDesc());
+        Type[] parmtypes = Type.getArgumentTypes(lmh.desc());
         for (Type type:parmtypes) {
             String tdesc = type.getDescriptor();
             localStack.add(objectFrom(tdesc));

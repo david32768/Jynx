@@ -1,7 +1,7 @@
 package jvm;
 
 import java.util.EnumSet;
-import jynx2asm.MethodDesc;
+import jynx2asm.handles.LocalMethodHandle;
 
 public enum Constants {
     
@@ -68,9 +68,8 @@ public enum Constants {
         return toString().equals(other);
     }
 
-    public MethodDesc methodDesc() {
-        assert str.contains("(");
-        return MethodDesc.getLocalInstance(str);
+    public LocalMethodHandle localMethodHandle() {
+        return LocalMethodHandle.getInstance(str);
     }
     
     @Override

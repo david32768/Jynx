@@ -20,10 +20,10 @@ import jvm.Context;
 import jynx.Access;
 import jynx.Directive;
 import jynx2asm.ClassChecker;
+import jynx2asm.handles.LocalMethodHandle;
 import jynx2asm.JynxLabelMap;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
-import jynx2asm.MethodDesc;
 import jynx2asm.NameDesc;
 import jynx2asm.ops.JynxOps;
 
@@ -33,7 +33,7 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
     private final Line methodLine;
     private final int numparms;
     private final Access accessName;
-    private final MethodDesc md;
+    private final LocalMethodHandle lmh;
     private String signature;
     private final List<String> exceptions;
     private final JynxLabelMap labelmap;
@@ -45,11 +45,11 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
     
     private final int errorsAtStart;
     
-    private JynxMethodNode(Line line, Access accessname, MethodDesc md,  ClassChecker checker) {
+    private JynxMethodNode(Line line, Access accessname, LocalMethodHandle lmh,  ClassChecker checker) {
         this.errorsAtStart = LOGGER().numErrors();
-        this.md = md;
+        this.lmh = lmh;
         this.accessName = accessname;
-        this.numparms = Type.getArgumentTypes(md.getDesc()).length;
+        this.numparms = Type.getArgumentTypes(lmh.desc()).length;
         this.methodLine = line;
         this.exceptions = new ArrayList<>();
         this.annotationLists = new MethodAnnotationLists(numparms);
@@ -62,16 +62,16 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
     public static JynxMethodNode getInstance(Line line, ClassChecker checker) {
         Access accessname = checker.getAccess(METHOD,line);
         line.noMoreTokens();
-        MethodDesc md = MethodDesc.getLocalInstance(accessname.getName());
-        if (md.isInit()) {
+        LocalMethodHandle lmh = LocalMethodHandle.getInstance(accessname.getName());
+        if (lmh.isInit()) {
             accessname.check4InitMethod();
         } else {
-            if (checker.isComponent(METHOD, md.getName(), md.getDesc())) {
+            if (checker.isComponent(METHOD, lmh.name(), lmh.desc())) {
                 accessname.setComponent();
             }
             accessname.check4Method();
         }
-        JynxMethodNode jmn =  new JynxMethodNode(line,accessname,md,checker);
+        JynxMethodNode jmn =  new JynxMethodNode(line,accessname,lmh,checker);
         checker.checkMethod(jmn);
         return jmn;
     }
@@ -81,11 +81,11 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
     }
     
     public String getName() {
-        return md.getName();
+        return lmh.name();
     }
     
     public String getDesc() {
-        return md.getDesc();
+        return lmh.desc();
     }
     
     public Line getLine() {
@@ -131,11 +131,11 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
             LOG(M155); // "code is not allowed as method is abstract or native"
             return null;
         }
-        return JynxCodeHdr.getInstance(mnode, js, md, labelmap,is(AccessFlag.acc_static),checker,opmap);
+        return JynxCodeHdr.getInstance(mnode, js, lmh, labelmap,is(AccessFlag.acc_static),checker,opmap);
     }
 
-    public MethodDesc getMethodDesc() {
-        return md;
+    public LocalMethodHandle getLocalMethodHandle() {
+        return lmh;
     }
     
     @Override
