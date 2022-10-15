@@ -3,9 +3,9 @@
 
 
 This is a rewritten version of [Jasmin](https://github.com/davidar/jasmin)
- using [ASM](https://asm.ow2.io) version 9.2 as a back end.
+ using [ASM](https://asm.ow2.io) version 9.3 as a back end.
 It is written in Java V1_8 (apart from module-info.java)
- and supports all features up to V18 except user attributes.
+ and supports all features up to V19 except user attributes.
 
 More checking is done before using ASM. For example
  stack and local variables types are checked assuming
@@ -17,7 +17,7 @@ not previously branched to or is not an exception handler.
 
 The opportunity has beeen taken to change the syntax of some statements.
 
-It supports "macros" as a service with structured macros (cf WebAssembly MVP) as an example.
+It supports "macros" as a service.
 
 ## WARNING
 
@@ -67,7 +67,8 @@ Changes are:
 *	tableswitch - new format
 ```
 	; <high> is always omitted
-	; tableswitch <minimum> default <default_label> <array of labels>
+	; tableswitch <minimum> default <default_label> <label-array>
+	; <label-array> = .array[\n<labael>]+\n.end_array
 	tableswitch 0 default DefaultLabel .array
 		ZeroLabel
 		OneLabel
@@ -75,7 +76,8 @@ Changes are:
 ```		
 *	lookupswitch - new format
 ```
-	; lookupswitch default <default_label> <array of <num -> <label>>
+	; lookupswitch default <default_label> <switch-array>
+	; <switch-array> = .array[\n<num> -> <label>]+\n.end_array
 	lookupswitch default DefaultLabel .array
 		1 -> Label1
 		10 -> Label2
@@ -108,29 +110,29 @@ Changes are
 *	user attributes are NOT supported
 *	.bytecode -> .version
 ```
-	; .bytecoode 61.0 ; change to
-	.version V17
+	; .bytecoode 61.0 ; Jasmin 2.4
+	.version V17 ; Jynx
 ```
 *	options (without -- prefix) can be on .version directive
 ```
 	.version V17 GENERATE_LINE_NUMBERS JVM_OPS_ONLY
 ```
-*	.deprecated removed; use deprecated pseudo-access_flag
+*	.deprecated removed; use "deprecated" pseudo-access_flag
 ```
 	; .class public aClass
-	; .deprecated
-	.class public deprecated aClass
+	; .deprecated ; Jasmin 2.4
+	.class public deprecated aClass ; Jynx
 	; etc.
 ```
 *	.enum instead of .class enum
 ```
-	; .class enum anEnum
-	.enum anEnum
+	; .class enum anEnum ; Jasmin 2.4
+	.enum anEnum [ Jynx
 ```
 *	.define_annotation instead of .class annotation
 ```
-	; .class annotation interface abstract anAnnotationClass ; change to
-	.define_annotation anAnnotationClass
+	; .class annotation interface abstract anAnnotationClass ; Jasmin 2.4
+	.define_annotation anAnnotationClass ; Jynx
 ```
 *	.inner class -> .inner_class, .inner interface -> .inner_interface etc.
 ```
@@ -143,12 +145,12 @@ Changes are
 	;	name is inner_class
 
 	; Jasmin 2,4
-	; .inner class [<access>] [<name>] [inner <classname>] [outer <name>]
-	;	name after access is inner_name (which can be absent)
+	; .inner class [<access-spec>] [<name>] [inner <classname>] [outer <name>]
+	;	name after access-spec is inner_name (which can be absent)
 	;	classname is inner_class
 
 	; Jynx
-	; .inner_class [<access>] <inner_class> [outer <outer_class>] [innername <innername>]
+	; .inner_class [<access-spec>] <inner_class> [outer <outer_class>] [innername <innername>]
 	;	i.e. change 
 
 	; .inner class x inner y$z outer w ; Jasmin 2.4
@@ -163,14 +165,14 @@ Changes are
 ```
 *	An interface method name should be preceded with a '@' in invoke ops and handles
 ```
-	; invokestatic anInterfaceMethod
-	invokestatic @anInterfaceMethod
+	; invokestatic anInterfaceMethod ; Jasmin 2.4
+	invokestatic @anInterfaceMethod ; Jynx
 ```
 *	if signature of a field is present must use .signature directive (NOT appear in .field directive) 
 *	.package
 ```
-	; .class interface abstract aPackage/package-info ; change to
-	.package aPackage
+	; .class interface abstract aPackage/package-info ; Jasmin 2.4
+	.package aPackage ; Jynx
 ```
 
 ### ANNOTATIONS
@@ -180,7 +182,8 @@ Changes are
 *	default maxparms annotation is numparms(ASM)
 *	[ annotation values must use .array e.g
 ```
-	intArrayValue [I = .array
+	; intArrayValue [I = 0 1 ; Jasmin 2,4
+	intArrayValue [I = .array ; Jynx
 		0
 		1
 	.end_array
@@ -208,14 +211,18 @@ Changes are
 ```
 *	add support for method-handle to ldc
 ```
+	; grammar
 	; ldc <method-handle>
-	; grammar for method-handle
-	<handle-type>:<method-name-desc>
-	<handle-type> = [VL|ST|SP|NW|IN]
+	; <method-handle> = [<handle-to-method>|<handle-to-field>]
 
-	<handle-type>:<field-name-desc>
-	<handle-type> = [GF|GS|PF|PS]
-	<field-nam-desc> = <field-name>()<field-desc>
+	; <handle-to-method> = <method-handle-type>:<method-name-desc>
+	; <method-handle-type> = [VL|ST|SP|NW|IN]
+	ldc ST:java/lang/Integer/getInteger(Ljava/lang/String;)java/lang/Integer
+
+	; <handle-to-field> = <field-handle-type>:<field-name-desc>
+	; <field-handle-type> = [GF|GS|PF|PS]
+	; <field-nam-desc> = <field-name>()<field-desc>
+	ldc GS:java/lang/Float/MIN_VALUE()F ; handle for smallest POSITIVE float
 	
 ```
 *	dynamic ldc
@@ -223,33 +230,92 @@ Changes are
 	; (a boot method parameter may be dynamic) 
 	; ldc { name desc boot_method_and_parameters } 
 ```
-*	.record
+*	.record ; see examples/Java17/Point.java
 ```
 	; grammar
-	.record <access-flags> <record-name>
-	[class-hdr-directive]*
-	[component]*
-	[field]* ; .field for each component must be present
-	[method]* ; .method for each component must be present
+	; .record <access-spec> <record-name>
+	; [<class-hdr-directive>]*
+	; [<component>]*
+	; [<field>]* ; .field for each component must be present
+	; [<method>]* ; .method for each component must be present
 ```
 *	.component
 ```
 	; grammar
-	.component <component-name> <desc>
-	[annotation|type-annotation]*
-	.end_component ; only necessary if any annotations or type annotations
+	; <component> = [<simple-component>|<compound-component>]
+	; <simple-component> = .component <component-name> <desc>
+	.component x I
+
+	; <compond-component> = .component <component-name> <desc>
+	;	[<signature>]?
+	;	<annotation>|<type-annotation>]*
+	; 	.end_component
 ```
 *	.module ; see examples/Java11/module-info.java
-*	alias ops e.g. ildc 3 ; load integer 3
-*	extended ops e.g. if_fcmpge label
-*	call common java methods e.g. iabs instead of invokestatic java/lang/Math/iabs(I)I
+```
+	; grammar
+	; .class acc_module module-info ; assumed
+	; .module <access-spec> <module-name> [<version>]?
+	; [<class-hdr-directives>]* ; for those which are valid for module (end of jvms 4.1)
+	; [<main>|<requires>|<exports>|<open>|<uses>|<supports>|<packages>]*
+	; ; end of file
+
+	; <main>? = .main <class-name>
+
+	; <requires>* = .requires <access-spec> <module-name> [module-version]?
+
+	; <exports> = [<unqualified-export>|<qualified export>]*
+	; <unqualified-export> = .exports <access-spec> <package-name>
+	; <qualified-export> = .exports <access-spec> <package-name> to <module-name-array>
+	; <module-name-array> = .array[\n<module-name>]+\n.end_array
+	
+	; <open>=[<unqualified-open>|<qualified open>]*
+	; <unqualified-open> = open <access-spec> <package-name>
+	; <qualified-open> = .open <access-spec> <package-name> to <module-name-array>
+	
+	; <uses>* = .uses <service-class-name>
+
+	; <provides>* = .provides <service-class-name> with <class-name-array>
+	; <class-name-array> = .array[\n<class-name>]+\n.end_array
+	
+	; <packeges>* = .packages <package-name-array>
+	; <package-name-array> = .array[\n<package-name>]+\n.end_array
+	
+```
+*	alias ops
+```
+	; e.g.
+	ildc 3 : alias for iconst_3
+	ildc 240 ; alias for bipush 240
+	ildc -32767 ; alias for sipush -32767
+	ildc 32768 ; alias for ldc 32768
+	; also lldc, fldc and dldc
+```
+*	extended ops
+```
+	; e.g.
+	if_fcmpge label
+	; fcmpl
+	; ifge labal
+	swap2
+	; dup2_x2
+	; pop2
+```
+*	call common java methods
+```
+	; e.g.
+	iabs ; invokestatic java/lang/Math/iabs(I)I
+```
 *	.macrolib <macro-library-name>
-*	.macrolib structured ; gives access to structured ops e.g. BLOCK, LOOP, END
 *	type_annotations
-*	.catch block (.catch .end_catch) is required if it has an .except_type_annotation
+*	.catch block if except type annotations
+```
+	; grammar
+	; <catch> [<except-type-annotation>]+ <end-catch>
+```
 *	.hint ; used to help verification if class(es) not available
 ```
 	; grammar
-	.hint <subtype-class-name> subtype <class_name>
-	.hint <common-class_name> common <class-name1> class_name2>
+	; .hint <subtype-class-name> subtype <class_name> ; x is subtype of y
+	; .hint <common-class_name> common <class-name1> class_name2> ; x is common of y and z
 ```
