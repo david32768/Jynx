@@ -6,6 +6,4 @@ module com.github.david32768.jynx {
 	requires org.objectweb.asm.tree.analysis;
 	requires org.objectweb.asm.util;
 	uses jynx2asm.ops.MacroLib;
-	provides com.github.david32768.jynx.MacroLib
-		with jynx2asm.ops.StructuredMacroLib;
 }
