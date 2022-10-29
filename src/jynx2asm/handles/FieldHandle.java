@@ -54,12 +54,12 @@ public class FieldHandle implements JynxHandle {
     
     @Override
     public String ond() {
-        return String.format("%s/%s()%s",owner,name,desc);
+        return HandlePart.ownerName(owner, name) + "()" + desc;
     }
 
     @Override
     public String toString() {
-        return String.format("%s%s/%s %s",ht.getPrefix(),owner,name,desc);
+        return ht.getPrefix() + ond();
     }
 
     public void checkReference() {

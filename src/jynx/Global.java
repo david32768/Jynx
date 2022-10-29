@@ -188,7 +188,7 @@ public class Global {
         global.logger.log(linestr,msg, objs);
     }
 
-    public static void LOG(Exception ex) {
+    public static void LOG(Throwable ex) {
         if (OPTION(GlobalOption.__PRINT_STACK_TRACES)) {
             ex.printStackTrace();;
         }
@@ -196,6 +196,9 @@ public class Global {
             return; // already logged
         }
         if (ex instanceof LogIllegalStateException) {
+            return; // already logged
+        }
+        if (ex instanceof SevereError) {
             return; // already logged
         }
         LOG(M999,ex.toString()); // "%s"

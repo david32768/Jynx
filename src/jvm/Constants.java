@@ -35,8 +35,8 @@ public enum Constants {
 
     NAME("name()L%s;",STRING_CLASS),
     ORDINAL("ordinal()I"),
-    VALUES_FORMAT("%1$s/values()[L%1$s;"),
-    VALUEOF_FORMAT("%%1$s/valueOf(L%s;)L%%1$s;",STRING_CLASS),
+    VALUES_FORMAT("%1$s.values()[L%1$s;"),
+    VALUEOF_FORMAT("%%1$s.valueOf(L%s;)L%%1$s;",STRING_CLASS),
     GET_DECLARING_CLASS("getDeclaringClass()L%s;",CLASS_CLASS),
     COMPARETO_FORMAT("compareTo(L%s;)I"),
     

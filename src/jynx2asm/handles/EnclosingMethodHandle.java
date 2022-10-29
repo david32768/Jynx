@@ -57,12 +57,12 @@ public class EnclosingMethodHandle implements JynxHandle {
 
     @Override
     public String ond() {
-        return String.format("%s/%s%s", owner,name,desc);
+        return HandlePart.ownerName(owner, name) + desc;
     }
 
     @Override
     public String toString() {
-        return owner + '/' + name + desc;
+        return ond();
     }
 
 }

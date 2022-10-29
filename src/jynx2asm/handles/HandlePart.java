@@ -3,8 +3,10 @@ package jynx2asm.handles;
 import java.util.EnumMap;
 import java.util.EnumSet;
 
+import static jynx.Global.LOG;
 import static jynx.Message.M299;
 import static jynx.Message.M300;
+import static jynx.Message.M305;
 import static jynx2asm.NameDesc.PACKAGE_NAME;
 
 import jvm.Constants;
@@ -24,6 +26,7 @@ public enum HandlePart {
     static final char INTERFACE_PREFIX = '@';
     private static final char LEFT_BRACKET = '(';
     private static final char FORWARD_SLASH = '/';
+    private static final char NAME_SEP = '.';
 
     public static EnumMap<HandlePart,String>  getInstance(String spec, EnumSet<HandlePart> expected) {
         String htype = null;
@@ -43,7 +46,14 @@ public enum HandlePart {
             mname = spec.substring(0,lbindex);
             mdesc = spec.substring(lbindex);
         }
-        int slindex = mname.lastIndexOf(FORWARD_SLASH);
+        int slindex = mname.lastIndexOf(NAME_SEP);
+        if (slindex < 0) {
+            slindex = mname.lastIndexOf(FORWARD_SLASH);
+            if (slindex >= 0) {
+                // "it is preferred that name is separated from owner by '%c' not '%c'"
+                LOG(M305,NAME_SEP,FORWARD_SLASH);
+            }
+        }
         String mclass = null;
         if (slindex >= 0) {
             mclass = mname.substring(0,slindex);
@@ -108,4 +118,7 @@ public enum HandlePart {
         return Constants.CLASS_INIT_NAME.equalString(name) && desc.endsWith(VOID_METHOD);
     }
     
+    public static String ownerName(String owner, String name) {
+        return owner + NAME_SEP + name;
+    }
 }

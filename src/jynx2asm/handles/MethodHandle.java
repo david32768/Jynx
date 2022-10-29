@@ -75,7 +75,12 @@ public class MethodHandle implements JynxHandle, Comparable<MethodHandle> {
     
     @Override
     public String ond() {
-        return String.format("%s/%s%s",owner,name,desc);
+        return HandlePart.ownerName(owner, name) + desc;
+    }
+
+    @Override
+    public String toString() {
+        return ht.getPrefix() + ond();
     }
 
     public boolean isInit() {

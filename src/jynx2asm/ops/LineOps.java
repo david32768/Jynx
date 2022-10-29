@@ -22,9 +22,11 @@ public enum LineOps implements LineOp {
     lab_pop,
 
     tok_skip,
+    tok_skipall,
     tok_swap,
     tok_dup,
     tok_print, // for debugging
+    
     ;    
     
     private LineOps() {}
@@ -67,6 +69,9 @@ public enum LineOps implements LineOp {
             case tok_skip:
                 line.nextToken();
                 break;
+            case tok_skipall:
+                line.skipTokens();
+                break;
             case tok_print:
                 System.err.format("token = %s%n", line.peekToken());
                 break;
@@ -88,6 +93,7 @@ public enum LineOps implements LineOp {
     private static enum Adjustment {
        INSERT,
        TRANSFORM,
+       JOIN,
        CHECK,
        ;
     }
@@ -96,11 +102,15 @@ public enum LineOps implements LineOp {
         return new AdjustLine(Adjustment.INSERT, str);
     }
     
-    public static LineOp insert(String klass, String method, String desc) {
+    public static LineOp join(String str) {
+        return new AdjustLine(Adjustment.JOIN, str);
+    }
+    
+    public static LineOp insertMethod(String klass, String method, String desc) {
         assert NameDesc.CLASS_NAME.validate(klass);
         assert NameDesc.METHOD_ID.validate(method);
         assert NameDesc.DESC.validate(desc);
-        return new AdjustLine(Adjustment.INSERT, klass + '/' + method + desc);
+        return new AdjustLine(Adjustment.INSERT, klass + '.' + method + desc);
     }
     
     public static LineOp prepend(String str) {
@@ -149,6 +159,11 @@ public enum LineOps implements LineOp {
             switch(type) {
                 case INSERT:
                     token = Token.getInstance(adjust);
+                    line.insert(token);
+                    break;
+                case JOIN:
+                    String first = line.nextToken().asString() + adjust;
+                    token = line.nextToken().transform(s->first + s);
                     line.insert(token);
                     break;
                 case TRANSFORM:

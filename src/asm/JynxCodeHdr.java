@@ -14,7 +14,6 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.TypePath;
 
 import static jvm.AttributeName.*;
@@ -29,6 +28,7 @@ import jvm.TypeRef;
 import jynx.Directive;
 import jynx.ReservedWord;
 import jynx2asm.ClassChecker;
+import jynx2asm.handles.JynxHandle;
 import jynx2asm.handles.LocalMethodHandle;
 import jynx2asm.InstList;
 import jynx2asm.JynxCatch;
@@ -75,8 +75,7 @@ public class JynxCodeHdr implements ContextDependent {
         this.mnode = mv;
         this.labelmap = labelmap;
         this.vars = new ArrayList<>();
-        Type rtype = Type.getReturnType(lmh.desc());
-        JvmOp returnop = getReturnOp(rtype);
+        JvmOp returnop = JynxHandle.getReturnOp(lmh);
         this.stackLocals = StackLocals.getInstance(localStack,labelmap,returnop,isStatic);
         this.s2a = new String2Insn(js, labelmap, checker, opmap);
         this.uniqueDirectives = new HashMap<>();
@@ -89,28 +88,6 @@ public class JynxCodeHdr implements ContextDependent {
         return new JynxCodeHdr(mv, js, checker,lmh, labelmap, isStatic ,opmap);
     }
 
-    private static JvmOp getReturnOp(Type rtype) {
-        char rtchar = rtype.getDescriptor().charAt(0);
-        switch (rtchar) {
-            case 'V':
-                return JvmOp.asm_return;
-            case 'Z':
-            case 'B':
-            case 'C':
-            case 'S':
-            case 'I':
-                return JvmOp.asm_ireturn;
-            case 'F':
-                return JvmOp.asm_freturn;
-            case 'D':
-                return JvmOp.asm_dreturn;
-            case 'J':
-                return JvmOp.asm_lreturn;
-            default:
-                return JvmOp.asm_areturn;
-        }
-    }
-    
     @Override
     public Context getContext() {
         return Context.CODE;
@@ -249,21 +226,14 @@ public class JynxCodeHdr implements ContextDependent {
 
     private void visitInsn(Line line) {
         InstList instlist = new InstList(stackLocals,line,options);
-        s2a.getInsts(line,instlist);
+        s2a.getInsts(instlist);
         instlist.accept(mnode);
     }
     
     private void visitLineNumber(Line line) {
-        int lineno = line.lastToken().asUnsignedShort();
-        line.noMoreTokens();
-        if (OPTION(GENERATE_LINE_NUMBERS)) {
-            LOG(M95,GENERATE_LINE_NUMBERS); // ".line directives ignored as %s specified"
-            return;
-        }
-        stackLocals.visitLineNumber(line);
-        Label label = new Label();  //  to get multiple line numbers. eg in jdk3/ArtificialStructures
-        mnode.visitLabel(label);
-        mnode.visitLineNumber(lineno, label);
+        InstList instlist = new InstList(stackLocals,line,options);
+        s2a.add(JvmOp.xxx_line, instlist);
+        instlist.accept(mnode);
     }
 
     private Object getAsmFrameType(FrameType ft,Line line) {

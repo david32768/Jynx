@@ -303,7 +303,7 @@ public enum Message {
     M302("%s is null or has different feature requirement than %s"),
     M303("Enclosing method cannot be in enclosed class"),
     M304("Nest host already defined%n  %s"),
-    //
+    M305(ENDINFO,"it is preferred that name is separated from owner by '%c' not '%c'"),
     M306("nested class have different owners; class = %s token = %s"),
 
     M313("final class cannot have %s"),

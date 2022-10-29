@@ -38,6 +38,7 @@ import jynx.Directive;
 import jynx.LogAssertionError;
 import jynx.LogIllegalStateException;
 import jynx.ReservedWord;
+import jynx2asm.handles.HandlePart;
 import jynx2asm.handles.MethodHandle;
 import jynx2asm.Line;
 import jynx2asm.NameDesc;
@@ -160,7 +161,7 @@ public class Insn2Jynx {
     
     public void arg_field(AbstractInsnNode in) {
         FieldInsnNode fin = (FieldInsnNode)in;
-        String on = String.format("%s/%s",fin.owner,fin.name);
+        String on = HandlePart.ownerName(fin.owner,fin.name);
         lb.append(asmop).append(on).append(fin.desc).nl();
    }
 

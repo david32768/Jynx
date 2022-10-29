@@ -15,6 +15,7 @@ import static jynx.Message.M990;
 import static jynx.ReservedWord.*;
 
 import asm.instruction.Instruction;
+import asm.instruction.LineInstruction;
 import jynx.ReservedWord;
 import jynx2asm.ops.JvmOp;
 
@@ -48,6 +49,10 @@ public class InstList {
         if (!options.isEmpty()) {
             LOG(M990,line); // "%s"
         }
+    }
+
+    public Line getLine() {
+        return line;
     }
 
     private void printStack() {
@@ -87,13 +92,13 @@ public class InstList {
     }
 
     public void addFront(Instruction insn) {
-        instructions.add(0,insn);
+        if (insn instanceof LineInstruction) {
+            instructions.add(0,insn);
+        } else {
+            throw new AssertionError();
+        }
     }
 
-    public List<Instruction> getInstructions() {
-        return instructions;
-    }
-    
     public void accept(MethodNode mnode) {
         for (Instruction in:instructions) {
             in.accept(mnode);

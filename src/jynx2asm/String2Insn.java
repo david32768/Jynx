@@ -9,6 +9,7 @@ import java.util.TreeMap;
 import org.objectweb.asm.ConstantDynamic;
 
 import static jynx.Global.*;
+import static jynx.GlobalOption.GENERATE_LINE_NUMBERS;
 import static jynx.Message.*;
 import static jynx.ReservedWord.*;
 import static jynx2asm.NameDesc.*;
@@ -55,7 +56,6 @@ public class String2Insn {
     private final JynxLabelMap labmap;
     private final LabelStack labelStack;
     private final ClassChecker checker;
-    private final String className;
     private final JynxOps opmap;
     
     private Line line;
@@ -71,14 +71,13 @@ public class String2Insn {
         this.labmap = labmap;
         this.labelStack = new LabelStack();
         this.checker = checker;
-        this.className = checker.getClassName();
         this.generateDotLine = OPTION(GlobalOption.GENERATE_LINE_NUMBERS);
         this.opmap = opmap;
         this.indent = INDENT_LENGTH;
     }
 
-    public void getInsts(Line linex, InstList instlist) {
-        line = linex;
+    public void getInsts(InstList instlist) {
+        line = instlist.getLine();
         if (line.isLabel()) {
             String lab = line.firstToken().asLabel();
             line.noMoreTokens();
@@ -104,16 +103,21 @@ public class String2Insn {
                 indent += INDENT_LENGTH;
             }
         }
+        add(jynxop, instlist);
+        if (generateDotLine && addDotLine) {
+            instlist.addFront(new LineInstruction(line.getLinect(),line));
+        }
+    }
+
+    public void add(JynxOp jynxop, InstList instlist) {
+        line = instlist.getLine();
         macroCount = 0;
         addDotLine = false;
         multi = false;
         add(jynxop,macroCount,instlist);
         line.noMoreTokens();
-        if (addDotLine) {
-            instlist.addFront(new LineInstruction(null,line.getLinect()));
-        }
     }
-
+    
     private void add(JynxOp jop, int macct, InstList instlist) {
         if (multi) {
             LOG(M254,jop); // "%s is used in a macro after a mulit-line op"
@@ -183,7 +187,7 @@ public class String2Insn {
     }
     
     private Instruction arg_atype(JvmOp jvmop) {
-        addDotLine |= generateDotLine;
+        addDotLine = true;
         int atype = line.nextToken().asTypeCode();
         return new IntInstruction(jvmop,atype);
     }
@@ -194,14 +198,14 @@ public class String2Insn {
     }
     
     private Instruction arg_callsite(JvmOp jvmop) {
-        addDotLine |= generateDotLine;
+        addDotLine = true;
         JynxConstantDynamic jcd = new JynxConstantDynamic(js, line, checker);
         ConstantDynamic cd = jcd.getConstantDynamic4Invoke();
         return new DynamicInstruction(jvmop,cd);
     }
     
     private Instruction arg_class(JvmOp jvmop) {
-        addDotLine |= generateDotLine;
+        addDotLine = true;
         String typeo = line.nextToken().asString();
         String type = TRANSLATE_OWNER(typeo);
         if (jvmop == JvmOp.asm_new) {
@@ -277,17 +281,25 @@ public class String2Insn {
     }
     
     private Instruction arg_dir(JvmOp jvmop) {
-        if (jvmop == JvmOp.xxx_label) {
-            String labstr = line.nextToken().asString();
-            JynxLabel target = labmap.defineJynxLabel(labstr, line);
-            return new LabelInstruction(jvmop,target);
-        }
-        if (jvmop == JvmOp.xxx_labelweak) {
-            String labstr = line.nextToken().asString();
-            JynxLabel target = labmap.defineWeakJynxLabel(labstr, line);
-            return target == null?null:new LabelInstruction(jvmop,target);
-        }
-        throw new AssertionError();
+        switch (jvmop) {
+            case xxx_label:
+                String labstr = line.nextToken().asString();
+                JynxLabel target = labmap.defineJynxLabel(labstr, line);
+                return new LabelInstruction(jvmop,target);
+            case xxx_labelweak:
+                labstr = line.nextToken().asString();
+                target = labmap.defineWeakJynxLabel(labstr, line);
+                return target == null?null:new LabelInstruction(jvmop,target);
+            case xxx_line:
+                int lineno = line.nextToken().asUnsignedShort();
+                if (OPTION(GENERATE_LINE_NUMBERS)) {
+                    LOG(M95,GENERATE_LINE_NUMBERS); // ".line directives ignored as %s specified"
+                    return null;
+                }
+                return new LineInstruction(lineno, line);
+            default:
+                throw new EnumConstantNotPresentException(JvmOp.class, jvmop.toString());
+            }
     }
     
     private Instruction arg_field(JvmOp jvmop) {
@@ -344,7 +356,7 @@ public class String2Insn {
     }
 
     private Instruction arg_marray(JvmOp jvmop) {
-        addDotLine |= generateDotLine;
+        addDotLine = true;
         String desc = line.nextToken().asString();
         ARRAY_DESC.validate(desc);
         int lastbracket = desc.lastIndexOf('[') + 1;
@@ -356,7 +368,7 @@ public class String2Insn {
     }
 
     private Instruction arg_method(JvmOp jvmop) {
-        addDotLine |= generateDotLine;
+        addDotLine = true;
         String mspec = line.nextToken().asString();
         MethodHandle mh = MethodHandle.getInstance(mspec,jvmop);
         checker.usedMethod(mh, jvmop, line);
@@ -364,7 +376,7 @@ public class String2Insn {
     }
 
     private Instruction arg_none(JvmOp jvmop) {
-        addDotLine |= generateDotLine && (jvmop == JvmOp.asm_idiv  || jvmop == JvmOp.asm_ldiv);
+        addDotLine = jvmop == JvmOp.asm_idiv  || jvmop == JvmOp.asm_ldiv;
         if (jvmop == JvmOp.opc_wide) {
             return wide();
         }

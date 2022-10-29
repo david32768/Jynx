@@ -37,7 +37,7 @@ public class DynamicSimpleOp implements DynamicOp {
         assert desc == null || NameDesc.DESC.validate(desc);
         assert NameDesc.CLASS_NAME.validate(bootclass);
         assert NameDesc.METHOD_ID.validate(bootmethod);
-        String boot = bootclass + '/' + bootmethod;
+        String boot = bootclass + '.' + bootmethod;
         return new DynamicSimpleOp(name, desc, boot, bootdescplus,bootparms);
     }
 

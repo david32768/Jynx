@@ -36,6 +36,7 @@ import jynx.ClassType;
 import jynx.Directive;
 import jynx.Global;
 import jynx.GlobalOption;
+import jynx2asm.handles.HandlePart;
 
 public class JynxDisassemble {
 
@@ -136,7 +137,7 @@ public class JynxDisassemble {
         if (outerMethod != null || outerMethodDesc != null) {
             String cmdesc = outerMethodDesc == null?outerMethod:outerMethod + outerMethodDesc;
             if (outerClass != null) {
-                cmdesc = outerClass + "/" + cmdesc;
+                cmdesc = HandlePart.ownerName(outerClass,cmdesc);
             }
             jp.appendDirective(dir_enclosing_method)
                     .append(cmdesc)

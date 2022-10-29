@@ -6,11 +6,18 @@ import static jynx.Message.M99;
 
 import jvm.HandleType;
 import jynx.LogIllegalArgumentException;
+import jynx2asm.ops.JvmOp;
 
 public interface JynxHandle {
     
     public String desc();
 
+    public default String returnDesc() {
+        String desc = desc();
+        int index = desc.indexOf(')');
+        return desc.substring(index + 1);
+    }
+    
     public default HandleType ht() {
         throw new AssertionError(); // return null;
     }
@@ -62,4 +69,30 @@ public interface JynxHandle {
             return MethodHandle.getInstance(handle, ht).handle();
         }
     }
+
+    public static JvmOp getReturnOp(LocalMethodHandle lmh) {
+        char rtchar = lmh.returnDesc().charAt(0);
+        switch (rtchar) {
+            case 'V':
+                return JvmOp.asm_return;
+            case 'Z':
+            case 'B':
+            case 'C':
+            case 'S':
+            case 'I':
+                return JvmOp.asm_ireturn;
+            case 'F':
+                return JvmOp.asm_freturn;
+            case 'D':
+                return JvmOp.asm_dreturn;
+            case 'J':
+                return JvmOp.asm_lreturn;
+            case 'L':
+            case '[':
+                return JvmOp.asm_areturn;
+            default:
+                throw new AssertionError();
+        }
+    }
+    
 }

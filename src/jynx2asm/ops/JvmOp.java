@@ -246,6 +246,7 @@ public enum JvmOp implements JynxOp {
 
     xxx_label(-1, 0, "()V", arg_dir, -1),
     xxx_labelweak(-1, 0, "()V", arg_dir, -1),
+    xxx_line(-2, 0, "()V", arg_dir, -2),
     ;
         
     private final int opcode;

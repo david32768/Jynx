@@ -29,7 +29,7 @@ public class Line implements TokenDeque {
     private final Deque<Token> tokens;
     private final LineType lineType;
 
-    private final int numTokens;
+    private boolean start;
     private String comment;
     
     private Line(String line, int linect,  int indent, Deque<Token> tokens, LineType linetype) {
@@ -39,7 +39,7 @@ public class Line implements TokenDeque {
         this.tokens = tokens;
         this.lineType = linetype;
         this.comment = "";
-        this.numTokens = tokens.size();
+        this.start = true;
     }
 
     public final static char DIRECTIVE_INICATOR = '.';
@@ -71,13 +71,14 @@ public class Line implements TokenDeque {
 
     @Override
     public Token firstToken() {
-        if (tokens.size() != numTokens) {
+        if (!start) {
             throw new LogIllegalStateException(M115,tokens.getFirst()); // "Not first token - token = %s"
         }
         if (tokens.isEmpty()) {
             LOG(M198); // "empty line - should not occur"
             throw new AssertionError();
         } else {
+            start = false;
             return tokens.removeFirst();
         }
     }

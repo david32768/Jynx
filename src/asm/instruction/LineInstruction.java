@@ -7,6 +7,7 @@ import static jynx.Global.LOG;
 import static jynx.Message.M34;
 
 import jvm.NumType;
+import jynx2asm.Line;
 import jynx2asm.ops.JvmOp;
 import jynx2asm.StackLocals;
 
@@ -15,9 +16,10 @@ public class LineInstruction extends Instruction {
     private static final int LINE_NUMBER_MOD = 50000; // 50000 for easy human calculation
     
     private final int lineNum;
+    private final Line line;
 
-    public LineInstruction(JvmOp jop, int lineNum) {
-        super(jop);
+    public LineInstruction(int lineNum, Line line) {
+        super((JvmOp)null);
         if (NumType.t_short.isInUnsignedRange(lineNum)) {
             this.lineNum = lineNum;
         } else {
@@ -25,6 +27,7 @@ public class LineInstruction extends Instruction {
             LOG(M34,LINE_NUMBER_MOD);
             this.lineNum = lineNum%(LINE_NUMBER_MOD);
         }
+        this.line = line;
     }
 
     @Override
@@ -35,8 +38,7 @@ public class LineInstruction extends Instruction {
     }
 
     @Override
-    public void adjust(StackLocals stackLocals) {
-    }
+    public void adjust(StackLocals stackLocals) {}
 
     @Override
     public String toString() {

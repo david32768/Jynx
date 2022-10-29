@@ -103,9 +103,7 @@ public class JynxClass {
             } catch (IllegalArgumentException ex) {
                 LOG(ex);
                 js.skipTokens();    // use js as may not be original line
-            } catch (SevereError lex) {
-                return false;
-            } catch (IllegalStateException ex) {
+            } catch (SevereError | IllegalStateException ex) {
                 LOG(ex);
                 return false;
             } catch (RuntimeException ex) {

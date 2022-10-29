@@ -180,6 +180,7 @@ public class StackLocals {
             return false;
         }
         if (in instanceof LineInstruction) {
+            visitLineNumber(line);
             return !isUnreachable();
         }
         JvmOp jvmop = in.resolve(this);
