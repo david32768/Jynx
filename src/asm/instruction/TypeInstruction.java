@@ -23,4 +23,9 @@ public class TypeInstruction extends Instruction {
         return String.format("%s %s",jvmop,type);
     }
 
+    @Override
+    public boolean needLineNumber() {
+        return true;
+    }
+
 }

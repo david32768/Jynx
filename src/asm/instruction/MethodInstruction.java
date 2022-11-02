@@ -52,4 +52,9 @@ public class MethodInstruction extends Instruction {
         return String.format("%s %s",jvmop,mh.iond());
     }
 
+    @Override
+    public boolean needLineNumber() {
+        return true;
+    }
+
 }

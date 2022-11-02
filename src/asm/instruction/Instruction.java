@@ -18,6 +18,9 @@ public class Instruction {
         return new Instruction(jvmop);
     }
     
+    public boolean needLineNumber() {
+        return jvmop == JvmOp.asm_idiv  || jvmop == JvmOp.asm_ldiv;
+    }
     
     public JvmOp resolve(StackLocals stackLocals) {
         return jvmop;

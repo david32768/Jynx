@@ -8,6 +8,7 @@ import java.util.List;
 import org.objectweb.asm.tree.MethodNode;
 
 import static jynx.Global.LOG;
+import static jynx.Global.OPTION;
 import static jynx.Message.M290;
 import static jynx.Message.M291;
 import static jynx.Message.M292;
@@ -16,6 +17,7 @@ import static jynx.ReservedWord.*;
 
 import asm.instruction.Instruction;
 import asm.instruction.LineInstruction;
+import jynx.GlobalOption;
 import jynx.ReservedWord;
 import jynx2asm.ops.JvmOp;
 
@@ -29,6 +31,8 @@ public class InstList {
     private final boolean expand;
     private final boolean stack;
     private final boolean locals;
+
+    private boolean addLineNumber;
     
     private String stackb;
     private String localsb;
@@ -49,6 +53,7 @@ public class InstList {
         if (!options.isEmpty()) {
             LOG(M990,line); // "%s"
         }
+        this.addLineNumber = OPTION(GlobalOption.GENERATE_LINE_NUMBERS);
     }
 
     public Line getLine() {
@@ -77,8 +82,8 @@ public class InstList {
             printLocals();
         }
     }
-    
-    public void add(Instruction insn) {
+
+    private void addInsn(Instruction insn) {
         if (expand) {
             LOG(M292,spacer,insn); // "%s  +%s"
         }
@@ -91,12 +96,12 @@ public class InstList {
         }
     }
 
-    public void addFront(Instruction insn) {
-        if (insn instanceof LineInstruction) {
-            instructions.add(0,insn);
-        } else {
-            throw new AssertionError();
+    public void add(Instruction insn) {
+        if (addLineNumber && insn.needLineNumber()) {
+            addInsn(new LineInstruction(line.getLinect(),line));    
+            addLineNumber = false;
         }
+        addInsn(insn);
     }
 
     public void accept(MethodNode mnode) {

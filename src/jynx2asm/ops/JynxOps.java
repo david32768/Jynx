@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.function.BinaryOperator;
+import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.HashMap;
 import java.util.List;
@@ -15,17 +16,28 @@ import static jynx.Global.LOG;
 import static jynx.Message.M176;
 import static jynx.Message.M243;
 import static jynx.Message.M267;
+import static jynx.Message.M314;
+import static jynx.Message.M315;
+import static jynx.Message.M316;
+import static jynx.Message.M318;
 
 import jvm.Feature;
 import jvm.JvmVersion;
 import jvm.JvmVersionRange;
+import jynx.Global;
 import jynx.LogAssertionError;
+import jynx2asm.NameDesc;
 
 public class JynxOps {
 
     private final Map<String, JynxOp> opmap;
     private final Map<String,MacroLib> macrolibs;
     private final JvmVersion jvmVersion;
+    
+    private Predicate<String> labelTester;
+    private UnaryOperator<String> parmtrans;
+    private BinaryOperator<String> ownertrans;
+    
 
     private JynxOps(JvmVersion jvmversion) {
         this.opmap = new HashMap<>(512);
@@ -46,6 +58,7 @@ public class JynxOps {
                     .map(op->(JynxOp)op)
                     .forEach(ops::addOp);
         }
+        Global.setOpMap(ops);
         return ops;
     }
 
@@ -53,6 +66,10 @@ public class JynxOps {
     
     private void addOp(JynxOp op) {
         String name = op.toString();
+        if (!NameDesc.OP_ID.isValid(name)) {
+            // "op %s is not a valid op name"
+            throw new LogAssertionError(M318, name);
+        }
         JynxOp before = opmap.putIfAbsent(name, op);
         if (before != null) {
             LOG(M243, name, op.getClass(), before.getClass()); // "%s op defined in %s has already been defined in %s"
@@ -87,13 +104,23 @@ public class JynxOps {
                 lib.streamExternal()
                         .forEach(this::addOp);
                 macrolibs.put(libname, lib);
-                UnaryOperator<String> parmtrans = lib.parmTranslator();
-                if (parmtrans != null) {
-                    jynx.Global.setParmTrans(parmtrans);
+                if (parmtrans == null) {
+                    parmtrans = lib.parmTranslator();
+                } else if (lib.parmTranslator() != null) {
+                    // "only one parameter translater allowed"
+                    LOG(M314);
                 }
-                BinaryOperator<String> ownertrans = lib.ownerTranslator();
-                if (ownertrans != null) {
-                    jynx.Global.setOwnerTrans(ownertrans);
+                if (ownertrans == null) {
+                    ownertrans = lib.ownerTranslator();
+                } else if (lib.ownerTranslator() != null) {
+                    // "only one owner translater allowed"
+                    LOG(M315);
+                }
+                if (labelTester == null) {
+                    labelTester = lib.labelTester();
+                } else if (lib.labelTester() != null) {
+                    // "only one label tester allowed"
+                    LOG(M316);
                 }
                 for (MacroOption opt:lib.getOptions()) {
                     ADD_OPTION(opt.option());
@@ -108,6 +135,26 @@ public class JynxOps {
         return result;
     }
 
+    public boolean isLabel(String labstr) {
+        return labelTester != null && labelTester.test(labstr);
+    }
+    
+    public String translateDesc(String str) {
+        if (str == null || parmtrans == null || !str.startsWith("(")) {
+            return str;
+        } else {
+            return parmtrans.apply(str);
+        }
+    }
+    
+    public String translateOwner(String classname, String str) {
+        if (ownertrans == null) {
+            return str;
+        } else {
+            return ownertrans.apply(classname,str);
+        }
+    }
+    
     public static Integer length(MacroOp macop) {
         List<Map.Entry<JynxOp, Integer>> oplist = expandLevel(macop);
         int sz = 0;

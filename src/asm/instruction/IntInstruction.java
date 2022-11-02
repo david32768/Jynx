@@ -2,6 +2,7 @@ package asm.instruction;
 
 import org.objectweb.asm.MethodVisitor;
 
+import jvm.OpArg;
 import jynx2asm.ops.JvmOp;
 
 public class IntInstruction extends Instruction {
@@ -21,6 +22,11 @@ public class IntInstruction extends Instruction {
     @Override
     public String toString() {
         return String.format("%s %d",jvmop,value);
+    }
+
+    @Override
+    public boolean needLineNumber() {
+        return jvmop.args() == OpArg.arg_atype;
     }
 
 }

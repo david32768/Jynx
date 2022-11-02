@@ -2,8 +2,6 @@ package jynx;
 
 import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.function.BinaryOperator;
-import java.util.function.UnaryOperator;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -19,6 +17,7 @@ import jvm.ConstantPoolType;
 import jvm.JvmVersion;
 import jvm.JvmVersioned;
 import jynx2asm.Line;
+import jynx2asm.ops.JynxOps;
 
 public class Global {
 
@@ -27,8 +26,8 @@ public class Global {
     private JvmVersion jvmVersion;
     private String classname;
     private final Main.MainOption main;
-    private UnaryOperator<String> parmtrans;
-    private BinaryOperator<String> ownertrans;
+    
+    private JynxOps opmap;
     
     private Global() {
         this.options = EnumSet.noneOf(GlobalOption.class);
@@ -36,7 +35,6 @@ public class Global {
         this.jvmVersion = null;
         this.classname = null;
         this.main = null;
-        this.parmtrans = null;
     }
 
     private Global(EnumSet<GlobalOption> options,Main.MainOption type) {
@@ -44,7 +42,6 @@ public class Global {
         this.logger  = new Logger(type.name().toLowerCase());
         this.jvmVersion = null;
         this.main = type;
-        this.parmtrans = null;
     }
     
     private static Global global = new Global();
@@ -90,6 +87,11 @@ public class Global {
     public static void setJvmVersion(JvmVersion jvmversion) {
         assert global.jvmVersion == null;
         global.jvmVersion = jvmversion;
+    }
+    
+    public static void setOpMap(JynxOps opmap) {
+        assert global.opmap == null;
+        global.opmap = opmap;
     }
     
     public static void setClassName(String classname) {
@@ -212,29 +214,11 @@ public class Global {
         return global.main;
     }
 
-    public static void setParmTrans(UnaryOperator<String> parmtrans) {
-        assert global.parmtrans == null;
-        global.parmtrans = parmtrans;
-    }
-    
-    public static void setOwnerTrans(BinaryOperator<String> ownertrans) {
-        assert global.ownertrans == null;
-        global.ownertrans = ownertrans;
-    }
-    
     public static String TRANSLATE_DESC(String str) {
-        if (str == null || global.parmtrans == null || !str.startsWith("(")) {
-            return str;
-        } else {
-            return global.parmtrans.apply(str);
-        }
+        return global.opmap.translateDesc(str);
     }
     
     public static String TRANSLATE_OWNER(String str) {
-        if (global.ownertrans == null) {
-            return str;
-        } else {
-            return global.ownertrans.apply(CLASS_NAME(),str);
-        }
+        return global.opmap.translateOwner(CLASS_NAME(),str);
     }
 }

@@ -6,6 +6,7 @@ public enum LogMsgType {
     BLANK(' '),
     ENDINFO('C'),
     INFO('I'),
+    LINE('L'),
     STYLE('T'),
     WARNING('W'),
     ERROR('E'),

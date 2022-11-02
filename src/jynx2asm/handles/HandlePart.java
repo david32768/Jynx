@@ -23,7 +23,8 @@ public enum HandlePart {
     DESC,
     ;
     
-    static final char INTERFACE_PREFIX = '@';
+    public static final char INTERFACE_PREFIX = '#';
+
     private static final char LEFT_BRACKET = '(';
     private static final char FORWARD_SLASH = '/';
     private static final char NAME_SEP = '.';

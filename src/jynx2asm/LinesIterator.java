@@ -43,7 +43,7 @@ public class LinesIterator implements Iterator<Line>,AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         if (hasNext()) {
             LOG(M119,enddir); // "this and following lines skipped until %s"
             while(js.nextLineNotEnd(enddir) != null);

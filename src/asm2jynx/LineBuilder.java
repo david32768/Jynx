@@ -2,6 +2,7 @@ package asm2jynx;
 
 import java.io.PrintWriter;
 import java.util.EnumSet;
+import java.util.List;
 
 import static jynx.Global.*;
 import static jynx.Message.M142;
@@ -37,15 +38,17 @@ public class LineBuilder {
         this.depth = 0;
     }
     
-    public void incrDepth() {
+    public LineBuilder incrDepth() {
         depth += 1;
+        return this;
     }
     
-    public void decrDepth() {
+    public LineBuilder decrDepth() {
         depth -= 1;
         if (depth < 0) {
             throw new LogAssertionError(M910); // "indent depth is now negative"
         }
+        return this;
     }
     
     private boolean isEmpty() {
@@ -62,12 +65,13 @@ public class LineBuilder {
         return line;
     }
 
-    public void nl() {
+    public LineBuilder nl() {
         if (!isEmpty()) {
             pw.println(this);
             pw.flush();
             clear();
         }
+        return this;
     }
 
     private void addSep() {
@@ -179,12 +183,22 @@ public class LineBuilder {
         return this;
     }
 
-    public void blankline() {
+    public LineBuilder blankline() {
         pw.println();
+        return this;
     }
     
-    public void printDirective(Directive dir, Object obj) {
-        appendNonNull(dir, obj).nl();
+    public LineBuilder printDirective(Directive dir, Object obj) {
+        return appendNonNull(dir, obj).nl();
+    }
+    
+    public LineBuilder printDirective(Directive dir, List<String> strs) {
+        if (strs != null) {
+            for (Object str:strs) {
+                printDirective(dir,str);
+            }
+        }
+        return this;
     }
     
     @Override

@@ -61,7 +61,8 @@ public class JynxMethodPrinter {
             String toname = i2s.getLabelName(tcbn.end);
             String usingname = i2s.getLabelName(tcbn.handler);
             String exception = tcbn.type == null?res_all.toString():tcbn.type;
-            jp.appendNonNull(dir_catch,exception)
+            jp.append(dir_catch)
+                    .append(exception)
                     .append(res_from, fromname)
                     .append(res_to, toname)
                     .append(res_using, usingname)
@@ -69,8 +70,8 @@ public class JynxMethodPrinter {
             if (isAnyPresent(tcbn.visibleTypeAnnotations,tcbn.invisibleTypeAnnotations)) {
                 jp.incrDepth();
                 annotator.printTypeAnnotations(tcbn.visibleTypeAnnotations, tcbn.invisibleTypeAnnotations);
-                jp.decrDepth();
-                jp.appendDirective(end_catch).nl();
+                jp.decrDepth()
+                        .appendDirective(end_catch).nl();
             }
         }
     }
@@ -107,8 +108,8 @@ public class JynxMethodPrinter {
         printLocalVariables(mn, i2s);
         jp.append(dir_limit)
             .append(res_locals, mn.maxLocals)
-            .nl();
-        jp.append(dir_limit)
+            .nl()
+            .append(dir_limit)
             .append(res_stack, mn.maxStack)
             .nl();
     }
@@ -122,13 +123,9 @@ public class JynxMethodPrinter {
                 .nlstr();
         LOGGER().setLine(line);
         LOGGER().pushContext();
-        jp.incrDepth();
-        jp.printDirective(dir_signature,mn.signature);
-        if (mn.exceptions != null) {
-            for (String exstr : mn.exceptions) {
-                jp.printDirective(dir_throws, exstr);
-            }
-        }
+        jp.incrDepth()
+                .printDirective(dir_signature,mn.signature)
+                .printDirective(dir_throws, mn.exceptions);
         for (ParameterNode pn : nonNullList(mn.parameters)) {
             EnumSet<AccessFlag> pnaccflags = AccessFlag.getEnumSet(pn.access, PARAMETER,jvmVersion);
             jp.appendDirective(dir_parameter)

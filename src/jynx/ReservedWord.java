@@ -50,6 +50,7 @@ public enum ReservedWord {
     right_array("]"),
     dot_array(".array"),
     comma(","),
+    comment(";"),
 ;
 
     private final String external_name;

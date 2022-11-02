@@ -37,4 +37,9 @@ public class DynamicInstruction extends Instruction {
         return String.format("%s %s", jvmop, o2s.constDynamic2String(cd));
     }
 
+    @Override
+    public boolean needLineNumber() {
+        return true;
+    }
+
 }

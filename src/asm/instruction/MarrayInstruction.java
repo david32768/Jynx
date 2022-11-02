@@ -37,4 +37,9 @@ public class MarrayInstruction extends Instruction {
         return String.format("%s %s %d",jvmop,type, dims);
     }
 
+    @Override
+    public boolean needLineNumber() {
+        return true;
+    }
+
 }

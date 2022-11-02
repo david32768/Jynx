@@ -2,6 +2,7 @@ package jynx2asm.ops;
 
 import java.util.EnumSet;
 import java.util.function.BinaryOperator;
+import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
@@ -17,6 +18,10 @@ public abstract class MacroLib {
     }
 
     public BinaryOperator<String> ownerTranslator() {
+        return null;
+    }
+
+    public Predicate<String> labelTester() {
         return null;
     }
 

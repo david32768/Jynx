@@ -181,11 +181,10 @@ public class JynxCodeHdr implements ContextDependent {
                         token = line.nextToken();
                     }
                 }
-                if (printFlag == 0+1) {
-                    LOG(M293,options); // "print options = %s"
-                } else {
-                    LOG(M990,line); //"%s"
-                    LOG(M293,options); // "print options = %s"
+                LOG(M293,options); // "print options = %s"
+                Integer localsct = options.get(res_locals);
+                if (localsct != null && localsct == 1) {
+                    LOG(M294, res_locals, stackLocals.stringLocals()); // "%s = %s"
                 }
                 break;
             case res_off:
@@ -200,7 +199,6 @@ public class JynxCodeHdr implements ContextDependent {
                 }
                 --printFlag;
                 assert printFlag >= 0;
-                LOG(M990,line); // "%s"
                 LOG(M293,options); // "print options = %s"
                 break;
             default:

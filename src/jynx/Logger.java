@@ -119,6 +119,8 @@ public class Logger {
                 printError(msg,objs);
                 printInfo(M84,type); // "%s terminated because of severe error"
                 throw new SevereError();
+            case LINE:
+                // fall through to warning
             case STYLE:
                 // fall through to warning
             case WARNING:

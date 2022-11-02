@@ -1,6 +1,8 @@
 package jynx2asm;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -37,6 +39,7 @@ import jvm.Context;
 import jvm.HandleType;
 import jvm.OpArg;
 import jynx.GlobalOption;
+import jynx.LogIllegalStateException;
 import jynx2asm.handles.FieldHandle;
 import jynx2asm.handles.MethodHandle;
 import jynx2asm.ops.DynamicOp;
@@ -61,8 +64,6 @@ public class String2Insn {
     private Line line;
     private boolean multi;
     private int macroCount;
-    private boolean addDotLine;
-    private final boolean generateDotLine;
     private int indent;
     
     public String2Insn(JynxScanner js, JynxLabelMap labmap,
@@ -71,7 +72,6 @@ public class String2Insn {
         this.labmap = labmap;
         this.labelStack = new LabelStack();
         this.checker = checker;
-        this.generateDotLine = OPTION(GlobalOption.GENERATE_LINE_NUMBERS);
         this.opmap = opmap;
         this.indent = INDENT_LENGTH;
     }
@@ -80,14 +80,16 @@ public class String2Insn {
         line = instlist.getLine();
         if (line.isLabel()) {
             String lab = line.firstToken().asLabel();
-            line.noMoreTokens();
-            JynxLabel target = labmap.defineJynxLabel(lab, line);
-            instlist.add(new LabelInstruction(JvmOp.xxx_label,target));
+            addLabel(lab, instlist);
             return;
         }
         String tokenstr = line.firstToken().asString();
         JynxOp jynxop = opmap.get(tokenstr);
         if (jynxop == null) {
+            if (opmap.isLabel(tokenstr)) {
+                addLabel(tokenstr,instlist);
+                return;
+            }
             LOG(M86,tokenstr); // "invalid op - %s"
             line.skipTokens();
             return;
@@ -104,27 +106,31 @@ public class String2Insn {
             }
         }
         add(jynxop, instlist);
-        if (generateDotLine && addDotLine) {
-            instlist.addFront(new LineInstruction(line.getLinect(),line));
-        }
     }
 
+    private void addLabel(String lab, InstList instlist) {
+        line.noMoreTokens();
+        JynxLabel target = labmap.defineJynxLabel(lab, line);
+        instlist.add(new LabelInstruction(JvmOp.xxx_label,target));
+    }
+    
     public void add(JynxOp jynxop, InstList instlist) {
         line = instlist.getLine();
-        macroCount = 0;
-        addDotLine = false;
         multi = false;
-        add(jynxop,macroCount,instlist);
+        macroCount = 0;
+        add(jynxop,new ArrayDeque<>(),macroCount,instlist);
         line.noMoreTokens();
     }
     
-    private void add(JynxOp jop, int macct, InstList instlist) {
+    private final static int MAX_MACROS_FOR_LINE = 64;
+    
+    private void add(JynxOp jop, Deque<MacroOp> macrostack, int macct, InstList instlist) {
         if (multi) {
             LOG(M254,jop); // "%s is used in a macro after a mulit-line op"
         }
         if (jop instanceof SelectOp) {
             SelectOp selector = (SelectOp)jop;
-            add(selector.getOp(line,instlist),macct,instlist);
+            add(selector.getOp(line,instlist),macrostack,macct,instlist);
         } else if (jop instanceof JvmOp) {
             JvmOp jvmop = (JvmOp)jop;
             switchArg(jvmop).ifPresent(instlist::add);
@@ -136,11 +142,17 @@ public class String2Insn {
             lineop.adjustLine(line, macct, labelStack);
         } else if (jop instanceof MacroOp) {
             MacroOp macroop = (MacroOp) jop;
+            macrostack.addLast(macroop);
             ++macroCount;
+            if (macroCount > MAX_MACROS_FOR_LINE) {
+                // "number of macro ops exceeds maximum of %d for %s"
+                throw new LogIllegalStateException(M317, MAX_MACROS_FOR_LINE, macrostack.peekFirst());
+            }
             macct = macroCount;
             for (JynxOp mjop:macroop.getJynxOps()) {
-                add(mjop,macct,instlist);
+                add(mjop,macrostack,macct,instlist);
             }
+            macrostack.removeLast();
         } else {
             throw new AssertionError();
         }
@@ -151,13 +163,6 @@ public class String2Insn {
             LOG(M249,labelStack.size()); // "structured op(s) missing; level at end is %d"
         }
     }
-    
-    private Instruction wide() {
-        line.noMoreTokens();
-        LOG(M210,JvmOp.opc_wide);    // "%s instruction ignored as never required"
-        return null;
-    }
-    
 
     private Optional<Instruction> switchArg(JvmOp jvmop) {
         Instruction insn;
@@ -187,7 +192,6 @@ public class String2Insn {
     }
     
     private Instruction arg_atype(JvmOp jvmop) {
-        addDotLine = true;
         int atype = line.nextToken().asTypeCode();
         return new IntInstruction(jvmop,atype);
     }
@@ -198,14 +202,12 @@ public class String2Insn {
     }
     
     private Instruction arg_callsite(JvmOp jvmop) {
-        addDotLine = true;
         JynxConstantDynamic jcd = new JynxConstantDynamic(js, line, checker);
         ConstantDynamic cd = jcd.getConstantDynamic4Invoke();
         return new DynamicInstruction(jvmop,cd);
     }
     
     private Instruction arg_class(JvmOp jvmop) {
-        addDotLine = true;
         String typeo = line.nextToken().asString();
         String type = TRANSLATE_OWNER(typeo);
         if (jvmop == JvmOp.asm_new) {
@@ -356,7 +358,6 @@ public class String2Insn {
     }
 
     private Instruction arg_marray(JvmOp jvmop) {
-        addDotLine = true;
         String desc = line.nextToken().asString();
         ARRAY_DESC.validate(desc);
         int lastbracket = desc.lastIndexOf('[') + 1;
@@ -368,7 +369,6 @@ public class String2Insn {
     }
 
     private Instruction arg_method(JvmOp jvmop) {
-        addDotLine = true;
         String mspec = line.nextToken().asString();
         MethodHandle mh = MethodHandle.getInstance(mspec,jvmop);
         checker.usedMethod(mh, jvmop, line);
@@ -376,9 +376,9 @@ public class String2Insn {
     }
 
     private Instruction arg_none(JvmOp jvmop) {
-        addDotLine = jvmop == JvmOp.asm_idiv  || jvmop == JvmOp.asm_ldiv;
         if (jvmop == JvmOp.opc_wide) {
-            return wide();
+            LOG(M210,JvmOp.opc_wide);    // "%s instruction ignored as not required"
+            return null;
         }
         return Instruction.getInstance(jvmop);
     }

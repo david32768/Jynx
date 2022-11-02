@@ -99,9 +99,10 @@ public class JynxDisassemble {
         accflags.removeAll(classtype.getMustHave4Class(jvmVersion));
         Directive dir = classtype.getDir();
         jp.append(dir)
-                .append(accflags,cname).nl();
-        jp.incrDepth();
-        jp.printDirective(dir_super, cn.superName);
+                .append(accflags,cname)
+                .nl()
+                .incrDepth()
+                .printDirective(dir_super, cn.superName);
         annotator.printAnnotations(cn.visibleAnnotations,cn.invisibleAnnotations);
         jp.decrDepth();
     }
@@ -157,26 +158,21 @@ public class JynxDisassemble {
         accflags.removeAll(classtype.getMustHave4Class(jvmVersion));
         Directive dir = classtype.getDir();
         jp.append(dir)
-                .append(accflags,cname).nl();
-        jp.incrDepth();
-        jp.printDirective(dir_super, cn.superName);
-        for (String itf : nonNullList(cn.interfaces)) {
-            jp.printDirective(dir_implements, itf);
-        }
-        jp.printDirective(dir_signature,cn.signature);
-        jp.printDirective(dir_debug, cn.sourceDebug);
+                .append(accflags,cname)
+                .nl()
+                .incrDepth()
+                .printDirective(dir_super, cn.superName)
+                .printDirective(dir_implements, cn.interfaces)
+                .printDirective(dir_signature,cn.signature)
+                .printDirective(dir_debug, cn.sourceDebug);
         printEnclosing(cn.outerClass,cn.outerMethod,cn.outerMethodDesc);
         jp.printDirective(dir_nesthost, cn.nestHostClass);
         annotator.printAnnotations(cn.visibleAnnotations,cn.invisibleAnnotations);
         annotator.printTypeAnnotations(cn.visibleTypeAnnotations, cn.invisibleTypeAnnotations);
         printInner();
-        for (String nested: nonNullList(cn.nestMembers)) {
-            jp.printDirective(dir_nestmember,nested);
-        }
-        for (String subtype: nonNullList(cn.permittedSubclasses)) {
-            jp.printDirective(dir_permittedSubclass,subtype);
-        }
-        jp.decrDepth();
+        jp.printDirective(dir_nestmember,cn.nestMembers)
+                .printDirective(dir_permittedSubclass,cn.permittedSubclasses)
+                .decrDepth();
         printComponents();
     }
 
@@ -193,12 +189,12 @@ public class JynxDisassemble {
                     rcn.visibleTypeAnnotations,
                     rcn.invisibleTypeAnnotations
                     )) {
-                jp.incrDepth();
-                    jp.printDirective(dir_signature, rcn.signature);
+                jp.incrDepth()
+                        .printDirective(dir_signature, rcn.signature);
                     annotator.printAnnotations(rcn.visibleAnnotations,rcn.invisibleAnnotations);
                     annotator.printTypeAnnotations(rcn.visibleTypeAnnotations, rcn.invisibleTypeAnnotations);
-                jp.decrDepth();
-                jp.appendDirective(end_component).nl();
+                jp.decrDepth()
+                        .appendDirective(end_component).nl();
             }
         }
     }
@@ -250,10 +246,9 @@ public class JynxDisassemble {
         jp.appendDirective(dir_module)
                 .append(accflags,module.name)
                 .appendNonNull(module.version)
-                .nl();
-
-        jp.incrDepth();
-        jp.printDirective(dir_debug, cn.sourceDebug);
+                .nl()
+                .incrDepth()
+                .printDirective(dir_debug, cn.sourceDebug);
         annotator.printAnnotations(cn.visibleAnnotations, cn.invisibleAnnotations);
         printInner();
         jp.decrDepth();
@@ -284,8 +279,8 @@ public class JynxDisassemble {
 
         if (endrequired) {
             LOGGER().pushContext();
-            jp.incrDepth();
-                jp.printDirective(dir_signature,fn.signature);
+            jp.incrDepth()
+                    .printDirective(dir_signature,fn.signature);
                 annotator.printAnnotations(fn.visibleAnnotations, fn.invisibleAnnotations);
                 annotator.printTypeAnnotations(fn.visibleTypeAnnotations, fn.invisibleTypeAnnotations);
             jp.decrDepth();
@@ -296,8 +291,8 @@ public class JynxDisassemble {
 
     private void printArray(List<String> strings) {
         jp.append(dot_array)
-                .nl();
-        jp.incrDepth();
+                .nl()
+                .incrDepth();
         for (String mod:strings) {
             jp.append(mod).nl();
         }
@@ -354,16 +349,18 @@ public class JynxDisassemble {
     }
 
     private void printVersionSource() {
-        jp.appendComment("options = " + OPTIONS().toString()).nl();
-        jp.appendComment(Main.MainOption.DISASSEMBLY.version()).nl();
-        jp.appendDirective(dir_version)
+        jp.appendComment("options = " + OPTIONS().toString())
+                .nl()
+                .appendComment(Main.MainOption.DISASSEMBLY.version())
+                .nl()
+                .appendDirective(dir_version)
                 .append(jvmVersion.asJava());
         OPTIONS().stream()
                 .filter(opt->opt.isRelevent(Main.MainOption.ASSEMBLY))
                 .filter(opt-> opt != GlobalOption.SYSIN)
                 .forEach(jp::append);
-        jp.nl();
-        jp.printDirective(dir_source, cn.sourceFile);
+        jp.nl()
+                .printDirective(dir_source, cn.sourceFile);
     }
     
     public static boolean a2jpw(PrintWriter pw, String fname) {

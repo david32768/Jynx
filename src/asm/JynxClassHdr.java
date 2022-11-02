@@ -519,7 +519,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         try {
             analyzer.analyze(cname, mv);
             verified =  true;
-        } catch (AnalyzerException e) {
+        } catch (AnalyzerException | IllegalArgumentException e) {
             String emsg = e.getMessage();
             LOG(M75,mv.name,GlobalOption.SIMPLE_VERIFIER,emsg); // "Method %s failed %s check:%n    %s"
         }

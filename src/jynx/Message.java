@@ -209,7 +209,7 @@ public enum Message {
     M207("possible serialization method %s is not private"),
     M208("code not complete - last %s was %s"),
     M209("code not complete - last was %s"),
-    M210(WARNING,"%s instruction ignored as never required"),
+    M210(ENDINFO,"%s instruction ignored as not required"),
 
     M212("attempting to load variable %d but current max is %d"),
     M213(WARNING,"label %s defined before use - locals assumed as before last unconditional op"),
@@ -292,8 +292,8 @@ public enum Message {
     M290(BLANK,";%s  %s -> %s"),
     M291(BLANK,";%s  %s = %s"),
     M292(BLANK,"%s  +%s"),
-    M293(INFO,"print options = %s"),
-    M294(WARNING,"%s = %s"),
+    M293(LINE,"print options = %s"),
+    M294(LINE,"%s = %s"),
     M295("%s is invalid: %s"),
     M296(WARNING,"method %s%s not added as contains errors"),
     M297(ENDINFO,"package %s used in %s is not in %s (OK if package not in module)"),
@@ -307,6 +307,11 @@ public enum Message {
     M306("nested class have different owners; class = %s token = %s"),
 
     M313("final class cannot have %s"),
+    M314(SEVERE,"only one parameter translater allowed"),
+    M315(SEVERE,"only one owner translater allowed"),
+    M316(SEVERE,"only one label tester allowed"),
+    M317("number of macro ops exceeds maximum of %d for %s"),
+    M318(SEVERE,"op %s is not a valid op name"),
     //
     M327(INFO,"added: %s %s"),
     //

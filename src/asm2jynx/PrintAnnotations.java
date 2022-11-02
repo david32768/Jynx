@@ -61,13 +61,14 @@ public class PrintAnnotations {
         if (obj == null) {
             return;
         }
-        lb.appendDirective(Directive.dir_default_annotation).nl();
-        lb.incrDepth();
+        lb.appendDirective(Directive.dir_default_annotation)
+                .nl()
+                .incrDepth();
             int retind = mdesc.lastIndexOf(')');
             String desc = mdesc.substring(retind + 1);
             printAnnotationValue(null,obj,desc);
-        lb.decrDepth();
-        lb.appendDirective(Directive.end_annotation).nl();
+        lb.decrDepth()
+                .appendDirective(Directive.end_annotation).nl();
     }
 
     private void printAnnotations(boolean visible, List<AnnotationNode> anlist) {
@@ -159,8 +160,8 @@ public class PrintAnnotations {
                             .appendNonNull(desc.substring(1))
                             .append(ReservedWord.equals_sign)
                             .append(ReservedWord.dot_annotation_array)
-                            .nl();
-                    lb.append(Directive.end_annotation_array)
+                            .nl()
+                            .append(Directive.end_annotation_array)
                             .nl();
                 } else {
                     lb.appendNonNull(name)
@@ -206,8 +207,9 @@ public class PrintAnnotations {
         String typestr = ct.getJynx_desc(isArray);
         lb.appendNonNull(name).append(typestr).appendNonNull(null).append(ReservedWord.equals_sign);
         if (isArray) {
-            lb.append(ReservedWord.dot_array).nl();
-            lb.incrDepth();
+            lb.append(ReservedWord.dot_array)
+                    .nl()
+                    .incrDepth();
         }
         for (Object value : values) { // String, Type or numeric
             String strvalue = o2s.stringFrom(ct, value);
@@ -228,8 +230,9 @@ public class PrintAnnotations {
         String typestr = ct.getJynx_desc(isArray);
         lb.appendNonNull(name).append(typestr).appendNonNull(enumstr).append(ReservedWord.equals_sign);
         if (isArray) {
-            lb.append(ReservedWord.dot_array).nl();
-            lb.incrDepth();
+            lb.append(ReservedWord.dot_array)
+                    .nl()
+                    .incrDepth();
         }
         for (Object value : values) {
             String[] strings = (String[]) value;
@@ -245,8 +248,8 @@ public class PrintAnnotations {
             }
         }
         if (isArray) {
-            lb.decrDepth();
-            lb.append(Directive.end_array);
+            lb.decrDepth()
+                    .append(Directive.end_array);
         }
         lb.nl();
     }
@@ -262,8 +265,8 @@ public class PrintAnnotations {
                 printAnnotation((AnnotationNode) anobj);
                 lb.appendDirective(Directive.end_annotation).nl();
             }
-            lb.decrDepth();
-            lb.appendDirective(end_annotation_array).nl();
+            lb.decrDepth()
+                    .appendDirective(end_annotation_array).nl();
         } else {
             lb.append(ReservedWord.dot_annotation).nl();
             printAnnotation((AnnotationNode) values.get(0));
@@ -315,9 +318,9 @@ public class PrintAnnotations {
             lb.append(res_typepath, typepath)
                 .append(lvan.desc)
                 .append(ReservedWord.dot_array)
-                .nl();
-            lb.incrDepth();
-                lb.incrDepth();
+                .nl()
+                    .incrDepth()
+                    .incrDepth();
                 int entries = lvan.index.size();
                 assert entries == lvan.start.size() && entries == lvan.start.size();
                 Iterator<Integer> indexiter = lvan.index.iterator();
@@ -333,8 +336,9 @@ public class PrintAnnotations {
                             .nl();
                 }
                 lb.decrDepth();
-            lb.appendDirective(Directive.end_array).nl();
-            lb.decrDepth();
+            lb.appendDirective(Directive.end_array)
+                    .nl()
+                    .decrDepth();
             printAnnotation(lvan);
             lb.appendDirective(Directive.end_annotation).nl();
         }

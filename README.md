@@ -83,10 +83,10 @@ Changes are:
 		10 -> Label2
 	.end_array
 ```
-*	invokeinterface; omit number as will be calculated and precede method_name with '@'
+*	invokeinterface; omit number as will be calculated and precede method_name with '#'
 ```
 	; invokeinterface java/util/Enumeration/hasMoreElements()Z 1
-	invokeinterface @java/util/Enumeration/hasMoreElements()Z
+	invokeinterface #java/util/Enumeration/hasMoreElements()Z
 ```
 *	if .limit is omitted it will be calculated rather than 1
 *	class names etc. must be valid Java names
@@ -163,10 +163,10 @@ Changes are
 	; invokedynamic { name desc  boot_method_and_parameters }
 	; see examples/Java11/Hi.java
 ```
-*	An interface method name should be preceded with a '@' in invoke ops and handles
+*	An interface method name should be preceded with a '#' in invoke ops and handles
 ```
 	; invokestatic anInterfaceMethod ; Jasmin 2.4
-	invokestatic @anInterfaceMethod ; Jynx
+	invokestatic #anInterfaceMethod ; Jynx
 ```
 *	if signature of a field is present must use .signature directive (NOT appear in .field directive) 
 *	.package
@@ -313,9 +313,11 @@ Changes are
 	; grammar
 	; <catch> [<except-type-annotation>]+ <end-catch>
 ```
-*	.hint ; used to help verification if class(es) not available
+*	.hints ; used to help verification if class(es) not available
 ```
 	; grammar
-	; .hint <subtype-class-name> subtype <class_name> ; x is subtype of y
-	; .hint <common-class_name> common <class-name1> class_name2> ; x is common of y and z
+	; .hints .array
+	; <subtype-class-name> subtypes <class_name> ; x is subtype of y
+	; <common-class_name> common <class-name1> class_name2> ; x is common of y and z
+	; .end_array
 ```
