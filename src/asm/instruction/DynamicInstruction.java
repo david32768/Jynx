@@ -1,5 +1,7 @@
 package asm.instruction;
 
+import java.util.Arrays;
+
 import org.objectweb.asm.ConstantDynamic;
 import org.objectweb.asm.MethodVisitor;
 
@@ -16,9 +18,7 @@ public class DynamicInstruction extends Instruction {
         super(jvmop);
         this.cd = cstdyn;
         this.bsmArgs = new Object[cd.getBootstrapMethodArgumentCount()];
-        for (int i = 0; i < bsmArgs.length;++i) {
-            bsmArgs[i] = cd.getBootstrapMethodArgument(i);
-        }
+        Arrays.setAll(bsmArgs, cd::getBootstrapMethodArgument);
     }
 
     @Override

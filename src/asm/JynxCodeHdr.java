@@ -260,21 +260,16 @@ public class JynxCodeHdr implements ContextDependent {
                 n = localStack.size();
             } else {
                 n = nstr.asUnsignedShort();
-                line.lastToken().mustBe(res_locals);
+                line.nextToken().mustBe(res_locals);
                 if (n > localStack.size()) {
                     LOG(M188,n, localStack.size());  // "n (%d) is greater than current local size(%d)"
                     n = localStack.size();
                 }
             }
-            int i = 0;
-            for (Object obj:localStack) {
-                if (i == n) {
-                    break;
-                }
-                frame_local.add(obj);
-                ++i;
-            }
+            frame_local.addAll(localStack.subList(0, n));
         }
+        line.noMoreTokens();
+        Line dirline = line;
 
         List<Object> frame_stack = new ArrayList<>();
         LinesIterator lines = new LinesIterator(js,Directive.end_stack);
@@ -292,7 +287,8 @@ public class JynxCodeHdr implements ContextDependent {
                 frame_local.add(item);
             }
         }
-        stackLocals.visitFrame(frame_stack, frame_local,js.getLine());
+        
+        stackLocals.visitFrame(frame_stack, frame_local,dirline);
         if (SUPPORTS(StackMapTable)) {
             Object[] stackarr = frame_stack.toArray();
             Object[] localarr = frame_local.toArray();

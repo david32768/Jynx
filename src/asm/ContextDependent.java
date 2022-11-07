@@ -13,13 +13,18 @@ import jynx2asm.Line;
 
 public interface ContextDependent {
     
-    public Context getContext();
+    public void visitDirective(Directive dir, JynxScanner js);
 
     // exceptions are thrown so tokens are skipped
     
+    public default Context getContext() {
+        throw new LogIllegalStateException(M42,Directive.dir_signature); // "%s invalid in context"
+    }
     
-    public void visitDirective(Directive dir, JynxScanner js);
-
+    public default void setSource(Line line) {
+        throw new LogIllegalStateException(M42,Directive.dir_signature); // "%s invalid in context"
+    }
+    
     public default void setSignature(Line line) {
         throw new LogIllegalStateException(M42,Directive.dir_signature); // "%s invalid in context"
     }
@@ -42,34 +47,18 @@ public interface ContextDependent {
     
     public default void visitCommonDirective(Directive dir, Line line, JynxScanner js) {
         switch(dir) {
+            case dir_source:
+                setSource(line);
+                break;
             case dir_signature:
                 setSignature(line);
                 break;
-            case dir_annotation:
-            case dir_argmethod_type_annotation:
-            case dir_argmethodref_type_annotation:
-            case dir_argnew_type_annotation:
-            case dir_argnewref_type_annotation:
-            case dir_cast_type_annotation:
-            case dir_except_type_annotation:
-            case dir_extends_type_annotation:
-            case dir_field_type_annotation:
-            case dir_formal_type_annotation:
-            case dir_instanceof_type_annotation:
-            case dir_methodref_type_annotation:
-            case dir_new_type_annotation:
-            case dir_newref_type_annotation:
-            case dir_param_bound_type_annotation:
-            case dir_param_type_annotation:
-            case dir_receiver_type_annotation:
-            case dir_resource_type_annotation:
-            case dir_return_type_annotation:
-            case dir_throws_type_annotation:
-            case dir_var_type_annotation:
-                JynxAnnotation.setAnnotation(dir,this,js);
-                break;
             default:
-                throw new EnumConstantNotPresentException(dir.getClass(), dir.name());
+                if (dir.isAnotation()) {
+                    JynxAnnotation.setAnnotation(dir,this,js);
+                } else {
+                    throw new EnumConstantNotPresentException(dir.getClass(), dir.name());
+                }
         }
     }
     

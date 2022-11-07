@@ -19,7 +19,7 @@ public enum Directive implements JvmVersioned {
     //  dir_x(after_state,before_states[,feature])
 
     dir_version(START_BLOCK, EnumSet.of(START)),
-    dir_source(START_BLOCK, EnumSet.of(START_BLOCK, END_START), SourceFile),
+    dir_source(COMMON, EnumSet.of(START_BLOCK, END_START,CLASSHDR), SourceFile),
     dir_macrolib(START_BLOCK, EnumSet.of(START_BLOCK, END_START)),
     
     dir_class(CLASSHDR, EnumSet.of(START_BLOCK, END_START)),
@@ -184,6 +184,10 @@ public enum Directive implements JvmVersioned {
         }
     }
 
+    public boolean isAnotation() {
+        return name().endsWith("_annotation");
+    }
+    
     public void checkUnique(Map<Directive,Line> unique_directives, Line line) {
         if (isUniqueWithin()) {
             Line linex = unique_directives.putIfAbsent(this, line);

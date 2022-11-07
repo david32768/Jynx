@@ -5,6 +5,7 @@ import java.lang.reflect.AccessibleObject;
 
 import static jynx.Global.CLASS_NAME;
 import static jynx.Global.LOG;
+import static jynx.Message.M319;
 import static jynx.Message.M400;
 import static jynx.Message.M407;
 
@@ -19,6 +20,7 @@ public class CheckReference {
     private final String desc;
     private final HandleType ht;
     private final Context context;
+    private final boolean isInterface;
 
     public CheckReference(JynxHandle jh) {
         this.ondstr = jh.ond();
@@ -32,6 +34,7 @@ public class CheckReference {
             this.desc = jh.desc();
             this.context = Context.METHOD;
         }
+        this.isInterface = jh.isInterface();
     }
 
     private void checkDeprecated(AccessibleObject mfc) {
@@ -41,6 +44,7 @@ public class CheckReference {
         }
     }
     
+    @SuppressWarnings("fallthrough")
     void check() {
         try {
             MethodType mt = MethodType.fromMethodDescriptorString(desc, null);
@@ -50,9 +54,14 @@ public class CheckReference {
             AccessibleObject mfc;
             switch (ht) {
                 case REF_invokeStatic:
-                case REF_invokeInterface:
-                case REF_invokeVirtual:
                 case REF_invokeSpecial:
+                case REF_invokeInterface:
+                    if (isInterface != klass.isInterface()) {
+                        // "%s is an interface and so '%c' must be prepended to %s"
+                        LOG(M319,owner,HandlePart.INTERFACE_PREFIX,ondstr);
+                    }
+                    // FALL THROUGH
+                case REF_invokeVirtual:
                     mfc = klass.getMethod(name, parms);
                     break;
                 case REF_newInvokeSpecial:

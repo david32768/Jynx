@@ -30,6 +30,7 @@ public enum GlobalOption {
     SKIP_CODE(M39,DISASSEMBLY), // "do not produce code"
     SKIP_DEBUG(M29,DISASSEMBLY), // "do not produce debug info"
     SKIP_FRAMES(M30,DISASSEMBLY), // "do not produce stack map"
+    SKIP_ANNOTATIONS(M18,DISASSEMBLY), // "do not produce annotations"
     DOWN_CAST(M14,DISASSEMBLY), // "if necessary reduces JVM release to maximum supported by ASM version"
     
     DEBUG(M13,ASSEMBLY,DISASSEMBLY), // "exit with stack trace if error"
@@ -66,15 +67,8 @@ public enum GlobalOption {
     private final static String OPTION_PREFIX = "--";
     private final static String ABBREV_PREFIX = "-";
 
-    public String argName() {
-        return OPTION_PREFIX + name();
-    }
-    
-    private String abbrevArgName() {
-        if (abbrev == null) {
-            return argName();
-        }
-        return ABBREV_PREFIX + abbrev;
+    private static boolean isEqual(String myname, String option) {
+        return option.replace('-', '_').toUpperCase().equals(myname);
     }
     
     public static boolean mayBeOption(String option) {
@@ -82,8 +76,13 @@ public enum GlobalOption {
     }
     
     public boolean isArg(String option) {
-        return argName().equalsIgnoreCase(option)
-                || abbrevArgName().equals(option);
+        assert OPTION_PREFIX.length() > ABBREV_PREFIX.length();
+        if (option.startsWith(OPTION_PREFIX)) {
+            return isEqual(name(),option.substring(OPTION_PREFIX.length()));
+        } else if (abbrev != null && option.startsWith(ABBREV_PREFIX)) {
+            return isEqual("" + abbrev,option.substring(ABBREV_PREFIX.length()));
+        }
+        return false;
     }
     
     public boolean isRelevent(Main.MainOption context) {
@@ -93,7 +92,7 @@ public enum GlobalOption {
     public static Optional<GlobalOption> optInstance(String str) {
         return Stream.of(values())
                 .filter(g-> g.msg != null)
-                .filter(g -> g.name().equalsIgnoreCase(str))
+                .filter(g -> isEqual(g.name(),str))
                 .findFirst();
     }
 
@@ -109,7 +108,7 @@ public enum GlobalOption {
         Stream.of(values())
                 .filter(opt->!opt.name().startsWith("_"))
                 .filter(opt->opt.main.contains(main))
-                .forEach(opt->System.err.println(String.format(" %s %s",opt.argName(),opt.msg)));
+                .forEach(opt->System.err.println(String.format(" %s%s %s",OPTION_PREFIX,opt.name(),opt.msg)));
         System.err.println();
     }
     

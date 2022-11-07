@@ -70,7 +70,7 @@ public class StackLocals {
     }
     
     public static StackLocals getInstance(List<Object> localstack, JynxLabelMap labelmap, JvmOp returnop, boolean isStatic) {
-        return new StackLocals(new LocalVars(OperandStackFrame.getInstance(localstack,false),isStatic),
+        return new StackLocals(LocalVars.getInstance(localstack,isStatic),
                 new OperandStack(), labelmap, returnop);
     }
 

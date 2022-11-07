@@ -205,7 +205,9 @@ public class PrintAnnotations {
 
     private void printValues(String name,ConstType ct, boolean isArray, List<Object> values) {
         String typestr = ct.getJynx_desc(isArray);
-        lb.appendNonNull(name).append(typestr).appendNonNull(null).append(ReservedWord.equals_sign);
+        lb.appendNonNull(name)
+                .append(typestr)
+                .append(ReservedWord.equals_sign);
         if (isArray) {
             lb.append(ReservedWord.dot_array)
                     .nl()

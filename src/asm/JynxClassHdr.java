@@ -63,7 +63,8 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     private final Access accessName;
     private final String cname;
 
-    private final String source;
+    private String source;
+    private String defaultSource;
     private String debugStr;
  
     private final ClassChecker checker;
@@ -88,13 +89,20 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     private final Map<Directive,Line> unique_directives;
     private final TypeHints hints;
 
-    private JynxClassHdr(int cwflags, JvmVersion version, String source,
+    private JynxClassHdr(int cwflags, JvmVersion version, ObjectLine<String> sourcex, String defaultsource,
             String cname, Access accessname, ClassType classtype) {
         this.hints = new TypeHints();
         this.cw = new JynxClassWriter(cwflags,hints);
         this.cv = new CheckClassAdapter(cw, false);
         this.jvmVersion = version;
-        this.source = source;
+        this.unique_directives = new HashMap<>();
+        if (sourcex == null) {
+            this.source = null;
+        } else {
+            this.source = sourcex.object();
+            Directive.dir_source.checkUnique(unique_directives, sourcex.line());
+        }
+        this.defaultSource = defaultsource;
         this.cname = cname;
         this.accessName = accessname;
         this.cimplements = new LinkedHashMap<>();
@@ -110,12 +118,11 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         this.encloseMethod = null;
         this.outerLine = null;
         this.host = null;
-        this.unique_directives = new HashMap<>();
         LOGGER().pushContext();
     }
     
-    public static JynxClassHdr getInstance(
-            JvmVersion jvmversion, String source, Line line, ClassType classtype) {
+    public static JynxClassHdr getInstance(JvmVersion jvmversion, ObjectLine<String> source, String defaultsource,
+            Line line, ClassType classtype) {
         String cname;
         EnumSet<AccessFlag> flags;
         switch (classtype) {
@@ -146,7 +153,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         } else {
             cwflags = usestack?0:ClassWriter.COMPUTE_MAXS;
         }
-        return new JynxClassHdr(cwflags,jvmversion, source, cname, accessname,classtype);
+        return new JynxClassHdr(cwflags,jvmversion, source, defaultsource, cname, accessname,classtype);
     }
 
     @Override
@@ -231,6 +238,11 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         String signaturex = line.lastToken().asQuoted();
         CLASS_SIGNATURE.validate(signaturex);
         csignature = signaturex;
+    }
+
+    @Override
+    public void setSource(Line line) {
+        source = line.lastToken().asQuoted();
     }
 
     private void setSuper(Line line) {
@@ -446,6 +458,11 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     }
     
     private void visitHeader() {
+        boolean usestack = OPTION(GlobalOption.USE_STACK_MAP);
+        if (source == null && !usestack) {
+            LOG(M143,Directive.dir_source,defaultSource); // "%s %s assumed"
+            source = defaultSource;
+        }
         if (source != null || debugStr != null) {
             cv.visitSource(source, debugStr);
         }

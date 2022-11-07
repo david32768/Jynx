@@ -22,7 +22,7 @@ public enum Message {
     M15(BLANK,"warn if names non-standard"),
     M16(BLANK,"use ASM BasicVerifier"),
     M17(BLANK,"use ASM SimpleVerifier (default)"),
-    //
+    M18(BLANK,"do not produce annotations"),
     M19(BLANK,"use user stack map instead of ASM generated"),
     M20("invalid major version(%d)"),
     M21("invalid minor version(%d) - spec table 4.1A"),
@@ -312,6 +312,7 @@ public enum Message {
     M316(SEVERE,"only one label tester allowed"),
     M317("number of macro ops exceeds maximum of %d for %s"),
     M318(SEVERE,"op %s is not a valid op name"),
+    M319("%s is an interface and so '%c' must be prepended to %s"),
     //
     M327(INFO,"added: %s %s"),
     //

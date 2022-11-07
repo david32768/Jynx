@@ -54,8 +54,12 @@ public class JynxDisassemble {
         this.pw = pw;
         this.o2s = new Object2String();
         this.jp = new LineBuilder(pw);
+        if (OPTION(GlobalOption.SKIP_ANNOTATIONS)) {
+            this.annotator = new PrintAnnotations(new LineBuilder(null));
+        } else {
+            this.annotator = new PrintAnnotations(jp);
+        }
         this.jvmVersion = jvmversion;
-        this.annotator = new PrintAnnotations(jp);
         this.cn = cn;
         this.jmp = JynxMethodPrinter.getInstance(cn.name, jvmVersion, jp, annotator);
     }

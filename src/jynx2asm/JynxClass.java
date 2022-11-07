@@ -29,14 +29,14 @@ import jynx.SevereError;
 import jynx.State;
 import jynx2asm.ops.JynxOps;
 
-public class JynxClass {
+public class JynxClass implements ContextDependent {
 
     private final JynxScanner js;
     private final String file_source;
-    private final String default_source;
+    private final String defaultSource;
     
     private JvmVersion jvmVersion;
-    private String source;
+    private ObjectLine<String> source;
 
     private State state;
 
@@ -57,9 +57,10 @@ public class JynxClass {
         this.js = js;
         this.file_source = file_source;
         int index = file_source.lastIndexOf(File.separatorChar);
-        this.default_source = file_source.substring(index + 1);
+        this.defaultSource = file_source.substring(index + 1);
         this.source = null;
         this.unique_directives = new HashMap<>();
+        this.sd = this;
     }
 
     public static byte[] getBytes(String default_source, JynxScanner lines) {
@@ -163,11 +164,12 @@ public class JynxClass {
         visitJvmVersion(JvmVersion.DEFAULT_VERSION);
     }
 
-    private void setSource(Line line) {
+    @Override
+    public void setSource(Line line) {
         if (jclasshdr != null) {
             throw new IllegalStateException();
         }
-        this.source = line.lastToken().asString();
+        this.source = new ObjectLine<>(line.lastToken().asString(),line);
     }
 
     private void setMacroLib(Line line) {
@@ -197,19 +199,21 @@ public class JynxClass {
     
     public void setClass(Directive dir) {
         ClassType classtype = ClassType.of(dir);
-        boolean usestack = OPTION(GlobalOption.USE_STACK_MAP);
-        if (source == null && !usestack) {
-            LOG(M143,Directive.dir_source,default_source); // "%s %s assumed"
-            source = default_source;
-        }
         LOG(M89, file_source,jvmVersion); // "file = %s version = %s"
-        jclasshdr = JynxClassHdr.getInstance(jvmVersion, source, js.getLine(), classtype);
+        jclasshdr = JynxClassHdr.getInstance(jvmVersion, source, defaultSource, js.getLine(), classtype);
         Global.setClassName(jclasshdr.getClassName());
         state = State.getState(classtype);
         sd = jclasshdr;
         if (classtype == ClassType.MODULE_CLASS) {
             jmodule = JynxModule.getInstance(js,jvmVersion);
         }
+    }
+
+    @Override
+    public void visitDirective(Directive dir, JynxScanner js) {
+        Line line = js.getLine();
+        dir.checkUnique(unique_directives, line);
+        visitCommonDirective(dir, line, js);
     }
 
     public void setCommon(Directive dir) {

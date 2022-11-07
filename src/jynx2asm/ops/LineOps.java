@@ -121,6 +121,14 @@ public enum LineOps implements LineOp {
         return new AdjustLine(Adjustment.TRANSFORM,s->s + str);
     }
     
+    public static LineOp UC() {
+        return new AdjustLine(Adjustment.TRANSFORM,String::toUpperCase);
+    }
+    
+    public static LineOp LC() {
+        return new AdjustLine(Adjustment.TRANSFORM,String::toLowerCase);
+    }
+    
     public static LineOp replace(String find, String replace) {
         return new AdjustLine(Adjustment.TRANSFORM,str->str.replace(find,replace));
     }

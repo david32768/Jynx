@@ -65,10 +65,16 @@ public class LineBuilder {
         return line;
     }
 
+    private void print(String str) {
+        if (pw != null) {
+            pw.println(str);
+            pw.flush();
+        }
+    }
+    
     public LineBuilder nl() {
         if (!isEmpty()) {
-            pw.println(this);
-            pw.flush();
+            print(sb.toString());
             clear();
         }
         return this;
@@ -184,7 +190,7 @@ public class LineBuilder {
     }
 
     public LineBuilder blankline() {
-        pw.println();
+        print("");
         return this;
     }
     

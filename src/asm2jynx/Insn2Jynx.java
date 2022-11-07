@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.objectweb.asm.ConstantDynamic;
 import org.objectweb.asm.Label;
@@ -290,8 +291,8 @@ public class Insn2Jynx {
             }
         }
         thislocal = Arrays.copyOfRange(thislocal, match, thislocal.length);
-        FrameTypeValue[] locals = FrameTypeValue.fromList(Arrays.asList(thislocal), this::getLabelName);
-        FrameTypeValue[] stacks = FrameTypeValue.fromList(fn.stack, this::getLabelName);
+        FrameTypeValue[] locals = FrameTypeValue.from(Stream.of(thislocal), this::getLabelName);
+        FrameTypeValue[] stacks = FrameTypeValue.from(fn.stack.stream(), this::getLabelName);
         lb.appendDirective(Directive.dir_stack);
         if (match != 0) {
             lb.append(ReservedWord.res_use);

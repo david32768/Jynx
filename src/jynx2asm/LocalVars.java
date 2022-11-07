@@ -1,6 +1,7 @@
 package jynx2asm;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static jynx.Global.LOG;
@@ -23,7 +24,7 @@ public class LocalVars {
     private final int parmsz;
     
     
-    public LocalVars(OperandStackFrame parmlocals, boolean isStatic) {
+    private LocalVars(OperandStackFrame parmlocals, boolean isStatic) {
         this.localsz = new LimitValue(LimitValue.Type.locals);
         this.locals = new FrameElement[MAXSTACK];
         this.isStatic = isStatic;
@@ -33,6 +34,10 @@ public class LocalVars {
         visitFrame(parmlocals, Optional.empty());  // wiil set startblock to false
         this.parmsz = sz;
         varAccess.completeInit(this.parmsz);
+    }
+
+    public static LocalVars getInstance(List<Object> localstack, boolean isStatic) {
+        return new LocalVars(OperandStackFrame.getInstance(localstack,false),isStatic);
     }
 
     public LocalFrame currentFrame() {

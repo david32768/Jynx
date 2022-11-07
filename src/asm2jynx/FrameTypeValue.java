@@ -1,8 +1,9 @@
 package asm2jynx;
 
 import java.util.function.Function;
-import java.util.List;
+import java.util.stream.Stream;
 
+import org.objectweb.asm.Label;
 import org.objectweb.asm.tree.LabelNode;
 
 import static jynx.Message.*;
@@ -36,20 +37,20 @@ public class FrameTypeValue {
             return new FrameTypeValue(FrameType.ft_Object,(String)obj);
         } else if (obj instanceof LabelNode) {
             return new FrameTypeValue(FrameType.ft_Uninitialized,labnamefn.apply((LabelNode) obj));
+        } else if (obj instanceof Label) {
+            LabelNode labnode = new LabelNode((Label)obj);
+            return new FrameTypeValue(FrameType.ft_Uninitialized,labnamefn.apply(labnode));
         } else {
+            String classname = obj == null?"NULL":obj.getClass().getName();
             // "invalid stack frame type - %s"
-            throw new LogIllegalArgumentException(M37,obj.getClass().getName());
+            throw new LogIllegalArgumentException(M37,classname);
         }
     }
 
-    public static FrameTypeValue[] fromList(List<Object> objs, Function<LabelNode,String> labnamefn) {
-        FrameTypeValue[] stackarr = new FrameTypeValue[objs.size()];
-        int i = 0;
-        for (Object obj:objs) {
-            stackarr[i] = FrameTypeValue.from(obj, labnamefn);
-            ++i;
-        }
-        return stackarr;
+    public static FrameTypeValue[] from(Stream<Object> objstream, Function<LabelNode,String> labnamefn) {
+        return objstream
+                .map(obj -> from(obj, labnamefn))
+                .toArray(FrameTypeValue[]::new);
     }
     
     @Override
