@@ -70,8 +70,6 @@ public class JynxMethodPrinter {
             if (isAnyPresent(tcbn.visibleTypeAnnotations,tcbn.invisibleTypeAnnotations)) {
                 jp.incrDepth();
                 annotator.printTypeAnnotations(tcbn.visibleTypeAnnotations, tcbn.invisibleTypeAnnotations);
-                jp.decrDepth()
-                        .appendDirective(end_catch).nl();
             }
         }
     }

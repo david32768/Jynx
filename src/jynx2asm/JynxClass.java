@@ -297,22 +297,6 @@ public class JynxClass implements ContextDependent {
         jcodehdr.visitDirective(dir, js);
     }
     
-    public void setCatch(Directive dir) {
-        switch (dir) {
-            case dir_except_type_annotation:
-                JynxAnnotation.setAnnotation(dir,jcodehdr,js);
-                break;
-            default:
-                throw new EnumConstantNotPresentException(dir.getClass(), dir.name());
-        }
-    }
-    
-    public void endCatch(Directive dir) {
-        if (dir == null) {
-            LOG(M270, Directive.end_catch); // "%s directive missing but assumed"
-        }
-    }
-    
     public void endMethod(Directive dir) {
         if (dir == null) {
             LOG(M270, Directive.end_method); // "%s directive missing but assumed"

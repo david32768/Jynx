@@ -110,11 +110,9 @@ public enum Directive implements JvmVersioned {
     dir_visible_parameter_count(METHOD_BLOCK,EnumSet.of(METHOD_BLOCK), RuntimeVisibleParameterAnnotations),
     dir_invisible_parameter_count(METHOD_BLOCK,EnumSet.of(METHOD_BLOCK), RuntimeInvisibleParameterAnnotations),
     
-    dir_catch(CATCH, EnumSet.of(METHOD_BLOCK, CODE), Exceptions),
-    dir_except_type_annotation(CATCH_BLOCK, EnumSet.of(CATCH, CATCH_BLOCK),
+    dir_catch(CODE, EnumSet.of(METHOD_BLOCK, CODE), Exceptions),
+    dir_except_type_annotation(CODE, EnumSet.of(CODE),
             RuntimeVisibleTypeAnnotations),
-    end_catch(END_CATCH,EnumSet.of(CATCH_BLOCK)),
-
     dir_limit(CODE, EnumSet.of(METHOD_BLOCK, CODE)),
     dir_line(CODE, EnumSet.of(METHOD_BLOCK, CODE), LineNumberTable),
     dir_print(CODE, EnumSet.of(METHOD_BLOCK, CODE)),

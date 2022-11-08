@@ -239,14 +239,12 @@ public class String2Insn {
                 break;
             case ct_long:
                 if (!ldc2) {
-                    LOG(M113,JvmOp.opc_ldc2_w,value);   // "%s must be used for long constant - %s"
+                    jvmop = JvmOp.opc_ldc2_w;
                 }
                 break;
             case ct_double:
                 if (!ldc2) {
-                    LOG(M117,JvmOp.opc_ldc2_w); // "%s must be used for double constants but assumed float required"
-                    value = ((Double)value).floatValue();
-                    ct = ConstType.ct_float;
+                    jvmop = JvmOp.opc_ldc2_w;
                 }
                 break;
             case ct_method_handle:

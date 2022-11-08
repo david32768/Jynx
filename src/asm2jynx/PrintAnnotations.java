@@ -324,7 +324,7 @@ public class PrintAnnotations {
                     .incrDepth()
                     .incrDepth();
                 int entries = lvan.index.size();
-                assert entries == lvan.start.size() && entries == lvan.start.size();
+                assert entries == lvan.start.size() && entries == lvan.end.size();
                 Iterator<Integer> indexiter = lvan.index.iterator();
                 Iterator<LabelNode> enditer = lvan.end.iterator();
                 for (LabelNode start:lvan.start) {

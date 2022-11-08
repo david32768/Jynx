@@ -54,6 +54,7 @@ Options are:
 *	--SKIP_CODE do not produce code
 *	--SKIP_DEBUG do not produce debug info
 *	--SKIP_FRAMES do not produce stack map
+*	--SKIP_ANNOTATIONS do not produce annotations
 *	--DOWN_CAST if necessary reduces JVM release to maximum supported by ASM version
 
 ## Jasmin 1.0
@@ -308,11 +309,6 @@ Changes are
 ```
 *	.macrolib <macro-library-name>
 *	type_annotations
-*	.catch block if except type annotations
-```
-	; grammar
-	; <catch> [<except-type-annotation>]+ <end-catch>
-```
 *	.hints ; used to help verification if class(es) not available
 ```
 	; grammar

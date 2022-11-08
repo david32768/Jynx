@@ -8,7 +8,9 @@ import java.util.Set;
 import org.objectweb.asm.tree.analysis.BasicValue;
 import org.objectweb.asm.Type;
 
+import static jynx.Global.LOG;
 import static jynx.Message.M241;
+import static jynx.Message.M403;
 import static jynx.Message.M58;
 import static jynx.Message.M82;
 import static jynx.ReservedWord.res_common;
@@ -82,6 +84,22 @@ public class TypeHints {
         }
     }
 
+    private boolean isPrimitive(Type type) {
+        switch(type.getSort()) {
+            case Type.BOOLEAN:
+            case Type.BYTE:
+            case Type.CHAR:
+            case Type.DOUBLE:
+            case Type.FLOAT:
+            case Type.INT:
+            case Type.LONG:
+            case Type.SHORT:
+                return true;
+            default:
+                return false;
+        }
+    }
+    
     private static final Type OBJECT = Type.getObjectType("java/lang/Object");
     
     public boolean isSubTypeOf(final BasicValue value, final BasicValue  expected) {
@@ -100,6 +118,9 @@ public class TypeHints {
                 if (baseelement.equals(OBJECT) && subelement.getSort() == Type.OBJECT) {
                     return subtype.getDimensions() >= basetype.getDimensions();
                 }
+                if (isPrimitive(subelement) || isPrimitive(baseelement)) {
+                    return false;
+                }
             }
         }
         String sub = subtype.getInternalName();
@@ -108,10 +129,15 @@ public class TypeHints {
             Global.LOG(M58, sub,res_subtypes,base); // "used hint: %s %s %s"
             return true;
         }
+        // "(redundant?) checkcast or hint needed if %s is subtype of %s"
+        LOG(M403,subtype.getInternalName(),basetype.getInternalName());
         return false;
     }
 
     public Type getCommonType(final Type type1, final Type type2) {
+        if (type1.equals(OBJECT) || type2.equals(OBJECT)) {
+            return OBJECT;
+        }
         String common = getCommonSuperClass(type1.getInternalName(), type2.getInternalName());
         if (common == null) {
             return null;

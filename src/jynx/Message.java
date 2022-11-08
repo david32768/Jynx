@@ -116,11 +116,11 @@ public enum Message {
     M110("access flag(s) %s not valid for version %s"),
     M111(ENDINFO,"instructions = %d labels = %d directives = %d pre_comments = %d"),
 
-    M113("%s must be used for long constant - %s"),
+    M113(WARNING,"value %s requires 'L' suffix as is a long constant"),
     M114("Requires at most one of {%s} specified"),
     M115("Not first token - token = %s"),
     M116(BLANK,"%s created - size %d bytes"),
-    M117(WARNING,"%s must be used for double constants but assumed float required"),
+
     M118("Requires all of {%s} specified"),
     M119("this and following lines skipped until %s"),
     M120("Requires only one of {%s} specified"),
@@ -230,7 +230,7 @@ public enum Message {
     M228(WARNING,"indent %d found but expected %d"),
     M229("duplicate key %d; previous target = %s, current target = %s"),
     M230(WARNING,"keys must be in ascending order; key = %d; previous key = %s"),
-
+    M231(WARNING,"Last instruction was %s: expected %s"),
     M232("Last instruction was %s: expected %s"),
     M233("Duplicate entry %s in %s: previous entry at line %d"),
     M234("invalid parameter number %d; bounds are [0 - %d)"),
@@ -316,7 +316,7 @@ public enum Message {
     //
     M327(INFO,"added: %s %s"),
     //
-    M335("index (%d) is not zero and does not refer to last %s directive (%d)"),
+    M335("index (%d) is not a current try index [0,%d]"),
 
     M362("expected arg %s but was %s"),
 
@@ -326,7 +326,7 @@ public enum Message {
     M400(ENDINFO,"unable to find %s %s because of %s"),
     M401(ENDINFO,"%s is a contextual reserved word"),
     M402("cannot insert end_token"),
-    M403("(redundant?) checkcast or hint needed if %s is subtype of %s"),
+    M403(WARNING,"(redundant?) checkcast or hint needed if %s is subtype of %s"),
     M404("(redundant?) checkcasts or hint needed to obtain common supertype of%n    %s and %s"),
     M405("%s has different type %s from previous %s at line %d"),
     M406("method %s in %s class must be %s, not %s and have no parameters"),

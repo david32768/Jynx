@@ -132,6 +132,9 @@ public class String2Object {
                     if (NumType.t_int.isInRange(lval)
                             || unsigned && NumType.t_int.isInUnsignedRange(lval)) {
                             return lval.intValue();
+                    } else {
+                        // "value %s requires 'L' suffix as is a long constant"
+                        LOG(M113,lval);
                     }
                 }
                 return lval;

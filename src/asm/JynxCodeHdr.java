@@ -24,6 +24,7 @@ import static jynx.ReservedWord.*;
 
 import jvm.Context;
 import jvm.FrameType;
+import jvm.JvmVersion;
 import jvm.TypeRef;
 import jynx.Directive;
 import jynx.ReservedWord;
@@ -386,14 +387,9 @@ public class JynxCodeHdr implements ContextDependent {
 
     private AnnotationVisitor visitTryCatchAnnotation(int typeref, TypePath tp, String desc, boolean visible) {
         int index = TypeRef.getIndexFrom(typeref);
-        if (index != 0 && index != tryct - 1) {
-            // "index (%d) is not zero and does not refer to last %s directive (%d)"
-            LOG(M335,index,Directive.dir_catch,tryct - 1);
-        }
-        if (index != tryct - 1) {
-                TypeRef tr = TypeRef.getInstance(typeref);
-                int[] indices = new int[]{tryct - 1};
-                typeref = tr.getTypeRef(indices);
+        if (index < 0 || index >= tryct) {
+            // "index (%d) is not a current try index [0,%d]"
+            LOG(M335,index,tryct - 1);
         }
         return mnode.visitTryCatchAnnotation(typeref, tp, desc, visible);
     }
@@ -419,7 +415,11 @@ public class JynxCodeHdr implements ContextDependent {
         }
         if (lastjops != null) {
             if (lastjop == null || !lastjops.contains(lastjop)) {
-                LOG(M232, lastjop, lastjops); // "Last instruction was %s: expected %s"
+                if (JVM_VERSION().compareTo(JvmVersion.V9) < 0) {
+                    LOG(M231, lastjop, lastjops); // "Last instruction was %s: expected %s"
+                } else {
+                    LOG(M232, lastjop, lastjops); // "Last instruction was %s: expected %s"
+                }
             }
         }
     }

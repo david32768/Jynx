@@ -9,7 +9,6 @@ import org.objectweb.asm.Type;
 
 import static jynx.Global.LOG;
 import static jynx.Message.M157;
-import static jynx.Message.M403;
 import static jynx.Message.M404;
 
 import jynx.Global;
@@ -48,14 +47,7 @@ public class JynxSimpleVerifier extends SimpleVerifier {
         try {
             return super.isSubTypeOf(value, expected);
         } catch (TypeNotPresentException ex) {
-            if (hints.isSubTypeOf(value, expected)) {
-                return true;
-            }
-            Type type = value.getType();
-            Type base = expected.getType();
-            // "(redundant?) checkcast or hint needed if %s is subtype of %s"
-            LOG(M403,type.getInternalName(),base.getInternalName());
-            return false;
+            return hints.isSubTypeOf(value, expected); 
         }
     }
 
