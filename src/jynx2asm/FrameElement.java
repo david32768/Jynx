@@ -20,6 +20,7 @@ public enum FrameElement {
     LONG('J','l'),
     OBJECT('A','a'),
     EXCEPTION('A','a'),
+    THIS('T','a'), // uninitialised this and this in <init> methods
     ERROR('X',' ',true),
     IRRELEVANT(' ',' ',true),
 ;
@@ -83,6 +84,8 @@ public enum FrameElement {
                 return OBJECT;
             case 'R':
                 return RETURN_ADDRESS;
+            case 'T':
+                return THIS;
             default:
                 throw new LogIllegalArgumentException(M206, type,(int)type); // "Invalid type letter '%c' (%d)"
         }
@@ -102,6 +105,8 @@ public enum FrameElement {
                 return OBJECT;
             case 'R':
                 return RETURN_ADDRESS;
+            case 'T':
+                return THIS;
             case 'X':
                 return ERROR;
             case 'U':
@@ -154,8 +159,9 @@ public enum FrameElement {
             case ft_Null:
             case ft_Object:
             case ft_Uninitialized:
-            case ft_UninitializedThis:
                 return OBJECT;
+            case ft_UninitializedThis:
+                return THIS;
             case ft_Top:
                 return TOP;
             default:

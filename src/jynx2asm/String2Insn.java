@@ -2,6 +2,7 @@ package jynx2asm;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import static jynx.GlobalOption.GENERATE_LINE_NUMBERS;
 import static jynx.Message.*;
 import static jynx.ReservedWord.*;
 import static jynx2asm.NameDesc.*;
+import static jynx2asm.ops.JvmOp.opc_switch;
 
 import asm.instruction.DynamicInstruction;
 import asm.instruction.FieldInstruction;
@@ -328,26 +330,51 @@ public class String2Insn {
     private Instruction arg_lookupswitch(JvmOp jvmop) {
         line.nextToken().mustBe(res_default);
         JynxLabel dflt = getJynxLabel(line.nextToken());
-        TokenArray dotarray = TokenArray.getInstance(js, line);
-        multi |= dotarray.isMultiLine(); 
+        boolean consec = true;
         Map<Integer,JynxLabel> swmap = new TreeMap<>();
-        Integer lastkey = null;
-        while (true) {
-            Token token = dotarray.firstToken();
-            if (token.is(right_array)) {
-                break;
+        Integer min = null;
+        try (TokenArray dotarray = TokenArray.getInstance(js, line)) {
+            multi |= dotarray.isMultiLine(); 
+            Integer lastkey = null;
+            while (true) {
+                Token token = dotarray.firstToken();
+                if (token.is(right_array)) {
+                    break;
+                }
+                Integer key = token.asInt();
+                if (min == null) {
+                    min = key;
+                }
+                dotarray.nextToken().mustBe(right_arrow);
+                JynxLabel target = getJynxLabel(dotarray.nextToken());
+                JynxLabel mustbenull = swmap.put(key, target);
+                if (mustbenull != null) {
+                    LOG(M229,key,mustbenull.name(),target.name());   // "duplicate key %d; previous target = %s, current target = %s"
+                } else if (lastkey != null && key <= lastkey) {
+                    LOG(M230,key,lastkey);   // "keys must be in ascending order; key = %d; previous key = %s"
+                }
+                consec &= lastkey == null || key == lastkey + 1;
+                lastkey = key;
+                dotarray.noMoreTokens();
             }
-            Integer key = token.asInt();
-            dotarray.nextToken().mustBe(right_arrow);
-            JynxLabel target = getJynxLabel(dotarray.nextToken());
-            JynxLabel mustbenull = swmap.put(key, target);
-            if (mustbenull != null) {
-                LOG(M229,key,mustbenull.name(),target.name());   // "duplicate key %d; previous target = %s, current target = %s"
-            } else if (lastkey != null && key < lastkey) {
-                LOG(M230,key,lastkey);   // "keys must be in ascending order; key = %d; previous key = %s"
+        }
+        if (consec && jvmop == opc_switch) {
+            int lct = swmap.size();
+            if (lct == 0) {
+                LOG(M224,jvmop,res_default); // "invalid %s as only has %s"
+                swmap.put(0, dflt);
+                ++lct;
+                min = 0;
             }
-            lastkey = key;
-            dotarray.noMoreTokens();
+            if (lct > MAX_TABLE_ENTRIES) {
+                LOG(M256,jvmop,lct,MAX_TABLE_ENTRIES); // "%s has %d entries, maximum possible is %d"
+            }
+            Collection<JynxLabel> labellist = swmap.values();
+            return new TableInstruction(JvmOp.asm_tableswitch, min, min + lct - 1,dflt,labellist);
+        }
+        if (consec) {
+            // "%s could be used as entries are consecutibe"
+            LOG(line,M244,JvmOp.asm_tableswitch);
         }
         if (swmap.size() > MAX_LOOKUP_ENTRIES) {
             LOG(M256,jvmop,swmap.size(),MAX_LOOKUP_ENTRIES); // "%s has %d entries, maximum possible is %d"
@@ -407,19 +434,20 @@ public class String2Insn {
         int min = line.nextToken().asInt();
         line.nextToken().mustBe(res_default);
         JynxLabel dflt = getJynxLabel(line.nextToken());
-        TokenArray dotarray = TokenArray.getInstance(js, line);
-        multi |= dotarray.isMultiLine(); 
         List<JynxLabel> labellist = new ArrayList<>();
         int lct = 0;
-        while (true) {
-            Token token = dotarray.firstToken();
-            if (token.is(right_array)) {
-                break;
+        try (TokenArray dotarray = TokenArray.getInstance(js, line)) {
+            multi |= dotarray.isMultiLine(); 
+            while (true) {
+                Token token = dotarray.firstToken();
+                if (token.is(right_array)) {
+                    break;
+                }
+                JynxLabel label = getJynxLabel(token);
+                labellist.add(label);
+                ++lct;
+                dotarray.noMoreTokens();
             }
-            JynxLabel label = getJynxLabel(token);
-            labellist.add(label);
-            ++lct;
-            dotarray.noMoreTokens();
         }
         if (lct == 0) {
             LOG(M224,jvmop,res_default); // "invalid %s as only has %s"

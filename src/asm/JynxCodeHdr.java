@@ -212,7 +212,8 @@ public class JynxCodeHdr implements ContextDependent {
         Token rw = line.lastToken();
         rw.mustBe(res_reachable);
         if (stackLocals.isUnreachableForwards()) {
-            js.skipNested(Directive.dir_if,Directive.end_if,Directive.dir_if,Directive.dir_line);
+            js.skipNested(Directive.dir_if,Directive.end_if,
+                    EnumSet.of(Directive.dir_line,Directive.dir_stack,Directive.end_stack));
         } else {
             ++endif;
         }
@@ -273,22 +274,22 @@ public class JynxCodeHdr implements ContextDependent {
         Line dirline = line;
 
         List<Object> frame_stack = new ArrayList<>();
-        LinesIterator lines = new LinesIterator(js,Directive.end_stack);
-        while (lines.hasNext()) {
-            line = lines.next();
-            Token token = line.firstToken();
-            ReservedWord rw = token.expectOneOf(res_stack, res_locals);
-            String type = line.nextToken().asString(); // verification type
-            FrameType ft = FrameType.fromString(type);
-            Object item = getAsmFrameType(ft,line);
-            line.noMoreTokens();
-            if (rw == res_stack) {
-                frame_stack.add(item);
-            } else {
-                frame_local.add(item);
+        try (LinesIterator lines = new LinesIterator(js,Directive.end_stack)) {
+            while (lines.hasNext()) {
+                line = lines.next();
+                Token token = line.firstToken();
+                ReservedWord rw = token.expectOneOf(res_stack, res_locals);
+                String type = line.nextToken().asString(); // verification type
+                FrameType ft = FrameType.fromString(type);
+                Object item = getAsmFrameType(ft,line);
+                line.noMoreTokens();
+                if (rw == res_stack) {
+                    frame_stack.add(item);
+                } else {
+                    frame_local.add(item);
+                }
             }
         }
-        
         stackLocals.visitFrame(frame_stack, frame_local,dirline);
         if (SUPPORTS(StackMapTable)) {
             Object[] stackarr = frame_stack.toArray();
@@ -435,16 +436,17 @@ public class JynxCodeHdr implements ContextDependent {
             ArrayList<Integer> indexlist = new ArrayList<>();
             ArrayList<String> startlist = new ArrayList<>();
             ArrayList<String> endlist = new ArrayList<>();
-            TokenArray array = TokenArray.getInstance(js, line);
-            while(true) {
-                Token token = array.firstToken();
-                if (token.is(right_array)) {
-                    break;
+            try (TokenArray array = TokenArray.getInstance(js, line)) {
+                while(true) {
+                    Token token = array.firstToken();
+                    if (token.is(right_array)) {
+                        break;
+                    }
+                    indexlist.add(token.asInt());
+                    startlist.add(array.nextToken().asString());
+                    endlist.add(array.nextToken().asString());
+                    array.noMoreTokens();
                 }
-                indexlist.add(token.asInt());
-                startlist.add(array.nextToken().asString());
-                endlist.add(array.nextToken().asString());
-                array.noMoreTokens();
             }
             int[] index_arr = new int[indexlist.size()];
             Label[] start_arr = new Label[startlist.size()];

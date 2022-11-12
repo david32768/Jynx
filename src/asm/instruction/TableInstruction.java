@@ -1,6 +1,6 @@
 package asm.instruction;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.stream.Collectors;
 
 import org.objectweb.asm.Label;
@@ -16,9 +16,9 @@ public class TableInstruction extends Instruction {
     private final int min;
     private final int max;
     private final JynxLabel dflt;
-    private final List<JynxLabel> labels;
+    private final Collection<JynxLabel> labels;
 
-    public TableInstruction(JvmOp jop, int min, int max, JynxLabel dflt, List<JynxLabel> labels) {
+    public TableInstruction(JvmOp jop, int min, int max, JynxLabel dflt, Collection<JynxLabel> labels) {
         super(jop);
         this.min = min;
         this.max = max;

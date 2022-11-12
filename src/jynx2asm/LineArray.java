@@ -21,6 +21,12 @@ class LineArray implements TokenArray {
         readArray(line);
     }
 
+    @Override
+    public void close() {
+        this.lines = null;
+        this.current = null;
+    }
+
     private void readArray(Line line) {
         Token token = line.nextTokenSplitIfStart(ReservedWord.left_array);
         token.mustBe(ReservedWord.left_array);

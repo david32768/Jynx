@@ -120,7 +120,7 @@ public class LocalVars {
         if (num < sz) {
             fe = peek(num);
             char local0 = fe.typeLetter();
-            if (type != local0) {
+            if (type != local0 && type != 'A' && fe != FrameElement.THIS) {
                 LOG(M190,num,FrameElement.fromLocal(type),fe); // "mismatched local %d: required %s but found %s"
                 if (fe == FrameElement.UNUSED) {
                     fe = FrameElement.fromLocal(type);
@@ -237,7 +237,7 @@ public class LocalVars {
                 sz -=2;
             }
             varAccess.setFrame(sz, fe);
-            if (fe == FrameElement.TOP) { // as '.stack local Top' means error(local usage ambiguous) or not used
+            if (fe == FrameElement.TOP) { // as '.stack local Top' means error (ambiguous) or not used
                 fe = FrameElement.ERROR;
             }
             store(sz,fe);

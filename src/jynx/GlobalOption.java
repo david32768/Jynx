@@ -22,7 +22,7 @@ public enum GlobalOption {
     GENERATE_LINE_NUMBERS(M9,ASSEMBLY), // "generate line numbers"
     BASIC_VERIFIER(M16,ASSEMBLY), // "use ASM BasicVerifier"
     SIMPLE_VERIFIER(M17,ASSEMBLY), // "use ASM SimpleVerifier (default)"
-    ALLOW_CLASS_FORNAME(M11,ASSEMBLY), // "let simple verifier use Class.forName()"
+    ALLOW_CLASS_FORNAME(M11,ASSEMBLY), // "let simple verifier use Class.forName() for non-java classes"
     CHECK_REFERENCES(M8,ASSEMBLY), // "check that called methods or used fields exist (on class path)"
     VALIDATE_ONLY(M51,ASSEMBLY), // "do not output class file"
     JVM_OPS_ONLY(M5,ASSEMBLY), // "only JVM specified ops"
@@ -63,6 +63,10 @@ public enum GlobalOption {
         this.abbrev = abbrev;
         this.main = EnumSet.noneOf(Main.MainOption.class);
     }
+    
+    public boolean isExternal() {
+        return msg != null;
+    }
 
     private final static String OPTION_PREFIX = "--";
     private final static String ABBREV_PREFIX = "-";
@@ -91,14 +95,14 @@ public enum GlobalOption {
     
     public static Optional<GlobalOption> optInstance(String str) {
         return Stream.of(values())
-                .filter(g-> g.msg != null)
+                .filter(GlobalOption::isExternal)
                 .filter(g -> isEqual(g.name(),str))
                 .findFirst();
     }
 
     public static Optional<GlobalOption> optArgInstance(String str) {
         return Stream.of(values())
-                .filter(g-> g.msg != null)
+                .filter(GlobalOption::isExternal)
                 .filter(g -> g.isArg(str))
                 .findFirst();
     }

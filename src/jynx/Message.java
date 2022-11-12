@@ -15,7 +15,7 @@ public enum Message {
     M8(BLANK,"check that called methods or used fields exist (on class path)"),
     M9(BLANK,"generate line numbers"),
     M10(BLANK,"warn if label unreferenced or alias"),
-    M11(BLANK,"let simple verifier use Class.forName()"),
+    M11(BLANK,"let simple verifier use Class.forName() for non-java classes"),
     M12(BLANK,"%nUsage:%n"),
     M13(BLANK,"exit with stack trace if error"),
     M14(BLANK,"if necessary reduces JVM release to maximum supported by ASM version"),
@@ -27,7 +27,7 @@ public enum Message {
     M20("invalid major version(%d)"),
     M21("invalid minor version(%d) - spec table 4.1A"),
     M22(WARNING,"value required (%d) for %s is more than limit value (%d)"),    
-//    M23(BLANK,"print stack trace of exceptions"),
+
     M24(INFO,"ambiguous option %s: %s assumed"),
     M25(BLANK,"treat warnings as errors"),
     M26(BLANK,"invalid main-option name - %s"),
@@ -153,13 +153,13 @@ public enum Message {
     M147(WARNING,"unknown Java version %s - %s used"),
     
     M150("expected equal values for index length = %d numind = %d"),
-
+    M151(ENDINFO,"Class.forName(%s) has been used"),
     M152("zero length name"),
     M153(WARNING,"as class has a %s method it should have a %s method"),
     M154("%s: key %d has duplicate entries %s and %s"),
     M155("code is not allowed as method is abstract or native"),
     M156("instance variables or methods with no %s method"),
-    M157(ENDINFO,"class %s has used Class.forName(); java.runtime.version = %s"),
+
     M158(STYLE,"components of package %s are not all lowercase"),
     M159("Invalid type - %s"),
     M160("invalid access flags %s for %s are dropped"),
@@ -243,7 +243,7 @@ public enum Message {
     M241("ambiguous hint for common supertype of %s and %s%n    %s and %s"),
     M242("either init method %s is static or op  is not %s"),
     M243("%s op defined in %s has already been defined in %s"),
-
+    M244(WARNING,"%s could be used as entries are consecutibe"),
     M245("Unknown directive = %s"),
     M246("unable to calculate relative local position %d:%n   current abs = %d max = %d locals = %s"),
     M247("inner class %s must be different from %s %s"),
@@ -327,13 +327,14 @@ public enum Message {
     M401(ENDINFO,"%s is a contextual reserved word"),
     M402("cannot insert end_token"),
     M403(WARNING,"(redundant?) checkcast or hint needed if %s is subtype of %s"),
-    M404("(redundant?) checkcasts or hint needed to obtain common supertype of%n    %s and %s"),
+    M404(WARNING,"(redundant?) checkcasts or hint needed to obtain common supertype of%n    %s and %s"),
     M405("%s has different type %s from previous %s at line %d"),
     M406("method %s in %s class must be %s, not %s and have no parameters"),
     M407(ENDINFO,"%s %s is deprecated"),
     M408("expected %s but found %s"),
     M409("illegal operation on END_TOKEN"),
     M410("cannot amend quoted token"),
+    M411("type %s not found"),
     
     M901("unknown ASM type %s as it starts with '%c'"),
     M902("unknown ASM stack frame type (%d)"),

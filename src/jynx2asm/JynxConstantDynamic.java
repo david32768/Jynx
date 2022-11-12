@@ -224,15 +224,16 @@ public class JynxConstantDynamic {
                     }
                     arraytype = type;
                     ConstType ct = ConstType.getFromType(type.getElementType(),Context.JVMCONSTANT);
-                    TokenArray tokenarr = TokenArray.getInstance(js, line);
-                    while (true) {
-                        Token token = tokenarr.firstToken();
-                        if (token.is(right_array)) {
-                            break;
+                    try (TokenArray tokenarr = TokenArray.getInstance(js, line)) {
+                        while (true) {
+                            Token token = tokenarr.firstToken();
+                            if (token.is(right_array)) {
+                                break;
+                            }
+                            Object value = token.getValue(ct);
+                            checker.mayBeHandle(value, line);
+                            arglist.add(value);
                         }
-                        Object value = token.getValue(ct);
-                        checker.mayBeHandle(value, line);
-                        arglist.add(value);
                     }
                 } else {
                     ConstType ct = ConstType.getFromType(type,Context.JVMCONSTANT);

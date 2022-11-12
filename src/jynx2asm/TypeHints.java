@@ -9,14 +9,19 @@ import org.objectweb.asm.tree.analysis.BasicValue;
 import org.objectweb.asm.Type;
 
 import static jynx.Global.LOG;
+import static jynx.Global.OPTION;
+import static jynx.GlobalOption.ALLOW_CLASS_FORNAME;
+import static jynx.Message.M151;
 import static jynx.Message.M241;
 import static jynx.Message.M403;
+import static jynx.Message.M404;
 import static jynx.Message.M58;
 import static jynx.Message.M82;
 import static jynx.ReservedWord.res_common;
 import static jynx.ReservedWord.res_subtypes;
 import static jynx.ReservedWord.right_array;
 
+import jvm.ConstType;
 import jynx.Global;
 import jynx.ReservedWord;
 
@@ -24,10 +29,12 @@ public class TypeHints {
 
     private final Map<String,Set<String>> subtypes;
     private final Map<String,Map<String,String>> commons;
+    private final boolean forname;
 
     public TypeHints() {
         this.subtypes = new HashMap<>();
         this.commons = new HashMap<>();
+        this.forname = OPTION(ALLOW_CLASS_FORNAME);
     }
     
     public void setHints(TokenArray dotarray) {
@@ -85,19 +92,7 @@ public class TypeHints {
     }
 
     private boolean isPrimitive(Type type) {
-        switch(type.getSort()) {
-            case Type.BOOLEAN:
-            case Type.BYTE:
-            case Type.CHAR:
-            case Type.DOUBLE:
-            case Type.FLOAT:
-            case Type.INT:
-            case Type.LONG:
-            case Type.SHORT:
-                return true;
-            default:
-                return false;
-        }
+        return ConstType.isPrimitiveType(type.getInternalName());
     }
     
     private static final Type OBJECT = Type.getObjectType("java/lang/Object");
@@ -134,7 +129,19 @@ public class TypeHints {
         return false;
     }
 
-    public Type getCommonType(final Type type1, final Type type2) {
+    public BasicValue merge(BasicValue value1, BasicValue value2, String typename) {
+        Type type1 = value1.getType();
+        Type type2 = value2.getType();
+        Type common = getCommonType(type1, type2);
+         if (common != null) {
+             return new BasicValue(common);
+         }
+         // "(redundant?) checkcasts or hint needed to obtain common supertype of%n    %s and %s"
+         LOG(M404,value1.getType().getInternalName(),value2.getType().getInternalName());
+         throw new TypeNotPresentException(typename, null);
+    }
+
+    private Type getCommonType(final Type type1, final Type type2) {
         if (type1.equals(OBJECT) || type2.equals(OBJECT)) {
             return OBJECT;
         }
@@ -146,15 +153,46 @@ public class TypeHints {
     }
     
     public String getCommonSuperClass(String name1, String name2) {
+        if (useClassForName(name1) && useClassForName(name2)) {
+           return null;
+        }
         if (name1.compareTo(name2) > 0) {
             String temp = name1;
             name1 = name2;
             name2 = temp;
         }
         String common = commons.computeIfAbsent(name1,k->new HashMap<>()).get(name2);
-        if (common != null) {
+        if (common == null) {
+            // "(redundant?) checkcasts or hint needed to obtain common supertype of%n    %s and %s"
+            LOG(M404, name1,name2);
+            throw new TypeNotPresentException(name1 + " or " + name2, null);
+        } else {
             Global.LOG(M82,common,res_common,name1,name2); // "used hint: %s %s %s %s"
         }
         return common;
     }
+
+    private boolean useClassForName(final String base) {
+        if (NameDesc.isJava(base) || ConstType.isPrimitiveType(base)) {
+            return true;
+        } else if (forname) {
+            // "Class.forName(%s) has been used"
+            LOG(M151,base);
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    public boolean useClassForName(final Type type) {
+        String name = type.getInternalName();
+        String base;
+        if (type.getSort() == Type.ARRAY) {
+            base = type.getElementType().getInternalName();
+        } else {
+            base = name;
+        }
+        return useClassForName(base);
+    }
+
 }

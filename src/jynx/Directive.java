@@ -48,7 +48,10 @@ public enum Directive implements JvmVersioned {
     dir_enclosing_method(HEADER, EnumSet.of(CLASSHDR), EnclosingMethod),
     dir_outer_class(HEADER, EnumSet.of(CLASSHDR), EnclosingMethod),
     dir_hints(HEADER, EnumSet.of(CLASSHDR)),
-    
+
+    dir_comment(COMMON,EnumSet.allOf(State.class)),
+    end_comment(READ_END, EnumSet.noneOf(State.class)),
+
     dir_annotation(COMMON, EnumSet.of(CLASSHDR,FIELD_BLOCK, METHOD_BLOCK, MODULEHDR,COMPONENT_BLOCK,PACKAGEHDR),
             RuntimeInvisibleAnnotations),
 

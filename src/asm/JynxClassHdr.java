@@ -415,8 +415,9 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     }
     
     private void setHints(JynxScanner js, Line line) {
-        TokenArray dotarray = TokenArray.getInstance(js, line);
-        hints.setHints(dotarray);
+        try (TokenArray dotarray = TokenArray.getInstance(js, line)) {
+            hints.setHints(dotarray);
+        }
     }
     
     @Override
@@ -541,7 +542,11 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
             LOG(M75,mv.name,GlobalOption.SIMPLE_VERIFIER,emsg); // "Method %s failed %s check:%n    %s"
         }
         if (verified) {
-            mv.accept(cv);
+            try {
+                mv.accept(cv);
+            } catch (TypeNotPresentException ex) {
+                LOG(M411,ex.typeName()); // "type %s not found"
+            }
         }
     }
     

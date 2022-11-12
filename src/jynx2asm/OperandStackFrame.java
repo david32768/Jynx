@@ -66,6 +66,13 @@ public class OperandStackFrame {
                 .collect(Collectors.joining());
     }
 
+    private String compareForm() {
+        return stream()
+                .map(fe-> fe == FrameElement.THIS?FrameElement.OBJECT:fe)
+                .map(fe -> String.valueOf(fe.typeLetter()))
+                .collect(Collectors.joining());
+    }
+    
     @Override
     public String toString() {
         return stringForm();
@@ -78,7 +85,8 @@ public class OperandStackFrame {
         }
         if (obj instanceof OperandStackFrame) {
             OperandStackFrame that = (OperandStackFrame)obj;
-            return this.stack.length == that.stack.length && this.stringForm().equals(that.stringForm());
+            return this.stack.length == that.stack.length
+                    && this.compareForm().equals(that.compareForm());
         }
         return false;
     }

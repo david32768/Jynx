@@ -7,9 +7,8 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 import static jynx.Global.*;
@@ -145,9 +144,8 @@ public class JynxScanner implements Iterator<Line> {
         return null;
     }
     
-    public void skipNested(Directive startdir,Directive enddir, Directive... allowarr) {
+    public void skipNested(Directive startdir,Directive enddir, EnumSet<Directive> allowed) {
         assert enddir.isEndDirective();
-        List<Directive> allow = Arrays.asList(allowarr);
         int nest = 1;
         while (nest > 0) {
             nextLine();
@@ -155,23 +153,18 @@ public class JynxScanner implements Iterator<Line> {
                 skipTokens();
                 continue;
             }
-            Token first = line.firstToken();
+            Token first = line.peekToken();
             Directive dir = first.asDirective();
-            if (allow.contains(dir)) {
-                skipTokens();
-                continue;
-            }
             if (dir == startdir) {
                 ++nest;
-                skipTokens();
-                continue;
-            }
-            if (dir != enddir) {
+            } else if (dir == enddir) {
+                --nest;
+            } else if (!allowed.contains(dir)) {
                 LOG(M127,dir,enddir);    // "directive %s reached before %s"
+                reread = true;
                 return;
             }
-            line.noMoreTokens();
-            --nest;
+            skipTokens();
         }
     }
   

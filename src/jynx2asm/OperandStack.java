@@ -1,6 +1,7 @@
 package jynx2asm;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import org.objectweb.asm.Type;
@@ -10,7 +11,9 @@ import static jynx.Global.*;
 import static jynx.Message.*;
 import static jynx.Message.M163;
 
+import jynx.LogAssertionError;
 import jynx.LogIllegalStateException;
+import jynx2asm.handles.JynxHandle;
 import jynx2asm.ops.JvmOp;
 
 public class OperandStack {
@@ -19,11 +22,14 @@ public class OperandStack {
 
     private final FrameElement[] stack;
     private final LimitValue stacksz;
+    private final boolean isInit;
+    
     private int endpos;
     private int sz;
     private boolean startblock;
     
-    public OperandStack() {
+    private OperandStack(boolean isinit) {
+        this.isInit = isinit;
         this.stacksz = new LimitValue(LimitValue.Type.stack);
         this.stack = new FrameElement[MAXSTACK];
         this.endpos = 0;
@@ -31,6 +37,11 @@ public class OperandStack {
         this.startblock = false;
     }
 
+    public static OperandStack getInstance(List<Object> parms) {
+        boolean isinit = !parms.isEmpty() && parms.get(0) == FrameElement.THIS;
+        return new OperandStack(isinit);
+    }
+    
     public void setLimit(int num, Line line) {
         stacksz.setLimit(num, line);        
     }
@@ -73,7 +84,7 @@ public class OperandStack {
     
     private FrameElement checkType(char type, FrameElement fe) {
         char tos = fe.typeLetter();
-        if (tos == type) {
+        if (tos == type || type == 'A' && fe == FrameElement.THIS) {
             return fe;
         } else {
             FrameElement required = FrameElement.fromStack(type);
@@ -160,6 +171,26 @@ public class OperandStack {
         adjust(parms,desc.charAt(desc.length() - 1));
     }
 
+    public void adjustInvoke(JvmOp jvmop, JynxHandle mh) {
+        String desc = mh.desc();
+        String stackdesc;
+        switch (jvmop) {
+            case asm_invokestatic:
+                stackdesc = desc;
+                break;
+            case asm_invokespecial:
+            case asm_invokeinterface:
+            case asm_invokevirtual:
+                String ownerL = mh.ownerL();
+                stackdesc = String.format("(%s%s",ownerL,desc.substring(1));
+                break;
+            default:
+                // "unexpected Op %s in this instruction"),
+                throw new LogAssertionError(M908,jvmop.name());
+        }
+        adjustOperand(stackdesc);
+    }
+    
     private char typeLetter(Type type) {
         if (type.equals(Type.VOID_TYPE)) {
             return 'V';

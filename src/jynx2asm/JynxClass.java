@@ -1,17 +1,19 @@
 package jynx2asm;
 
 import java.io.File;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static jynx.Directive.dir_comment;
+import static jynx.Directive.end_comment;
 import static jynx.Global.*;
 import static jynx.GlobalOption.BASIC_VERIFIER;
 import static jynx.GlobalOption.SIMPLE_VERIFIER;
 import static jynx.Message.*;
 
 import asm.ContextDependent;
-import asm.JynxAnnotation;
 import asm.JynxClassHdr;
 import asm.JynxCodeHdr;
 import asm.JynxComponentNode;
@@ -146,6 +148,10 @@ public class JynxClass implements ContextDependent {
             Optional<GlobalOption> option = GlobalOption.optInstance(token.toString());
             if (option.isPresent() && option.get().isRelevent(MainOption.ASSEMBLY)) {
                 boolean added = ADD_OPTION(option.get());
+                if (added && option.get() == GlobalOption.DEBUG) {
+                    ADD_OPTION(GlobalOption.__EXIT_IF_ERROR);
+                    ADD_OPTION(GlobalOption.__PRINT_STACK_TRACES);
+                }
             } else {
                 LOG(M105,token); // "unknown option %s - ignored"
             }
@@ -217,7 +223,13 @@ public class JynxClass implements ContextDependent {
     }
 
     public void setCommon(Directive dir) {
-        sd.visitDirective(dir, js);
+        if (dir == dir_comment) {
+            LOGGER().pushContext();
+            js.skipNested(dir_comment, end_comment,EnumSet.noneOf(Directive.class));
+            LOGGER().popContext();
+        } else {
+            sd.visitDirective(dir, js);
+        }
     }
     
     public void setHeader(Directive dir) {

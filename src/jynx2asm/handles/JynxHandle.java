@@ -28,6 +28,11 @@ public interface JynxHandle {
         throw new AssertionError(); // return null;
     }
 
+    public default String ownerL() {
+        String owner = owner();
+        return owner.charAt(0) == '['?owner:"L" + owner + ";";
+    }
+    
     public default boolean isInterface() {
         return false;
     }

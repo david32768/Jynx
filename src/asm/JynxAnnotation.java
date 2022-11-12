@@ -125,71 +125,73 @@ public class JynxAnnotation {
     }
 
     private void visitAnnotationValues(AnnotationVisitor av) {
-        LinesIterator lines = new LinesIterator(js,Directive.end_annotation);
-        while(lines.hasNext()) {
-            Line line = lines.next();
-            String name = line.firstToken().asString();
-            String chdesc;
-            if (dir == Directive.dir_default_annotation) {
-                chdesc = name;
-            } else {
-                chdesc = line.nextToken().asString();
-            }
-            boolean array = chdesc.startsWith("[");
-            if (array) {
-                chdesc = chdesc.substring(1);
-            }
-            if (chdesc.length() != 1) {
-                throw new LogIllegalArgumentException(M96); // "syntax error in annotation field type"
-            }
-            char typech = chdesc.charAt((0));
-            switch (typech) {
-                case '@': // case '&':
-                    String desc = line.nextToken().asString();
-                    line.nextToken().mustBe(equals_sign);
-                    Token dot = line.nextToken();
-                    if (array) {
-                        dot.mustBe(dot_annotation_array);
-                        line.noMoreTokens();
-                        Directive enddir = Directive.end_annotation_array;
-                        visitArrayOfAnnotations(av, name,desc,enddir);
-                        break;
-                    }
-                    dot.mustBe(dot_annotation);
-                    line.noMoreTokens();
-                    visitAnnotationValues(av.visitAnnotation(name, desc));
-                    break;
-                case '\n':
-                    AnnotationVisitor avnull = av.visitArray(name);
-                    avnull.visitEnd();
-                    break;
-                default:
-                    String enumdesc = typech == 'e'?line.nextToken().asString():null;
-                    assert typech != '@';
-                    ConstType cta = ConstType.getInstance(typech,ANNOTATION);
-                    line.nextToken().mustBe(equals_sign);
-                    if (array) {
-                        AnnotationVisitor avarr = av.visitArray(name);
-                        TokenArray tokens = TokenArray.getInstance(js, line);
-                        while (true) {
-                            Token token = tokens.firstToken();
-                            if (token.is(right_array)) {
-                                break;
-                            }
-                            Object value = token.getValue(cta);
-                            visitvalue(avarr,name,enumdesc,value);
-                            tokens.noMoreTokens();
+        try (LinesIterator lines = new LinesIterator(js,Directive.end_annotation)) {
+            while(lines.hasNext()) {
+                Line line = lines.next();
+                String name = line.firstToken().asString();
+                String chdesc;
+                if (dir == Directive.dir_default_annotation) {
+                    chdesc = name;
+                } else {
+                    chdesc = line.nextToken().asString();
+                }
+                boolean array = chdesc.startsWith("[");
+                if (array) {
+                    chdesc = chdesc.substring(1);
+                }
+                if (chdesc.length() != 1) {
+                    throw new LogIllegalArgumentException(M96); // "syntax error in annotation field type"
+                }
+                char typech = chdesc.charAt((0));
+                switch (typech) {
+                    case '@': // case '&':
+                        String desc = line.nextToken().asString();
+                        line.nextToken().mustBe(equals_sign);
+                        Token dot = line.nextToken();
+                        if (array) {
+                            dot.mustBe(dot_annotation_array);
+                            line.noMoreTokens();
+                            Directive enddir = Directive.end_annotation_array;
+                            visitArrayOfAnnotations(av, name,desc,enddir);
+                            break;
                         }
-                        avarr.visitEnd();
-                    } else {
-                        Token token = line.lastToken();
-                        Object value = token.getValue(cta);
-                        visitvalue(av,name,enumdesc,value);
-                    }
-                    break;
+                        dot.mustBe(dot_annotation);
+                        line.noMoreTokens();
+                        visitAnnotationValues(av.visitAnnotation(name, desc));
+                        break;
+                    case '\n':
+                        AnnotationVisitor avnull = av.visitArray(name);
+                        avnull.visitEnd();
+                        break;
+                    default:
+                        String enumdesc = typech == 'e'?line.nextToken().asString():null;
+                        assert typech != '@';
+                        ConstType cta = ConstType.getInstance(typech,ANNOTATION);
+                        line.nextToken().mustBe(equals_sign);
+                        if (array) {
+                            AnnotationVisitor avarr = av.visitArray(name);
+                            try (TokenArray tokens = TokenArray.getInstance(js, line)) {
+                                while (true) {
+                                    Token token = tokens.firstToken();
+                                    if (token.is(right_array)) {
+                                        break;
+                                    }
+                                    Object value = token.getValue(cta);
+                                    visitvalue(avarr,name,enumdesc,value);
+                                    tokens.noMoreTokens();
+                                }
+                                avarr.visitEnd();
+                            }
+                        } else {
+                            Token token = line.lastToken();
+                            Object value = token.getValue(cta);
+                            visitvalue(av,name,enumdesc,value);
+                        }
+                        break;
+                }
             }
+            av.visitEnd();
         }
-        av.visitEnd();
     }
     
     private void visitvalue(AnnotationVisitor av,String name,String enumdesc,Object value) {

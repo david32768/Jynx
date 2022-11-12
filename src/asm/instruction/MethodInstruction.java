@@ -25,26 +25,7 @@ public class MethodInstruction extends Instruction {
 
     @Override
     public void adjust(StackLocals stackLocals) {
-        String owner = mh.owner();
-        owner = owner.charAt(0) == '['?owner:"L" + owner + ";";
-        String desc = mh.desc();
-        String stackdesc;
-        switch (jvmop) {
-            case asm_invokestatic:
-                stackdesc = desc;
-                break;
-            case asm_invokespecial:
-                stackdesc = String.format("(%s%s",owner,desc.substring(1));
-                break;
-            case asm_invokeinterface:
-            case asm_invokevirtual:
-                stackdesc = String.format("(%s%s",owner,desc.substring(1));
-                break;
-            default:
-                // "unexpected Op %s in this instruction"),
-                throw new LogAssertionError(M908,jvmop.name());
-        }
-        stackLocals.adjustStackOperand(stackdesc);
+        stackLocals.adjustStackOperand(jvmop,mh);
     }
 
     @Override

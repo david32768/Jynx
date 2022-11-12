@@ -3,6 +3,8 @@ package jynx2asm;
 import java.util.Deque;
 import java.util.Objects;
 
+import static jynx.Global.LOGGER;
+
 import jynx.Directive;
 import jynx.ReservedWord;
 
@@ -40,5 +42,17 @@ class DotArray implements TokenArray {
         Objects.nonNull(line);
         return line.getDeque();
     }
+
+    @Override
+    public void close() {
+        if (line != null) {
+            LOGGER().pushCurrent();
+            while((line = js.nextLineNotEnd(Directive.end_array)) != null) {
+                line.skipTokens();
+            }
+            LOGGER().popCurrent();
+        }
+    }
+    
     
 }

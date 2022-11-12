@@ -4,7 +4,9 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import static jynx.Global.LOG;
+import static jynx.Global.LOGGER;
 import static jynx.Message.M119;
+
 import jynx.Directive;
 
 public class LinesIterator implements Iterator<Line>,AutoCloseable {
@@ -14,6 +16,7 @@ public class LinesIterator implements Iterator<Line>,AutoCloseable {
 
     private Line line;
     private boolean finished;
+    private boolean hasNexted;
     
     public LinesIterator(JynxScanner js, Directive enddir) {
         assert enddir.isEndDirective();
@@ -21,12 +24,14 @@ public class LinesIterator implements Iterator<Line>,AutoCloseable {
         this.enddir = enddir;
         this.line = null;
         this.finished = false;
+        this.hasNexted = false;
     }
 
     @Override
     public boolean hasNext() {
-        if (!finished && line == null) {
+        if (!finished && !hasNexted) {
             line = js.nextLineNotEnd(enddir);
+            hasNexted = true;
             finished = line == null;
         }
         return !finished;
@@ -37,17 +42,25 @@ public class LinesIterator implements Iterator<Line>,AutoCloseable {
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
-        Line result = line;
-        line = null;
-        return result;
+        hasNexted = false;
+        LOGGER().setLine(line.toString());
+        return line;
     }
 
     @Override
     public void close() {
-        if (hasNext()) {
-            LOG(M119,enddir); // "this and following lines skipped until %s"
-            while(js.nextLineNotEnd(enddir) != null);
+        if (finished) {
+            return;
         }
+        LOG(M119,enddir); // "this and following lines skipped until %s"
+        LOGGER().pushCurrent();
+        if (hasNext()) {
+            next().skipTokens();;
+            while(hasNext()) {
+            next().skipTokens();;
+            }
+        }
+        LOGGER().popCurrent();
     }
     
 }

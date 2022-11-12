@@ -40,7 +40,7 @@ Options are:
 *	--GENERATE_LINE_NUMBERS generate line numbers
 *	--BASIC_VERIFIER use ASM BasicVerifier
 *	--SIMPLE_VERIFIER use ASM SimpleVerifier (default)
-*	--ALLOW_CLASS_FORNAME let simple verifier use Class.forName()
+*	--ALLOW_CLASS_FORNAME let simple verifier use Class.forName() for non-java classes
 *	--CHECK_REFERENCES check that called methods or used fields exist (on class path)
 *	--VALIDATE_ONLY do not output class file
 *	--JVM_OPS_ONLY only JVM specified ops

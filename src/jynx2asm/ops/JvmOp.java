@@ -242,6 +242,8 @@ public enum JvmOp implements JynxOp {
     opc_lstore_w(55, 4, "(J)V", arg_var, LSTORE),
     opc_ret_w(169, 4, "()V", arg_var, RET, Feature.subroutines),
 
+    opc_switch(171, null, "(I)V", arg_lookupswitch, LOOKUPSWITCH),
+
     opc_wide(196, null, "()V", arg_none, NOP),
 
     xxx_label(-1, 0, "()V", arg_dir, -1),
@@ -302,13 +304,19 @@ public enum JvmOp implements JynxOp {
                     if (mapop == null) {
                         CODEMAP[opcode] = op;
                     } else {
-                        boolean validsame = op.isWideFormOf(mapop)
+                        boolean sameargs = mapop.args == op.args;
+                        boolean samevar = op.isWideFormOf(mapop)
                                 && (op.args() == arg_var || op.args() == arg_incr);
-                        if (validsame && !Objects.equals(op.feature(), mapop.feature())) {
+                        boolean samefeature = Objects.equals(op.requires, mapop.requires);
+                        boolean sameswitch = mapop == asm_lookupswitch && op == opc_switch;
+                        
+                        boolean validsame = sameargs && (samevar || sameswitch);
+                        boolean nonvirtual = sameargs && mapop == asm_invokespecial && op == opc_invokenonvirtual;
+                        
+                        if (validsame && !samefeature) {
                             // "%s is null or has different feature requirement than %s"
                             throw new LogIllegalArgumentException(M302,op,mapop);
-                        }
-                        if (!validsame && mapop != asm_invokespecial && op != opc_invokenonvirtual){
+                        } else if (!validsame && !nonvirtual){
                             LOG(M274,op,opcode,mapop); // "duplicate: %s has the same opcode(%d) as %s"
                             ok = false;
                         }

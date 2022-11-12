@@ -4,10 +4,12 @@ import java.io.PrintWriter;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.FrameNode;
 import org.objectweb.asm.tree.InnerClassNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.ModuleExportNode;
@@ -83,13 +85,26 @@ public class JynxDisassemble {
         cr.accept(cn, crflag);
         JvmVersion jvmversion = JvmVersion.getInstance(cn.version);
         jvmversion.checkSupported();
-        if (jvmversion == JvmVersion.V1_6JSR && !OPTION(GlobalOption.SKIP_FRAMES)) {
+        if (jvmversion == JvmVersion.V1_6JSR && hasFrames(cn)) {
             jvmversion = JvmVersion.V1_6;
         }
         Global.setJvmVersion(jvmversion);
         return new JynxDisassemble(cn, pw, jvmversion);
     }
 
+    private static boolean hasFrames(ClassNode cn) {
+        if (cn.methods == null || OPTION(GlobalOption.SKIP_FRAMES)) {
+            return false;
+        }
+        return cn.methods.stream()
+                .map(m->m.instructions)
+                .filter(insnlist-> insnlist != null)
+                .flatMap(insnlist->Stream.of(insnlist.toArray()))
+                .filter(insn-> insn instanceof FrameNode)
+                .findAny()
+                .isPresent();
+    }
+    
     public void close() {
         pw.close();
     }
@@ -360,6 +375,7 @@ public class JynxDisassemble {
                 .appendDirective(dir_version)
                 .append(jvmVersion.asJava());
         OPTIONS().stream()
+                .filter(GlobalOption::isExternal)
                 .filter(opt->opt.isRelevent(Main.MainOption.ASSEMBLY))
                 .filter(opt-> opt != GlobalOption.SYSIN)
                 .forEach(jp::append);

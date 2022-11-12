@@ -16,6 +16,9 @@ import asm.instruction.LineInstruction;
 import asm.JynxVar;
 import jvm.Feature;
 import jynx.GlobalOption;
+import jynx.LogAssertionError;
+import jynx2asm.handles.JynxHandle;
+import jynx2asm.handles.MethodHandle;
 import jynx2asm.ops.JvmOp;
 
 public class StackLocals {
@@ -69,9 +72,11 @@ public class StackLocals {
         this.activeLabels = new ArrayList<>();
     }
     
-    public static StackLocals getInstance(List<Object> localstack, JynxLabelMap labelmap, JvmOp returnop, boolean isStatic) {
-        return new StackLocals(LocalVars.getInstance(localstack,isStatic),
-                new OperandStack(), labelmap, returnop);
+    public static StackLocals getInstance(List<Object> localstack, JynxLabelMap labelmap,
+            JvmOp returnop, boolean isStatic) {
+        LocalVars lv = LocalVars.getInstance(localstack,isStatic);
+        OperandStack os = OperandStack.getInstance(localstack);
+        return new StackLocals(lv, os, labelmap, returnop);
     }
 
     public LocalVars locals() {
@@ -290,6 +295,10 @@ public class StackLocals {
 
     public void adjustStackOperand(String desc) {
         stack.adjustOperand(desc);
+    }
+    
+    public void adjustStackOperand(JvmOp jvmop, JynxHandle mh) {
+        stack.adjustInvoke(jvmop, mh);
     }
     
     public void checkIncr(int var) {
