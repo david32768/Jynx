@@ -16,9 +16,7 @@ import asm.instruction.LineInstruction;
 import asm.JynxVar;
 import jvm.Feature;
 import jynx.GlobalOption;
-import jynx.LogAssertionError;
 import jynx2asm.handles.JynxHandle;
-import jynx2asm.handles.MethodHandle;
 import jynx2asm.ops.JvmOp;
 
 public class StackLocals {
@@ -305,21 +303,24 @@ public class StackLocals {
         locals.checkChar('I', var);
     }
     
-    public void adjustLoadStore(JvmOp jop, int var) {
+    public int adjustLoadStore(JvmOp jop, Token vartoken) {
         char ctype = jop.vartype();
+        int var;
         if (jop.isStoreVar()) {
-            FrameElement fe = stack.storeType(ctype, var);
-            locals.storeFrameElement(fe,var);
+            FrameElement fe = stack.storeType(ctype);
+            var = locals.storeFrameElement(fe,vartoken);
             for (JynxLabel lab:activeLabels) {
                 lab.store(fe,var);
             }
         } else {
+            var = locals.loadVarNumber(vartoken);
             FrameElement fe = locals.loadType(ctype,var);
             for (JynxLabel lab:activeLabels) {
                 lab.load(fe,var);
             }
             stack.load(fe, var);
         }
+        return var;
     }
     
     public void adjustStack(JvmOp jop) {

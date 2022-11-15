@@ -68,7 +68,7 @@ public class String2Insn {
     private int macroCount;
     private int indent;
     
-    public String2Insn(JynxScanner js, JynxLabelMap labmap,
+    private String2Insn(JynxScanner js, JynxLabelMap labmap,
             ClassChecker checker, JynxOps opmap) {
         this.js = js;
         this.labmap = labmap;
@@ -78,6 +78,11 @@ public class String2Insn {
         this.indent = INDENT_LENGTH;
     }
 
+    public static String2Insn getInstance(JynxScanner js, JynxLabelMap labmap,
+            ClassChecker checker, JynxOps opmap) {
+        return new String2Insn(js, labmap, checker, opmap);
+    }
+   
     public void getInsts(InstList instlist) {
         line = instlist.getLine();
         if (line.isLabel()) {
@@ -362,15 +367,14 @@ public class String2Insn {
             int lct = swmap.size();
             if (lct == 0) {
                 LOG(M224,jvmop,res_default); // "invalid %s as only has %s"
-                swmap.put(0, dflt);
-                ++lct;
-                min = 0;
+                return new JumpInstruction(JvmOp.asm_goto,dflt);
             }
+            jvmop = JvmOp.asm_tableswitch;
             if (lct > MAX_TABLE_ENTRIES) {
                 LOG(M256,jvmop,lct,MAX_TABLE_ENTRIES); // "%s has %d entries, maximum possible is %d"
             }
             Collection<JynxLabel> labellist = swmap.values();
-            return new TableInstruction(JvmOp.asm_tableswitch, min, min + lct - 1,dflt,labellist);
+            return new TableInstruction(jvmop, min, min + lct - 1,dflt,labellist);
         }
         if (consec) {
             // "%s could be used as entries are consecutibe"
@@ -461,15 +465,15 @@ public class String2Insn {
     }
     
     private Instruction arg_var(JvmOp jvmop) {
-        int v;
+        Token token;
         if (jvmop.isImmediate()) {
             String opname = jvmop.toString();
             char suffix = opname.charAt(opname.length() - 1);
-            v = Integer.valueOf("" + suffix);
+            token = Token.getInstance("" + suffix);
         } else {
-            v = line.nextToken().asUnsignedShort();
+            token = line.nextToken();
         }
-        return new VarInstruction(jvmop, v);
+        return new VarInstruction(jvmop, token);
     }
 
 }

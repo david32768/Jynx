@@ -138,7 +138,8 @@ public enum AccessFlag implements JvmVersioned {
                         dir_record, dir_inner_record,
                         dir_class, dir_inner_class,
                         dir_field, dir_method)),
-    // flag for internal use - xxx_ prefix and 0x0
+    // Jynx specific pseudo access flags 0x0
+        // flag for internal use - xxx_ prefix and 0x0
         xxx_component(Feature.record,0,0,
                 EnumSet.of(FIELD,METHOD),
                 EnumSet.of(dir_field,dir_method)),

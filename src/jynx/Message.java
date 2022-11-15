@@ -203,14 +203,14 @@ public enum Message {
     M201("%s can only occur in locals"),
     M202("unused field(s) in typeref not zero"),
     M203(WARNING,"potential infinite loop - catch using label equals catch from label"),
-
+    M204("different types for %s; was %s but now %s"),
     M205("enum class changed; was %s now %s"),
     M206("Invalid type letter '%c' (%d)"),
     M207("possible serialization method %s is not private"),
     M208("code not complete - last %s was %s"),
     M209("code not complete - last was %s"),
     M210(ENDINFO,"%s instruction ignored as not required"),
-
+    M211("unknown variable: %s"),
     M212("attempting to load variable %d but current max is %d"),
     M213(WARNING,"label %s defined before use - locals assumed as before last unconditional op"),
     M214(WARNING,"field %s %s does not exist in this class but may exist in superclass/superinterface"),
@@ -245,7 +245,7 @@ public enum Message {
     M243("%s op defined in %s has already been defined in %s"),
     M244(WARNING,"%s could be used as entries are consecutibe"),
     M245("Unknown directive = %s"),
-    M246("unable to calculate relative local position %d:%n   current abs = %d max = %d locals = %s"),
+
     M247("inner class %s must be different from %s %s"),
     M248("ELSE does not match an IF or TRY op"),
     M249("structured op(s) missing; level at end is %d"),
@@ -254,7 +254,7 @@ public enum Message {
     M252("own init method %s not found"),
     M253("illegal number of dimensions %d; must be in range [0,%d]"),
     M254("%s is used in a macro after a mulit-line op"),
-
+    M255("cannot mix absolute and relative local variables"),
     M256("%s has %d entries, maximum possible is %d"),
     M257("argument count %d is not in range [0,%d]"),
     M258(WARNING,"%s is a reserved word and cannot be a Java Id"),
@@ -305,6 +305,7 @@ public enum Message {
     M304("Nest host already defined%n  %s"),
     M305(ENDINFO,"it is preferred that name is separated from owner by '%c' not '%c'"),
     M306("nested class have different owners; class = %s token = %s"),
+    M307(WARNING,"parameters [%s ] are overwritten"),
 
     M313("final class cannot have %s"),
     M314(SEVERE,"only one parameter translater allowed"),

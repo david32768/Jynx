@@ -331,7 +331,7 @@ public class OperandStack {
         }
     }
     
-    public FrameElement storeType(char type,int var) {
+    public FrameElement storeType(char type) {
         FrameElement fe = pop();
         if (fe == FrameElement.RETURN_ADDRESS && type == 'A') {
             type = 'R';

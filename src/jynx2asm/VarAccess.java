@@ -5,6 +5,7 @@ import java.util.BitSet;
 import static jynx.Global.LOG;
 import static jynx.Message.M223;
 import static jynx.Message.M281;
+import static jynx.Message.M307;
 import static jynx.Message.M56;
 import static jynx.Message.M60;
 import static jynx.Message.M65;
@@ -15,6 +16,7 @@ public class VarAccess {
     private final BitSet writeVars;
     private final BitSet typedVars;
     private final BitSet frameVars;
+    private final BitSet parmVars;
 
     private int parmsz;
     
@@ -23,6 +25,7 @@ public class VarAccess {
         this.writeVars = new BitSet();
         this.typedVars = new BitSet();
         this.frameVars = new BitSet();
+        this.parmVars = new BitSet();
     }
 
     public void completeInit(int parmsz) {
@@ -44,6 +47,9 @@ public class VarAccess {
 
     public void setWrite(int num, FrameElement fe) {
         set(writeVars,num,fe);
+        if (num < parmsz) {
+            set(parmVars,num,fe);
+        }
     }
 
     public void setFrame(int num, FrameElement fe) {
@@ -136,6 +142,11 @@ public class VarAccess {
             // "local variables [%s ] are in a frame but not written"
             LOG(M281,ranges);
         }
+//        ranges = rangeString(0,parmVars);
+//        if (!ranges.isEmpty()) {
+//            // "parameters [%s ] are overwritten"
+//            LOG(M307,ranges);
+//        }
     }
     
 }

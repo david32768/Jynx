@@ -27,8 +27,8 @@ public enum SelectOps implements SelectOp {
 
     xxx_xreturn(Type.RETURN),
     
-    xxx_xload_rel(Type.REL_LOCAL,asm_iload,asm_lload,asm_fload,asm_dload,asm_aload),
-    xxx_xstore_rel(Type.REL_STACK,asm_istore,asm_lstore,asm_fstore,asm_dstore,asm_astore),
+    xxx_xload(Type.LOCAL,asm_iload,asm_lload,asm_fload,asm_dload,asm_aload),
+    xxx_xstore(Type.STACK,asm_istore,asm_lstore,asm_fstore,asm_dstore,asm_astore),
     ;
         
     private final Select selector;
@@ -59,28 +59,18 @@ public enum SelectOps implements SelectOp {
 
     private static enum Type {
         STACK_LENGTH,
-        STACK_TYPE,
         ILDC,
         LLDC,
         FLDC,
         DLDC,
-        REL_STACK,
-        REL_LOCAL,
-        ABS_LOCAL,
+        STACK,
+        LOCAL,
         RETURN,
         ;
     }
 
     public static SelectOp of12(JynxOp oplen1, JynxOp oplen2) {
         return new Select(Type.STACK_LENGTH, oplen1, oplen2);
-    }
-
-    public static SelectOp ofIJFDA(JynxOp opi, JynxOp opj, JynxOp opf, JynxOp opd, JynxOp opa) {
-        return new Select(Type.STACK_TYPE, opi, opj, opf, opd, opa);
-    }
-
-    public static SelectOp ofIJFD(JynxOp opi, JynxOp opj, JynxOp opf, JynxOp opd) {
-        return new Select(Type.STACK_TYPE, opi, opj, opf, opd);
     }
 
     private static class Select implements SelectOp {
@@ -91,8 +81,6 @@ public enum SelectOps implements SelectOp {
         private Select(SelectOps.Type type, JynxOp... ops) {
             this.type = type;
             this.ops = ops;
-            assert type != Type.STACK_TYPE || ops.length == 4  || ops.length == 5;
-            assert type != Type.STACK_LENGTH || ops.length == 2;
         }
 
         @Override
@@ -104,17 +92,11 @@ public enum SelectOps implements SelectOp {
                 case STACK_LENGTH:
                     index = getLength(line,instlist);
                     break;
-                case STACK_TYPE:
+                case STACK:
                     index = getTypeIndex(instlist.peekTOS());
                     break;
-                case ABS_LOCAL:
-                    index = getAbsLocal(line,instlist);
-                    break;
-                case REL_STACK:
-                    index = getRelStackType(line,instlist);
-                    break;
-                case REL_LOCAL:
-                    index = getRelLocal(line,instlist);
+                case LOCAL:
+                    index = getLocal(line,instlist);
                     break;
                 case ILDC:
                     index = getIldc(line,instlist);
@@ -156,25 +138,11 @@ public enum SelectOps implements SelectOp {
             return index;
         }
         
-        private int getRelStackType(Line line,InstList instlist) {
-            int num  = line.nextToken().asUnsignedShort();
-            num = instlist.absolute(num);
-            line.insert(Integer.toString(num));
-            return getTypeIndex(instlist.peekTOS());
+        private int getLocal(Line line, InstList instlist) {
+            Token token = line.peekToken();
+            return getTypeIndex(instlist.peekVarNum(token));
         }
-
-        private int getAbsLocal(Line line,InstList instlist) {
-            int num  = line.peekToken().asUnsignedShort();
-            return getTypeIndex(instlist.peekVar(num));
-        }
-
-        private int getRelLocal(Line line,InstList instlist) {
-            int num  = line.nextToken().asUnsignedShort();
-            num = instlist.absolute(num);
-            line.insert(Integer.toString(num));
-            return getAbsLocal(line,instlist);
-        }
-
+        
         private int rangeType(long lval) {
             if (lval >= 0 && lval <= 5) {
                 return (int)lval;

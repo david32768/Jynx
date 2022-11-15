@@ -117,14 +117,10 @@ public class InstList {
         return stackLocals.stack().peekTOS();
     }
     
-    public FrameElement peekVar(int varnum) {
-        return stackLocals.locals().peek(varnum);
+    public FrameElement peekVarNum(Token token) {
+        return stackLocals.locals().peekVarNumber(token);
     }
     
-    public int absolute(int varnum) {
-        return stackLocals.locals().absolute(varnum);
-    }
-
     public JvmOp getReturnOp() {
         return stackLocals.getReturnOp();
     }

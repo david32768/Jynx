@@ -78,7 +78,7 @@ public class JynxCodeHdr implements ContextDependent {
         this.vars = new ArrayList<>();
         JvmOp returnop = JynxHandle.getReturnOp(lmh);
         this.stackLocals = StackLocals.getInstance(localStack,labelmap,returnop,isStatic);
-        this.s2a = new String2Insn(js, labelmap, checker, opmap);
+        this.s2a = String2Insn.getInstance(js, labelmap, checker, opmap);
         this.uniqueDirectives = new HashMap<>();
         this.options = new EnumMap<>(ReservedWord.class);
     }

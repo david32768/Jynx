@@ -1,28 +1,40 @@
 package jynx2asm;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static jynx.Global.LOG;
+import static jynx.Global.OPTION;
 import static jynx.Message.*;
 
 import jvm.NumType;
+import jynx.GlobalOption;
 import jynx.LogIllegalArgumentException;
 
 public class LocalVars {
+
+    private enum VarState {
+        NOT_SET,
+        ACTUAL,
+        SYMBOLIC,
+    }
     
     private static final int MAXSTACK = 1 << 16;
     
     private final LimitValue localsz;
     private final FrameElement[] locals;
     private final boolean isStatic;
+    private final VarAccess varAccess;
+    private final int parmsz;
+    private final Map<String,Integer> varmap;
+    
     private int sz;
     private boolean startblock;
     private LocalFrame lastlocals;
-    private final VarAccess varAccess;
-    private final int parmsz;
-    
+    private VarState varState;
     
     private LocalVars(OperandStackFrame parmlocals, boolean isStatic) {
         this.localsz = new LimitValue(LimitValue.Type.locals);
@@ -34,10 +46,29 @@ public class LocalVars {
         visitFrame(parmlocals, Optional.empty());  // wiil set startblock to false
         this.parmsz = sz;
         varAccess.completeInit(this.parmsz);
+        this.varState = OPTION(GlobalOption.USE_STACK_MAP)?VarState.ACTUAL:VarState.NOT_SET;
+        this.varmap = new HashMap<>();
     }
 
+    private void setParms(OperandStackFrame osf) {
+        int parm0 = 0;
+        if (!isStatic) {
+            varmap.put("$this",0);
+            parm0 = 1;
+        }
+        int current = parm0;
+        for (int i = parm0; i < osf.size(); ++i) {
+            FrameElement fe = osf.at(i);
+            varmap.put("$" + (i - parm0), current);
+            current += fe.isTwo()?2:1;
+        }
+    }
+    
     public static LocalVars getInstance(List<Object> localstack, boolean isStatic) {
-        return new LocalVars(OperandStackFrame.getInstance(localstack,false),isStatic);
+        OperandStackFrame parmosf = OperandStackFrame.getInstance(localstack,false);
+        LocalVars lv = new LocalVars(parmosf,isStatic);
+        lv.setParms(parmosf);
+        return lv;
     }
 
     public LocalFrame currentFrame() {
@@ -49,34 +80,65 @@ public class LocalVars {
         localsz.setLimit(num, line);        
     }
 
-    public int absolute(int relnum) {
-        assert relnum >= 0;
-        int abs = isStatic?0:1; // preserve this and start parms at rel 0
-        int rel = 0;
-        for (int i = abs; i < sz; ++i)  {
-            if (rel == relnum) {
-                return abs;
-            }
-            FrameElement fe = locals[i];
-            if (fe.isTwo()) {
-                if (i >= sz - 1 || !fe.checkNext(locals[i+1])) {
-                    // "unable to calculate relative local position %d:%n   current abs = %d max = %d locals = %s"
-                    LOG(M246,relnum,abs,sz,this);
-                    return 0;
-                }
-                abs += 2;
-                ++i;
+    private int getVarNumber(Token token, FrameElement fe) {
+        String tokenstr = token.asString();
+        if (varState == VarState.NOT_SET) {
+            varState = tokenstr.charAt(0) == '$'?VarState.SYMBOLIC:VarState.ACTUAL;
+        }
+        switch(varState) {
+            case ACTUAL:
+                return getActualVarNumber(token);
+            case SYMBOLIC:
+                return getSymbolicVarNumber(token,fe);
+            default:
+                throw new EnumConstantNotPresentException(varState.getClass(), varState.name());
+        }
+    }
+    
+    private int getSymbolicVarNumber(Token token, FrameElement fe) {
+        String tokenstr = token.asString();
+        if (tokenstr.charAt(0) != '$') {
+            // "cannot mix absolute and relative local variables"
+            throw new LogIllegalArgumentException(M255);
+        }
+        Integer number = varmap.get(tokenstr);
+        if (fe != null) {
+            if (number == null) {
+                number = sz;
+                varmap.put(tokenstr,sz);
             } else {
-                ++abs;
+                if (peek(number) != fe) {
+                    // "different types for %s; was %s but now %s"
+                    LOG(M204,tokenstr,peek(number),fe);
+                }
             }
-            ++rel;
+        } else if (number == null) {
+            //"unknown variable: %s"
+            LOG(M211,tokenstr);
         }
-        if (rel == relnum) {
-            return abs;
+        return number;
+    }
+    
+    private int getActualVarNumber(Token token) {
+        String tokenstr = token.asString();
+        if (tokenstr.charAt(0) == '$') {
+            // "cannot mix absolute and relative local variables"
+            throw new LogIllegalArgumentException(M255);
         }
-        // "unable to calculate relative local position %d:%n   current abs = %d max = %d locals = %s"
-        LOG(M246,relnum,abs,sz,this);
-        return 0;
+        return token.asUnsignedShort();
+    }
+    
+    public int loadVarNumber(Token token) {
+        return getVarNumber(token,null);
+    }
+    
+    public FrameElement peekVarNumber(Token token) {
+        int num = loadVarNumber(token);
+        return peek(num);
+    }
+
+    private int storeVarNumber(Token token, FrameElement fe) {
+        return getVarNumber(token,fe);
     }
     
     public void startBlock() {
@@ -99,7 +161,7 @@ public class LocalVars {
         sz = Math.max(sz, maxv);
     }
     
-    public FrameElement peek(int num) {
+    private FrameElement peek(int num) {
         FrameElement fe = locals[num];
         if (fe == null) {
             fe = FrameElement.UNUSED;
@@ -155,12 +217,13 @@ public class LocalVars {
         adjustMax(fe,num);
     }
     
-    public void storeFrameElement(FrameElement fe, int num) {
+    public int storeFrameElement(FrameElement fe, Token vartoken) {
+        int num = storeVarNumber(vartoken, fe);
         store(num,fe);
-        if (fe == FrameElement.UNUSED || fe == FrameElement.ERROR) {
-            return;
+        if (fe != FrameElement.UNUSED && fe != FrameElement.ERROR) {
+            varAccess.setWrite(num, fe);
         }
-        varAccess.setWrite(num, fe);
+        return num;
     }
 
     public void preVisitJvmOp(Optional<JynxLabel> lastLab) {
