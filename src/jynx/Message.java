@@ -314,6 +314,9 @@ public enum Message {
     M317("number of macro ops exceeds maximum of %d for %s"),
     M318(SEVERE,"op %s is not a valid op name"),
     M319("%s is an interface and so '%c' must be prepended to %s"),
+    M320(ENDINFO,"occurences of %s have been ignored: %s"),
+    M321("%d does not in [0,%d]"),
+    M322("use of %s is not supported: %s"),
     //
     M327(INFO,"added: %s %s"),
     //
@@ -336,6 +339,7 @@ public enum Message {
     M409("illegal operation on END_TOKEN"),
     M410("cannot amend quoted token"),
     M411("type %s not found"),
+    M412("%s not supported"),
     
     M901("unknown ASM type %s as it starts with '%c'"),
     M902("unknown ASM stack frame type (%d)"),

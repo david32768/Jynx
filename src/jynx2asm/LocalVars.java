@@ -23,6 +23,7 @@ public class LocalVars {
     }
     
     private static final int MAXSTACK = 1 << 16;
+    private static final char SYMBOL_MARKER = '$';
     
     private final LimitValue localsz;
     private final FrameElement[] locals;
@@ -53,13 +54,14 @@ public class LocalVars {
     private void setParms(OperandStackFrame osf) {
         int parm0 = 0;
         if (!isStatic) {
-            varmap.put("$this",0);
+            varmap.put(SYMBOL_MARKER + "this",0);
             parm0 = 1;
         }
         int current = parm0;
         for (int i = parm0; i < osf.size(); ++i) {
             FrameElement fe = osf.at(i);
-            varmap.put("$" + (i - parm0), current);
+            String parmnumstr = "" + (i - parm0);
+            varmap.put(SYMBOL_MARKER + parmnumstr, current);
             current += fe.isTwo()?2:1;
         }
     }
@@ -83,7 +85,7 @@ public class LocalVars {
     private int getVarNumber(Token token, FrameElement fe) {
         String tokenstr = token.asString();
         if (varState == VarState.NOT_SET) {
-            varState = tokenstr.charAt(0) == '$'?VarState.SYMBOLIC:VarState.ACTUAL;
+            varState = tokenstr.charAt(0) == SYMBOL_MARKER?VarState.SYMBOLIC:VarState.ACTUAL;
         }
         switch(varState) {
             case ACTUAL:
@@ -97,7 +99,7 @@ public class LocalVars {
     
     private int getSymbolicVarNumber(Token token, FrameElement fe) {
         String tokenstr = token.asString();
-        if (tokenstr.charAt(0) != '$') {
+        if (tokenstr.charAt(0) != SYMBOL_MARKER) {
             // "cannot mix absolute and relative local variables"
             throw new LogIllegalArgumentException(M255);
         }
@@ -121,7 +123,7 @@ public class LocalVars {
     
     private int getActualVarNumber(Token token) {
         String tokenstr = token.asString();
-        if (tokenstr.charAt(0) == '$') {
+        if (tokenstr.charAt(0) == SYMBOL_MARKER) {
             // "cannot mix absolute and relative local variables"
             throw new LogIllegalArgumentException(M255);
         }

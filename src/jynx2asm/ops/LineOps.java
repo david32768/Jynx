@@ -1,10 +1,5 @@
 package jynx2asm.ops;
 
-import java.util.function.UnaryOperator;
-
-import static jynx.Message.M408;
-
-import jynx.LogIllegalStateException;
 import jynx2asm.LabelStack;
 import jynx2asm.Line;
 import jynx2asm.NameDesc;
@@ -32,7 +27,7 @@ public enum LineOps implements LineOp {
     private LineOps() {}
 
     @Override
-    public void adjustLine(Line line, int macrolevel,LabelStack labelStack) {
+    public void adjustLine(Line line, int macrolevel, MacroOp macroop, LabelStack labelStack) {
         lineop(line, macrolevel, labelStack);
     }
 
@@ -88,113 +83,6 @@ public enum LineOps implements LineOp {
             default:
                 throw new EnumConstantNotPresentException(this.getClass(),this.name());
         }
-    }
-
-    private static enum Adjustment {
-       INSERT,
-       TRANSFORM,
-       JOIN,
-       CHECK,
-       ;
-    }
-   
-    public static LineOp insert(String str) {
-        return new AdjustLine(Adjustment.INSERT, str);
-    }
-    
-    public static LineOp join(String str) {
-        return new AdjustLine(Adjustment.JOIN, str);
-    }
-    
-    public static LineOp insertMethod(String klass, String method, String desc) {
-        assert NameDesc.CLASS_NAME.validate(klass);
-        assert NameDesc.METHOD_ID.validate(method);
-        assert NameDesc.DESC.validate(desc);
-        return new AdjustLine(Adjustment.INSERT, klass + '.' + method + desc);
-    }
-    
-    public static LineOp prepend(String str) {
-        return new AdjustLine(Adjustment.TRANSFORM,s->str + s);
-    }
-    
-    public static LineOp append(String str) {
-        return new AdjustLine(Adjustment.TRANSFORM,s->s + str);
-    }
-    
-    public static LineOp UC() {
-        return new AdjustLine(Adjustment.TRANSFORM,String::toUpperCase);
-    }
-    
-    public static LineOp LC() {
-        return new AdjustLine(Adjustment.TRANSFORM,String::toLowerCase);
-    }
-    
-    public static LineOp replace(String find, String replace) {
-        return new AdjustLine(Adjustment.TRANSFORM,str->str.replace(find,replace));
-    }
-    
-    public static LineOp translateDesc() {
-        return new AdjustLine(Adjustment.TRANSFORM,jynx.Global::TRANSLATE_DESC);
-    }
-    
-    public static LineOp check(String str) {
-        return new AdjustLine(Adjustment.CHECK,str);
-    }
-    
-    private static class AdjustLine implements LineOp {
-
-        private final Adjustment type;
-        private final String adjust;
-        private final UnaryOperator<String> op;
-
-        public AdjustLine(Adjustment type, String adjust) {
-            this.adjust = adjust;
-            this.type = type;
-            this.op = null;
-            assert type != LineOps.Adjustment.TRANSFORM;
-        }
-
-        public AdjustLine(LineOps.Adjustment type, UnaryOperator<String> op) {
-            this.type = type;
-            this.adjust = null;
-            this.op = op;
-            assert type == LineOps.Adjustment.TRANSFORM;
-        }
-
-        @Override
-        public void adjustLine(Line line, int macrolevel, LabelStack labelStack){
-            Token token;
-            switch(type) {
-                case INSERT:
-                    token = Token.getInstance(adjust);
-                    line.insert(token);
-                    break;
-                case JOIN:
-                    String first = line.nextToken().asString() + adjust;
-                    token = line.nextToken().transform(s->first + s);
-                    line.insert(token);
-                    break;
-                case TRANSFORM:
-                    token = line.nextToken().transform(op);
-                    line.insert(token);
-                    break;
-                case CHECK:
-                    token = line.nextToken();
-                    if (!token.asString().equals(adjust)) {
-                        // "expected %s but found %s"
-                        throw new LogIllegalStateException(M408,adjust,token.asString());
-                    }
-                    break;
-                default:
-                    throw new EnumConstantNotPresentException(type.getClass(), type.name());
-            }
-        }
-
-        @Override
-        public String toString() {
-            return String.format("*%s %s", type, adjust);
-        }
-
     }
 
 }

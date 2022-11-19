@@ -45,6 +45,7 @@ import jynx.LogIllegalStateException;
 import jynx2asm.handles.FieldHandle;
 import jynx2asm.handles.MethodHandle;
 import jynx2asm.ops.DynamicOp;
+import jynx2asm.ops.IndentType;
 import jynx2asm.ops.JvmOp;
 import jynx2asm.ops.JynxOp;
 import jynx2asm.ops.JynxOps;
@@ -55,7 +56,6 @@ import jynx2asm.ops.SelectOp;
 public class String2Insn {
 
     private static final int MAX_METHOD_SIZE = 2*Short.MAX_VALUE + 1;
-    public static final int INDENT_LENGTH = 2;
     
     private final JynxScanner js;
     private final JynxLabelMap labmap;
@@ -75,7 +75,7 @@ public class String2Insn {
         this.labelStack = new LabelStack();
         this.checker = checker;
         this.opmap = opmap;
-        this.indent = INDENT_LENGTH;
+        this.indent = IndentType.BEGIN.after();
     }
 
     public static String2Insn getInstance(JynxScanner js, JynxLabelMap labmap,
@@ -102,15 +102,12 @@ public class String2Insn {
             return;
         }
         if (OPTION(GlobalOption.__WARN_INDENT)) {
-            if (jynxop.reduceIndentBefore()) {
-                indent -= INDENT_LENGTH;
-            }
+            IndentType itype = jynxop.indentType();
+            indent += itype.before();
             if (line.getIndent() != indent) {
                 LOG(M228,line.getIndent(),indent); // "indent %d found but expected %d"
             }
-            if (jynxop.increaseIndentAfter()) {
-                indent += INDENT_LENGTH;
-            }
+            indent += itype.after();
         }
         add(jynxop, instlist);
     }
@@ -146,7 +143,7 @@ public class String2Insn {
             instlist.add(dynamicop.getInstruction(js,line,checker));
         } else if (jop instanceof LineOp) {
             LineOp lineop = (LineOp)jop;
-            lineop.adjustLine(line, macct, labelStack);
+            lineop.adjustLine(line, macct, macrostack.peekLast(),labelStack);
         } else if (jop instanceof MacroOp) {
             MacroOp macroop = (MacroOp) jop;
             macrostack.addLast(macroop);

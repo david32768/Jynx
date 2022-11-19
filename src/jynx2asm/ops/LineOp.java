@@ -10,7 +10,7 @@ public interface LineOp extends JynxOp {
         return 0;
     }
     
-    public void adjustLine(Line line, int macrolevel, LabelStack labelStack);
+    public void adjustLine(Line line, int macrolevel, MacroOp macroop, LabelStack labelStack);
 
     @Override
     public default boolean isExternal() {

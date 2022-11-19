@@ -97,7 +97,7 @@ public enum JavaCallOps implements MacroOp {
         this.feature = feature;
         this.jynxops = new JynxOp[2];
         String classname = klass.getName().replace('.', '/');
-        jynxops[0] = LineOps.insertMethod(classname,methodName,desc);
+        jynxops[0] = AdjustToken.insertMethod(classname,methodName,desc);
         jynxops[1] = JvmOp.asm_invokestatic;
     }
 
