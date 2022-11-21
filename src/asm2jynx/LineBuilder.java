@@ -82,7 +82,7 @@ public class LineBuilder {
 
     private void addSep() {
         if (isEmpty()) {
-            int indent = String2Insn.INDENT_LENGTH * depth;
+            int indent = IndentType.BEGIN.after() * depth;
             for (int i = 0; i < indent;++i) {
                 sb.append(TOKEN_SEPARATOR);
             }
