@@ -2,7 +2,6 @@ package asm2jynx;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -49,16 +48,17 @@ public class Insn2Jynx {
     
     private final JvmVersion jvmVersion;
     private final Object2String o2s;
-    private final LineBuilder lb;
+    private final JynxStringBuilder lb;
 
     private final Map<Label, String> labelMap;
     private Object[] lastLocalStack;
     private JvmOp asmop;
     
-    public Insn2Jynx(LineBuilder lb, JvmVersion jvmVersion, Object2String o2s, Object[] initstack) {
+    public Insn2Jynx(JynxStringBuilder lb, JvmVersion jvmVersion, Object2String o2s, Object[] initstack) {
         this.o2s = o2s;
         this.jvmVersion = jvmVersion;
         this.lb = lb;
+        lb.setLabelNamer(this::getLabelName);
         this.labelMap = new HashMap<>();
         this.lastLocalStack = initstack;
     }
@@ -99,23 +99,15 @@ public class Insn2Jynx {
         return  getLabelName(label);
     }
 
-    public String getLabelName(Label label) {
-        int maxchain = 256;
-        int ct = maxchain;
-        while(ct-- > 0) {
-            String labref = labelMap.get(label);
-            if (labref != null) {
-                return labref;
-            } else if (label.info instanceof LabelNode) {
-                label = ((LabelNode)label.info).getLabel();
-            } else {
-                labref = NameDesc.GENERATED_LABEL_MARKER + "L" + labelMap.size();
-                labelMap.put(label,labref);
-                return labref;
-            }
+    private String getLabelName(Label label) {
+        String labref = labelMap.get(label);
+        if (labref != null) {
+            return labref;
+        } else {
+            labref = NameDesc.GENERATED_LABEL_MARKER + "L" + labelMap.size();
+            labelMap.put(label,labref);
+            return labref;
         }
-        // "length of label node chain exceeds %d"
-        throw new LogIllegalStateException(M27, maxchain);
     }
     
     
@@ -176,37 +168,23 @@ public class Insn2Jynx {
     
     private void arg_label(AbstractInsnNode in) {
         JumpInsnNode jin = (JumpInsnNode)in;
-        String labelname = getLabelName(jin.label);
-        lb.append(asmop).append(labelname).nl();
+        lb.append(asmop).appendLabelNode(jin.label).nl();
     }
 
     
     private void arg_lookupswitch(AbstractInsnNode in) {
         LookupSwitchInsnNode lsin = (LookupSwitchInsnNode)in;
-        Map<Integer,String> labmap = new LinkedHashMap<>();
-        int i = 0;
-        for (LabelNode ln:lsin.labels) {
-            String labelname = getLabelName(ln);
-            String mustbenull = labmap.put(lsin.keys.get(i), labelname);
-            if (mustbenull != null) {
-                // "%s: key %d has duplicate entries %s and %s"
-                LOG(M154,JvmOp.asm_lookupswitch,lsin.keys.get(i),labelname,mustbenull);
-            }
-            ++i;
-        }
-        String deflab = getLabelName(lsin.dflt);
         lb.append(asmop)
-                .append(ReservedWord.res_default)
-                .append(deflab)
+                .append(ReservedWord.res_default,lsin.dflt)
                 .append(ReservedWord.left_array);
-        boolean first = true;
-        for (Map.Entry<Integer,String> me:labmap.entrySet()) {
-            if (first) {
-                first = false;
+        int i = 0;
+        for (LabelNode labelnode:lsin.labels) {
+            if (i == 0) {
             } else {
                 lb.append(ReservedWord.comma);
             }
-            lb.append(me.getKey()).append(ReservedWord.right_arrow).append(me.getValue());
+            lb.append(lsin.keys.get(i)).append(ReservedWord.right_arrow,labelnode);
+            ++i;
         }
         lb.append(ReservedWord.right_array).nl();
     }
@@ -237,27 +215,18 @@ public class Insn2Jynx {
     
     private void arg_tableswitch(AbstractInsnNode in) {
         TableSwitchInsnNode tsin = (TableSwitchInsnNode)in;
-        String[] labels = new String[tsin.labels.size()];
-        int i = 0;
-        for (LabelNode ln:tsin.labels) {
-            String labelname = getLabelName(ln);
-            labels[i] = labelname;
-            ++i;
-        }
-        String deflab = getLabelName(tsin.dflt);
         lb.append(JvmOp.asm_tableswitch)
                 .append(tsin.min)
-                .append(ReservedWord.res_default)
-                .append(deflab)
+                .append(ReservedWord.res_default,tsin.dflt)
                 .append(ReservedWord.left_array);
         boolean first = true;
-        for (String  label:labels) {
+        for (LabelNode labelnode:tsin.labels) {
             if (first) {
                 first = false;
             } else {
                 lb.append(ReservedWord.comma);
             }
-            lb.append(label);
+            lb.appendLabelNode(labelnode);
         }
         lb.append(ReservedWord.right_array).nl();
     }
@@ -293,7 +262,7 @@ public class Insn2Jynx {
         thislocal = Arrays.copyOfRange(thislocal, match, thislocal.length);
         FrameTypeValue[] locals = FrameTypeValue.from(Stream.of(thislocal), this::getLabelName);
         FrameTypeValue[] stacks = FrameTypeValue.from(fn.stack.stream(), this::getLabelName);
-        lb.appendDirective(Directive.dir_stack);
+        lb.append(Directive.dir_stack);
         if (match != 0) {
             lb.append(ReservedWord.res_use);
             if (match != lastLocalStack.length) {
@@ -309,7 +278,7 @@ public class Insn2Jynx {
         for (FrameTypeValue ftv:stacks) {
           lb.append(ReservedWord.res_stack).append(ftv.ft()).appendNonNull(ftv.value()).nl();
         }
-        lb.appendDirective(Directive.end_stack).nl();
+        lb.append(Directive.end_stack).nl();
     }
     
     private void arg_dir(AbstractInsnNode in) {
@@ -319,7 +288,7 @@ public class Insn2Jynx {
             lb.append(labelname + Line.LABEL_INDICATOR).nl();
         } else if (in instanceof LineNumberNode) {
             LineNumberNode lnn = (LineNumberNode) in;
-            lb.appendDirective(Directive.dir_line).append(lnn.line).nl();
+            lb.append(Directive.dir_line).append(lnn.line).nl();
         } else if (in instanceof FrameNode) {
             frame(in);
         } else {

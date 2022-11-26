@@ -13,6 +13,12 @@ import static jynx.Global.LOG;
 import static jynx.Message.M187;
 import static jynx.Message.M194;
 import static jynx.Message.M234;
+import static jynx.Message.M308;
+import static jynx.Message.M309;
+import static jynx.Message.M310;
+
+import jvm.AccessFlag;
+import jynx.Directive;
 
 public class MethodAnnotationLists {
     
@@ -57,9 +63,20 @@ public class MethodAnnotationLists {
         annotations.add(jan);
     }
 
-    public void visitParameter(String pname, int access) {
+    public void visitParameter(int parmnum, String pname, int access) {
+        assert parmnum >= 0;
+        if (parmnum >= parameters.length) {
+            // "parameter number %d is not in range [0,%d]"
+            LOG(M308,parmnum,parameters.length - 1);
+            return;
+        }
+        if (parameters[parmnum] != null) {
+            // "parameter %d has already been defined: %s"
+            LOG(M310,parmnum,parameters[parmnum].name);
+            return;
+        }
         ParameterNode pn = new ParameterNode(pname, access);
-        parameters[parmct] = pn;
+        parameters[parmnum] = pn;
         ++parmct;
     }
     
@@ -115,9 +132,18 @@ public class MethodAnnotationLists {
     }
 
     public void accept(MethodVisitor mv) {
-        for (int i = 0; i < parmct; ++i) {
-            ParameterNode pn = parameters[i];
-            mv.visitParameter(pn.name, pn.access);
+        if (parmct > 0) {
+            int parmnum = 0;
+            for (ParameterNode pn: parameters) {
+                if (pn == null) {
+                    // "missing %s %d : %s parameter added"
+                    LOG(M309,Directive.dir_parameter,parmnum,AccessFlag.acc_synthetic);
+                    mv.visitParameter("" + parmnum, AccessFlag.acc_synthetic.getAccessFlag());
+                } else {
+                    mv.visitParameter(pn.name, pn.access);
+                }
+                ++parmnum;
+            }
         }
         if (defaultAnnotation != null) {
             defaultAnnotation.accept(mv.visitAnnotationDefault());

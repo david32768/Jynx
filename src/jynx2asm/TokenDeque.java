@@ -100,8 +100,7 @@ public interface TokenDeque {
     public default String after(ReservedWord rw)   {
         Token token = nextToken();
         token.mustBe(rw);
-        token = nextToken();
-        return rw.token2string(token);
+        return nextToken().asReservedWordType(rw.rwtype());
     }
 
     public default String optAfter(ReservedWord rw) {
@@ -109,8 +108,7 @@ public interface TokenDeque {
         Token token = peekToken();
         if (token.is(rw)) {
             nextToken();
-            token = nextToken();
-            return rw.token2string(token);
+            return nextToken().asReservedWordType(rw.rwtype());
         }
         return null;
     }

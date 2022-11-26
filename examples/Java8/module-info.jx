@@ -10,9 +10,6 @@
 .requires org.objectweb.asm.tree.analysis 9.2.0
 .requires org.objectweb.asm.util 9.2.0
 .uses jynx2asm/ops/MacroLib
-.provides jynx2asm/ops/MacroLib with .array
-  jynx2asm/ops/StructuredMacroLib
-.end_array
 .packages .array
   asm
   asm/instruction
@@ -22,6 +19,8 @@
   jynx
   jynx2asm
   jynx2asm/ops
+  jynx2asm/handles
+  textifier
 .end_array
 ; jar -uf Jynx.jar module-info.class
 ; REM move Jynx.jar to a module directory or delete module-info.class

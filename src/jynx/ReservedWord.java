@@ -2,19 +2,18 @@ package jynx;
 
 import java.util.Optional;
 import java.util.stream.Stream;
-import jynx2asm.Token;
 
 public enum ReservedWord {
     res_method,
-    res_signature('q',true),
-    res_outer('n',true),
-    res_innername('n',true),
+    res_signature(ReservedWordType.TOKEN,true),
+    res_outer(ReservedWordType.NAME,true),
+    res_innername(ReservedWordType.NAME,true),
 
-    res_is('n'),
+    res_is(ReservedWordType.NAME),
 
-    res_from('l'),
-    res_to('l'),
-    res_using('l'),
+    res_from(ReservedWordType.LABEL),
+    res_to(ReservedWordType.LABEL),
+    res_using(ReservedWordType.LABEL),
 
     res_stack,
     res_locals,
@@ -22,11 +21,10 @@ public enum ReservedWord {
     res_reachable,
     res_label,
     
-    res_default,
-    res_main(true),
+    res_default(ReservedWordType.LABEL),
+    res_main(ReservedWordType.TOKEN,true),
     res_all,    // finally -> .catch all
-    res_typepath(true),
-    res_labels('l'),
+    res_typepath(ReservedWordType.TOKEN,true),
 
     res_on,
     res_off,
@@ -43,7 +41,7 @@ public enum ReservedWord {
     res_invisible,
     dot_annotation(".annotation"),
     dot_annotation_array(".annotation_array"),
-    right_arrow("->",'l'),
+    right_arrow("->",ReservedWordType.LABEL),
     left_brace("{"),
     right_brace("}"),
     left_array("["),
@@ -54,39 +52,33 @@ public enum ReservedWord {
 ;
 
     private final String external_name;
-    private final char type;
+    private final ReservedWordType rwtype;
     private final boolean optional;
 
-    private ReservedWord(String external_name, char type, boolean optional) {
-        this.external_name = external_name == null?name().substring(4):external_name;
-        this.type = type;
-        this.optional = optional;
-    }
-
-    private ReservedWord(String external_name, char type) {
-        this(external_name,type,false);
-    }
-
-    
-    private ReservedWord(char type,boolean optional) {
-        this(null,type,optional);
-    }
-
-    private ReservedWord(char type) {
-        this(null,type,false);
-    }
-
-    private ReservedWord(boolean optional) {
-        this(null,' ',optional);
-    }
-
-    
-    private ReservedWord(String external_name) {
-        this(external_name,' ');
-    }
-
     private ReservedWord() {
-        this(null,' ',false);
+        this(null, ReservedWordType.TOKEN, false);
+    }
+
+    private ReservedWord(String external_name) {
+        this(external_name,ReservedWordType.TOKEN, false);
+    }
+
+    private ReservedWord(ReservedWordType rwtype) {
+        this(null, rwtype, false);
+    }
+
+    private ReservedWord(ReservedWordType rwtype, boolean optional) {
+        this(null, rwtype, optional);
+    }
+
+    private ReservedWord(String external_name, ReservedWordType rwtype) {
+        this(external_name, rwtype, false);
+    }
+
+    private ReservedWord(String external_name, ReservedWordType rwtype, boolean optional) {
+        this.external_name = external_name == null?name().substring(4):external_name;
+        this.rwtype = rwtype;
+        this.optional = optional;
     }
 
     public boolean isOptional() {
@@ -95,6 +87,10 @@ public enum ReservedWord {
 
     public String externalName() {
         return external_name;
+    }
+
+    public ReservedWordType rwtype() {
+        return rwtype;
     }
 
     @Override
@@ -109,29 +105,4 @@ public enum ReservedWord {
                 .findAny();
     }
     
-    public String token2string(Token token) {
-        switch(type) {
-            case 'n':
-                return token.asName();
-            case 'q':
-                return token.asQuoted();
-            case 'l':
-            default:
-                return token.asString();
-        }
-    }
-
-    public String stringify(String string) {
-        switch(type) {
-            case 'n':
-                return StringUtil.escapeName(string);
-            case 'q':
-                return StringUtil.QuoteEscape(string);
-            case 'l':
-                return string;
-            default:
-                return StringUtil.visible(string);
-        }
-    }
-
 }

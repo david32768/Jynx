@@ -217,7 +217,7 @@ public enum Directive implements JvmVersioned {
         return name().startsWith("end");
     }
 
-    private final static EnumSet<Directive> QUOTED_ARGS = EnumSet.of(dir_debug,dir_signature);
+    private final static EnumSet<Directive> QUOTED_ARGS = EnumSet.of(dir_debug);
     
     public boolean hasQuotedArg() {
         return QUOTED_ARGS.contains(this);

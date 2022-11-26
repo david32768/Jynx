@@ -44,6 +44,7 @@ Options are:
 *	--CHECK_REFERENCES check that called methods or used fields exist (on class path)
 *	--VALIDATE_ONLY do not output class file
 *	--JVM_OPS_ONLY only JVM specified ops
+*	--TRACE print (jynxifier) trace
 *	--DEBUG exit with stack trace if error
 
  2jynx {options}  class-name|class_file > .jx_file
@@ -195,6 +196,11 @@ Changes are
 
 ## Additions
 
+*	.parameter
+```
+	; .parameter <parameter-number> <access-flags>? <name>
+	.parameter 0 final p0
+```
 *	.nesthost
 ```
 	; .nesthost <host-class-name>

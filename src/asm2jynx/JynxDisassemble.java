@@ -48,16 +48,16 @@ public class JynxDisassemble {
     
     private final JvmVersion jvmVersion;
     private final Object2String o2s;
-    private final LineBuilder jp;
+    private final JynxStringBuilder jp;
     private final PrintAnnotations annotator;
     private final JynxMethodPrinter jmp;
 
     private JynxDisassemble(ClassNode cn, PrintWriter pw, JvmVersion jvmversion) {
         this.pw = pw;
         this.o2s = new Object2String();
-        this.jp = new LineBuilder(pw);
+        this.jp = new JynxStringBuilder(pw::print);
         if (OPTION(GlobalOption.SKIP_ANNOTATIONS)) {
-            this.annotator = new PrintAnnotations(new LineBuilder(null));
+            this.annotator = new PrintAnnotations(new JynxStringBuilder(str->{}));
         } else {
             this.annotator = new PrintAnnotations(jp);
         }
@@ -118,10 +118,11 @@ public class JynxDisassemble {
         accflags.removeAll(classtype.getMustHave4Class(jvmVersion));
         Directive dir = classtype.getDir();
         jp.append(dir)
-                .append(accflags,cname)
+                .appendFlags(accflags)
+                .appendName(cname)
                 .nl()
                 .incrDepth()
-                .printDirective(dir_super, cn.superName);
+                .appendDir(dir_super, cn.superName);
         annotator.printAnnotations(cn.visibleAnnotations,cn.invisibleAnnotations);
         jp.decrDepth();
     }
@@ -159,12 +160,12 @@ public class JynxDisassemble {
             if (outerClass != null) {
                 cmdesc = HandlePart.ownerName(outerClass,cmdesc);
             }
-            jp.appendDirective(dir_enclosing_method)
+            jp.append(dir_enclosing_method)
                     .append(cmdesc)
                     .nl();
             
         } else if (outerClass != null) {
-            jp.appendDirective(dir_outer_class)
+            jp.append(dir_outer_class)
                     .append(outerClass)
                     .nl();
         }
@@ -177,20 +178,21 @@ public class JynxDisassemble {
         accflags.removeAll(classtype.getMustHave4Class(jvmVersion));
         Directive dir = classtype.getDir();
         jp.append(dir)
-                .append(accflags,cname)
+                .appendFlags(accflags)
+                .appendName(cname)
                 .nl()
                 .incrDepth()
-                .printDirective(dir_super, cn.superName)
-                .printDirective(dir_implements, cn.interfaces)
-                .printDirective(dir_signature,cn.signature)
-                .printDirective(dir_debug, cn.sourceDebug);
+                .appendDir(dir_super, cn.superName)
+                .appendDirs(dir_implements, cn.interfaces)
+                .appendDir(dir_signature,cn.signature)
+                .appendDir(dir_debug, cn.sourceDebug);
         printEnclosing(cn.outerClass,cn.outerMethod,cn.outerMethodDesc);
-        jp.printDirective(dir_nesthost, cn.nestHostClass);
+        jp.appendDir(dir_nesthost, cn.nestHostClass);
         annotator.printAnnotations(cn.visibleAnnotations,cn.invisibleAnnotations);
         annotator.printTypeAnnotations(cn.visibleTypeAnnotations, cn.invisibleTypeAnnotations);
         printInner();
-        jp.printDirective(dir_nestmember,cn.nestMembers)
-                .printDirective(dir_permittedSubclass,cn.permittedSubclasses)
+        jp.appendDirs(dir_nestmember,cn.nestMembers)
+                .appendDirs(dir_permittedSubclass,cn.permittedSubclasses)
                 .decrDepth();
         printComponents();
     }
@@ -209,11 +211,11 @@ public class JynxDisassemble {
                     rcn.invisibleTypeAnnotations
                     )) {
                 jp.incrDepth()
-                        .printDirective(dir_signature, rcn.signature);
+                        .appendDir(dir_signature, rcn.signature);
                     annotator.printAnnotations(rcn.visibleAnnotations,rcn.invisibleAnnotations);
                     annotator.printTypeAnnotations(rcn.visibleTypeAnnotations, rcn.invisibleTypeAnnotations);
                 jp.decrDepth()
-                        .appendDirective(end_component).nl();
+                        .append(end_component).nl();
             }
         }
     }
@@ -224,8 +226,9 @@ public class JynxDisassemble {
             ClassType classtype = ClassType.from(inneraccflags);
             inneraccflags.removeAll(classtype.getMustHave4Inner(jvmVersion));
             Directive inner = classtype.getInnerDir();
-            jp.appendDirective(inner)
-                    .append(inneraccflags, icn.name)
+            jp.append(inner)
+                    .appendFlags(inneraccflags)
+                    .appendName(icn.name)
                     .append(res_outer, icn.outerName)
                     .append(res_innername, icn.innerName)
                     .nl();
@@ -262,12 +265,13 @@ public class JynxDisassemble {
         
         ModuleNode module = cn.module;
         accflags = AccessFlag.getEnumSet(module.access, MODULE,jvmVersion);
-        jp.appendDirective(dir_module)
-                .append(accflags,module.name)
+        jp.append(dir_module)
+                .appendFlags(accflags)
+                .appendName(module.name)
                 .appendNonNull(module.version)
                 .nl()
                 .incrDepth()
-                .printDirective(dir_debug, cn.sourceDebug);
+                .appendDir(dir_debug, cn.sourceDebug);
         annotator.printAnnotations(cn.visibleAnnotations, cn.invisibleAnnotations);
         printInner();
         jp.decrDepth();
@@ -285,25 +289,27 @@ public class JynxDisassemble {
         boolean endrequired = annotated || fn.signature != null;
 
         EnumSet<AccessFlag> accflags = AccessFlag.getEnumSet(fn.access, FIELD,jvmVersion);
-        jp.appendDirective(dir_field)
-                .append(accflags, fn.name)
+        jp.append(dir_field)
+                .appendFlags(accflags)
+                .appendName(fn.name)
                 .appendNonNull(fn.desc);
         if (fn.value != null) {
             jvmVersion.checkSupports(ConstantValue);
             ConstType ct = ConstType.getFromDesc(fn.desc,FIELD);
             jp.append(equals_sign, o2s.stringFrom(ct,fn.value));
         }
-        String line = jp.nlstr();
+        String line = jp.line();
+        jp.nl();
         LOGGER().setLine(line);
 
         if (endrequired) {
             LOGGER().pushContext();
             jp.incrDepth()
-                    .printDirective(dir_signature,fn.signature);
+                    .appendDir(dir_signature,fn.signature);
                 annotator.printAnnotations(fn.visibleAnnotations, fn.invisibleAnnotations);
                 annotator.printTypeAnnotations(fn.visibleTypeAnnotations, fn.invisibleTypeAnnotations);
             jp.decrDepth();
-            jp.appendDirective(end_field).nl();
+            jp.append(end_field).nl();
             LOGGER().popContext();
         }
     }
@@ -316,23 +322,25 @@ public class JynxDisassemble {
             jp.append(mod).nl();
         }
         jp.decrDepth();
-        jp.appendDirective(end_array).nl();
+        jp.append(end_array).nl();
     }
     
     private void printModuleInfo(ModuleNode module) {
-        jp.printDirective(dir_main,module.mainClass);
+        jp.appendDir(dir_main,module.mainClass);
         EnumSet<AccessFlag> accflags;
         for (ModuleRequireNode mrn: nonNullList(module.requires)) {
             accflags = AccessFlag.getEnumSet(mrn.access, REQUIRE,jvmVersion);
-            jp.appendDirective(dir_requires)
-                    .append(accflags, mrn.module)
+            jp.append(dir_requires)
+                    .appendFlags(accflags)
+                    .appendName(mrn.module)
                     .appendNonNull(mrn.version)
                     .nl();
         }
         for (ModuleExportNode men: nonNullList(module.exports)) {
             accflags = AccessFlag.getEnumSet(men.access, MODULE,jvmVersion);
-            jp.appendDirective(dir_exports)
-                    .append(accflags, men.packaze);
+            jp.append(dir_exports)
+                    .appendFlags(accflags)
+                    .appendName(men.packaze);
             if(isAbsent(men.modules)) {
                 jp.nl();
             } else {
@@ -342,8 +350,9 @@ public class JynxDisassemble {
         }
         for (ModuleOpenNode mon: nonNullList(module.opens)) {
             accflags = AccessFlag.getEnumSet(mon.access, MODULE,jvmVersion);
-            jp.appendDirective(dir_opens)
-                    .append(accflags, mon.packaze);
+            jp.append(dir_opens)
+                    .appendFlags(accflags)
+                    .appendName(mon.packaze);
             if(isAbsent(mon.modules)) {
                 jp.nl();
             } else {
@@ -352,17 +361,17 @@ public class JynxDisassemble {
             }
         }
         for (String use:nonNullList(module.uses)) {
-            jp.appendDirective(dir_uses).append(use).nl();
+            jp.append(dir_uses).append(use).nl();
         }
         for (ModuleProvideNode mpn: nonNullList(module.provides)) {
-            jp.appendDirective(dir_provides)
+            jp.append(dir_provides)
                     .append(mpn.service)
                     .append(res_with);
             printArray(mpn.providers);
         }
 
         if (isPresent(module.packages)) {
-            jp.appendDirective(dir_packages);
+            jp.append(dir_packages);
             printArray(module.packages);
         }
     }
@@ -370,9 +379,10 @@ public class JynxDisassemble {
     private void printVersionSource() {
         jp.appendComment("options = " + OPTIONS().toString())
                 .nl()
-                .appendComment(Main.MainOption.DISASSEMBLY.version())
+                .comment()
+                .append(Main.MainOption.DISASSEMBLY.version())
                 .nl()
-                .appendDirective(dir_version)
+                .append(dir_version)
                 .append(jvmVersion.asJava());
         OPTIONS().stream()
                 .filter(GlobalOption::isExternal)
@@ -380,7 +390,7 @@ public class JynxDisassemble {
                 .filter(opt-> opt != GlobalOption.SYSIN)
                 .forEach(jp::append);
         jp.nl()
-                .printDirective(dir_source, cn.sourceFile);
+                .appendDir(dir_source, cn.sourceFile);
     }
     
     public static boolean a2jpw(PrintWriter pw, String fname) {

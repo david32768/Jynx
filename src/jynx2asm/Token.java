@@ -17,6 +17,7 @@ import jynx.Directive;
 import jynx.LogIllegalArgumentException;
 import jynx.LogIllegalStateException;
 import jynx.ReservedWord;
+import jynx.ReservedWordType;
 import jynx.StringUtil;
 
 public class Token {
@@ -72,6 +73,20 @@ public class Token {
     public String asString() {
         checkNotEnd();
         return token;
+    }
+
+    public String asReservedWordType(ReservedWordType rwtype) {
+        switch(rwtype) {
+            case NAME:
+                return asName();
+            case QUOTED:
+                return asQuoted();
+            case LABEL:
+            case TOKEN:
+                return asString();
+            default:
+                throw new EnumConstantNotPresentException(rwtype.getClass(), rwtype.name());
+        }
     }
 
     public String asLabel() {

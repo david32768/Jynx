@@ -30,7 +30,6 @@ public class Line implements TokenDeque {
     private final LineType lineType;
 
     private boolean start;
-    private String comment;
     
     private Line(String line, int linect,  int indent, Deque<Token> tokens, LineType linetype) {
         this.line = line;
@@ -38,7 +37,6 @@ public class Line implements TokenDeque {
         this.indent = indent;
         this.tokens = tokens;
         this.lineType = linetype;
-        this.comment = "";
         this.start = true;
     }
 
@@ -65,10 +63,6 @@ public class Line implements TokenDeque {
         return lineType == LineType.LABEL;
     }
     
-    public void addComment(String comment) {
-        this.comment += " ; " + comment;
-    }
-
     @Override
     public Token firstToken() {
         if (!start) {
@@ -115,7 +109,7 @@ public class Line implements TokenDeque {
 
     @Override
     public String toString() {
-        return String.format("%s ; %s = %d%s",line,ReservedWord.res_lineno,linect,comment);
+        return String.format("%s ; %s = %d",line,ReservedWord.res_lineno,linect);
     }
 
 }

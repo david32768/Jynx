@@ -85,7 +85,7 @@ public class Global {
     }
     
     public static void setJvmVersion(JvmVersion jvmversion) {
-        assert global.jvmVersion == null;
+        assert global.jvmVersion == null || global.jvmVersion == jvmversion;
         global.jvmVersion = jvmversion;
     }
     

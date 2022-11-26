@@ -1,14 +1,12 @@
 package asm2jynx;
 
 import java.util.ArrayList;
-import java.util.function.Function;
 import java.util.Iterator;
 import java.util.List;
 
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.LabelNode;
 import org.objectweb.asm.tree.LocalVariableAnnotationNode;
-import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.TypeAnnotationNode;
 import org.objectweb.asm.TypePath;
 
@@ -27,10 +25,10 @@ import jynx.ReservedWord;
 
 public class PrintAnnotations {
 
-    private final LineBuilder lb;
+    private final JynxStringBuilder lb;
     private final Object2String o2s;
 
-    public PrintAnnotations(LineBuilder lb) {
+    public PrintAnnotations(JynxStringBuilder lb) {
         this.lb = lb;
         this.o2s = new Object2String();
     }
@@ -42,7 +40,7 @@ public class PrintAnnotations {
         String typepath = tp == null?null:tp.toString();
         String trstr = tr.getTypeRefString(typeref);
         ReservedWord visibility = visible?ReservedWord.res_visible:ReservedWord.res_invisible;
-        lb.appendDirective(dir)
+        lb.append(dir)
                 .append(visibility);
         if (!trstr.isEmpty()) {
             lb.append(trstr.split(" "));
@@ -61,25 +59,25 @@ public class PrintAnnotations {
         if (obj == null) {
             return;
         }
-        lb.appendDirective(Directive.dir_default_annotation)
+        lb.append(Directive.dir_default_annotation)
                 .nl()
                 .incrDepth();
             int retind = mdesc.lastIndexOf(')');
             String desc = mdesc.substring(retind + 1);
             printAnnotationValue(null,obj,desc);
         lb.decrDepth()
-                .appendDirective(Directive.end_annotation).nl();
+                .append(Directive.end_annotation).nl();
     }
 
     private void printAnnotations(boolean visible, List<AnnotationNode> anlist) {
         ReservedWord visibility = visible?ReservedWord.res_visible:ReservedWord.res_invisible;
         for (AnnotationNode an : nonNullList(anlist)) {
-            lb.appendDirective(dir_annotation)
+            lb.append(dir_annotation)
                     .append(visibility)
                     .append(an.desc)
                     .nl();
             printAnnotation(an);
-            lb.appendDirective(Directive.end_annotation).nl();
+            lb.append(Directive.end_annotation).nl();
         }
     }
 
@@ -91,7 +89,7 @@ public class PrintAnnotations {
         }
         boolean notdefault = count < max;
         if (notdefault) {
-            lb.appendDirective(dirx).append(count).nl();
+            lb.append(dirx).append(count).nl();
         }
     }
 
@@ -120,13 +118,13 @@ public class PrintAnnotations {
         ReservedWord visibility = visible?ReservedWord.res_visible:ReservedWord.res_invisible;
         for (List<AnnotationNode> anlist:anlistarr) {
             for (AnnotationNode an : nonNullList(anlist)) {
-                lb.appendDirective(dir_parameter_annotation)
+                lb.append(dir_parameter_annotation)
                         .append(visibility)
                         .append(index)
                         .append(an.desc)
                         .nl();
                 printAnnotation(an);
-                lb.appendDirective(Directive.end_annotation).nl();
+                lb.append(Directive.end_annotation).nl();
             }
             ++index;
         }
@@ -263,16 +261,16 @@ public class PrintAnnotations {
             lb.append(ReservedWord.dot_annotation_array).nl();
             lb.incrDepth();
             for (Object anobj : values) {
-                lb.appendDirective(Directive.dir_annotation).nl();
+                lb.append(Directive.dir_annotation).nl();
                 printAnnotation((AnnotationNode) anobj);
-                lb.appendDirective(Directive.end_annotation).nl();
+                lb.append(Directive.end_annotation).nl();
             }
             lb.decrDepth()
-                    .appendDirective(end_annotation_array).nl();
+                    .append(end_annotation_array).nl();
         } else {
             lb.append(ReservedWord.dot_annotation).nl();
             printAnnotation((AnnotationNode) values.get(0));
-            lb.appendDirective(Directive.end_annotation).nl();
+            lb.append(Directive.end_annotation).nl();
         }
     }
     
@@ -285,7 +283,7 @@ public class PrintAnnotations {
         for (TypeAnnotationNode tan : nonNullList(anlist)) {
             printTypeAnnotation(visible,tan.typeRef, tan.typePath, tan.desc);
             printAnnotation(tan);
-            lb.appendDirective(Directive.end_annotation).nl();
+            lb.append(Directive.end_annotation).nl();
         }
     }
 
@@ -293,7 +291,7 @@ public class PrintAnnotations {
         for (TypeAnnotationNode tan : nonNullList(anlist)) {
             printTypeAnnotation(visibility,tan.typeRef, tan.typePath, tan.desc);
             printAnnotation(tan);
-            lb.appendDirective(Directive.end_annotation).nl();
+            lb.append(Directive.end_annotation).nl();
         }
     }
 
@@ -302,8 +300,7 @@ public class PrintAnnotations {
         printInsnTypeAnnotations(false,invisible);
     }   
     
-    private void printLocalVarAnnotations(boolean visible, List<LocalVariableAnnotationNode> anlist,
-                Function<LabelNode,String> lab2strfn,List<LocalVariableNode> lvnlist) {
+    private void printLocalVarAnnotations(boolean visible, List<LocalVariableAnnotationNode> anlist) {
         for (LocalVariableAnnotationNode lvan:nonNullList(anlist)) {
             int typeref = lvan.typeRef;
             TypeRef tr = TypeRef.getInstance(typeref);
@@ -312,7 +309,7 @@ public class PrintAnnotations {
             String typepath = lvan.typePath == null?null:lvan.typePath.toString();
             String trstr = tr.getTypeRefString(typeref);
             ReservedWord visibility = visible?ReservedWord.res_visible:ReservedWord.res_invisible;
-            lb.appendDirective(dir)
+            lb.append(dir)
                     .append(visibility);
             if (!trstr.isEmpty()) {
                 lb.append(trstr.split(" "));
@@ -330,27 +327,24 @@ public class PrintAnnotations {
                 for (LabelNode start:lvan.start) {
                     int index = indexiter.next();
                     LabelNode end = enditer.next();
-                    String startname = lab2strfn.apply(start);
-                    String endname = lab2strfn.apply(end);
                     lb.append(index)
-                            .append(startname)
-                            .append(endname)
+                            .appendLabelNode(start)
+                            .appendLabelNode(end)
                             .nl();
                 }
                 lb.decrDepth();
-            lb.appendDirective(Directive.end_array)
+            lb.append(Directive.end_array)
                     .nl()
                     .decrDepth();
             printAnnotation(lvan);
-            lb.appendDirective(Directive.end_annotation).nl();
+            lb.append(Directive.end_annotation).nl();
         }
     }
 
     public final void printLocalVarAnnotations(List<LocalVariableAnnotationNode> visible,
-            List<LocalVariableAnnotationNode> invisible,
-            Function<LabelNode,String> lab2strfn,List<LocalVariableNode> lvnlist) {
-        printLocalVarAnnotations(true,visible, lab2strfn, lvnlist);
-        printLocalVarAnnotations(false, invisible, lab2strfn, lvnlist);
+            List<LocalVariableAnnotationNode> invisible) {
+        printLocalVarAnnotations(true,visible);
+        printLocalVarAnnotations(false, invisible);
     }
     
 }

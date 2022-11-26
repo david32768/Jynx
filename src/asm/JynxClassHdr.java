@@ -1,5 +1,6 @@
 package asm;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -23,10 +24,13 @@ import org.objectweb.asm.tree.InnerClassNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.TypePath;
 import org.objectweb.asm.util.CheckClassAdapter;
+import org.objectweb.asm.util.Printer;
+import org.objectweb.asm.util.TraceClassVisitor;
 
 import static jvm.AccessFlag.acc_final;
 import static jvm.AttributeName.StackMapTable;
 import static jynx.Global.*;
+import static jynx.GlobalOption.TRACE;
 import static jynx.Message.*;
 import static jynx.ReservedWord.*;
 import static jynx2asm.NameDesc.*;
@@ -50,6 +54,7 @@ import jynx2asm.NameDesc;
 import jynx2asm.ObjectLine;
 import jynx2asm.TokenArray;
 import jynx2asm.TypeHints;
+import textifier.JynxText;
 
 public class JynxClassHdr implements ContextDependent, HasAccessFlags {
 
@@ -64,7 +69,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     private final String cname;
 
     private String source;
-    private String defaultSource;
+    private final String defaultSource;
     private String debugStr;
  
     private final ClassChecker checker;
@@ -93,7 +98,14 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
             String cname, Access accessname, ClassType classtype) {
         this.hints = new TypeHints();
         this.cw = new JynxClassWriter(cwflags,hints);
-        this.cv = new CheckClassAdapter(cw, false);
+        if (OPTION(TRACE)) {
+            Printer printer = new JynxText();
+            PrintWriter pw = new PrintWriter(System.out);
+            TraceClassVisitor tcv = new TraceClassVisitor(cw, printer, pw);
+            this.cv = new CheckClassAdapter(tcv, false);
+        } else {
+            this.cv = new CheckClassAdapter(cw, false);
+        }
         this.jvmVersion = version;
         this.unique_directives = new HashMap<>();
         if (sourcex == null) {

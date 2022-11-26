@@ -28,12 +28,12 @@ public class JynxMethodPrinter {
 
     protected final JvmVersion jvmVersion;
     protected final Object2String o2s;
-    protected final LineBuilder jp;
+    protected final JynxStringBuilder jp;
     protected final PrintAnnotations annotator;
     protected final String cname;
 
 
-    private JynxMethodPrinter(String cname, JvmVersion jvmversion, LineBuilder jp,PrintAnnotations jasAnnotator) {
+    private JynxMethodPrinter(String cname, JvmVersion jvmversion, JynxStringBuilder jp,PrintAnnotations jasAnnotator) {
         this.cname = cname;
         this.jp = jp;
         this.o2s = new Object2String();
@@ -41,7 +41,7 @@ public class JynxMethodPrinter {
         this.annotator = jasAnnotator;
     }
 
-    public static JynxMethodPrinter getInstance(String cname, JvmVersion jvmversion, LineBuilder jp,
+    public static JynxMethodPrinter getInstance(String cname, JvmVersion jvmversion, JynxStringBuilder jp,
             PrintAnnotations jasAnnotator) {
         return new JynxMethodPrinter(cname,jvmversion,jp,jasAnnotator);
     }
@@ -57,39 +57,32 @@ public class JynxMethodPrinter {
 
     private void printCatchBlocks(MethodNode mn, Insn2Jynx i2s) {
         for (TryCatchBlockNode tcbn : nonNullList(mn.tryCatchBlocks)) {
-            String fromname = i2s.getLabelName(tcbn.start);
-            String toname = i2s.getLabelName(tcbn.end);
-            String usingname = i2s.getLabelName(tcbn.handler);
             String exception = tcbn.type == null?res_all.toString():tcbn.type;
             jp.append(dir_catch)
                     .append(exception)
-                    .append(res_from, fromname)
-                    .append(res_to, toname)
-                    .append(res_using, usingname)
+                    .append(res_from, tcbn.start)
+                    .append(res_to, tcbn.end)
+                    .append(res_using, tcbn.handler)
                     .nl();
             if (isAnyPresent(tcbn.visibleTypeAnnotations,tcbn.invisibleTypeAnnotations)) {
-                jp.incrDepth();
                 annotator.printTypeAnnotations(tcbn.visibleTypeAnnotations, tcbn.invisibleTypeAnnotations);
             }
         }
     }
 
-    private void printLocalVariables(MethodNode mn, Insn2Jynx i2s) {
+    private void printLocalVariables(MethodNode mn) {
         List<LocalVariableNode> lvnlist = mn.localVariables == null?new ArrayList<>():mn.localVariables;
         for (LocalVariableNode lvn : lvnlist) {
-            String fromname = i2s.getLabelName(lvn.start);
-            String toname = i2s.getLabelName(lvn.end);
             jp.append(dir_var)
                     .append(lvn.index)
                     .append(res_is,lvn.name)
                     .append(lvn.desc)
                     .append(res_signature, lvn.signature)
-                    .append(res_from, fromname)
-                    .append(res_to,toname)
+                    .append(res_from, lvn.start)
+                    .append(res_to,lvn.end)
                     .nl();
         }
-        annotator.printLocalVarAnnotations(mn.visibleLocalVariableAnnotations, mn.invisibleLocalVariableAnnotations,
-                i2s::getLabelName,lvnlist);
+        annotator.printLocalVarAnnotations(mn.visibleLocalVariableAnnotations, mn.invisibleLocalVariableAnnotations);
     }
     
     private void printCode(MethodNode mn, String classname) {
@@ -103,7 +96,7 @@ public class JynxMethodPrinter {
         Insn2Jynx i2s = new Insn2Jynx(jp,jvmVersion,o2s,initstack);
         printCatchBlocks(mn, i2s);
         printInstructions(mn.instructions, i2s);
-        printLocalVariables(mn, i2s);
+        printLocalVariables(mn);
         jp.append(dir_limit)
             .append(res_locals, mn.maxLocals)
             .nl()
@@ -112,23 +105,29 @@ public class JynxMethodPrinter {
             .nl();
     }
     
-    public void printMethod(MethodNode mn) {
+    public void printMethod(final MethodNode mn) {
         jp.blankline();
         LOGGER().setLine("method " + mn.name);
         EnumSet<AccessFlag> accflags = AccessFlag.getEnumSet(mn.access,METHOD,jvmVersion);
-        String line = jp.appendDirective(dir_method)
-                .append(accflags, mn.name + mn.desc)
-                .nlstr();
+        jp.append(dir_method)
+                .appendFlags(accflags)
+                .appendName(mn.name + mn.desc);
+        String line = jp.line();
+        jp.nl();
         LOGGER().setLine(line);
         LOGGER().pushContext();
         jp.incrDepth()
-                .printDirective(dir_signature,mn.signature)
-                .printDirective(dir_throws, mn.exceptions);
+                .appendDir(dir_signature,mn.signature)
+                .appendDirs(dir_throws, mn.exceptions);
+        int parmnum = 0;
         for (ParameterNode pn : nonNullList(mn.parameters)) {
             EnumSet<AccessFlag> pnaccflags = AccessFlag.getEnumSet(pn.access, PARAMETER,jvmVersion);
-            jp.appendDirective(dir_parameter)
-                    .append(pnaccflags,pn.name)
+            jp.append(dir_parameter)
+                    .append(parmnum)
+                    .appendFlags(pnaccflags)
+                    .appendName(pn.name)
                     .nl();
+            ++parmnum;
         }
         annotator.printDefaultAnnotation(mn.annotationDefault,mn.desc);
         annotator.printAnnotations(mn.visibleAnnotations, mn.invisibleAnnotations);
@@ -143,7 +142,7 @@ public class JynxMethodPrinter {
             jp.decrDepth();
         }
         jp.decrDepth();
-        jp.appendDirective(end_method).nl();
+        jp.append(end_method).nl();
         LOGGER().popContext();
     }
 

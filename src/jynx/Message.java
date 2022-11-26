@@ -27,11 +27,11 @@ public enum Message {
     M20("invalid major version(%d)"),
     M21("invalid minor version(%d) - spec table 4.1A"),
     M22(WARNING,"value required (%d) for %s is more than limit value (%d)"),    
-
+    M23(BLANK,"print (jynxifier) trace"),
     M24(INFO,"ambiguous option %s: %s assumed"),
     M25(BLANK,"treat warnings as errors"),
     M26(BLANK,"invalid main-option name - %s"),
-    M27("length of label node chain exceeds %d"),
+
     M28("no args have been specified for main option %s"),
     M29(BLANK,"do not produce debug info"),
     M30(BLANK,"do not produce stack map"),
@@ -156,7 +156,7 @@ public enum Message {
     M151(ENDINFO,"Class.forName(%s) has been used"),
     M152("zero length name"),
     M153(WARNING,"as class has a %s method it should have a %s method"),
-    M154("%s: key %d has duplicate entries %s and %s"),
+
     M155("code is not allowed as method is abstract or native"),
     M156("instance variables or methods with no %s method"),
 
@@ -306,7 +306,10 @@ public enum Message {
     M305(ENDINFO,"it is preferred that name is separated from owner by '%c' not '%c'"),
     M306("nested class have different owners; class = %s token = %s"),
     M307(WARNING,"parameters [%s ] are overwritten"),
-
+    M308("parameter number %d is not in range [0,%d]"),
+    M309("missing %s %d : %s parameter added"),
+    M310("parameter %d has already been defined: %s"),
+    //
     M313("final class cannot have %s"),
     M314(SEVERE,"only one parameter translater allowed"),
     M315(SEVERE,"only one owner translater allowed"),

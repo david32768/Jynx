@@ -26,6 +26,7 @@ public enum GlobalOption {
     CHECK_REFERENCES(M8,ASSEMBLY), // "check that called methods or used fields exist (on class path)"
     VALIDATE_ONLY(M51,ASSEMBLY), // "do not output class file"
     JVM_OPS_ONLY(M5,ASSEMBLY), // "only JVM specified ops"
+    TRACE(M23,ASSEMBLY), // "print (jynxifier) trace"
     
     SKIP_CODE(M39,DISASSEMBLY), // "do not produce code"
     SKIP_DEBUG(M29,DISASSEMBLY), // "do not produce debug info"
