@@ -8,10 +8,12 @@ import java.util.List;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.tree.LabelNode;
 
+import static jynx.Directive.end_array;
 import static jynx.Global.LOG;
 import static jynx.Message.M142;
 import static jynx.Message.M81;
 import static jynx.Message.M910;
+import static jynx.ReservedWord.dot_array;
 
 import jvm.AccessFlag;
 import jynx.Directive;
@@ -152,22 +154,16 @@ public class JynxStringBuilder {
                 throw new EnumConstantNotPresentException(rw.rwtype().getClass(), rw.rwtype().name());
         }
     }
-
+    
     public JynxStringBuilder append(ReservedWord res, Object value) {
         if (value != null) {
-            append(res)
-                    .append(stringify(res,value));
+            append(res).append(stringify(res,value));
         }
         return this;
     }
 
     public JynxStringBuilder appendName(String name) {
-        if (name.toLowerCase().equals(name)) {
-            append('\'' + name + '\'');
-        } else {
-            append(name);
-        }
-        return this;
+        return append(StringUtil.escapeName(name));
     }
 
     public JynxStringBuilder appendDir(Directive dir, Object[] values) {
@@ -240,6 +236,23 @@ public class JynxStringBuilder {
         sb.append('\n');
         consumer.accept(sb.toString());
         sb.setLength(0);
+        return this;
+    }
+    
+    public JynxStringBuilder  appendDotArray(List<String> strings) {
+        return appendDotArray(strings.toArray(new String[0]));
+    }
+    
+    public JynxStringBuilder  appendDotArray(String[] strings) {
+        append(dot_array)
+                .nl()
+                .incrDepth();
+        for (String mod:strings) {
+            append(mod).nl();
+        }
+        decrDepth()
+                .append(end_array)
+                .nl();
         return this;
     }
 }

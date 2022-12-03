@@ -261,9 +261,9 @@ Changes are
 *	.module ; see examples/Java11/module-info.java
 ```
 	; grammar
-	; .class acc_module module-info ; assumed
-	; .module <access-spec> <module-name> [<version>]?
+	; .module
 	; [<class-hdr-directives>]* ; for those which are valid for module (end of jvms 4.1)
+	; .module_info <access-spec> <module-name> [<version>]?
 	; [<main>|<requires>|<exports>|<open>|<uses>|<supports>|<packages>]*
 	; ; end of file
 

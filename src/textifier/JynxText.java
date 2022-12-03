@@ -1,8 +1,9 @@
 package textifier;
 
-import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 
 import org.objectweb.asm.Attribute;
 import org.objectweb.asm.ClassReader;
@@ -16,6 +17,7 @@ import static jvm.AttributeName.ConstantValue;
 import static jvm.Context.CLASS;
 import static jvm.Context.FIELD;
 import static jvm.Context.INNER_CLASS;
+
 import static jynx.Directive.dir_enclosing_method;
 import static jynx.Directive.dir_field;
 import static jynx.Directive.dir_implements;
@@ -24,6 +26,7 @@ import static jynx.Directive.dir_signature;
 import static jynx.Directive.dir_super;
 import static jynx.Directive.dir_version;
 import static jynx.Directive.end_field;
+
 import static jynx.Global.OPTION;
 import static jynx.ReservedWord.equals_sign;
 import static jynx.ReservedWord.res_innername;
@@ -33,6 +36,7 @@ import asm.JynxClassReader;
 import asm2jynx.JynxStringBuilder;
 import asm2jynx.Object2String;
 import jvm.AccessFlag;
+import jvm.Constants;
 import jvm.ConstType;
 import jvm.JvmVersion;
 import jynx.ClassType;
@@ -45,6 +49,7 @@ public class JynxText extends Textifier {
 
     private final Object2String o2s;
     private final JynxStringBuilder jsb;
+    private final List<String> packages;
 
     private JvmVersion jvmVersion;
     private boolean endRequired;
@@ -53,12 +58,20 @@ public class JynxText extends Textifier {
         this(JvmVersion.DEFAULT_VERSION, false);
     }
 
-    public JynxText(JvmVersion jvmVersion, boolean endRequired) {
+    protected JynxText(JvmVersion jvmVersion, boolean endRequired) {
         super(Opcodes.ASM9);
         this.o2s = new Object2String();
         this.jsb = new JynxStringBuilder(text::add);
         this.jvmVersion = jvmVersion;
         this.endRequired = endRequired;
+        this.packages = new ArrayList<>();
+    }
+
+    public static void jynxify(final byte[] ba, final PrintWriter pw) {
+        ClassReader cr = JynxClassReader.getClassReader(ba);
+        Printer printer = new JynxText();
+        TraceClassVisitor tcv = new TraceClassVisitor(null, printer, pw);
+        cr.accept(tcv, 0);
     }
 
     // textifier for method
@@ -96,10 +109,14 @@ public class JynxText extends Textifier {
                 .append(jvmversion.asJava())
                 .nl()
                 .appendDir(Directive.dir_macrolib, "ASMTextOps")
-                .append(dir)
-                .appendFlags(accflags)
-                .append(name)
-                .nl()
+                .append(dir);
+        if (classtype == ClassType.MODULE_CLASS) {
+            assert Constants.MODULE_CLASS_NAME.equalString(name);
+        } else {
+            jsb.appendFlags(accflags)
+                .append(name);
+        }
+        jsb.nl()
                 .incrDepth()
                 .appendDir(dir_super, superName)
                 .appendDir(dir_implements, interfaces)
@@ -310,6 +327,13 @@ public class JynxText extends Textifier {
         text.add(".comment\n");
         super.visitAttribute(attribute);
         text.add(".end_comment\n");
+    }
+
+    @Override
+    public Printer visitModule(String name, int access, String version) {
+        JynxModuleText jmt = new JynxModuleText(jvmVersion, jsb);
+        jmt.visitModule(name, access, version);
+        return jmt;
     }
 
 }

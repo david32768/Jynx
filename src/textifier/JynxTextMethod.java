@@ -1,12 +1,10 @@
 package textifier;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 
 import org.objectweb.asm.ConstantDynamic;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Label;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.LabelNode;
 import org.objectweb.asm.TypePath;
 import org.objectweb.asm.util.Printer;
@@ -31,8 +29,8 @@ import static jynx.ReservedWord.res_to;
 import static jynx.ReservedWord.res_typepath;
 import static jynx.ReservedWord.res_using;
 import static jynx.ReservedWord.right_arrow;
+import static jynx2asm.ops.JvmOp.asm_ldc;
 
-import asm2jynx.FrameTypeValue;
 import asm2jynx.JynxStringBuilder;
 import asm2jynx.Object2String;
 import jvm.AccessFlag;
@@ -195,7 +193,7 @@ public class JynxTextMethod extends JynxText {
     public void visitLdcInsn(final Object value) {
         String cststr = o2s.asm2String(value);
         jsb.start(2)
-                .append("LDC")
+                .append(asm_ldc)
                 .append(cststr)
                 .nl();
     }
@@ -248,32 +246,6 @@ public class JynxTextMethod extends JynxText {
         }
         jsb.decrDepth()
                 .append(Directive.end_array)
-                .nl();
-    }
-
-    @Override
-    public void visitFrame(int type, int numLocal, Object[] local, int numStack, Object[] stack) {
-        assert type == Opcodes.F_NEW;
-        FrameTypeValue[] locals = FrameTypeValue.from(Arrays.stream(local, 0, numLocal), this::getLabelName);
-        FrameTypeValue[] stacks = FrameTypeValue.from(Arrays.stream(stack, 0, numStack), this::getLabelName);
-        jsb.start(2)
-                .append(Directive.dir_stack)
-                .nl()
-                .incrDepth();
-        for (FrameTypeValue ftv : locals) {
-            jsb.append(ReservedWord.res_locals)
-                    .append(ftv.ft())
-                    .appendNonNull(ftv.value())
-                    .nl();
-        }
-        for (FrameTypeValue ftv : stacks) {
-            jsb.append(ReservedWord.res_stack)
-                    .append(ftv.ft())
-                    .appendNonNull(ftv.value())
-                    .nl();
-        }
-        jsb.decrDepth()
-                .append(Directive.end_stack)
                 .nl();
     }
 

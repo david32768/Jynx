@@ -19,7 +19,7 @@ public enum Directive implements JvmVersioned {
     //  dir_x(after_state,before_states[,feature])
 
     dir_version(START_BLOCK, EnumSet.of(START)),
-    dir_source(COMMON, EnumSet.of(START_BLOCK, END_START,CLASSHDR), SourceFile),
+    dir_source(COMMON, EnumSet.of(START_BLOCK, END_START, CLASSHDR, PACKAGEHDR, MODULEHDR), SourceFile),
     dir_macrolib(START_BLOCK, EnumSet.of(START_BLOCK, END_START)),
     
     dir_class(CLASSHDR, EnumSet.of(START_BLOCK, END_START)),
@@ -135,13 +135,14 @@ public enum Directive implements JvmVersioned {
 
     end_array(READ_END, EnumSet.noneOf(State.class)),
 
-    dir_main(MODULE, EnumSet.of(MODULE,END_MODULEHDR), ModulePackages),
-    dir_packages(MODULE, EnumSet.of(MODULE,END_MODULEHDR), ModulePackages),
-    dir_uses(MODULE, EnumSet.of(MODULE,END_MODULEHDR), Module),
-    dir_exports(MODULE, EnumSet.of(MODULE,END_MODULEHDR), Module),
-    dir_opens(MODULE, EnumSet.of(MODULE,END_MODULEHDR), Module),
-    dir_requires(MODULE, EnumSet.of(MODULE,END_MODULEHDR), Module),
-    dir_provides(MODULE, EnumSet.of(MODULE,END_MODULEHDR), Module),
+    dir_module_info(MODULE, EnumSet.of(MODULE,END_MODULEHDR)),
+    dir_main(MODULE, EnumSet.of(MODULE), ModulePackages),
+    dir_packages(MODULE, EnumSet.of(MODULE), ModulePackages),
+    dir_uses(MODULE, EnumSet.of(MODULE), Module),
+    dir_exports(MODULE, EnumSet.of(MODULE), Module),
+    dir_opens(MODULE, EnumSet.of(MODULE), Module),
+    dir_requires(MODULE, EnumSet.of(MODULE), Module),
+    dir_provides(MODULE, EnumSet.of(MODULE), Module),
 
     // used internally to end class, module etc.
     end_class(END_CLASS, EnumSet.of(END_CLASSHDR, END_FIELD, END_METHOD,MODULE,END_MODULEHDR, END_PACKAGEHDR)),

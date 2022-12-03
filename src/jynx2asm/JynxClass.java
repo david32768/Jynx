@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static jynx.Directive.dir_comment;
+import static jynx.Directive.dir_module_info;
 import static jynx.Directive.end_comment;
 import static jynx.Global.*;
 import static jynx.GlobalOption.BASIC_VERIFIER;
@@ -210,9 +211,6 @@ public class JynxClass implements ContextDependent {
         Global.setClassName(jclasshdr.getClassName());
         state = State.getState(classtype);
         sd = jclasshdr;
-        if (classtype == ClassType.MODULE_CLASS) {
-            jmodule = JynxModule.getInstance(js,jvmVersion);
-        }
     }
 
     @Override
@@ -334,7 +332,11 @@ public class JynxClass implements ContextDependent {
     }
 
     public void setModule(Directive dir) {
-        jmodule.visitDirective(dir, js);
+        if (dir == dir_module_info) {
+            jmodule = JynxModule.getInstance(js,jvmVersion);
+        } else {
+            jmodule.visitDirective(dir, js);
+        }
     }
     
     public void endClass(Directive dir) {

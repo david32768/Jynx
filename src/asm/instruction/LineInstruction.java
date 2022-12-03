@@ -3,9 +3,6 @@ package asm.instruction;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 
-import static jynx.Global.LOG;
-import static jynx.Message.M34;
-
 import jvm.NumType;
 import jynx2asm.Line;
 import jynx2asm.ops.JvmOp;
@@ -13,20 +10,13 @@ import jynx2asm.StackLocals;
 
 public class LineInstruction extends Instruction {
 
-    private static final int LINE_NUMBER_MOD = 50000; // 50000 for easy human calculation
-    
     private final int lineNum;
     private final Line line;
 
-    public LineInstruction(int lineNum, Line line) {
+    public LineInstruction(int linenum, Line line) {
         super((JvmOp)null);
-        if (NumType.t_short.isInUnsignedRange(lineNum)) {
-            this.lineNum = lineNum;
-        } else {
-            // "some generated line numbers have been reduced mod %d as exceed unsigned short max"
-            LOG(M34,LINE_NUMBER_MOD);
-            this.lineNum = lineNum%(LINE_NUMBER_MOD);
-        }
+        assert NumType.t_short.isInUnsignedRange(linenum);
+        this.lineNum = linenum == 0? 1: linenum; // bug in ASM label ignores line number 0;
         this.line = line;
     }
 

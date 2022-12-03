@@ -29,7 +29,7 @@ public class Line implements TokenDeque {
     private final Deque<Token> tokens;
     private final LineType lineType;
 
-    private boolean start;
+    private final Token start;
     
     private Line(String line, int linect,  int indent, Deque<Token> tokens, LineType linetype) {
         this.line = line;
@@ -37,7 +37,7 @@ public class Line implements TokenDeque {
         this.indent = indent;
         this.tokens = tokens;
         this.lineType = linetype;
-        this.start = true;
+        this.start = tokens.peekFirst();
     }
 
     public final static char DIRECTIVE_INICATOR = '.';
@@ -65,15 +65,15 @@ public class Line implements TokenDeque {
     
     @Override
     public Token firstToken() {
-        if (!start) {
-            throw new LogIllegalStateException(M115,tokens.getFirst()); // "Not first token - token = %s"
-        }
         if (tokens.isEmpty()) {
             LOG(M198); // "empty line - should not occur"
             throw new AssertionError();
         } else {
-            start = false;
-            return tokens.removeFirst();
+            Token token = tokens.removeFirst();
+            if (token != start) {
+                throw new LogIllegalStateException(M115,token); // "Not first token - token = %s"
+            }
+            return token;
         }
     }
 
@@ -82,6 +82,16 @@ public class Line implements TokenDeque {
         return tokens;
     }
 
+    private static LineType lineTypeOf(String str) {
+        if (str.charAt(0) == DIRECTIVE_INICATOR) {
+            return LineType.DIRECTIVE;
+        }
+        if (str.length() > 1 && str.indexOf(LABEL_INDICATOR) == str.length() - 1) {
+            return LineType.LABEL;
+        }
+        return LineType.CODE;
+    }
+    
     public static Line tokenise(String line, int linect) {
         if (line.contains("\n") || line.contains("\r")) {
             LOG(line,M43); // "line contains newline or carriage return character"
@@ -91,14 +101,9 @@ public class Line implements TokenDeque {
         assert !str.isEmpty() && str.charAt(0) != ';';
         int indent = 0;
         while (Character.isWhitespace(line.charAt(indent))) ++indent;
-        LineType linetype = str.charAt(0) == DIRECTIVE_INICATOR?LineType.DIRECTIVE:LineType.CODE;
         str = StringUtil.unescapeUnicode(str);
         String[] strings = StringUtil.tokenise(str);
-        if (linetype == LineType.CODE
-                && strings[0].length() > 1
-                && strings[0].indexOf(LABEL_INDICATOR) == strings[0].length() - 1) {
-            linetype = LineType.LABEL;
-        }
+        LineType linetype = lineTypeOf(strings[0]);
         Deque<Token> tokens = new ArrayDeque<>();
         Stream.of(strings)
                 .map(Token::getInstance)

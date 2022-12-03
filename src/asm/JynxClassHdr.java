@@ -155,6 +155,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
                 CLASS_NAME.validate(cname);
                 break;
         }
+        line.noMoreTokens();
         flags.addAll(classtype.getMustHave4Class(jvmversion)); 
         Access accessname = Access.getInstance(flags, jvmversion, cname,classtype);
         accessname.check4Class();

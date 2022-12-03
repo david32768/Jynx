@@ -31,12 +31,6 @@ public class Token {
     private final String token;
 
     private Token(String token) {
-        Objects.nonNull(token);
-        long len = token.length();
-        if (len > MAX_UTF8_STRING/3 && StringUtil.modifiedUTF8Length(token) > MAX_UTF8_STRING) {
-            // "String length of %d exceeds maximum %d"
-            throw new LogIllegalArgumentException(M179,len,MAX_UTF8_STRING);
-        }
         this.token = token;
     }
 
@@ -56,18 +50,29 @@ public class Token {
     }
     
     public static Token getInstance(String tokenstr) {
+        Objects.nonNull(tokenstr);
+        if (!tokenstr.isEmpty() && tokenstr.charAt(0) == '\"') {
+            NameDesc.QUOTED_STRING.validate(tokenstr);
+        } else {
+            NameDesc.TOKEN.validate(tokenstr);
+        }
+        long len = tokenstr.length();
+        if (len > MAX_UTF8_STRING/3 && StringUtil.modifiedUTF8Length(tokenstr) > MAX_UTF8_STRING) {
+            // "String length of %d exceeds maximum %d"
+            throw new LogIllegalArgumentException(M179,len,MAX_UTF8_STRING);
+        }
         return new Token(tokenstr);
     }
 
     public static Token getInstance(ReservedWord res) {
-        return new Token(res.toString());
+        return getInstance(res.toString());
     }
 
     public Token transform(UnaryOperator<String> op) {
         checkNotEnd();
         checkNotQuoted();
         String str = op.apply(token);
-        return new Token(str);
+        return getInstance(str);
     }
     
     public String asString() {

@@ -24,6 +24,7 @@ import jynx.LogIllegalStateException;
 import jynx.ReservedWord;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
+import jynx2asm.NameDesc;
 import jynx2asm.Token;
 import jynx2asm.TokenArray;
 
@@ -232,7 +233,7 @@ public class JynxModule {
             for (Map.Entry<String,EnumSet<Directive>> me:packageUse.entrySet()) {
                 String pkg = me.getKey();
                 EnumSet<Directive> dirs = me.getValue();
-                if (!dirs.contains(Directive.dir_packages)) {
+                if (!NameDesc.isJava(pkg) && !dirs.contains(Directive.dir_packages)) {
                     if (dirs.size() == 1 && dirs.contains(Directive.dir_uses)) {
                         // "package %s used in %s is not in %s (OK if package not in module)"
                         LOG(M297,pkg,Directive.dir_uses,Directive.dir_packages);

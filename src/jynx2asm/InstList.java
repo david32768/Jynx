@@ -12,11 +12,13 @@ import static jynx.Global.OPTION;
 import static jynx.Message.M290;
 import static jynx.Message.M291;
 import static jynx.Message.M292;
+import static jynx.Message.M34;
 import static jynx.Message.M990;
 import static jynx.ReservedWord.*;
 
 import asm.instruction.Instruction;
 import asm.instruction.LineInstruction;
+import jvm.NumType;
 import jynx.GlobalOption;
 import jynx.ReservedWord;
 import jynx2asm.ops.JvmOp;
@@ -96,9 +98,17 @@ public class InstList {
         }
     }
 
+    private static final int LINE_NUMBER_MOD = 50000; // 50000 for easy human calculation
+    
     public void add(Instruction insn) {
         if (addLineNumber && insn.needLineNumber()) {
-            addInsn(new LineInstruction(line.getLinect(),line));    
+            int lnum = line.getLinect();
+            if (!NumType.t_short.isInUnsignedRange(lnum)) {
+                // "some generated line numbers have been reduced mod %d as exceed unsigned short max"
+                LOG(M34,LINE_NUMBER_MOD);
+                lnum = lnum%(LINE_NUMBER_MOD);
+            }
+            addInsn(new LineInstruction(lnum,line));    
             addLineNumber = false;
         }
         addInsn(insn);

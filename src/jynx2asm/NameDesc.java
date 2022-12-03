@@ -25,6 +25,11 @@ public enum NameDesc {
     OP_PARMS("\\((%s)*\\)",OP_STACK),
     OP_DESC("%s(V|%s)",OP_PARMS,OP_STACK),
     STACKOP_DESC("[nN]?[tT]->[nNtT]*"),
+
+    NOT_QUOTE_ESCAPE("^\"\\\\"),
+    ESCAPED_CHAR("\\\\."),
+    QUOTED_STRING("\"[%s]*(?:%s[%s]*)*\"",NOT_QUOTE_ESCAPE,ESCAPED_CHAR,NOT_QUOTE_ESCAPE),
+    TOKEN("[^\\p{javaWhitespace}]+"),
     
     PRIMITIVE("[BCDFIJSZ]"),
     JAVA_ID("\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*"),

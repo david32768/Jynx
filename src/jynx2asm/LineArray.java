@@ -30,12 +30,10 @@ class LineArray implements TokenArray {
     private void readArray(Line line) {
         Token token = line.nextTokenSplitIfStart(ReservedWord.left_array);
         token.mustBe(ReservedWord.left_array);
-        if (line.peekToken().is(ReservedWord.right_array)) {
-            line.nextToken();
-            return;
-        }
+
         while (true) {
             Deque<Token> tokens = new ArrayDeque<>();
+
             while(true) {
                 token = line.nextTokenSplitIfEnd(ReservedWord.comma, ReservedWord.right_array);
                 if (token.mayBe(ReservedWord.comma,ReservedWord.right_array).isPresent()) {
@@ -44,12 +42,15 @@ class LineArray implements TokenArray {
                 token.noneOf(ReservedWord.left_array, ReservedWord.dot_array);
                 tokens.addLast(token);
             }
-            if (tokens.isEmpty()) {
-                    // "empty element in  array"
-                    throw new LogIllegalArgumentException(M276);
+
+            if (!tokens.isEmpty()) {
+                tokens.addLast(Token.END_TOKEN);
+                lines.addLast(tokens);
+            } else if (token.is(ReservedWord.comma)) {
+                // "empty element in  array"
+                throw new LogIllegalArgumentException(M276);
             }
-            tokens.addLast(Token.END_TOKEN);
-            lines.addLast(tokens);
+
             if (token.is(ReservedWord.right_array)) {
                 break;
             }
