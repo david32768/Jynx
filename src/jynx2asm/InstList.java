@@ -106,7 +106,10 @@ public class InstList {
             if (!NumType.t_short.isInUnsignedRange(lnum)) {
                 // "some generated line numbers have been reduced mod %d as exceed unsigned short max"
                 LOG(M34,LINE_NUMBER_MOD);
-                lnum = lnum%(LINE_NUMBER_MOD);
+                lnum = lnum%LINE_NUMBER_MOD;
+                if (lnum == 0) {
+                    lnum = LINE_NUMBER_MOD;
+                }
             }
             addInsn(new LineInstruction(lnum,line));    
             addLineNumber = false;

@@ -209,6 +209,7 @@ public class JynxText extends Textifier {
 
     @Override
     public void visitClassEnd() {
+        jsb.close();
     }
 
     @Override
@@ -331,7 +332,7 @@ public class JynxText extends Textifier {
 
     @Override
     public Printer visitModule(String name, int access, String version) {
-        JynxModuleText jmt = new JynxModuleText(jvmVersion, jsb);
+        JynxTextModule jmt = new JynxTextModule(jvmVersion, jsb);
         jmt.visitModule(name, access, version);
         return jmt;
     }

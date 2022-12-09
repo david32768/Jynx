@@ -3,6 +3,9 @@ package asm.instruction;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 
+import static jynx.Global.LOG;
+import static jynx.Message.M800;
+
 import jvm.NumType;
 import jynx2asm.Line;
 import jynx2asm.ops.JvmOp;
@@ -16,7 +19,12 @@ public class LineInstruction extends Instruction {
     public LineInstruction(int linenum, Line line) {
         super((JvmOp)null);
         assert NumType.t_short.isInUnsignedRange(linenum);
-        this.lineNum = linenum == 0? 1: linenum; // bug in ASM label ignores line number 0;
+        if (linenum == 0) {
+            // "line number 0 changed to 1; ASM Issue #317989"
+            LOG(M800);
+            linenum = 1;
+        }
+        this.lineNum = linenum;
         this.line = line;
     }
 

@@ -7,7 +7,8 @@ import jynx2asm.StackLocals;
 
 public class Instruction {
 
-    protected final JvmOp jvmop;
+    protected JvmOp jvmop;
+    
 
     protected Instruction(JvmOp jvmop) {
         this.jvmop = jvmop;

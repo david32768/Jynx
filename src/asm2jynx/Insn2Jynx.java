@@ -161,7 +161,7 @@ public class Insn2Jynx {
     
     private void arg_incr(AbstractInsnNode in) {
         IincInsnNode incn = (IincInsnNode)in;
-        JvmOp jop = JvmOp.exactIncr(asmop,incn.var, incn.incr,jvmVersion);
+        JvmOp jop = JvmOp.exactIncr(asmop,incn.var, incn.incr);
         lb.append(jop).append(incn.var).append(incn.incr).nl();
     }
 
@@ -234,7 +234,7 @@ public class Insn2Jynx {
     private void arg_var(AbstractInsnNode in) {
         VarInsnNode varnode = (VarInsnNode)in;
         int v = varnode.var;
-        JvmOp jop = JvmOp.exactVar(asmop,v,jvmVersion);
+        JvmOp jop = JvmOp.exactVar(asmop,v);
         if (jop.isImmediate()) {
             lb.append(jop).nl();
         } else {

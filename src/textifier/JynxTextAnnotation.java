@@ -173,6 +173,7 @@ public class JynxTextAnnotation extends Textifier {
         jsb.start(1)
                 .append(Directive.end_annotation)
                 .nl();
+        jsb.close();
     }
 
     @Override

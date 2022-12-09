@@ -19,13 +19,11 @@ public class LdcInstruction extends Instruction {
     }
 
     @Override
-    public Integer minLength() {
-        return 2;
-    }
-
-    @Override
     public Integer maxLength() {
-        return 3;
+        if (jvmop == JvmOp.asm_ldc) {
+            return JvmOp.opc_ldc_w.length();
+        }
+        return jvmop.length();
     }
 
     @Override

@@ -19,6 +19,7 @@ public class VarInstruction extends Instruction {
     @Override
     public void adjust(StackLocals stackLocals) {
         varnum = stackLocals.adjustLoadStore(jvmop, varToken);
+        this.jvmop = JvmOp.exactVar(jvmop, varnum);
     }
 
     @Override

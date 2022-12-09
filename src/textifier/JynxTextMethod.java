@@ -158,6 +158,7 @@ public class JynxTextMethod extends JynxText {
         jsb.start(1)
                 .append(end_method)
                 .nl();
+        jsb.close();
     }
 
     @Override

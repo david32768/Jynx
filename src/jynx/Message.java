@@ -245,7 +245,7 @@ public enum Message {
     M243("%s op defined in %s has already been defined in %s"),
     M244(WARNING,"%s could be used as entries are consecutibe"),
     M245("Unknown directive = %s"),
-
+    M246("features for %s and %s differ"),
     M247("inner class %s must be different from %s %s"),
     M248("ELSE does not match an IF or TRY op"),
     M249("structured op(s) missing; level at end is %d"),
@@ -309,7 +309,8 @@ public enum Message {
     M308("parameter number %d is not in range [0,%d]"),
     M309("missing %s %d : %s parameter added"),
     M310("parameter %d has already been defined: %s"),
-    //
+    M311("maximum code size exceeded"),
+    M312(WARNING,"maximum code size may have been exceeded"),
     M313("final class cannot have %s"),
     M314(SEVERE,"only one parameter translater allowed"),
     M315(SEVERE,"only one owner translater allowed"),
@@ -343,6 +344,8 @@ public enum Message {
     M410("cannot amend quoted token"),
     M411("type %s not found"),
     M412("%s not supported"),
+
+    M800(ENDINFO,"line number 0 changed to 1; ASM Issue #317989"),
     
     M901("unknown ASM type %s as it starts with '%c'"),
     M902("unknown ASM stack frame type (%d)"),

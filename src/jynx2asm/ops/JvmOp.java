@@ -10,6 +10,7 @@ import static org.objectweb.asm.Opcodes.*;
 
 import static jvm.OpArg.*;
 import static jynx.Global.LOG;
+import static jynx.Message.M246;
 import static jynx.Message.M274;
 import static jynx.Message.M280;
 import static jynx.Message.M302;
@@ -441,36 +442,38 @@ public enum JvmOp implements JynxOp {
         return OPMAP.get(opstr);
     }
     
-    public static JvmOp getWideOp(int code) {
-        JvmOp jop = getOp(code);
-        JvmOp result = OPMAP.get(jop.toString() + "_w");
+    private static JvmOp getOp(JvmOp jop, Object suffix) {
+        String base = jop.toString();
+        int index = base.indexOf('_');
+        if (index >= 0) {
+            base = base.substring(0,index);
+        }
+        String exact = base + "_" + suffix.toString();
+        JvmOp result = OPMAP.get(exact);
         Objects.nonNull(result);
+        if (jop.requires != result.requires) {
+            // "features for %s and %s differ"
+            LOG(M246,jop,result);
+        }
         return result;
     }
     
-    private static JvmOp getOp(JvmOp jop, Object suffix, JvmVersion jvmversion) {
-        JvmOp result = OPMAP.get(jop.toString() + "_" + suffix.toString());
-        Objects.nonNull(result);
-        jvmversion.checkSupports(result);
-        return result;
-    }
-    
-    public  static JvmOp exactVar(JvmOp jop, int v, JvmVersion jvmversion) {
+    public  static JvmOp exactVar(JvmOp jop, int v) {
         jop.checkArg(arg_var);
         if (v >= 0 && v <= 3 && jop != JvmOp.asm_ret) {
-            return getOp(jop,v,jvmversion);
+            return getOp(jop,v);
         } else if (!NumType.t_byte.isInUnsignedRange(v)) {
-            return getOp(jop,'w',jvmversion);
+            return getOp(jop,'w');
         }
         return jop;
     }
     
-    public  static JvmOp exactIncr(JvmOp jop, int v, int incr, JvmVersion jvmversion) {
+    public  static JvmOp exactIncr(JvmOp jop, int v, int incr) {
         jop.checkArg(arg_incr);
         if (NumType.t_byte.isInUnsignedRange(v) && NumType.t_byte.isInRange(incr)) {
             return jop;
         }
-        return getOp(jop,'w', jvmversion);
+        return getOp(jop,'w');
     }
 
     @Override

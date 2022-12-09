@@ -228,7 +228,7 @@ public class Access {
     }
 
     public void check4Module() {
-        checkValid(MODULE,dir_module);
+        checkValid(MODULE,dir_define_module);
         mostOneOf(acc_synthetic, acc_mandated);
     }
 

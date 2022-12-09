@@ -67,26 +67,26 @@ public class JynxCodeHdr implements ContextDependent {
     
     private final Map<Directive,Line> uniqueDirectives;
     
-    private JynxCodeHdr(MethodNode mv, JynxScanner js, ClassChecker checker,
+    private JynxCodeHdr(MethodNode mnode, JynxScanner js, ClassChecker checker,
             LocalMethodHandle lmh, JynxLabelMap labelmap, boolean isStatic, JynxOps opmap) {
         this.errorsAtStart = LOGGER().numErrors();
         this.js = js;
         String clname = isStatic?null:checker.getClassName();
         this.localStack = FrameType.getInitFrame(clname, lmh); // classname set non null for virtual methods
-        this.mnode = mv;
+        this.mnode = mnode;
         this.labelmap = labelmap;
         this.vars = new ArrayList<>();
         JvmOp returnop = JynxHandle.getReturnOp(lmh);
-        this.stackLocals = StackLocals.getInstance(localStack,labelmap,returnop,isStatic);
+        this.stackLocals = StackLocals.getInstance(localStack,labelmap,mnode.parameters,returnop,isStatic);
         this.s2a = String2Insn.getInstance(js, labelmap, checker, opmap);
         this.uniqueDirectives = new HashMap<>();
         this.options = new EnumMap<>(ReservedWord.class);
     }
 
-    public static JynxCodeHdr getInstance(MethodNode mv, JynxScanner js, LocalMethodHandle lmh,
+    public static JynxCodeHdr getInstance(MethodNode mnode, JynxScanner js, LocalMethodHandle lmh,
             JynxLabelMap labelmap, boolean isStatic, ClassChecker checker, JynxOps opmap) {
         CHECK_SUPPORTS(Code);
-        return new JynxCodeHdr(mv, js, checker,lmh, labelmap, isStatic ,opmap);
+        return new JynxCodeHdr(mnode, js, checker,lmh, labelmap, isStatic ,opmap);
     }
 
     @Override
@@ -315,6 +315,9 @@ public class JynxCodeHdr implements ContextDependent {
     }
     
     private void acceptVars(MethodVisitor mv) {
+        if (vars.isEmpty()) {
+            return;
+        }
         LOGGER().pushCurrent();
         for (JynxVar jvar:vars) {
             LOGGER().setLine(jvar.getLine().toString());

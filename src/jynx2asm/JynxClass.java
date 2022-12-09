@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static jynx.Directive.dir_comment;
-import static jynx.Directive.dir_module_info;
+import static jynx.Directive.dir_module;
 import static jynx.Directive.end_comment;
 import static jynx.Global.*;
 import static jynx.GlobalOption.BASIC_VERIFIER;
@@ -332,11 +332,18 @@ public class JynxClass implements ContextDependent {
     }
 
     public void setModule(Directive dir) {
-        if (dir == dir_module_info) {
+        if (dir == dir_module) {
             jmodule = JynxModule.getInstance(js,jvmVersion);
         } else {
             jmodule.visitDirective(dir, js);
         }
+    }
+    
+    public void endModule(Directive dir) {
+        assert dir == Directive.end_module;
+        assert jmodule != null;
+        jmodule.visitEnd();
+        jclasshdr.acceptModule(jmodule);
     }
     
     public void endClass(Directive dir) {
@@ -346,10 +353,6 @@ public class JynxClass implements ContextDependent {
         int errct = LOGGER().numErrors();
         if (errct != 0) {
             return;
-        }
-        if (jmodule != null) {
-            jmodule.visitEnd();
-            jclasshdr.acceptModule(jmodule);
         }
         jclasshdr.visitEnd();
     }

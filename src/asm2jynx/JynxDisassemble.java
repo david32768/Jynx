@@ -66,7 +66,7 @@ public class JynxDisassemble {
         this.jmp = JynxMethodPrinter.getInstance(cn.name, jvmVersion, jp, annotator);
     }
 
-    public static JynxDisassemble getInstance(ClassReader cr, PrintWriter pw) {
+    private static JynxDisassemble getInstance(ClassReader cr, PrintWriter pw) {
         int poolsz = cr.getItemCount();
         if (poolsz >= 256) {
             LOG(M67,poolsz); // "poolsz = %d"
@@ -106,6 +106,7 @@ public class JynxDisassemble {
     }
     
     public void close() {
+        jp.close();
         pw.close();
     }
 
@@ -127,7 +128,7 @@ public class JynxDisassemble {
         jp.decrDepth();
     }
     
-    public boolean print() {
+    private boolean print() {
         Global.setClassName(cn.name);
         printVersionSource();
         if (cn.module != null) {
@@ -263,7 +264,7 @@ public class JynxDisassemble {
         EnumSet<AccessFlag>  accflags = AccessFlag.getEnumSet(cn.access, CLASS,jvmVersion);
         assert accflags.contains(acc_module) && accflags.size() == 1;
         
-        jp.append(dir_module)
+        jp.append(dir_define_module)
                 .nl()
                 .incrDepth()
                 .appendDir(dir_debug, cn.sourceDebug);
@@ -311,11 +312,12 @@ public class JynxDisassemble {
 
     private void printModuleInfo(ModuleNode module) {
         EnumSet<AccessFlag> accflags = AccessFlag.getEnumSet(module.access, MODULE,jvmVersion);
-        jp.append(dir_module_info)
+        jp.append(dir_module)
                 .appendFlags(accflags)
                 .appendName(module.name)
                 .appendNonNull(module.version)
-                .nl();
+                .nl()
+                .incrDepth();
         jp.appendDir(dir_main,module.mainClass);
         for (ModuleRequireNode mrn: nonNullList(module.requires)) {
             accflags = AccessFlag.getEnumSet(mrn.access, REQUIRE,jvmVersion);
@@ -363,6 +365,7 @@ public class JynxDisassemble {
             jp.append(dir_packages)
                     .appendDotArray(module.packages);
         }
+        jp.decrDepth().append(end_module).nl();
     }
 
     private void printVersionSource() {

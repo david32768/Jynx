@@ -25,7 +25,7 @@ public enum Directive implements JvmVersioned {
     dir_class(CLASSHDR, EnumSet.of(START_BLOCK, END_START)),
     dir_interface(CLASSHDR, EnumSet.of(START_BLOCK, END_START)),
     dir_enum(CLASSHDR, EnumSet.of(START_BLOCK, END_START)),
-    dir_module(MODULEHDR, EnumSet.of(START_BLOCK, END_START), Module),
+    dir_define_module(MODULEHDR, EnumSet.of(START_BLOCK, END_START), Module),
     dir_record(CLASSHDR, EnumSet.of(START_BLOCK, END_START),Record),
     dir_package(PACKAGEHDR, EnumSet.of(START_BLOCK, END_START)),
     dir_define_annotation(CLASSHDR, EnumSet.of(START_BLOCK, END_START), AnnotationDefault),
@@ -135,7 +135,7 @@ public enum Directive implements JvmVersioned {
 
     end_array(READ_END, EnumSet.noneOf(State.class)),
 
-    dir_module_info(MODULE, EnumSet.of(MODULE,END_MODULEHDR)),
+    dir_module(MODULE, EnumSet.of(END_MODULEHDR)),
     dir_main(MODULE, EnumSet.of(MODULE), ModulePackages),
     dir_packages(MODULE, EnumSet.of(MODULE), ModulePackages),
     dir_uses(MODULE, EnumSet.of(MODULE), Module),
@@ -143,9 +143,10 @@ public enum Directive implements JvmVersioned {
     dir_opens(MODULE, EnumSet.of(MODULE), Module),
     dir_requires(MODULE, EnumSet.of(MODULE), Module),
     dir_provides(MODULE, EnumSet.of(MODULE), Module),
+    end_module(END_MODULE,EnumSet.of(MODULE)),
 
     // used internally to end class, module etc.
-    end_class(END_CLASS, EnumSet.of(END_CLASSHDR, END_FIELD, END_METHOD,MODULE,END_MODULEHDR, END_PACKAGEHDR)),
+    end_class(END_CLASS, EnumSet.of(END_CLASSHDR, END_FIELD, END_METHOD,END_MODULE, END_PACKAGEHDR)),
     ;
 
     private final State after;

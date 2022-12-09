@@ -29,7 +29,7 @@ public class JynxVar {
     private final JynxLabel toref;
     private final Line line;
 
-    public JynxVar(int varnum, String name, String desc, String signature, JynxLabel fromref, JynxLabel toref, Line line) {
+    private JynxVar(int varnum, String name, String desc, String signature, JynxLabel fromref, JynxLabel toref, Line line) {
         this.varnum = varnum;
         this.name = name;
         this.desc = desc;

@@ -4,26 +4,30 @@ import org.objectweb.asm.MethodVisitor;
 
 import jynx2asm.ops.JvmOp;
 import jynx2asm.StackLocals;
+import jynx2asm.Token;
 
 public class IncrInstruction extends Instruction {
 
-    private final int varnum;
+    private final Token varToken;
     private final int incr;
 
-    public IncrInstruction(JvmOp jop, int varnum, int incr) {
+    private int varnum;
+
+    public IncrInstruction(JvmOp jop, Token vartoken, int incr) {
         super(jop);
-        this.varnum = varnum;
+        this.varToken = vartoken;
         this.incr = incr;
+    }
+
+    @Override
+    public void adjust(StackLocals stackLocals) {
+        this.varnum = stackLocals.adjustIncr(varToken);
+        this.jvmop = JvmOp.exactIncr(jvmop, varnum, incr);
     }
 
     @Override
     public void accept(MethodVisitor mv) {
         mv.visitIincInsn(varnum, incr);
-    }
-
-    @Override
-    public void adjust(StackLocals stackLocals) {
-        stackLocals.checkIncr(varnum);
     }
 
     @Override

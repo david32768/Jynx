@@ -18,6 +18,7 @@ public enum State {
     END_COMPONENT(JynxClass::endComponent),
     END_FIELD(JynxClass::endField),
     END_MODULEHDR(JynxClass::endHeader),
+    END_MODULE(JynxClass::endModule),
     END_START(JynxClass::defaultVersion), 
     END_PACKAGEHDR(JynxClass::endHeader),
 

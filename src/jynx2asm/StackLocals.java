@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import org.objectweb.asm.tree.ParameterNode;
+
 import static jynx.Global.LOG;
 import static jynx.Global.OPTION;
 import static jynx.Global.SUPPORTS;
@@ -43,18 +45,17 @@ public class StackLocals {
     private final LocalVars locals;
     private final OperandStack stack;
     private final JynxLabelMap labelmap;
-
     private final JvmOp returnOp;
+    private final List<JynxLabel> activeLabels;
+
     private boolean returns;
     private boolean hasThrow;
-
     private boolean frameRequired;
-    
     private Optional<JynxLabel> lastLab;
     private JvmOp lastop;
     private Last completion;
-    private final List<JynxLabel> activeLabels;
-
+    private int minLength;
+    private int maxLength;
     
     private StackLocals(LocalVars locals, OperandStack stack, JynxLabelMap labelmap, JvmOp returnop) {
         this.locals = locals;
@@ -68,11 +69,13 @@ public class StackLocals {
         this.frameRequired = false;
         this.completion = Last.OP;
         this.activeLabels = new ArrayList<>();
+        this.minLength = 0;
+        this.maxLength = 0;
     }
     
-    public static StackLocals getInstance(List<Object> localstack, JynxLabelMap labelmap,
+    public static StackLocals getInstance(List<Object> localstack, JynxLabelMap labelmap, List<ParameterNode> parameters,
             JvmOp returnop, boolean isStatic) {
-        LocalVars lv = LocalVars.getInstance(localstack,isStatic);
+        LocalVars lv = LocalVars.getInstance(localstack,parameters,isStatic);
         OperandStack os = OperandStack.getInstance(localstack);
         return new StackLocals(lv, os, labelmap, returnop);
     }
@@ -178,6 +181,8 @@ public class StackLocals {
         completion = Last.OP;
     }
 
+    private static int CODE_LIMIT = 1 << 16;
+    
     public boolean visitInsn(Instruction in, Line line) {
         if (in == null) {
             return false;
@@ -191,6 +196,14 @@ public class StackLocals {
             in.adjust(this);
             return true;
         }
+        if (isUnreachable()) {
+            if (jvmop.isUnconditional()) {
+                LOG(M122,jvmop,lastop);  // "Instruction '%s' dropped as unreachable after '%s' without intervening label"
+            } else {
+                LOG(M121,jvmop,lastop);  // "Instruction '%s' dropped as unreachable after '%s' without intervening label"
+            }
+            return false;
+        }
         if (jvmop.isReturn()) {
             if (jvmop == returnOp) {
                 returns = true;
@@ -200,26 +213,27 @@ public class StackLocals {
             }
         }
         hasThrow |= jvmop == JvmOp.asm_athrow; 
-        if (isUnreachable()) {
-            if (jvmop.isUnconditional()) {
-                LOG(M122,jvmop,lastop);  // "Instruction '%s' dropped as unreachable after '%s' without intervening label"
-            } else {
-                LOG(M121,jvmop,lastop);  // "Instruction '%s' dropped as unreachable after '%s' without intervening label"
-            }
-            return false;
-        } else {
-            if (jvmop == JvmOp.asm_new && lastLab.isPresent()) {
-                labelmap.weakUseOfJynxLabel(lastLab.get(), line);
-            }
-            if (frameRequired && SUPPORTS(Feature.stackmap) && OPTION(GlobalOption.USE_STACK_MAP)) {
-                    LOG(M124);  // "stack frame is definitely required here"
-            }
-            frameRequired = false; // to prevent multiple error messages
-            visitPreJvmOp(jvmop);
-            in.adjust(this);
-            visitPostJvmOp(jvmop);
-            return true;
+        if (jvmop == JvmOp.asm_new && lastLab.isPresent()) {
+            labelmap.weakUseOfJynxLabel(lastLab.get(), line);
         }
+        if (frameRequired && SUPPORTS(Feature.stackmap) && OPTION(GlobalOption.USE_STACK_MAP)) {
+                LOG(M124);  // "stack frame is definitely required here"
+        }
+        frameRequired = false; // to prevent multiple error messages
+        visitPreJvmOp(jvmop);
+        in.adjust(this);
+        int minbefore = minLength;
+        int maxbefore = maxLength;
+        minLength += in.minLength();
+        maxLength += in.maxLength();
+        if (maxbefore < CODE_LIMIT && maxLength >= CODE_LIMIT) {
+            LOG(M312); // "maximum code size may have been exceeded"
+        }
+        if (minbefore < CODE_LIMIT && minLength >= CODE_LIMIT) {
+            LOG(M311); // "maximum code size exceeded"
+        }
+        visitPostJvmOp(jvmop);
+        return true;
     }
 
     public boolean visitVarDirective(JynxVar jvar) {
@@ -299,28 +313,42 @@ public class StackLocals {
         stack.adjustInvoke(jvmop, mh);
     }
     
-    public void checkIncr(int var) {
-        locals.checkChar('I', var);
-    }
-    
-    public int adjustLoadStore(JvmOp jop, Token vartoken) {
-        char ctype = jop.vartype();
-        int var;
-        if (jop.isStoreVar()) {
-            FrameElement fe = stack.storeType(ctype);
-            var = locals.storeFrameElement(fe,vartoken);
-            for (JynxLabel lab:activeLabels) {
-                lab.store(fe,var);
-            }
-        } else {
-            var = locals.loadVarNumber(vartoken);
-            FrameElement fe = locals.loadType(ctype,var);
-            for (JynxLabel lab:activeLabels) {
-                lab.load(fe,var);
-            }
-            stack.load(fe, var);
+    public int adjustIncr(Token vartoken) {
+        char ctype = 'I';
+        int var = locals.loadVarNumber(vartoken);
+        FrameElement fe = locals.loadType(ctype,var);
+        for (JynxLabel lab:activeLabels) {
+            lab.load(fe,var);
         }
         return var;
+    }
+    
+    private int adjustLoad(char ctype, Token vartoken) {
+        int var = locals.loadVarNumber(vartoken);
+        FrameElement fe = locals.loadType(ctype,var);
+        for (JynxLabel lab:activeLabels) {
+            lab.load(fe,var);
+        }
+        stack.load(fe, var);
+        return var;
+    }
+    
+    private int adjustStore(char ctype, Token vartoken) {
+        FrameElement fe = stack.storeType(ctype);
+        int var = locals.storeFrameElement(fe,vartoken);
+        for (JynxLabel lab:activeLabels) {
+            lab.store(fe,var);
+        }
+        return var;
+    }
+
+    public int adjustLoadStore(JvmOp jop, Token vartoken) {
+        char ctype = jop.vartype();
+        if (jop.isStoreVar()) {
+            return adjustStore(ctype, vartoken);
+        } else {
+            return adjustLoad(ctype, vartoken);
+        }
     }
     
     public void adjustStack(JvmOp jop) {

@@ -255,4 +255,11 @@ public class JynxStringBuilder {
                 .nl();
         return this;
     }
+    
+    public void close() {
+        if (sb.length() != 0) {
+            String msg = "extraneous text: " + sb.toString();
+            throw new AssertionError(msg);
+        }
+    }
 }

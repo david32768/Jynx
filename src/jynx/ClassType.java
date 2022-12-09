@@ -25,7 +25,7 @@ public enum ClassType {
             EnumSet.of(acc_interface,acc_abstract)),
     ENUM(dir_enum, dir_inner_enum, acc_enum,
             EnumSet.of(acc_enum, acc_super)),
-    MODULE_CLASS(dir_module, null, acc_module, EnumSet.of(acc_module)),
+    MODULE_CLASS(dir_define_module, null, acc_module, EnumSet.of(acc_module)),
     RECORD(dir_record, dir_inner_record, acc_record,
             EnumSet.of(acc_record, acc_super)),
     BASIC(dir_class, dir_inner_class, acc_super,

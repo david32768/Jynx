@@ -315,9 +315,9 @@ public class String2Insn {
     }
     
     private Instruction arg_incr(JvmOp jvmop) {
-        int var = line.nextToken().asUnsignedShort();
+        Token vartoken = line.nextToken();
         int incr = line.nextToken().asShort();
-        return new IncrInstruction(jvmop,var, incr);
+        return new IncrInstruction(jvmop,vartoken, incr);
     }
 
     private Instruction arg_label(JvmOp jvmop) {

@@ -117,6 +117,7 @@ public class JynxTextAnnotationArray extends JynxTextAnnotation {
         jsb.decrDepth()
                 .append(dir)
                 .nl();
+        jsb.close();
     }
 
 }

@@ -16,6 +16,19 @@ public class JumpInstruction extends Instruction {
     }
 
     @Override
+    public Integer maxLength() {
+        switch(jvmop) {
+            case asm_goto: case opc_goto_w:
+                return JvmOp.opc_goto_w.length();
+            case asm_jsr: case opc_jsr_w:
+                return JvmOp.opc_jsr_w.length();
+            default:
+                return jvmop.length() + JvmOp.opc_goto_w.length();
+        }
+    }
+
+    
+    @Override
     public void accept(MethodVisitor mv) {
         mv.visitJumpInsn(jvmop.asmOpcode(), jlab.asmlabel());
     }
