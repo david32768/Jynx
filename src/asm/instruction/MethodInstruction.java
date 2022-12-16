@@ -2,9 +2,6 @@ package asm.instruction;
 
 import org.objectweb.asm.MethodVisitor;
 
-import static jynx.Message.M908;
-
-import jynx.LogAssertionError;
 import jynx2asm.handles.MethodHandle;
 import jynx2asm.ops.JvmOp;
 import jynx2asm.StackLocals;

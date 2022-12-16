@@ -20,6 +20,7 @@ class DotArray implements TokenArray {
         line.noMoreTokens();
         this.js = js;
         this.line = line;
+        LOGGER().pushContext();
     }
 
     @Override
@@ -52,6 +53,7 @@ class DotArray implements TokenArray {
             }
             LOGGER().popCurrent();
         }
+        LOGGER().popContext();
     }
     
     

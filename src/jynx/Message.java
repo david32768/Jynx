@@ -31,7 +31,7 @@ public enum Message {
     M24(INFO,"ambiguous option %s: %s assumed"),
     M25(BLANK,"treat warnings as errors"),
     M26(BLANK,"invalid main-option name - %s"),
-
+    M27(BLANK,"print all log messages"),
     M28("no args have been specified for main option %s"),
     M29(BLANK,"do not produce debug info"),
     M30(BLANK,"do not produce stack map"),
@@ -229,7 +229,7 @@ public enum Message {
     M227(WARNING,"possible serialization method %s does not match %s"),
     M228(WARNING,"indent %d found but expected %d"),
     M229("duplicate key %d; previous target = %s, current target = %s"),
-    M230(WARNING,"keys must be in ascending order; key = %d; previous key = %s"),
+    M230(WARNING,"keys should be in ascending order; key = %d; previous key = %s"),
     M231(WARNING,"Last instruction was %s: expected %s"),
     M232("Last instruction was %s: expected %s"),
     M233("Duplicate entry %s in %s: previous entry at line %d"),
@@ -243,7 +243,7 @@ public enum Message {
     M241("ambiguous hint for common supertype of %s and %s%n    %s and %s"),
     M242("either init method %s is static or op  is not %s"),
     M243("%s op defined in %s has already been defined in %s"),
-    M244(WARNING,"%s could be used as entries are consecutibe"),
+    M244(WARNING,"%s could be used as entries are consecutive"),
     M245("Unknown directive = %s"),
     M246("features for %s and %s differ"),
     M247("inner class %s must be different from %s %s"),
@@ -255,7 +255,7 @@ public enum Message {
     M253("illegal number of dimensions %d; must be in range [0,%d]"),
     M254("%s is used in a macro after a mulit-line op"),
     M255("cannot mix absolute and relative local variables"),
-    M256("%s has %d entries, maximum possible is %d"),
+    M256("size of %s is %d which exceeds %d"),
     M257("argument count %d is not in range [0,%d]"),
     M258(WARNING,"%s is a reserved word and cannot be a Java Id"),
     M259("dynamic constant is %s but %s expected"),
@@ -321,6 +321,8 @@ public enum Message {
     M320(ENDINFO,"occurences of %s have been ignored: %s"),
     M321("%d does not in [0,%d]"),
     M322("use of %s is not supported: %s"),
+    M323(WARNING,"by adding dflt entries %s (size %d) would still be smaller than %s (size %d); range = %d labels = %d"),
+
     //
     M327(INFO,"added: %s %s"),
     //
@@ -346,6 +348,8 @@ public enum Message {
     M412("%s not supported"),
 
     M800(ENDINFO,"line number 0 changed to 1; ASM Issue #317989"),
+    M801(FINE,"min length = %d max length = %d"),
+    M802(FINER,"at label %s: min length = %d max length = %d -> %d (adjusted = -%d)"),
     
     M901("unknown ASM type %s as it starts with '%c'"),
     M902("unknown ASM stack frame type (%d)"),

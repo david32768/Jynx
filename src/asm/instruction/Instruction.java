@@ -23,8 +23,12 @@ public class Instruction {
         return jvmop == JvmOp.asm_idiv  || jvmop == JvmOp.asm_ldiv;
     }
     
-    public JvmOp resolve(StackLocals stackLocals) {
+    public JvmOp resolve(int minoffset, int maxoffset) {
         return jvmop;
+    }
+
+    public void adjust(StackLocals stackLocals) {
+        stackLocals.adjustStack(jvmop);
     }
 
     public Integer minLength() {
@@ -37,10 +41,6 @@ public class Instruction {
     
     public void accept(MethodVisitor mv) {
         mv.visitInsn(jvmop.asmOpcode());
-    }
-
-    public void adjust(StackLocals stackLocals) {
-        stackLocals.adjustStack(jvmop);
     }
 
     @Override

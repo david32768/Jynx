@@ -1,7 +1,9 @@
 package jynx2asm;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.objectweb.asm.Label;
@@ -12,15 +14,19 @@ import static jynx.Message.*;
 public class JynxLabel {
 
     private final String name;
-    private Line defined;
-    private boolean usedInCode;
     private final ArrayList<Line> usedList;
     private final ArrayList<Line> weakList;
     private final Label asmlab;
-
-    private JynxLabelFrame jlf;
     private final List<JynxCatch> catchList;
+    private final Map<Integer,Integer> usedAtMap;
 
+    private Line defined;
+    private boolean usedInCode;
+    private JynxLabelFrame jlf;
+    
+    private int minLimit;
+    private int maxLimit;
+    
     public JynxLabel(String name) {
         this.name = name;
         this.defined = null;
@@ -30,6 +36,9 @@ public class JynxLabel {
         this.asmlab = new Label();
         this.jlf = new JynxLabelFrame(name);
         this.catchList = new ArrayList<>();
+        this.minLimit = Integer.MAX_VALUE;
+        this.maxLimit = Integer.MIN_VALUE;
+        this.usedAtMap = new HashMap<>();
     }
     
     public boolean isDefined() {
@@ -48,12 +57,31 @@ public class JynxLabel {
         return this.isDefined() && after.isDefined() && this.definedLine().getLinect() < after.definedLine().getLinect();
     }
     
+    public void setOffset(int minoffset, int maxoffset) {
+        assert !hasOffset();
+        assert minoffset >= 0 && maxoffset >= minoffset;
+        this.minLimit = Math.max(0, maxoffset - Short.MAX_VALUE);
+        this.maxLimit = Math.max(0 - Short.MIN_VALUE, minoffset - Short.MIN_VALUE);
+    }
+    
     public void define(Line line) {
         if (isDefined()) {
             LOG(M36,line);   // "label already defined in line:%n  %s"
             return;
         }
         defined = line;
+    }
+
+    public boolean hasOffset() {
+        return this.maxLimit > 0;
+    }
+    
+    public boolean isDefinitelyNotWide(int minoffset, int maxoffset) {
+        return hasOffset() && maxoffset <= maxLimit && minoffset >= minLimit;
+    }
+    
+    public boolean isDefinitelyWide(int minoffset, int maxoffset) {
+        return hasOffset() && (minoffset > maxLimit || maxoffset < minLimit);
     }
     
     public Line definedLine() {
@@ -71,6 +99,25 @@ public class JynxLabel {
     
     public void addWeakUsed(Line line) {
         weakList.add(line);
+    }
+    
+    public void usedAt(int minoffset,int maxoffset, int adjust) {
+        if (!hasOffset() && adjust != 0) {
+            Integer before = usedAtMap.put(minoffset, adjust);
+            assert before == null;
+        }
+    }
+
+    public int forwardBranchAdjustment() {
+        int adjust = 0;
+        for (Map.Entry<Integer,Integer> me:usedAtMap.entrySet()) {
+            int minoffset = me.getKey();
+            if (isDefinitelyNotWide(minoffset, minoffset)) {
+                adjust += me.getValue();
+            }
+        }
+        usedAtMap.clear();
+        return adjust;
     }
     
     public String name() {

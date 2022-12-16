@@ -3,6 +3,9 @@ package jynx;
 public enum LogMsgType {
 
     // errors in ascending severity
+    FINEST('t'),
+    FINER('r'),
+    FINE('e'),
     BLANK(' '),
     ENDINFO('C'),
     INFO('I'),

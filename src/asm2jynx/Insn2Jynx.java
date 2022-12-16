@@ -36,7 +36,6 @@ import jvm.NumType;
 import jvm.OpArg;
 import jynx.Directive;
 import jynx.LogAssertionError;
-import jynx.LogIllegalStateException;
 import jynx.ReservedWord;
 import jynx2asm.handles.HandlePart;
 import jynx2asm.handles.MethodHandle;
@@ -176,17 +175,17 @@ public class Insn2Jynx {
         LookupSwitchInsnNode lsin = (LookupSwitchInsnNode)in;
         lb.append(asmop)
                 .append(ReservedWord.res_default,lsin.dflt)
-                .append(ReservedWord.left_array);
+                .append(ReservedWord.dot_array)
+                .nl();
         int i = 0;
         for (LabelNode labelnode:lsin.labels) {
-            if (i == 0) {
-            } else {
-                lb.append(ReservedWord.comma);
-            }
-            lb.append(lsin.keys.get(i)).append(ReservedWord.right_arrow,labelnode);
+            lb.append(lsin.keys.get(i))
+                    .append(ReservedWord.right_arrow,labelnode)
+                    .nl();
             ++i;
         }
-        lb.append(ReservedWord.right_array).nl();
+        lb.append(Directive.end_array)
+                .nl();
     }
 
     private void arg_marray(AbstractInsnNode in) {
@@ -218,17 +217,14 @@ public class Insn2Jynx {
         lb.append(JvmOp.asm_tableswitch)
                 .append(tsin.min)
                 .append(ReservedWord.res_default,tsin.dflt)
-                .append(ReservedWord.left_array);
-        boolean first = true;
+                .append(ReservedWord.dot_array)
+                .nl();
         for (LabelNode labelnode:tsin.labels) {
-            if (first) {
-                first = false;
-            } else {
-                lb.append(ReservedWord.comma);
-            }
-            lb.appendLabelNode(labelnode);
+            lb.appendLabelNode(labelnode)
+                    .nl();
         }
-        lb.append(ReservedWord.right_array).nl();
+        lb.append(Directive.end_array)
+                .nl();
     }
     
     private void arg_var(AbstractInsnNode in) {

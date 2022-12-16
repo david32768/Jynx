@@ -35,6 +35,7 @@ public enum GlobalOption {
     DOWN_CAST(M14,DISASSEMBLY), // "if necessary reduces JVM release to maximum supported by ASM version"
     
     DEBUG(M13,ASSEMBLY,DISASSEMBLY), // "exit with stack trace if error"
+    VERBOSE(M27,ASSEMBLY,DISASSEMBLY), // "print all log messages"
     
     // may change
     __TREAT_WARNINGS_AS_ERRORS(M25,ASSEMBLY), // "treat warnings as errors"

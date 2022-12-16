@@ -11,25 +11,27 @@ import jynx2asm.JynxLabel;
 import jynx2asm.ops.JvmOp;
 import jynx2asm.StackLocals;
 
-public class LookupInstruction extends Instruction {
+public class LookupInstruction extends SwitchInstruction {
 
     private final JynxLabel dflt;
     private final Map<Integer,JynxLabel> intlabels;
 
     public LookupInstruction(JvmOp jop, JynxLabel dflt, Map<Integer,JynxLabel> intlabels) {
-        super(jop);
+        super(jop, minsize(intlabels.size()));
         this.dflt = dflt;
         this.intlabels = intlabels;
     }
 
-    @Override
-    public Integer minLength() {
-        return 1 + 4 + 4 + 8*intlabels.size();
-    }
+    private static final int OVERHEAD = 1 + 4 + 4; // opcode, dflt lbel, label count
 
+    public static final long minsize(long labelct) {
+        return OVERHEAD + 8*labelct;
+    }
+    
     @Override
-    public Integer maxLength() {
-        return minLength() + 3; // maximum padding
+    public void adjust(StackLocals stackLocals) {
+        super.adjust(stackLocals);
+        stackLocals.adjustLabelSwitch(dflt,intlabels.values());
     }
 
     @Override
@@ -41,12 +43,6 @@ public class LookupInstruction extends Instruction {
                 .mapToInt(i->(int)i)
                 .toArray();
         mv.visitLookupSwitchInsn(dflt.asmlabel(), asmkeys, asmlabels);
-    }
-
-    @Override
-    public void adjust(StackLocals stackLocals) {
-        super.adjust(stackLocals);
-        stackLocals.adjustLabels(dflt,intlabels.values());
     }
 
     @Override

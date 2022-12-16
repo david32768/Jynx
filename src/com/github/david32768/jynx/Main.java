@@ -27,7 +27,7 @@ public class Main {
 
     private final static int JYNX_VERSION = 0;
     private final static int JYNX_RELEASE = 19;
-    private final static int JYNX_BUILD = 10;
+    private final static int JYNX_BUILD = 11;
     
     private static String version() {
         if (OPTION(DEBUG)) {

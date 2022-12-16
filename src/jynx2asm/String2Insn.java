@@ -2,11 +2,10 @@ package jynx2asm;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.objectweb.asm.ConstantDynamic;
@@ -16,7 +15,6 @@ import static jynx.GlobalOption.GENERATE_LINE_NUMBERS;
 import static jynx.Message.*;
 import static jynx.ReservedWord.*;
 import static jynx2asm.NameDesc.*;
-import static jynx2asm.ops.JvmOp.opc_switch;
 
 import asm.instruction.DynamicInstruction;
 import asm.instruction.FieldInstruction;
@@ -27,10 +25,10 @@ import asm.instruction.JumpInstruction;
 import asm.instruction.LabelInstruction;
 import asm.instruction.LdcInstruction;
 import asm.instruction.LineInstruction;
-import asm.instruction.LookupInstruction;
 import asm.instruction.MarrayInstruction;
 import asm.instruction.MethodInstruction;
 import asm.instruction.StackInstruction;
+import asm.instruction.SwitchInstruction;
 import asm.instruction.TableInstruction;
 import asm.instruction.TypeInstruction;
 import asm.instruction.VarInstruction;
@@ -55,8 +53,6 @@ import jynx2asm.ops.SelectOp;
 
 public class String2Insn {
 
-    private static final int MAX_METHOD_SIZE = 2*Short.MAX_VALUE + 1;
-    
     private final JynxScanner js;
     private final JynxLabelMap labmap;
     private final LabelStack labelStack;
@@ -272,6 +268,9 @@ public class String2Insn {
         if (desc.length() == 1) {
             ct = ConstType.getFromDesc(desc,Context.JVMCONSTANT);
         }
+        if (dyn.getSize() == 2) {
+            jvmop = JvmOp.opc_ldc2_w;
+        }
         return new LdcInstruction(jvmop,dyn,ct);
     }
     
@@ -325,23 +324,24 @@ public class String2Insn {
         return new JumpInstruction(jvmop,jlab);
     }
 
-    private static final int LOOKUPSWITCH_OVERHEAD = 4 + 4 + 4 + 4 - 1;
-    // default label on 4 byte boundary, default label, n, at least two returns, one return value may be pshed on stack
-    private final static int MAX_LOOKUP_ENTRIES = (MAX_METHOD_SIZE - LOOKUPSWITCH_OVERHEAD)/8;
-
     private Instruction arg_lookupswitch(JvmOp jvmop) {
         line.nextToken().mustBe(res_default);
         JynxLabel dflt = getJynxLabel(line.nextToken());
-        boolean consec = true;
-        Map<Integer,JynxLabel> swmap = new TreeMap<>();
+        SortedMap<Integer,JynxLabel> swmap = new TreeMap<>();
         Integer min = null;
+        Integer lastkey = null;
+        Integer errkey = null;
+        Integer previous = null;
         try (TokenArray dotarray = TokenArray.getInstance(js, line)) {
             multi |= dotarray.isMultiLine(); 
-            Integer lastkey = null;
             while (true) {
                 Token token = dotarray.firstToken();
                 if (token.is(right_array)) {
-                    break;
+                    if (errkey != null) {
+                        // "keys should be in ascending order; key = %d; previous key = %s"
+                        LOG(M230,errkey,previous);
+                    }
+                    return SwitchInstruction.getInstance(jvmop, dflt, swmap);
                 }
                 Integer key = token.asInt();
                 if (min == null) {
@@ -351,36 +351,16 @@ public class String2Insn {
                 JynxLabel target = getJynxLabel(dotarray.nextToken());
                 JynxLabel mustbenull = swmap.put(key, target);
                 if (mustbenull != null) {
-                    LOG(M229,key,mustbenull.name(),target.name());   // "duplicate key %d; previous target = %s, current target = %s"
-                } else if (lastkey != null && key <= lastkey) {
-                    LOG(M230,key,lastkey);   // "keys must be in ascending order; key = %d; previous key = %s"
+                    // "duplicate key %d; previous target = %s, current target = %s"
+                    LOG(M229,key,mustbenull.name(),target.name());
+                } else if (errkey == null && lastkey != null && key <= lastkey) {
+                    errkey = key;
+                    previous = lastkey;
                 }
-                consec &= lastkey == null || key == lastkey + 1;
                 lastkey = key;
                 dotarray.noMoreTokens();
             }
         }
-        if (consec && jvmop == opc_switch) {
-            int lct = swmap.size();
-            if (lct == 0) {
-                LOG(M224,jvmop,res_default); // "invalid %s as only has %s"
-                return new JumpInstruction(JvmOp.asm_goto,dflt);
-            }
-            jvmop = JvmOp.asm_tableswitch;
-            if (lct > MAX_TABLE_ENTRIES) {
-                LOG(M256,jvmop,lct,MAX_TABLE_ENTRIES); // "%s has %d entries, maximum possible is %d"
-            }
-            Collection<JynxLabel> labellist = swmap.values();
-            return new TableInstruction(jvmop, min, min + lct - 1,dflt,labellist);
-        }
-        if (consec) {
-            // "%s could be used as entries are consecutibe"
-            LOG(line,M244,JvmOp.asm_tableswitch);
-        }
-        if (swmap.size() > MAX_LOOKUP_ENTRIES) {
-            LOG(M256,jvmop,swmap.size(),MAX_LOOKUP_ENTRIES); // "%s has %d entries, maximum possible is %d"
-        }
-        return new LookupInstruction(jvmop,dflt,swmap);
     }
 
     private Instruction arg_marray(JvmOp jvmop) {
@@ -427,10 +407,6 @@ public class String2Insn {
         return labmap.codeUseOfJynxLabel(labstr, line);
     }
 
-    private static final int TABLESWITCH_OVERHEAD = 4 + 4 + 4 + 4 + 4 - 1;
-    // default label on 4 byte boundary, default label, low, n, at least two returns, one return value may be pshed on stack
-    private final static int MAX_TABLE_ENTRIES = (MAX_METHOD_SIZE - TABLESWITCH_OVERHEAD)/4;
-    
     private Instruction arg_tableswitch(JvmOp jvmop) {
         int min = line.nextToken().asInt();
         line.nextToken().mustBe(res_default);
@@ -454,9 +430,6 @@ public class String2Insn {
             LOG(M224,jvmop,res_default); // "invalid %s as only has %s"
             labellist.add(dflt);
             ++lct;
-        }
-        if (lct > MAX_TABLE_ENTRIES) {
-            LOG(M256,jvmop,lct,MAX_TABLE_ENTRIES); // "%s has %d entries, maximum possible is %d"
         }
         return new TableInstruction(jvmop, min, min + lct - 1,dflt,labellist);
     }

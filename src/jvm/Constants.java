@@ -96,4 +96,7 @@ public enum Constants {
     public static boolean isNameIn(String str, EnumSet<Constants> set) {
         return set.stream().anyMatch(cnst->cnst.name().toLowerCase().equals(str));
     }
+    
+    public static final int MAX_CODE = (int)NumType.t_short.unsignedMaxvalue();
+
 }

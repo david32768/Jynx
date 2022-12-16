@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.objectweb.asm.tree.ParameterNode;
 
+import static jvm.Constants.MAX_CODE;
 import static jynx.Global.LOG;
 import static jynx.Global.OPTION;
 import static jynx.Global.SUPPORTS;
@@ -124,7 +125,15 @@ public class StackLocals {
         activeLabels.clear();
     }
     
-    public void visitLabel(JynxLabel target) {
+    public void adjustLabelDefine(JynxLabel target) {
+        int adjustmax = target.forwardBranchAdjustment();
+        if (adjustmax > 0) {
+            int oldmax = maxLength;
+            maxLength -= adjustmax;
+            // "at label %s: min length = %d max length = %d -> %d (adjusted = -%d)"
+            LOG(M802, target,minLength, oldmax, maxLength,adjustmax);
+            assert maxLength >= minLength;
+        }
         if (target.isCatch()) {
             target.visitCatch();
         }
@@ -149,7 +158,7 @@ public class StackLocals {
         }
     }
 
-    public void visitLineNumber(Line line) {
+    private void visitLineNumber(Line line) {
         if (lastLab.isPresent()) {
             JynxLabel jlabel = labelmap.weakUseOfJynxLabel(lastLab.get(), line);
         }
@@ -181,7 +190,18 @@ public class StackLocals {
         completion = Last.OP;
     }
 
-    private static int CODE_LIMIT = 1 << 16;
+    private void checkMethodLength(Instruction in) {
+        int minbefore = minLength;
+        int maxbefore = maxLength;
+        minLength += in.minLength();
+        maxLength += in.maxLength();
+        assert maxLength >= minLength;
+        if (minbefore <= MAX_CODE && minLength > MAX_CODE) {
+            LOG(M311); // "maximum code size exceeded"
+        } else if (maxbefore <= MAX_CODE && maxLength > MAX_CODE) {
+            LOG(M312); // "maximum code size may have been exceeded"
+        }
+    }
     
     public boolean visitInsn(Instruction in, Line line) {
         if (in == null) {
@@ -191,8 +211,8 @@ public class StackLocals {
             visitLineNumber(line);
             return !isUnreachable();
         }
-        JvmOp jvmop = in.resolve(this);
-        if (jvmop.opcode() < 0) { // label or try
+        JvmOp jvmop = in.resolve(minLength,maxLength);
+        if (jvmop.opcode() < 0) { // label
             in.adjust(this);
             return true;
         }
@@ -222,16 +242,7 @@ public class StackLocals {
         frameRequired = false; // to prevent multiple error messages
         visitPreJvmOp(jvmop);
         in.adjust(this);
-        int minbefore = minLength;
-        int maxbefore = maxLength;
-        minLength += in.minLength();
-        maxLength += in.maxLength();
-        if (maxbefore < CODE_LIMIT && maxLength >= CODE_LIMIT) {
-            LOG(M312); // "maximum code size may have been exceeded"
-        }
-        if (minbefore < CODE_LIMIT && minLength >= CODE_LIMIT) {
-            LOG(M311); // "maximum code size exceeded"
-        }
+        checkMethodLength(in);
         visitPostJvmOp(jvmop);
         return true;
     }
@@ -266,6 +277,8 @@ public class StackLocals {
             default:
                 throw new AssertionError();
         }
+        // "min length = %d max length = %d"
+        LOG(M801,minLength,maxLength);
     }
 
     private void updateLocal(JynxLabel label, LocalFrame osf) {
@@ -278,7 +291,7 @@ public class StackLocals {
         updateLocal(label,osf);
     }
     
-    public void adjustLabel(JynxLabel label, boolean jsr) {
+    public void adjustLabelJump(JynxLabel label, boolean jsr) {
         stack.checkStack(label, jsr);
         updateLocal(label);
     }
@@ -300,7 +313,7 @@ public class StackLocals {
     }
     
 
-    public void adjustLabels(JynxLabel dflt, Collection<JynxLabel> labels) {
+    public void adjustLabelSwitch(JynxLabel dflt, Collection<JynxLabel> labels) {
         checkStack(dflt, labels);
         updateLocal(dflt, labels);
     }

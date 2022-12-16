@@ -16,13 +16,19 @@ public class LabelInstruction extends Instruction {
     }
 
     @Override
-    public void accept(MethodVisitor mv) {
-        mv.visitLabel(jlab.asmlabel());
+    public JvmOp resolve(int minoffset, int maxoffset) {
+        jlab.setOffset(minoffset, maxoffset);
+        return jvmop;
     }
 
     @Override
     public void adjust(StackLocals stackLocals) {
-        stackLocals.visitLabel(jlab);
+        stackLocals.adjustLabelDefine(jlab);
+    }
+
+    @Override
+    public void accept(MethodVisitor mv) {
+        mv.visitLabel(jlab.asmlabel());
     }
 
     @Override

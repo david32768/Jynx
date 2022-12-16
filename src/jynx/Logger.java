@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import static jynx.Global.OPTION;
+import static jynx.GlobalOption.VERBOSE;
 
 import static jynx.Message.*;
 
@@ -141,6 +142,13 @@ public class Logger {
                 break;
             case BLANK:
                 printInfo(msg,objs);
+                break;
+            case FINE:
+            case FINER:
+            case FINEST:
+                if (OPTION(VERBOSE)) {
+                    printLineMessage(msg,objs);
+                }
                 break;
             default:
                 throw new EnumConstantNotPresentException(logtype.getClass(),logtype.name());

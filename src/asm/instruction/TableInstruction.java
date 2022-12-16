@@ -11,7 +11,7 @@ import jynx2asm.JynxLabel;
 import jynx2asm.ops.JvmOp;
 import jynx2asm.StackLocals;
 
-public class TableInstruction extends Instruction {
+public class TableInstruction extends SwitchInstruction {
 
     private final int min;
     private final int max;
@@ -19,21 +19,23 @@ public class TableInstruction extends Instruction {
     private final Collection<JynxLabel> labels;
 
     public TableInstruction(JvmOp jop, int min, int max, JynxLabel dflt, Collection<JynxLabel> labels) {
-        super(jop);
+        super(jop, minsize(labels.size()));
         this.min = min;
         this.max = max;
         this.dflt = dflt;
         this.labels = labels;
     }
 
-    @Override
-    public Integer minLength() {
-        return 1 + 4 + 4 + 4 + 4*labels.size();
+    private static final int OVERHEAD = 1 + 4 + 4 + 4 ;
+    
+    public static final long minsize(long labelct) {
+        return OVERHEAD + 4*labelct;
     }
-
+    
     @Override
-    public Integer maxLength() {
-        return minLength() + 3; // maximum padding
+    public void adjust(StackLocals stackLocals) {
+        super.adjust(stackLocals);
+        stackLocals.adjustLabelSwitch(dflt,labels);
     }
 
     @Override
@@ -42,12 +44,6 @@ public class TableInstruction extends Instruction {
             .map(JynxLabel::asmlabel)
             .toArray(Label[]::new);
         mv.visitTableSwitchInsn(min, max, dflt.asmlabel(), asmlabels);
-    }
-
-    @Override
-    public void adjust(StackLocals stackLocals) {
-        super.adjust(stackLocals);
-        stackLocals.adjustLabels(dflt,labels);
     }
 
     @Override
