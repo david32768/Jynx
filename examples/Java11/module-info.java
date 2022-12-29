@@ -12,9 +12,9 @@ module com.github.david32768.jynx {
 // jar --create --file Jynx.jar --main-class com.github.david32768.jynx.Main --module-version 0.19 -C build\classes\ .
 /*
 .version V11
+.define_module
 .source module-info.java
-.module
-.module_info com.github.david32768.jynx 0.19 ; version added by jar tool --module-version
+.module com.github.david32768.jynx 0.19 ; version added by jar tool --module-version
 .main com/github/david32768/jynx/Main ; main added by jar tool --main-class
 .requires mandated java.base 11
 .requires org.objectweb.asm 9.3.0
@@ -39,4 +39,5 @@ module com.github.david32768.jynx {
   jynx2asm/ops
   textifier
 .end_array
+,end_module
 ; */
