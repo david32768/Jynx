@@ -39,5 +39,5 @@ module com.github.david32768.jynx {
   jynx2asm/ops
   textifier
 .end_array
-,end_module
+.end_module
 ; */
