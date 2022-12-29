@@ -46,6 +46,7 @@ Options are:
 *	--JVM_OPS_ONLY only JVM specified ops
 *	--TRACE print (jynxifier) trace
 *	--DEBUG exit with stack trace if error
+*	--VERBOSE print all log messages
 
  2jynx {options}  class-name|class_file > .jx_file
    (produces a .jx file from a class)
@@ -57,6 +58,7 @@ Options are:
 *	--SKIP_FRAMES do not produce stack map
 *	--SKIP_ANNOTATIONS do not produce annotations
 *	--DOWN_CAST if necessary reduces JVM release to maximum supported by ASM version
+*	--VERBOSE print all log messages
 
 ## Jasmin 1.0
 
@@ -253,19 +255,19 @@ Changes are
 	; <simple-component> = .component <component-name> <desc>
 	.component x I
 
-	; <compond-component> = .component <component-name> <desc>
+	; <compound-component> = .component <component-name> <desc>
 	;	[<signature>]?
 	;	<annotation>|<type-annotation>]*
 	; 	.end_component
 ```
-*	.module ; see examples/Java11/module-info.java
+*	.define_module ; see examples/Java11/module-info.java
 ```
 	; grammar
-	; .module
+	; .define_module
 	; [<class-hdr-directives>]* ; for those which are valid for module (end of jvms 4.1)
-	; .module_info <access-spec> <module-name> [<version>]?
+	; .module <access-spec> <module-name> [<version>]?
 	; [<main>|<requires>|<exports>|<open>|<uses>|<supports>|<packages>]*
-	; ; end of file
+	; .end_module
 
 	; <main>? = .main <class-name>
 
