@@ -133,7 +133,7 @@ public class String2Insn {
             add(selector.getOp(line,instlist),macrostack,macct,instlist);
         } else if (jop instanceof JvmOp) {
             JvmOp jvmop = (JvmOp)jop;
-            switchArg(jvmop).ifPresent(instlist::add);
+            addJvmOp(jvmop,instlist);
         } else if (jop instanceof DynamicOp) {
             DynamicOp dynamicop = (DynamicOp)jop;
             instlist.add(dynamicop.getInstruction(js,line,checker));
@@ -164,7 +164,7 @@ public class String2Insn {
         }
     }
 
-    private Optional<Instruction> switchArg(JvmOp jvmop) {
+    private void addJvmOp(JvmOp jvmop, InstList instlist) {
         Instruction insn;
         OpArg oparg = jvmop.args();
         switch(oparg) {
@@ -176,7 +176,7 @@ public class String2Insn {
             case arg_dir:insn = arg_dir(jvmop);break;
             case arg_field:insn = arg_field(jvmop);break;
             case arg_incr:insn = arg_incr(jvmop);break;
-            case arg_label:insn = arg_label(jvmop);break;
+            case arg_label:insn = arg_label(jvmop,instlist.isUnreachable());break;
             case arg_lookupswitch:insn = arg_lookupswitch(jvmop);break;
             case arg_marray:insn = arg_marray(jvmop);break;
             case arg_method:case arg_interface:insn = arg_method(jvmop);break;
@@ -188,7 +188,10 @@ public class String2Insn {
             default:
                 throw new EnumConstantNotPresentException(oparg.getClass(), oparg.name());
         }
-        return insn == null?Optional.empty():Optional.of(insn);
+        if (insn == null) {
+            return;
+        }
+        instlist.add(insn);
     }
     
     private Instruction arg_atype(JvmOp jvmop) {
@@ -289,7 +292,7 @@ public class String2Insn {
                 String labstr = line.nextToken().asString();
                 JynxLabel target = labmap.defineJynxLabel(labstr, line);
                 return new LabelInstruction(jvmop,target);
-            case xxx_labelweak:
+            case xxx_label_weak:
                 labstr = line.nextToken().asString();
                 target = labmap.defineWeakJynxLabel(labstr, line);
                 return target == null?null:new LabelInstruction(jvmop,target);
@@ -319,8 +322,15 @@ public class String2Insn {
         return new IncrInstruction(jvmop,vartoken, incr);
     }
 
-    private Instruction arg_label(JvmOp jvmop) {
-        JynxLabel jlab = getJynxLabel(line.nextToken());
+    private Instruction arg_label(JvmOp jvmop, boolean unreachable) {
+        Token label = line.nextToken();
+        if (jvmop == JvmOp.xxx_goto_weak) {
+            if (unreachable) {
+                return null;
+            }
+            jvmop = JvmOp.asm_goto;
+        }
+        JynxLabel jlab = getJynxLabel(label);
         return new JumpInstruction(jvmop,jlab);
     }
 

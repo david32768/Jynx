@@ -270,7 +270,7 @@ public class ASMTextMacroLib extends MacroLib {
         RET_W(opc_ret_w),
         WIDE(opc_wide),
         LABEL(xxx_label),
-        LABELWEAK(xxx_labelweak),
+        LABELWEAK(xxx_label_weak),
 
         ;
 

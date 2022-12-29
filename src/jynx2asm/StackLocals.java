@@ -15,6 +15,7 @@ import static jynx.GlobalOption.WARN_UNNECESSARY_LABEL;
 import static jynx.Message.*;
 
 import asm.instruction.Instruction;
+import asm.instruction.LabelInstruction;
 import asm.instruction.LineInstruction;
 import asm.JynxVar;
 import jvm.Feature;
@@ -101,7 +102,7 @@ public class StackLocals {
         return lastLab.isPresent()?null:lastop;
     }
 
-    private boolean isUnreachable() {
+    public boolean isUnreachable() {
         return lastop.isUnconditional() && !lastLab.isPresent();
     }
     
@@ -207,23 +208,20 @@ public class StackLocals {
         if (in == null) {
             return false;
         }
-        if (in instanceof LineInstruction) {
-            visitLineNumber(line);
-            return !isUnreachable();
-        }
         JvmOp jvmop = in.resolve(minLength,maxLength);
-        if (jvmop.opcode() < 0) { // label
+        if (in instanceof LabelInstruction) {
             in.adjust(this);
             return true;
         }
         if (isUnreachable()) {
-            if (jvmop.isUnconditional()) {
-                LOG(M122,jvmop,lastop);  // "Instruction '%s' dropped as unreachable after '%s' without intervening label"
-            } else {
-                LOG(M121,jvmop,lastop);  // "Instruction '%s' dropped as unreachable after '%s' without intervening label"
-            }
+            LOG(M121,jvmop,lastop);  // "Instruction '%s' dropped as unreachable after '%s' without intervening label"
             return false;
         }
+        if (in instanceof LineInstruction) {
+            visitLineNumber(line);
+            return true;
+        }
+        assert jvmop.opcode() >= 0;
         if (jvmop.isReturn()) {
             if (jvmop == returnOp) {
                 returns = true;

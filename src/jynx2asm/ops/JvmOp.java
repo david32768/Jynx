@@ -247,8 +247,9 @@ public enum JvmOp implements JynxOp {
 
     opc_wide(196, null, "()V", arg_none, NOP),
 
+    xxx_goto_weak(-3, 5, "()V", arg_label, GOTO),
     xxx_label(-1, 0, "()V", arg_dir, -1),
-    xxx_labelweak(-1, 0, "()V", arg_dir, -1),
+    xxx_label_weak(-1, 0, "()V", arg_dir, -1),
     xxx_line(-2, 0, "()V", arg_dir, -2),
     ;
         

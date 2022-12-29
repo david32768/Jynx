@@ -125,7 +125,7 @@ public enum Message {
     M119("this and following lines skipped until %s"),
     M120("Requires only one of {%s} specified"),
     M121("Instruction \'%s\' dropped as unreachable after '%s' without intervening label"),
-    M122(WARNING,"Instruction \'%s\' dropped as unreachable after '%s' without intervening label"),
+
     M123("compilation of %s failed because of %s"),
     M124("stack frame is definitely required here"),
     M125("Requires none of {%s} specified"),

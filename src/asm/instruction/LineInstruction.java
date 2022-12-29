@@ -29,14 +29,14 @@ public class LineInstruction extends Instruction {
     }
 
     @Override
+    public void adjust(StackLocals stackLocals) {}
+
+    @Override
     public void accept(MethodVisitor mv) {
         Label label = new Label();  //  to get multiple line numbers. eg in jdk3/ArtificialStructures
         mv.visitLabel(label);
         mv.visitLineNumber(lineNum, label);
     }
-
-    @Override
-    public void adjust(StackLocals stackLocals) {}
 
     @Override
     public String toString() {

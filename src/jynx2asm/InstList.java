@@ -137,4 +137,9 @@ public class InstList {
     public JvmOp getReturnOp() {
         return stackLocals.getReturnOp();
     }
+    
+    public boolean isUnreachable() {
+        return stackLocals.isUnreachable();
+    }
+    
 }
