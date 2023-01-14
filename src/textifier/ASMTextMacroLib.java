@@ -5,7 +5,7 @@ import java.util.stream.Stream;
 
 import static jynx2asm.ops.AdjustToken.join;
 import static jynx2asm.ops.AdjustToken.LC;
-import static jynx2asm.ops.AdjustToken.replace;
+import static jynx2asm.ops.AdjustToken.removePrefix;
 import static jynx2asm.ops.JvmOp.*;
 import static jynx2asm.ops.LineOps.tok_skip;
 import static jynx2asm.ops.LineOps.tok_skipall;
@@ -61,7 +61,7 @@ public class ASMTextMacroLib extends MacroLib {
         INVOKESTATIC(join(""),asm_invokestatic,checkNot("{itf}")), // {itf} not supported (precede ClassName with @ instead)
         INVOKEVIRTUAL(join(""),asm_invokevirtual),
         LINENUMBER(xxx_line,tok_skip),
-        NEWARRAY(replace("T_",""),LC(),asm_newarray),
+        NEWARRAY(removePrefix("T_"),LC(),asm_newarray),
         PUTFIELD(tok_swap,check(":"),asm_putfield),
         PUTSTATIC(tok_swap,check(":"),asm_putstatic),
         // Upper case

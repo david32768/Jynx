@@ -81,6 +81,10 @@ public class AdjustToken implements LineOp{
     public static LineOp append(String str) {
         return new AdjustToken(AdjustToken.Adjustment.TRANSFORM,s->s + str);
     }
+
+    public static LineOp surround(String pre, String post) {
+        return new AdjustToken(AdjustToken.Adjustment.TRANSFORM,s->pre + s + post);
+    }
     
     public static LineOp UC() {
         return new AdjustToken(AdjustToken.Adjustment.TRANSFORM,String::toUpperCase);
@@ -90,8 +94,9 @@ public class AdjustToken implements LineOp{
         return new AdjustToken(AdjustToken.Adjustment.TRANSFORM,String::toLowerCase);
     }
     
-    public static LineOp replace(String find, String replace) {
-        return new AdjustToken(AdjustToken.Adjustment.TRANSFORM,str->str.replace(find,replace));
+    public static LineOp removePrefix(String prefix) {
+        return new AdjustToken(AdjustToken.Adjustment.TRANSFORM,
+                str->str.startsWith(prefix)?str.substring(prefix.length()):str);
     }
     
     public static LineOp translateDesc() {
