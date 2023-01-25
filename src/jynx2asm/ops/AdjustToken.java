@@ -94,6 +94,10 @@ public class AdjustToken implements LineOp{
         return new AdjustToken(AdjustToken.Adjustment.TRANSFORM,String::toLowerCase);
     }
     
+    public static LineOp replace(String from, String to) {
+        return new AdjustToken(AdjustToken.Adjustment.TRANSFORM,s->s.replace(from,to));
+    }
+    
     public static LineOp removePrefix(String prefix) {
         return new AdjustToken(AdjustToken.Adjustment.TRANSFORM,
                 str->str.startsWith(prefix)?str.substring(prefix.length()):str);
