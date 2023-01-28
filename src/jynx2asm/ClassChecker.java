@@ -50,7 +50,11 @@ public class ClassChecker {
     private final Access classAccess;
     private final ClassType classType;
     private final JvmVersion jvmVersion;
+    private String superClassName;
 
+    private int specialct;
+    private int newct;
+    
     private ClassChecker(String cname, Access classAccess, ClassType classType, JvmVersion jvmversion) {
         this.className = cname;
         this.classAccess = classAccess;
@@ -127,6 +131,7 @@ public class ClassChecker {
             MethodHandle valueof = MethodHandle.getInstance(str,REF_invokeStatic);
             ownMethodsUsed.put(valueof,STATIC_METHOD_HANDLE_LINE);
         }
+        superClassName = csuper;
         return csuper;
     }
     
@@ -144,7 +149,17 @@ public class ClassChecker {
 
     public void usedMethod(MethodHandle mh, JvmOp jvmop, Line line) {
         HandleType ht = HandleType.fromOp(jvmop, mh.isInit());
+        if (ht == REF_newInvokeSpecial
+                && (mh.owner().equals(className) || mh.owner().equals(superClassName))) {
+            ++specialct;
+        }
         usedMethod(mh, ht, line);
+    }
+    
+    public void usedNew(String classname) {
+        if (classname.equals(className) || classname.equals(superClassName)) {
+            ++newct;
+        }
     }
     
     private void usedMethod(MethodHandle mh, HandleType ht, Line line) {
@@ -193,6 +208,8 @@ public class ClassChecker {
 
     public void checkMethod(JynxMethodNode jmn) {
         LocalMethodHandle lmh = jmn.getLocalMethodHandle();
+        specialct = 0;
+        newct = 0;
         HandleType ht;
         if (jmn.isStatic()) {
             ht = REF_invokeStatic;
@@ -236,6 +253,20 @@ public class ClassChecker {
             }
         }
    }    
+
+    public void endMethod(JynxMethodNode jmn) {
+        if (jmn.getLocalMethodHandle().isInit()) {
+            int standard = Constants.OBJECT_CLASS.equalString(className)?0:1;
+            int net = specialct - newct;
+            if (net < standard) {
+                // "init method does not contain this or super: %s = %d %s = %d"
+                LOG(M102,HandleType.REF_newInvokeSpecial,specialct, JvmOp.asm_new,newct);
+            } else if (net > standard) {
+                // "init method contains %d %s and %d %s for net of %d"
+                LOG(M103,specialct,HandleType.REF_newInvokeSpecial,newct,JvmOp.asm_new,net);
+            }
+        }
+    }
     
     private JynxComponentNode getComponent4Method(String mname, String mdesc) {
         JynxComponentNode jcn = components.get(mname);

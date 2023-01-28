@@ -106,7 +106,8 @@ public enum Message {
     M99("Separator \'%s\' not found in %s"),
 
     M101("unknown handle mnemonic: %s"),
-
+    M102("init method does not contain this or super: %s = %d %s = %d"),
+    M103(WARNING,"init method contains %d %s and %d %s for net of %d"),
     M104(BLANK,"class %s %s completed successfully"),
     M105("unknown option %s - ignored"),
     M106("labels in %s must not be defined yet"),

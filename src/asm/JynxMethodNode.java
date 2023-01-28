@@ -212,6 +212,7 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
         if (signature == null && isComponent()) {
             checker.checkSignature4Method(signature, getName(), getDesc());
         }
+        checker.endMethod(this);
         try {
             mnode.visitEnd();
         } catch (Exception ex) {

@@ -215,6 +215,7 @@ public class String2Insn {
         String type = TRANSLATE_OWNER(typeo);
         if (jvmop == JvmOp.asm_new) {
             CLASS_NAME.validate(type);
+            checker.usedNew(type);
         } else {
             OBJECT_NAME.validate(type);
         }
