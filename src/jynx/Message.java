@@ -48,7 +48,7 @@ public enum Message {
     M41("component can only appear in a record"),
     M42("%s invalid in context"),
     M43("line contains newline or carriage return character"),
-
+    M44(BLANK,"local variables are symbolic not absolute integers"),
     M45("value(%d) for %s exceeds that(%d) set by line:%n  %s"),
     M46("method %s has no body"),
     M47("Invalid component name - %s"),
@@ -255,7 +255,7 @@ public enum Message {
     M252("own init method %s not found"),
     M253("illegal number of dimensions %d; must be in range [0,%d]"),
     M254("%s is used in a macro after a mulit-line op"),
-    M255("cannot mix absolute and relative local variables"),
+
     M256("size of %s is %d which exceeds %d"),
     M257("argument count %d is not in range [0,%d]"),
     M258(WARNING,"%s is a reserved word and cannot be a Java Id"),

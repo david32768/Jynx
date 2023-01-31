@@ -38,6 +38,7 @@ Options are:
 *	--WARN_UNNECESSARY_LABEL warn if label unreferenced or alias
 *	--WARN_STYLE warn if names non-standard
 *	--GENERATE_LINE_NUMBERS generate line numbers
+*	--SYMBOLIC_LOCAL local variables are symbolic not absolute integers
 *	--BASIC_VERIFIER use ASM BasicVerifier
 *	--SIMPLE_VERIFIER use ASM SimpleVerifier (default)
 *	--ALLOW_CLASS_FORNAME let simple verifier use Class.forName() for non-java classes
@@ -58,6 +59,7 @@ Options are:
 *	--SKIP_FRAMES do not produce stack map
 *	--SKIP_ANNOTATIONS do not produce annotations
 *	--DOWN_CAST if necessary reduces JVM release to maximum supported by ASM version
+*	--DEBUG exit with stack trace if error
 *	--VERBOSE print all log messages
 
 ## Jasmin 1.0
@@ -255,7 +257,7 @@ Changes are
 	; <simple-component> = .component <component-name> <desc>
 	.component x I
 
-	; <compound-component> = .component <component-name> <desc>
+	; <compond-component> = .component <component-name> <desc>
 	;	[<signature>]?
 	;	<annotation>|<type-annotation>]*
 	; 	.end_component
@@ -268,6 +270,7 @@ Changes are
 	; .module <access-spec> <module-name> [<version>]?
 	; [<main>|<requires>|<exports>|<open>|<uses>|<supports>|<packages>]*
 	; .end_module
+	; ; end of file
 
 	; <main>? = .main <class-name>
 

@@ -18,14 +18,7 @@ import jynx.LogIllegalArgumentException;
 
 public class LocalVars {
 
-    private enum VarState {
-        NOT_SET,
-        ACTUAL,
-        SYMBOLIC,
-    }
-    
     private static final int MAXSTACK = 1 << 16;
-    private static final char SYMBOL_MARKER = '$';
     
     private final LimitValue localsz;
     private final FrameElement[] locals;
@@ -33,12 +26,11 @@ public class LocalVars {
     private final VarAccess varAccess;
     private final int parmsz;
     private final Map<String,Integer> varmap;
+    private final boolean symbolic;
     
     private int sz;
     private boolean startblock;
     private LocalFrame lastlocals;
-    private VarState varState;
-    private int parmct;
     
     private LocalVars(OperandStackFrame parmlocals, boolean isStatic) {
         this.localsz = new LimitValue(LimitValue.Type.locals);
@@ -50,58 +42,49 @@ public class LocalVars {
         visitFrame(parmlocals, Optional.empty());  // wiil set startblock to false
         this.parmsz = sz;
         varAccess.completeInit(this.parmsz);
-        this.varState = OPTION(GlobalOption.USE_STACK_MAP)?VarState.ACTUAL:VarState.NOT_SET;
+        this.symbolic = OPTION(GlobalOption.SYMBOLIC_LOCAL);
         this.varmap = new HashMap<>();
     }
 
+    public static LocalVars getInstance(List<Object> localstack, List<ParameterNode> parameters, boolean isStatic) {
+        OperandStackFrame parmosf = OperandStackFrame.getInstance(localstack,false);
+        LocalVars lv = new LocalVars(parmosf,isStatic);
+        if (lv.symbolic) {
+            lv.setParms(parmosf);
+            if (parameters != null) {
+                int parmnum = 0;
+                for (ParameterNode parameter:parameters) {
+                    lv.setParmName(parmnum,parameter.name);
+                    ++parmnum;
+                }
+            }
+        }
+        return lv;
+    }
+
     private void setParms(OperandStackFrame osf) {
+        assert symbolic;
         int parm0 = 0;
         if (!isStatic) {
-            varmap.put(SYMBOL_MARKER + "this",0);
+            varmap.put("$this",0);
             parm0 = 1;
         }
         int current = parm0;
         for (int i = parm0; i < osf.size(); ++i) {
             FrameElement fe = osf.at(i);
             String parmnumstr = "" + (i - parm0);
-            varmap.put(SYMBOL_MARKER + parmnumstr, current);
+            varmap.put(parmnumstr, current);
             current += fe.isTwo()?2:1;
         }
-        this.parmct = osf.size() - parm0;
     }
 
-    private boolean isAbsolute(String name) {
-        assert name != null && !name.isEmpty();
-        return Character.isDigit(name.charAt(0));
-    }
-    
-    private String getSymbolicVarName(String name) {
-        if (isAbsolute(name)) {
-            return SYMBOL_MARKER + name;
-        }
-        return name;
-    }
-    
     private void setParmName(int parmnum, String name) {
-        Integer jvmnum = varmap.get("" + SYMBOL_MARKER + parmnum);
-        assert jvmnum != null && parmnum >= 0 && parmnum < parmct;
-        varmap.put(getSymbolicVarName(name), jvmnum);
+        assert symbolic;
+        Integer jvmnum = varmap.get("" + parmnum);
+        assert jvmnum != null && parmnum >= 0;
+        varmap.put(name, jvmnum);
     }
     
-    public static LocalVars getInstance(List<Object> localstack, List<ParameterNode> parameters, boolean isStatic) {
-        OperandStackFrame parmosf = OperandStackFrame.getInstance(localstack,false);
-        LocalVars lv = new LocalVars(parmosf,isStatic);
-        lv.setParms(parmosf);
-        if (parameters != null) {
-            int parmnum = 0;
-            for (ParameterNode parameter:parameters) {
-                lv.setParmName(parmnum,parameter.name);
-                ++parmnum;
-            }
-        }
-        return lv;
-    }
-
     public LocalFrame currentFrame() {
         return new LocalFrame(locals,sz);
     }
@@ -112,26 +95,11 @@ public class LocalVars {
     }
 
     private int getVarNumber(Token token, FrameElement fe) {
-        String tokenstr = token.asString();
-        if (varState == VarState.NOT_SET) {
-            varState = isAbsolute(tokenstr)?VarState.ACTUAL:VarState.SYMBOLIC;
-        }
-        switch(varState) {
-            case ACTUAL:
-                return getActualVarNumber(token);
-            case SYMBOLIC:
-                return getSymbolicVarNumber(token,fe);
-            default:
-                throw new EnumConstantNotPresentException(varState.getClass(), varState.name());
-        }
+        return symbolic? getSymbolicVarNumber(token,fe): getActualVarNumber(token);
     }
     
     private int getSymbolicVarNumber(Token token, FrameElement fe) {
         String tokenstr = token.asString();
-        if (isAbsolute(tokenstr)) {
-            // "cannot mix absolute and relative local variables"
-            throw new LogIllegalArgumentException(M255);
-        }
         Integer number = varmap.get(tokenstr);
         if (fe != null) {
             if (number == null) {
@@ -151,11 +119,6 @@ public class LocalVars {
     }
     
     private int getActualVarNumber(Token token) {
-        String tokenstr = token.asString();
-        if (!isAbsolute(tokenstr)) {
-            // "cannot mix absolute and relative local variables"
-            throw new LogIllegalArgumentException(M255);
-        }
         return token.asUnsignedShort();
     }
     
