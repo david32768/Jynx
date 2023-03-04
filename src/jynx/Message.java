@@ -306,7 +306,7 @@ public enum Message {
     M304("Nest host already defined%n  %s"),
     M305(ENDINFO,"it is preferred that name is separated from owner by '%c' not '%c'"),
     M306("nested class have different owners; class = %s token = %s"),
-    M307(WARNING,"parameters [%s ] are overwritten"),
+    M307("final parameters [%s ] are overwritten"),
     M308("parameter number %d is not in range [0,%d]"),
     M309("missing %s %d : %s parameter added"),
     M310("parameter %d has already been defined: %s"),

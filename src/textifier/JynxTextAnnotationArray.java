@@ -35,7 +35,7 @@ public class JynxTextAnnotationArray extends JynxTextAnnotation {
         jsb.start(2);
         if (valct++ == 0) {
             ct = ConstType.getFromASM(value, Context.ANNOTATION);
-            String typestr = ct.getJynx_desc(true);
+            String typestr = ct.getJynxDesc(true);
             jsb.appendNonNull(name)
                     .append(typestr)
                     .append(ReservedWord.equals_sign)
@@ -55,7 +55,7 @@ public class JynxTextAnnotationArray extends JynxTextAnnotation {
         jsb.start(2);
         if (valct++ == 0) {
             ct = ConstType.ct_enum;
-            String typestr = ct.getJynx_desc(true);
+            String typestr = ct.getJynxDesc(true);
             jsb.appendNonNull(name)
                     .append(typestr)
                     .appendNonNull(descriptor)
@@ -73,7 +73,7 @@ public class JynxTextAnnotationArray extends JynxTextAnnotation {
     @Override
     public Textifier visitAnnotation(String nullname, String descriptor) {
         ct = ConstType.ct_annotation;
-        String typestr = ct.getJynx_desc(true);
+        String typestr = ct.getJynxDesc(true);
         jsb.start(2)
                 .appendNonNull(name)
                 .append(typestr)
@@ -105,7 +105,7 @@ public class JynxTextAnnotationArray extends JynxTextAnnotation {
         } else {
             if (valct == 0) {
                 ct = ConstType.ct_int;
-                String typestr = ct.getJynx_desc(true);
+                String typestr = ct.getJynxDesc(true);
                 jsb.appendNonNull(name)
                         .append(typestr)
                         .append(ReservedWord.equals_sign)

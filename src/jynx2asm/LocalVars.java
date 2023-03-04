@@ -1,6 +1,7 @@
 package jynx2asm;
 
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,11 +33,11 @@ public class LocalVars {
     private boolean startblock;
     private LocalFrame lastlocals;
     
-    private LocalVars(OperandStackFrame parmlocals, boolean isStatic) {
+    private LocalVars(OperandStackFrame parmlocals, boolean isStatic, BitSet finalparms) {
         this.localsz = new LimitValue(LimitValue.Type.locals);
         this.locals = new FrameElement[MAXSTACK];
         this.isStatic = isStatic;
-        this.varAccess = new VarAccess();
+        this.varAccess = new VarAccess(finalparms);
         this.sz = 0;
         this.startblock = true;
         visitFrame(parmlocals, Optional.empty());  // wiil set startblock to false
@@ -46,9 +47,10 @@ public class LocalVars {
         this.varmap = new HashMap<>();
     }
 
-    public static LocalVars getInstance(List<Object> localstack, List<ParameterNode> parameters, boolean isStatic) {
+    public static LocalVars getInstance(List<Object> localstack, List<ParameterNode> parameters,
+            boolean isStatic, BitSet finalparms) {
         OperandStackFrame parmosf = OperandStackFrame.getInstance(localstack,false);
-        LocalVars lv = new LocalVars(parmosf,isStatic);
+        LocalVars lv = new LocalVars(parmosf,isStatic,finalparms);
         if (lv.symbolic) {
             lv.setParms(parmosf);
             if (parameters != null) {

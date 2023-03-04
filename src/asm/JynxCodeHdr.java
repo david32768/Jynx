@@ -1,6 +1,7 @@
 package asm;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -38,6 +39,8 @@ import jynx2asm.JynxLabelMap;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
 import jynx2asm.LinesIterator;
+import jynx2asm.LocalVars;
+import jynx2asm.OperandStack;
 import jynx2asm.ops.JvmOp;
 import jynx2asm.ops.JynxOps;
 import jynx2asm.StackLocals;
@@ -67,26 +70,26 @@ public class JynxCodeHdr implements ContextDependent {
     
     private final Map<Directive,Line> uniqueDirectives;
     
-    private JynxCodeHdr(MethodNode mnode, JynxScanner js, ClassChecker checker,
-            LocalMethodHandle lmh, JynxLabelMap labelmap, boolean isStatic, JynxOps opmap) {
+    private JynxCodeHdr(MethodNode mnode, StackLocals stackLocals,
+            List<Object> localStack, String2Insn s2a) {
+        
         this.errorsAtStart = LOGGER().numErrors();
-        this.js = js;
-        String clname = isStatic?null:checker.getClassName();
-        this.localStack = FrameType.getInitFrame(clname, lmh); // classname set non null for virtual methods
+        this.localStack = localStack;
         this.mnode = mnode;
-        this.labelmap = labelmap;
         this.vars = new ArrayList<>();
-        JvmOp returnop = JynxHandle.getReturnOp(lmh);
-        this.stackLocals = StackLocals.getInstance(localStack,labelmap,mnode.parameters,returnop,isStatic);
-        this.s2a = String2Insn.getInstance(js, labelmap, checker, opmap);
+        this.stackLocals = stackLocals;
+        this.s2a = s2a;
+        this.js = s2a.getJynxScanner();
+        this.labelmap = s2a.getLabelMap();
         this.uniqueDirectives = new HashMap<>();
         this.options = new EnumMap<>(ReservedWord.class);
     }
 
-    public static JynxCodeHdr getInstance(MethodNode mnode, JynxScanner js, LocalMethodHandle lmh,
-            JynxLabelMap labelmap, boolean isStatic, ClassChecker checker, JynxOps opmap) {
+    public static JynxCodeHdr getInstance(MethodNode mnode, StackLocals stackLocals,
+            List<Object> localStack, String2Insn s2a) {
+        
         CHECK_SUPPORTS(Code);
-        return new JynxCodeHdr(mnode, js, checker,lmh, labelmap, isStatic ,opmap);
+        return new JynxCodeHdr(mnode, stackLocals, localStack, s2a);
     }
 
     @Override

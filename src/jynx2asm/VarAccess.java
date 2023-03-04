@@ -17,15 +17,17 @@ public class VarAccess {
     private final BitSet typedVars;
     private final BitSet frameVars;
     private final BitSet parmVars;
+    private final BitSet finalParms;
 
     private int parmsz;
     
-    public VarAccess() {
+    public VarAccess(BitSet finalparms) {
         this.readVars = new BitSet();
         this.writeVars = new BitSet();
         this.typedVars = new BitSet();
         this.frameVars = new BitSet();
         this.parmVars = new BitSet();
+        this.finalParms = finalparms;
     }
 
     public void completeInit(int parmsz) {
@@ -142,11 +144,13 @@ public class VarAccess {
             // "local variables [%s ] are in a frame but not written"
             LOG(M281,ranges);
         }
-//        ranges = rangeString(0,parmVars);
-//        if (!ranges.isEmpty()) {
-//            // "parameters [%s ] are overwritten"
-//            LOG(M307,ranges);
-//        }
+        BitSet writtenparms = (BitSet)parmVars.clone();
+        writtenparms.and(finalParms);
+        ranges = rangeString(0,writtenparms);
+        if (!ranges.isEmpty()) {
+            // "final parameters [%s ] are overwritten"
+            LOG(M307,ranges);
+        }
     }
     
 }

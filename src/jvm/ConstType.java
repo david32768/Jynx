@@ -70,7 +70,7 @@ public enum ConstType {
         this(jynx_desc, klass, contexts,tokenfn,klass);
     }
 
-    public String getJynx_desc(boolean isArray) {
+    public String getJynxDesc(boolean isArray) {
         String arrayind = isArray?"[":"";
         return arrayind + jynx_desc;
     }

@@ -91,6 +91,38 @@ public class String2Object {
     public Handle parseHandle(String token) {
         return JynxHandle.getHandle(token);
     }
+
+    private ConstType typeConstant(String constant) {
+        assert !constant.isEmpty();
+        char typeconstant = constant.charAt(0);
+        int index = "+-0123456789".indexOf(typeconstant);
+        if (index >= 0) {
+            String lcstr = constant.toLowerCase();
+            if (index <= 1 && (lcstr.startsWith("nan",1) || lcstr.startsWith("inf",1))) {
+                    return ConstType.ct_double;
+            }
+            if (lcstr.startsWith("0x") && !lcstr.contains(".") &&  !lcstr.contains("p")) {
+                return ConstType.ct_long;
+            }
+            if (lcstr.contains(".") || lcstr.contains("e") || lcstr.contains("p")) {
+                return ConstType.ct_double;
+            }
+            return ConstType.ct_long;
+        }
+        switch(typeconstant) {
+            case '\"':
+                return ConstType.ct_string;
+            case '(':
+                return ConstType.ct_method_type;
+            case'\'':
+                return ConstType.ct_char;
+            default:    // class or method handle
+                if (constant.indexOf(HandleType.SEP) >= 0) { // method handle
+                    return ConstType.ct_method_handle;
+                }
+                return ConstType.ct_class;
+        }
+    }
     
     public Object getConst(Token token) {
         String constant = token.asString();
@@ -103,30 +135,13 @@ public class String2Object {
         if (constant.equals("false")) {
             return 0;
         }
+
+        ConstType consttype = typeConstant(constant);
         char first = constant.charAt(0);
         char last = constant.toUpperCase().charAt(constant.length() - 1);
-
-        char typeconstant = first;
-        int index = "+-0123456789".indexOf(typeconstant);
-        if (index >= 0) {
-            typeconstant = '0';
-            if (index <= 1) {   // "+-"
-                String con1 = constant.substring(1).toLowerCase(); // remove +- for NaN/Infinity test 
-                if (con1.startsWith("nan") || con1.startsWith("inf")) {
-                    typeconstant = '.';
-                }
-            }
-            if (constant.toUpperCase().startsWith("0X") && !constant.contains(".") &&  !constant.toLowerCase().contains("p")) {
-                typeconstant = '0';
-            } else if (constant.contains(".") || constant.toLowerCase().contains("e") || constant.toLowerCase().contains("p")) {
-                typeconstant = '.';
-            }
-        }
-        switch(typeconstant) {
-            case '\"':
-                return token.asQuoted();
-            case '0':
-                Long lval = ulong && first != '-'?token.asUnsignedLong():token.asLong();
+        switch(consttype) {
+            case ct_long:
+                Long lval = ulong && first != '-'? token.asUnsignedLong(): token.asLong();
                 if (last != 'L') {
                     boolean unsigned = constant.toUpperCase().startsWith("0X");
                     if (NumType.t_int.isInRange(lval)
@@ -138,20 +153,16 @@ public class String2Object {
                     }
                 }
                 return lval;
-            case '.':
+            case ct_double:
+                // NB cannot use ?: unless both cast to Object
                 if (last == 'F') {
                     return token.asFloat();
                 }
                 return token.asDouble();
-            case '(':
-                return token.asMethodType();
-            case'\'':
-                return (int)token.asChar();
-            default:    // class or method handle
-                if (constant.indexOf(HandleType.SEP) >= 0) { // method handle
-                    return token.asHandle();
-                }
-                return token.asType();
+            case ct_char:
+                return (int)token.asChar(); // Integer needed for invokedynamic parameters
+            default:
+                return consttype.getValue(token);
         }
     }
     

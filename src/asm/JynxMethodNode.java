@@ -17,15 +17,22 @@ import static jynx.Message.*;
 
 import jvm.AccessFlag;
 import jvm.Context;
+import jvm.FrameType;
 import jynx.Access;
 import jynx.Directive;
 import jynx2asm.ClassChecker;
+import jynx2asm.handles.JynxHandle;
 import jynx2asm.handles.LocalMethodHandle;
 import jynx2asm.JynxLabelMap;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
+import jynx2asm.LocalVars;
 import jynx2asm.NameDesc;
+import jynx2asm.OperandStack;
+import jynx2asm.ops.JvmOp;
 import jynx2asm.ops.JynxOps;
+import jynx2asm.StackLocals;
+import jynx2asm.String2Insn;
 
 public class JynxMethodNode implements ContextDependent, HasAccessFlags {
 
@@ -36,7 +43,6 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
     private final LocalMethodHandle lmh;
     private String signature;
     private final List<String> exceptions;
-    private final JynxLabelMap labelmap;
 
     private final MethodAnnotationLists annotationLists;
     private final Map<Directive,Line> unique_directives;
@@ -54,7 +60,6 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
         this.exceptions = new ArrayList<>();
         this.annotationLists = new MethodAnnotationLists(numparms);
         this.signature = null;
-        this.labelmap = new JynxLabelMap();
         this.unique_directives = new HashMap<>();
         this.checker = checker;
     }
@@ -131,7 +136,16 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
             LOG(M155); // "code is not allowed as method is abstract or native"
             return null;
         }
-        return JynxCodeHdr.getInstance(mnode, js, lmh, labelmap,is(AccessFlag.acc_static),checker,opmap);
+        boolean isStatic = is(AccessFlag.acc_static);
+        JynxLabelMap labelmap = new JynxLabelMap();
+        String virtclname = isStatic? null: checker.getClassName();
+        List<Object> localStack = FrameType.getInitFrame(virtclname, lmh); // classname set non null for virtual methods
+        LocalVars lv = LocalVars.getInstance(localStack, mnode.parameters, isStatic, annotationLists.getFinalParms());
+        JvmOp returnop = JynxHandle.getReturnOp(lmh);
+        OperandStack opstack = OperandStack.getInstance(localStack);
+        StackLocals stackLocals = StackLocals.getInstance(lv, opstack, labelmap, returnop);
+        String2Insn s2a = String2Insn.getInstance(js, labelmap, checker, opmap);
+        return JynxCodeHdr.getInstance(mnode, stackLocals, localStack, s2a);
     }
 
     public LocalMethodHandle getLocalMethodHandle() {
@@ -172,10 +186,8 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
         int parmnum = line.nextToken().asUnsignedInt();
         Access accessname = checker.getAccess(Context.PARAMETER, line);
         line.noMoreTokens();
-        String pname = accessname.getName();
         accessname.check4Parameter();
-        int pflags = accessname.getAccess();
-        annotationLists.visitParameter(parmnum,pname, pflags);
+        annotationLists.visitParameter(parmnum, accessname);
     }
     
     @Override

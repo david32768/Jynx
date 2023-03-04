@@ -154,7 +154,7 @@ public class PrintAnnotations {
                 ConstType ct = desc == null? ConstType.ct_int:ConstType.getFromDesc(desc.substring(1), ANNOTATION);
                 if (ct == ConstType.ct_annotation) {
                     lb.appendNonNull(name)
-                            .append(ct.getJynx_desc(true))
+                            .append(ct.getJynxDesc(true))
                             .appendNonNull(desc.substring(1))
                             .append(ReservedWord.equals_sign)
                             .append(ReservedWord.dot_annotation_array)
@@ -163,7 +163,7 @@ public class PrintAnnotations {
                             .nl();
                 } else {
                     lb.appendNonNull(name)
-                            .append(ct.getJynx_desc(true))
+                            .append(ct.getJynxDesc(true))
                             .append(ReservedWord.equals_sign)
                             .append(ReservedWord.left_array)
                             .append(ReservedWord.right_array)
@@ -202,7 +202,7 @@ public class PrintAnnotations {
     }
 
     private void printValues(String name,ConstType ct, boolean isArray, List<Object> values) {
-        String typestr = ct.getJynx_desc(isArray);
+        String typestr = ct.getJynxDesc(isArray);
         lb.appendNonNull(name)
                 .append(typestr)
                 .append(ReservedWord.equals_sign);
@@ -227,7 +227,7 @@ public class PrintAnnotations {
     }
     
     private void printValuesEnum(String name, ConstType ct, boolean isArray, List<Object> values, String enumstr) {
-        String typestr = ct.getJynx_desc(isArray);
+        String typestr = ct.getJynxDesc(isArray);
         lb.appendNonNull(name).append(typestr).appendNonNull(enumstr).append(ReservedWord.equals_sign);
         if (isArray) {
             lb.append(ReservedWord.dot_array)
@@ -255,7 +255,7 @@ public class PrintAnnotations {
     }
     
     private void printValuesAnnotation(String name, ConstType ct, boolean isArray, List<Object> values, String desc) {
-        String typestr = ct.getJynx_desc(isArray);
+        String typestr = ct.getJynxDesc(isArray);
         lb.appendNonNull(name).append(typestr).appendNonNull(desc).append(ReservedWord.equals_sign);
         if (isArray) {
             lb.append(ReservedWord.dot_annotation_array).nl();

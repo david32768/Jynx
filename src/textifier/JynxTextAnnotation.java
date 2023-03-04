@@ -100,7 +100,7 @@ public class JynxTextAnnotation extends Textifier {
             return;
         }
         ConstType ct = ConstType.getFromASM(value, Context.ANNOTATION);
-        String typestr = ct.getJynx_desc(false);
+        String typestr = ct.getJynxDesc(false);
         String strvalue = o2s.stringFrom(ct, value);
         assert strvalue != null;
         jsb.start(2)
@@ -114,7 +114,7 @@ public class JynxTextAnnotation extends Textifier {
     @Override
     public void visitEnum(final String name, final String descriptor, final String value) {
         ConstType ct = ConstType.ct_enum;
-        String typestr = ct.getJynx_desc(false);
+        String typestr = ct.getJynxDesc(false);
         String strvalue = o2s.stringFrom(ConstType.ct_enum, value);
         assert strvalue != null;
         jsb.start(2)
@@ -129,7 +129,7 @@ public class JynxTextAnnotation extends Textifier {
     @Override
     public Textifier visitAnnotation(String name, String descriptor) {
         ConstType ct = ConstType.ct_annotation;
-        String typestr = ct.getJynx_desc(false);
+        String typestr = ct.getJynxDesc(false);
         jsb.start(2)
                 .appendNonNull(name)
                 .append(typestr)

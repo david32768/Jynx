@@ -54,7 +54,7 @@ import jynx2asm.ops.SelectOp;
 public class String2Insn {
 
     private final JynxScanner js;
-    private final JynxLabelMap labmap;
+    private final JynxLabelMap labelMap;
     private final LabelStack labelStack;
     private final ClassChecker checker;
     private final JynxOps opmap;
@@ -64,10 +64,10 @@ public class String2Insn {
     private int macroCount;
     private int indent;
     
-    private String2Insn(JynxScanner js, JynxLabelMap labmap,
+    private String2Insn(JynxScanner js, JynxLabelMap labelmap,
             ClassChecker checker, JynxOps opmap) {
         this.js = js;
-        this.labmap = labmap;
+        this.labelMap = labelmap;
         this.labelStack = new LabelStack();
         this.checker = checker;
         this.opmap = opmap;
@@ -77,6 +77,14 @@ public class String2Insn {
     public static String2Insn getInstance(JynxScanner js, JynxLabelMap labmap,
             ClassChecker checker, JynxOps opmap) {
         return new String2Insn(js, labmap, checker, opmap);
+    }
+
+    public JynxLabelMap getLabelMap() {
+        return labelMap;
+    }
+
+    public JynxScanner getJynxScanner() {
+        return js;
     }
    
     public void getInsts(InstList instlist) {
@@ -110,7 +118,7 @@ public class String2Insn {
 
     private void addLabel(String lab, InstList instlist) {
         line.noMoreTokens();
-        JynxLabel target = labmap.defineJynxLabel(lab, line);
+        JynxLabel target = labelMap.defineJynxLabel(lab, line);
         instlist.add(new LabelInstruction(JvmOp.xxx_label,target));
     }
     
@@ -291,11 +299,11 @@ public class String2Insn {
         switch (jvmop) {
             case xxx_label:
                 String labstr = line.nextToken().asString();
-                JynxLabel target = labmap.defineJynxLabel(labstr, line);
+                JynxLabel target = labelMap.defineJynxLabel(labstr, line);
                 return new LabelInstruction(jvmop,target);
             case xxx_label_weak:
                 labstr = line.nextToken().asString();
-                target = labmap.defineWeakJynxLabel(labstr, line);
+                target = labelMap.defineWeakJynxLabel(labstr, line);
                 return target == null?null:new LabelInstruction(jvmop,target);
             case xxx_line:
                 int lineno = line.nextToken().asUnsignedShort();
@@ -415,7 +423,7 @@ public class String2Insn {
             int index = token.asInt();
             labstr = labelStack.peek(index).asString();
         }
-        return labmap.codeUseOfJynxLabel(labstr, line);
+        return labelMap.codeUseOfJynxLabel(labstr, line);
     }
 
     private Instruction arg_tableswitch(JvmOp jvmop) {

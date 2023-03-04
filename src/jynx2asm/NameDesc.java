@@ -149,7 +149,7 @@ public enum NameDesc {
                         && accessname.is(acc_static)
                         && accessname.is(acc_final)
                         && !accessname.is(acc_synthetic)
-                        && !name.toUpperCase().equals(name)
+                        && !name.equalsIgnoreCase(name)
                         && !name.equals("serialVersionUID")
                         && ok) {
                     LOG(M64,name); // "final static field name (%s) is not in uppercase"

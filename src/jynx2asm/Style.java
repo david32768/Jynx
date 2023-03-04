@@ -93,7 +93,7 @@ public enum Style {
 
     private static void checkJavaMethodNameStyle(String str) {
         int first = str.codePointAt(0);
-        if (Character.isUpperCase(first) && !str.toUpperCase().equals(str)) {
+        if (Character.isUpperCase(first) && !str.equalsIgnoreCase(str)) {
             LOG(M236,METHOD_NAME,str); // "%s (%s) starts with uppercase letter and is not all uppercase"
         }
     }
@@ -114,7 +114,7 @@ public enum Style {
         checkNotJavaReserved(str);
         if (Global.OPTION(GlobalOption.WARN_STYLE)) {
             int first = str.codePointAt(0);
-            if (Character.isUpperCase(first) && !str.toUpperCase().equals(str)) {
+            if (Character.isUpperCase(first) && !str.equalsIgnoreCase(str)) {
                 LOG(M236,FIELD_NAME,str); // "%s (%s) starts with uppercase letter and is not all uppercase"
             }
         }

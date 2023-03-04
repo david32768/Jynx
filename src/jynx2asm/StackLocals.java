@@ -5,8 +5,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import org.objectweb.asm.tree.ParameterNode;
-
 import static jvm.Constants.MAX_CODE;
 import static jynx.Global.LOG;
 import static jynx.Global.OPTION;
@@ -75,10 +73,7 @@ public class StackLocals {
         this.maxLength = 0;
     }
     
-    public static StackLocals getInstance(List<Object> localstack, JynxLabelMap labelmap, List<ParameterNode> parameters,
-            JvmOp returnop, boolean isStatic) {
-        LocalVars lv = LocalVars.getInstance(localstack,parameters,isStatic);
-        OperandStack os = OperandStack.getInstance(localstack);
+    public static StackLocals getInstance(LocalVars lv, OperandStack os, JynxLabelMap labelmap, JvmOp returnop) {
         return new StackLocals(lv, os, labelmap, returnop);
     }
 

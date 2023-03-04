@@ -1,6 +1,7 @@
 package asm;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.List;
 
 import org.objectweb.asm.AnnotationVisitor;
@@ -18,6 +19,7 @@ import static jynx.Message.M309;
 import static jynx.Message.M310;
 
 import jvm.AccessFlag;
+import jynx.Access;
 import jynx.Directive;
 
 public class MethodAnnotationLists {
@@ -31,6 +33,7 @@ public class MethodAnnotationLists {
     private int visibleDefault;
     private int invisibleDefault;
     private final List<AcceptsVisitor> annotations;
+    private final BitSet finalParms;
     
     
     public MethodAnnotationLists(int numparms) {
@@ -41,10 +44,15 @@ public class MethodAnnotationLists {
         this.visibleDefault = numparms;
         this.invisibleDefault = numparms;
         this.annotations = new ArrayList<>();
+        this.finalParms = new BitSet(numparms);
     }
 
     public boolean hasAnnotations() {
         return !annotations.isEmpty();
+    }
+
+    public BitSet getFinalParms() {
+        return finalParms;
     }
     
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
@@ -63,11 +71,14 @@ public class MethodAnnotationLists {
         annotations.add(jan);
     }
 
-    public void visitParameter(int parmnum, String pname, int access) {
+    public void visitParameter(int parmnum, Access accessname) {
         assert parmnum >= 0;
-        if (parmnum >= parameters.length) {
+        String pname = accessname.getName();
+        int pflags = accessname.getAccess();
+        
+        if (parmnum >= numparms) {
             // "parameter number %d is not in range [0,%d]"
-            LOG(M308,parmnum,parameters.length - 1);
+            LOG(M308,parmnum, numparms - 1);
             return;
         }
         if (parameters[parmnum] != null) {
@@ -75,7 +86,10 @@ public class MethodAnnotationLists {
             LOG(M310,parmnum,parameters[parmnum].name);
             return;
         }
-        ParameterNode pn = new ParameterNode(pname, access);
+        if (accessname.is(AccessFlag.acc_final)) {
+            finalParms.set(parmnum);
+        }
+        ParameterNode pn = new ParameterNode(pname, pflags);
         parameters[parmnum] = pn;
         ++parmct;
     }

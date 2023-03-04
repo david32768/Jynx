@@ -27,7 +27,7 @@ public class Main {
 
     private final static int JYNX_VERSION = 0;
     private final static int JYNX_RELEASE = 19;
-    private final static int JYNX_BUILD = 12;
+    private final static int JYNX_BUILD = 13;
     
     private static String version() {
         if (OPTION(DEBUG)) {
@@ -152,34 +152,62 @@ public class Main {
         }
     }
 
-    private static boolean mainz(String[] args) {
+    private static void appUsage(MainOption mo) {
+        LOG(M12); // "%nUsage:%n"
+        System.err.println(mo.usage());
+        System.err.format("   (%s)%n%n",mo.longdesc());
+        GlobalOption.print(mo);
+    }
+
+    private static Optional<MainOption> getMainOption(String[] args) {
         if (args.length == 0) {
             appUsage();
-            return false;
+            return Optional.empty();
         }
         String option = args[0];
         if (args.length == 1) {
             if (VERSION.isArg(option)) {
                 outputVersion();
-                return false;
+                return Optional.empty();
             }
             if (HELP.isArg(option)) {
                 appUsage();
-                return false;
+                return Optional.empty();
             }
         }
         Optional<MainOption> mainopt = MainOption.getInstance(option);
         if (!mainopt.isPresent()) {
             LOG(M26,option); // "invalid main-option name - %s"
-            return false;
+            return Optional.empty();
         }
         MainOption main = mainopt.get();
-        args = Arrays.copyOfRange(args, 1, args.length);
-        if (args.length == 0) {
+        if (args.length == 1) {
             // "no args have been specified for main option %s"
             LOG(M28,main.extname());
+            appUsage(main);
+            return Optional.empty();
+        }
+        option = args[1];
+        if (args.length == 2) {
+            if (VERSION.isArg(option)) {
+                outputVersion();
+                return Optional.empty();
+            }
+            if (HELP.isArg(option)) {
+                appUsage(main);
+                return Optional.empty();
+            }
+        }
+        return mainopt;
+    }
+    
+    private static boolean mainz(String[] args) {
+        Optional<MainOption> optmain = getMainOption(args);
+        if (!optmain.isPresent()) {
             return false;
         }
+        MainOption main = optmain.get();
+        args = Arrays.copyOfRange(args, 1, args.length);
         newGlobal(main, EnumSet.noneOf(GlobalOption.class));
         Optional<String> optname = setOptions(args);
         if (LOGGER().numErrors() != 0) {

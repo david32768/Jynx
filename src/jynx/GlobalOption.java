@@ -75,7 +75,7 @@ public enum GlobalOption {
     private final static String ABBREV_PREFIX = "-";
 
     private static boolean isEqual(String myname, String option) {
-        return option.replace('-', '_').toUpperCase().equals(myname);
+        return option.replace('-', '_').equalsIgnoreCase(myname);
     }
     
     public static boolean mayBeOption(String option) {
