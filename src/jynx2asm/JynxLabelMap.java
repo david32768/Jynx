@@ -7,9 +7,11 @@ import java.util.stream.Stream;
 import org.objectweb.asm.MethodVisitor;
 
 import static jynx.Global.LOG;
+import static jynx.Message.M106;
 import static jynx.Message.M217;
 import static jynx.Message.M284;
 
+import jynx.Directive;
 import jynx.LogIllegalArgumentException;
 
 public class JynxLabelMap {
@@ -98,10 +100,6 @@ public class JynxLabelMap {
         labelmap.put(alias,base);
     }
 
-    public void addCatch(JynxCatch jcatch, Line line) {
-        catches.put(jcatch,line);
-    }
-    
     public void checkCatch() {
         for (Map.Entry<JynxCatch,Line>  me:catches.entrySet()) {
             JynxCatch jcatch = me.getKey();
@@ -120,6 +118,21 @@ public class JynxLabelMap {
         return labelmap.entrySet().stream()
                 .filter(me->me.getKey().equals(me.getValue().name())) // remove aliases
                 .map(me->me.getValue());
+    }
+
+    public JynxCatch getCatch(String fromname, String  toname,
+            String usingname, String exception, Line line) {
+        JynxLabel fromref = useOfJynxLabel(fromname, line);
+        JynxLabel toref = useOfJynxLabel(toname, line);
+        JynxLabel usingref = codeUseOfJynxLabel(usingname, line);
+        if (!fromref.isDefined() && !toref.isDefined() && !usingref.isDefined()) {
+            JynxCatch jcatch = new JynxCatch(fromref, toref, usingref,exception,line);
+            catches.put(jcatch,line);
+            return jcatch;
+        } else {
+            LOG(M106,Directive.dir_catch); // "labels in %s must not be defined yet"
+            return null;
+        }
     }
 
 }

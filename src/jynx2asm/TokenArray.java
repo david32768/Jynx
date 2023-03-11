@@ -22,9 +22,9 @@ public interface TokenArray extends TokenDeque, AutoCloseable {
         return multiline? new DotArray(js, line):new LineArray(line);
     }
 
-    public static String[] arrayString(Directive dir, JynxScanner js, Line line, NameDesc nd) {
+    public static String[] arrayString(Directive dir, Line line, NameDesc nd) {
         Map<String,Line> modlist = new LinkedHashMap<>();
-        try (TokenArray array = TokenArray.getInstance(js, line)) {
+        try (TokenArray array = line.getTokenArray()) {
             while(true) {
                 Token token = array.firstToken();
                 if (token.is(ReservedWord.right_array)) {

@@ -2,6 +2,7 @@ package jynx2asm;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static jynx.Global.LOG;
@@ -22,22 +23,25 @@ public class Line implements TokenDeque {
         ;
     }
     
-    public static final Line EMPTY = new Line(null, 0, 0, new ArrayDeque<>(),LineType.CODE);
+    public static final Line EMPTY = new Line(null, 0, 0, new ArrayDeque<>(),LineType.CODE, null);
     private final String line;
     private final int linect;
     private final int indent;
     private final Deque<Token> tokens;
     private final LineType lineType;
+    private final Function<Line,TokenArray> arrayfn;
 
     private final Token start;
     
-    private Line(String line, int linect,  int indent, Deque<Token> tokens, LineType linetype) {
+    private Line(String line, int linect,  int indent, Deque<Token> tokens,
+            LineType linetype, Function<Line,TokenArray> arrayfn) {
         this.line = line;
         this.linect = linect;
         this.indent = indent;
         this.tokens = tokens;
         this.lineType = linetype;
         this.start = tokens.peekFirst();
+        this.arrayfn = arrayfn;
     }
 
     public final static char DIRECTIVE_INICATOR = '.';
@@ -61,6 +65,10 @@ public class Line implements TokenDeque {
 
     public boolean isLabel() {
         return lineType == LineType.LABEL;
+    }
+    
+    public TokenArray getTokenArray() {
+        return arrayfn.apply(this);
     }
     
     @Override
@@ -92,7 +100,7 @@ public class Line implements TokenDeque {
         return LineType.CODE;
     }
     
-    public static Line tokenise(String line, int linect) {
+    public static Line tokenise(String line, int linect, Function<Line,TokenArray> arrayfn) {
         if (line.contains("\n") || line.contains("\r")) {
             LOG(line,M43); // "line contains newline or carriage return character"
             throw new AssertionError();
@@ -109,7 +117,7 @@ public class Line implements TokenDeque {
                 .map(Token::getInstance)
                 .forEach(tokens::addLast);
         tokens.addLast(Token.END_TOKEN);
-        return new Line(line,linect,indent,tokens,linetype);
+        return new Line(line,linect,indent,tokens,linetype,arrayfn);
     }
 
     @Override

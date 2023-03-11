@@ -8,6 +8,7 @@ import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.EnumSet;
+import java.util.function.Function;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -25,6 +26,7 @@ public class JynxScanner implements Iterator<Line> {
     private int precomments;
 
     private final BufferedReader lines;
+    private final Function<Line,TokenArray> arrayfn;
 
     private JynxScanner(BufferedReader  lines) {
         this.lines = lines;
@@ -33,6 +35,7 @@ public class JynxScanner implements Iterator<Line> {
         this.line = Line.EMPTY;
         this.reread = false;
         this.precomments = 0;
+        this.arrayfn = (linex) -> TokenArray.getInstance(this, linex);
     }
 
     public int getPreCommentsCount() {
@@ -79,7 +82,7 @@ public class JynxScanner implements Iterator<Line> {
             ++precomments;
         } while (!linestr.trim().startsWith(".")); // ignore lines until directive
         --precomments;
-        line = Line.tokenise(linestr, linect);
+        line = Line.tokenise(linestr, linect, arrayfn);
         LOGGER().setLine(line.toString());
         reread = true;
     }
@@ -100,7 +103,7 @@ public class JynxScanner implements Iterator<Line> {
             }
             ++linect;
         } while (linestr.trim().length() == 0 || linestr.trim().startsWith(";")); // ignore empty lines and comments
-        line = Line.tokenise(linestr, linect);
+        line = Line.tokenise(linestr, linect, arrayfn);
         LOGGER().setLine(line.toString());
     }
 
@@ -121,7 +124,7 @@ public class JynxScanner implements Iterator<Line> {
         }
         nextLine();
         if (line == null) {
-            return Line.tokenise(Directive.end_class.toString(), Integer.MAX_VALUE);
+            return Line.tokenise(Directive.end_class.toString(), Integer.MAX_VALUE, arrayfn);
         }
         return line;
     }

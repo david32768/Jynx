@@ -4,7 +4,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
-import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -16,22 +15,7 @@ import static jynx.Message.*;
 import static jynx.ReservedWord.*;
 import static jynx2asm.NameDesc.*;
 
-import asm.instruction.DynamicInstruction;
-import asm.instruction.FieldInstruction;
-import asm.instruction.IncrInstruction;
-import asm.instruction.Instruction;
-import asm.instruction.IntInstruction;
-import asm.instruction.JumpInstruction;
-import asm.instruction.LabelInstruction;
-import asm.instruction.LdcInstruction;
-import asm.instruction.LineInstruction;
-import asm.instruction.MarrayInstruction;
-import asm.instruction.MethodInstruction;
-import asm.instruction.StackInstruction;
-import asm.instruction.SwitchInstruction;
-import asm.instruction.TableInstruction;
-import asm.instruction.TypeInstruction;
-import asm.instruction.VarInstruction;
+import asm.instruction.*;
 
 import jvm.ConstantPoolType;
 import jvm.ConstType;
@@ -42,18 +26,10 @@ import jynx.GlobalOption;
 import jynx.LogIllegalStateException;
 import jynx2asm.handles.FieldHandle;
 import jynx2asm.handles.MethodHandle;
-import jynx2asm.ops.DynamicOp;
-import jynx2asm.ops.IndentType;
-import jynx2asm.ops.JvmOp;
-import jynx2asm.ops.JynxOp;
-import jynx2asm.ops.JynxOps;
-import jynx2asm.ops.LineOp;
-import jynx2asm.ops.MacroOp;
-import jynx2asm.ops.SelectOp;
+import jynx2asm.ops.*;
 
 public class String2Insn {
 
-    private final JynxScanner js;
     private final JynxLabelMap labelMap;
     private final LabelStack labelStack;
     private final ClassChecker checker;
@@ -64,9 +40,7 @@ public class String2Insn {
     private int macroCount;
     private int indent;
     
-    private String2Insn(JynxScanner js, JynxLabelMap labelmap,
-            ClassChecker checker, JynxOps opmap) {
-        this.js = js;
+    private String2Insn(JynxLabelMap labelmap, ClassChecker checker, JynxOps opmap) {
         this.labelMap = labelmap;
         this.labelStack = new LabelStack();
         this.checker = checker;
@@ -74,19 +48,14 @@ public class String2Insn {
         this.indent = IndentType.BEGIN.after();
     }
 
-    public static String2Insn getInstance(JynxScanner js, JynxLabelMap labmap,
-            ClassChecker checker, JynxOps opmap) {
-        return new String2Insn(js, labmap, checker, opmap);
+    public static String2Insn getInstance(JynxLabelMap labmap, ClassChecker checker, JynxOps opmap) {
+        return new String2Insn(labmap, checker, opmap);
     }
 
     public JynxLabelMap getLabelMap() {
         return labelMap;
     }
 
-    public JynxScanner getJynxScanner() {
-        return js;
-    }
-   
     public void getInsts(InstList instlist) {
         line = instlist.getLine();
         if (line.isLabel()) {
@@ -144,7 +113,7 @@ public class String2Insn {
             addJvmOp(jvmop,instlist);
         } else if (jop instanceof DynamicOp) {
             DynamicOp dynamicop = (DynamicOp)jop;
-            instlist.add(dynamicop.getInstruction(js,line,checker));
+            instlist.add(dynamicop.getInstruction(line,checker));
         } else if (jop instanceof LineOp) {
             LineOp lineop = (LineOp)jop;
             lineop.adjustLine(line, macct, macrostack.peekLast(),labelStack);
@@ -213,7 +182,7 @@ public class String2Insn {
     }
     
     private Instruction arg_callsite(JvmOp jvmop) {
-        JynxConstantDynamic jcd = new JynxConstantDynamic(js, line, checker);
+        JynxConstantDynamic jcd = new JynxConstantDynamic(line, checker);
         ConstantDynamic cd = jcd.getConstantDynamic4Invoke();
         return new DynamicInstruction(jvmop,cd);
     }
@@ -274,7 +243,7 @@ public class String2Insn {
     
     private Instruction dynamicConstant(JvmOp jvmop) {
         ConstType ct = ConstType.ct_const_dynamic;
-        JynxConstantDynamic jcd = new JynxConstantDynamic(js, line, checker);
+        JynxConstantDynamic jcd = new JynxConstantDynamic(line, checker);
         ConstantDynamic dyn = jcd.getConstantDynamic4Load();
         String desc = dyn.getDescriptor();
         if (desc.length() == 1) {
@@ -351,7 +320,7 @@ public class String2Insn {
         Integer lastkey = null;
         Integer errkey = null;
         Integer previous = null;
-        try (TokenArray dotarray = TokenArray.getInstance(js, line)) {
+        try (TokenArray dotarray = line.getTokenArray()) {
             multi |= dotarray.isMultiLine(); 
             while (true) {
                 Token token = dotarray.firstToken();
@@ -432,7 +401,7 @@ public class String2Insn {
         JynxLabel dflt = getJynxLabel(line.nextToken());
         List<JynxLabel> labellist = new ArrayList<>();
         int lct = 0;
-        try (TokenArray dotarray = TokenArray.getInstance(js, line)) {
+        try (TokenArray dotarray = line.getTokenArray()) {
             multi |= dotarray.isMultiLine(); 
             while (true) {
                 Token token = dotarray.firstToken();

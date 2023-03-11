@@ -20,19 +20,12 @@ import jvm.Context;
 import jvm.FrameType;
 import jynx.Access;
 import jynx.Directive;
-import jynx2asm.ClassChecker;
+
+import jynx2asm.*;
 import jynx2asm.handles.JynxHandle;
 import jynx2asm.handles.LocalMethodHandle;
-import jynx2asm.JynxLabelMap;
-import jynx2asm.JynxScanner;
-import jynx2asm.Line;
-import jynx2asm.LocalVars;
-import jynx2asm.NameDesc;
-import jynx2asm.OperandStack;
 import jynx2asm.ops.JvmOp;
 import jynx2asm.ops.JynxOps;
-import jynx2asm.StackLocals;
-import jynx2asm.String2Insn;
 
 public class JynxMethodNode implements ContextDependent, HasAccessFlags {
 
@@ -144,8 +137,8 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
         JvmOp returnop = JynxHandle.getReturnOp(lmh);
         OperandStack opstack = OperandStack.getInstance(localStack);
         StackLocals stackLocals = StackLocals.getInstance(lv, opstack, labelmap, returnop);
-        String2Insn s2a = String2Insn.getInstance(js, labelmap, checker, opmap);
-        return JynxCodeHdr.getInstance(mnode, stackLocals, localStack, s2a);
+        String2Insn s2a = String2Insn.getInstance(labelmap, checker, opmap);
+        return JynxCodeHdr.getInstance(js, mnode, stackLocals, localStack, s2a);
     }
 
     public LocalMethodHandle getLocalMethodHandle() {

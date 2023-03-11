@@ -1,7 +1,6 @@
 package asm;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -29,24 +28,8 @@ import jvm.JvmVersion;
 import jvm.TypeRef;
 import jynx.Directive;
 import jynx.ReservedWord;
-import jynx2asm.ClassChecker;
-import jynx2asm.handles.JynxHandle;
-import jynx2asm.handles.LocalMethodHandle;
-import jynx2asm.InstList;
-import jynx2asm.JynxCatch;
-import jynx2asm.JynxLabel;
-import jynx2asm.JynxLabelMap;
-import jynx2asm.JynxScanner;
-import jynx2asm.Line;
-import jynx2asm.LinesIterator;
-import jynx2asm.LocalVars;
-import jynx2asm.OperandStack;
+import jynx2asm.*;
 import jynx2asm.ops.JvmOp;
-import jynx2asm.ops.JynxOps;
-import jynx2asm.StackLocals;
-import jynx2asm.String2Insn;
-import jynx2asm.Token;
-import jynx2asm.TokenArray;
 
 public class JynxCodeHdr implements ContextDependent {
 
@@ -70,26 +53,26 @@ public class JynxCodeHdr implements ContextDependent {
     
     private final Map<Directive,Line> uniqueDirectives;
     
-    private JynxCodeHdr(MethodNode mnode, StackLocals stackLocals,
+    private JynxCodeHdr(JynxScanner js, MethodNode mnode, StackLocals stackLocals,
             List<Object> localStack, String2Insn s2a) {
         
+        this.js = js;
         this.errorsAtStart = LOGGER().numErrors();
         this.localStack = localStack;
         this.mnode = mnode;
         this.vars = new ArrayList<>();
         this.stackLocals = stackLocals;
         this.s2a = s2a;
-        this.js = s2a.getJynxScanner();
         this.labelmap = s2a.getLabelMap();
         this.uniqueDirectives = new HashMap<>();
         this.options = new EnumMap<>(ReservedWord.class);
     }
 
-    public static JynxCodeHdr getInstance(MethodNode mnode, StackLocals stackLocals,
+    public static JynxCodeHdr getInstance(JynxScanner js, MethodNode mnode, StackLocals stackLocals,
             List<Object> localStack, String2Insn s2a) {
         
         CHECK_SUPPORTS(Code);
-        return new JynxCodeHdr(mnode, stackLocals, localStack, s2a);
+        return new JynxCodeHdr(js, mnode, stackLocals, localStack, s2a);
     }
 
     @Override
@@ -144,7 +127,7 @@ public class JynxCodeHdr implements ContextDependent {
         String toname = line.after(res_to);
         String usingname = line.after(res_using);
         line.noMoreTokens();
-        JynxCatch jcatch =  JynxCatch.getInstance(line, fromname, toname, usingname, exception, labelmap);
+        JynxCatch jcatch =  labelmap.getCatch(fromname, toname, usingname, exception, line);
         if (jcatch != null) {
             stackLocals.visitTryCatchBlock(jcatch);
             jcatch.accept(mnode);
@@ -442,7 +425,7 @@ public class JynxCodeHdr implements ContextDependent {
             ArrayList<Integer> indexlist = new ArrayList<>();
             ArrayList<String> startlist = new ArrayList<>();
             ArrayList<String> endlist = new ArrayList<>();
-            try (TokenArray array = TokenArray.getInstance(js, line)) {
+            try (TokenArray array = line.getTokenArray()) {
                 while(true) {
                     Token token = array.firstToken();
                     if (token.is(right_array)) {

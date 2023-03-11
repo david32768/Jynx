@@ -170,7 +170,7 @@ public class JynxAnnotation {
                         line.nextToken().mustBe(equals_sign);
                         if (array) {
                             AnnotationVisitor avarr = av.visitArray(name);
-                            try (TokenArray tokens = TokenArray.getInstance(js, line)) {
+                            try (TokenArray tokens = line.getTokenArray()) {
                                 while (true) {
                                     Token token = tokens.firstToken();
                                     if (token.is(right_array)) {

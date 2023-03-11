@@ -3,12 +3,11 @@ package jynx2asm.ops;
 import asm.instruction.Instruction;
 import jvm.Feature;
 import jynx2asm.ClassChecker;
-import jynx2asm.JynxScanner;
 import jynx2asm.Line;
 
 public interface DynamicOp extends JynxOp {
     
-    public Instruction getInstruction(JynxScanner js, Line line, ClassChecker checker);
+    public Instruction getInstruction(Line line, ClassChecker checker);
 
     public default Feature feature(){
         return Feature.invokeDynamic;

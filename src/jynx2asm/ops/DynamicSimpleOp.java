@@ -42,7 +42,7 @@ public class DynamicSimpleOp implements DynamicOp {
     }
 
     @Override
-    public Instruction getInstruction(JynxScanner js,Line line, ClassChecker checker) {
+    public Instruction getInstruction(Line line, ClassChecker checker) {
         String namex = name;
         String descx = desc;
         if (namex == null) {
@@ -58,7 +58,7 @@ public class DynamicSimpleOp implements DynamicOp {
         if (descx == null) {
             descx = line.nextToken().asString();
         }
-        JynxConstantDynamic jcd = new JynxConstantDynamic(js, line, checker);
+        JynxConstantDynamic jcd = new JynxConstantDynamic(line, checker);
         ConstantDynamic cd = jcd.getSimple(namex, descx, bootmethodName, bootdescplus,bootparms);
         return new DynamicInstruction(JvmOp.asm_invokedynamic, cd);
     }

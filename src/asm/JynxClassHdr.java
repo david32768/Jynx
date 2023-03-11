@@ -428,7 +428,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     }
     
     private void setHints(JynxScanner js, Line line) {
-        try (TokenArray dotarray = TokenArray.getInstance(js, line)) {
+        try (TokenArray dotarray = line.getTokenArray()) {
             hints.setHints(dotarray);
         }
     }

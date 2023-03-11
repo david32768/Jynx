@@ -38,12 +38,10 @@ public class JynxConstantDynamic {
     
     private final static String2Object S2O = new String2Object();
 
-    private final JynxScanner js;
     private final Line line;
     private final ClassChecker checker;
 
-    public JynxConstantDynamic(JynxScanner js, Line line, ClassChecker checker) {
-        this.js = js;
+    public JynxConstantDynamic(Line line, ClassChecker checker) {
         this.line = line;
         this.checker = checker;
         Global.CHECK_SUPPORTS(BootstrapMethods);
@@ -224,7 +222,7 @@ public class JynxConstantDynamic {
                     }
                     arraytype = type;
                     ConstType ct = ConstType.getFromType(type.getElementType(),Context.JVMCONSTANT);
-                    try (TokenArray tokenarr = TokenArray.getInstance(js, line)) {
+                    try (TokenArray tokenarr = line.getTokenArray()) {
                         while (true) {
                             Token token = tokenarr.firstToken();
                             if (token.is(right_array)) {

@@ -332,10 +332,11 @@ public class JynxClass implements ContextDependent {
     }
 
     public void setModule(Directive dir) {
+        Line line = js.getLine();
         if (dir == dir_module) {
-            jmodule = JynxModule.getInstance(js,jvmVersion);
+            jmodule = JynxModule.getInstance(line,jvmVersion);
         } else {
-            jmodule.visitDirective(dir, js);
+            jmodule.visitDirective(dir, line);
         }
     }
     

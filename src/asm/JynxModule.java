@@ -31,7 +31,6 @@ import jynx2asm.TokenArray;
 public class JynxModule {
     
     private final ModuleNode modNode;
-    private final JynxScanner js;
     private final JvmVersion jvmVersion;
     private final Map<String,EnumSet<Directive>> packageUse;
     private final Map<String,Line> providerUse;
@@ -42,9 +41,8 @@ public class JynxModule {
     private final Map<Directive,Line> unique_directives;
 
 
-    private JynxModule(ModuleNode modnode, JynxScanner js, JvmVersion jvmversion) {
+    private JynxModule(ModuleNode modnode, JvmVersion jvmversion) {
         this.modNode = modnode;
-        this.js = js;
         this.jvmVersion = jvmversion;
         this.packageUse = new HashMap<>();
         this.providerUse = new HashMap<>();
@@ -54,8 +52,7 @@ public class JynxModule {
         this.unique_directives = new HashMap<>();
     }
     
-    public static JynxModule getInstance(JynxScanner js, JvmVersion jvmversion) {
-        Line line = js.getLine();
+    public static JynxModule getInstance(Line line, JvmVersion jvmversion) {
         EnumSet<AccessFlag> flags = line.getAccFlags();
         String name = line.nextToken().asName();
         Access accessname = Access.getInstance(flags, jvmversion, name,MODULE_CLASS);
@@ -66,7 +63,7 @@ public class JynxModule {
         accessname.check4Module();
         int access = accessname.getAccess();
         ModuleNode mnode = new ModuleNode(name, access, version);
-        return new JynxModule(mnode, js, jvmversion);
+        return new JynxModule(mnode, jvmversion);
     }
 
     public ModuleNode getModNode() {
@@ -95,8 +92,7 @@ public class JynxModule {
         return Access.getInstance(flags, jvmVersion, name, MODULE_CLASS);
     }
     
-    public void visitDirective(Directive dir, JynxScanner js) {
-        Line line = js.getLine();
+    public void visitDirective(Directive dir, Line line) {
         dir.checkUnique(unique_directives, line);
         switch(dir) {
             case dir_main:
@@ -158,7 +154,7 @@ public class JynxModule {
         Token to = line.nextToken();
         if (to != Token.END_TOKEN) {
             to.mustBe(ReservedWord.res_to);
-            modarr = TokenArray.arrayString(Directive.dir_exports,js,line,MODULE_NAME);
+            modarr = TokenArray.arrayString(Directive.dir_exports, line, MODULE_NAME);
         }
         modNode.visitExport(packaze,access,modarr);
     }
@@ -174,7 +170,7 @@ public class JynxModule {
         Token to = line.nextToken();
         if (to != Token.END_TOKEN) {
             to.mustBe(ReservedWord.res_to);
-            modarr = TokenArray.arrayString(Directive.dir_opens,js,line,MODULE_NAME);
+            modarr = TokenArray.arrayString(Directive.dir_opens, line, MODULE_NAME);
         }
         line.noMoreTokens();
         modNode.visitOpen(packaze,access,modarr);
@@ -199,7 +195,7 @@ public class JynxModule {
         CLASS_NAME_IN_MODULE.validate(service);
         Line linex = providerUse.put(service, line);
         line.nextToken().mustBe(ReservedWord.res_with);
-        String[] modarr = TokenArray.arrayString(Directive.dir_provides,js,line, CLASS_NAME_IN_MODULE);
+        String[] modarr = TokenArray.arrayString(Directive.dir_provides, line, CLASS_NAME_IN_MODULE);
         if (linex == null) {
             if (modarr.length == 0) {
                 LOG(M225,Directive.dir_provides); // "empty %s ignored"
@@ -216,7 +212,7 @@ public class JynxModule {
 
     private void visitPackages(Line line) {
         packagesVisited = true;
-        String[] packages = TokenArray.arrayString(Directive.dir_packages,js,line, PACKAGE_NAME);
+        String[] packages = TokenArray.arrayString(Directive.dir_packages, line, PACKAGE_NAME);
         for (String pkg:packages) {
             checkPackage(pkg, Directive.dir_packages);
             modNode.visitPackage(pkg);
