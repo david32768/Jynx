@@ -9,17 +9,17 @@ public class Hi {
 }
 /*
 ; options = [SKIP_FRAMES]
-; Jynx DISASSEMBLY 0+18
+; Jynx DISASSEMBLY 0.20
 .version V1_8
 .source Hi.java
 .class public Hi
-  .super java/lang/Object ; assumed if not supplied
+  .super java/lang/Object
 
 .method public <init>()V
     @L0:
     .line 1
     aload_0
-    invokespecial java/lang/Object/<init>()V
+    invokespecial java/lang/Object.<init>()V
     return
     .limit locals 1
     .limit stack 1
@@ -43,18 +43,18 @@ public class Hi {
     .line 5
     new java/lang/StringBuilder
     dup
-    invokespecial java/lang/StringBuilder/<init>()V
+    invokespecial java/lang/StringBuilder.<init>()V
     ldc "Hi "
-    invokevirtual java/lang/StringBuilder/append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invokevirtual java/lang/StringBuilder.append(Ljava/lang/String;)Ljava/lang/StringBuilder;
     aload_1
-    invokevirtual java/lang/StringBuilder/append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-    invokevirtual java/lang/StringBuilder/toString()Ljava/lang/String;
+    invokevirtual java/lang/StringBuilder.append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invokevirtual java/lang/StringBuilder.toString()Ljava/lang/String;
     astore_2
     @L4:
     .line 6
-    getstatic java/lang/System/out Ljava/io/PrintStream;
+    getstatic java/lang/System.out Ljava/io/PrintStream;
     aload_2
-    invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
+    invokevirtual java/io/PrintStream.println(Ljava/lang/String;)V
     @L5:
     .line 7
     return

@@ -46,6 +46,8 @@ public enum JvmVersion {
     V19_PREVIEW(63 | Opcodes.V_PREVIEW),  // Opcodes.V19
     V20(64), // Opcodes.V20
     V20_PREVIEW(64 | Opcodes.V_PREVIEW),  // Opcodes.V20
+    V21(65), // Opcodes.V21
+    V21_PREVIEW(65 | Opcodes.V_PREVIEW),  // Opcodes.V21
     
     NEVER(-1); // must be last 0xffff ffff
     
@@ -91,7 +93,7 @@ public enum JvmVersion {
     
     public final static JvmVersion MIN_VERSION = V1_0_2;
     public final static JvmVersion DEFAULT_VERSION = V17;
-    public final static JvmVersion SUPPORTED_VERSION = V19;
+    public final static JvmVersion SUPPORTED_VERSION = V20;
     public final static JvmVersion MAX_VERSION;
 
     static {

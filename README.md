@@ -3,9 +3,9 @@
 
 
 This is a rewritten version of [Jasmin](https://github.com/davidar/jasmin)
- using [ASM](https://asm.ow2.io) version 9.3 as a back end.
+ using [ASM](https://asm.ow2.io) version 9.4 as a back end.
 It is written in Java V1_8 (apart from module-info.java)
- and supports all features up to V19 except user attributes.
+ and supports all features up to V20 except user attributes.
 
 More checking is done before using ASM. For example
  stack and local variables types are checked assuming
@@ -92,9 +92,9 @@ Changes are:
 *	invokeinterface; omit number as will be calculated and precede method_name with '@'
 ```
 	; invokeinterface java/util/Enumeration/hasMoreElements()Z 1
-	invokeinterface @java/util/Enumeration/hasMoreElements()Z
+	invokeinterface @java/util/Enumeration.hasMoreElements()Z
 ```
-*	if .limit is omitted it will be calculated rather than 1
+*	if .limit is omitted it will be calculated rather than defaulting to 1
 *	class names etc. must be valid Java names
 *	labels are constrained to be a Java Id or if generated start with an @
 *	.interface must be used to declare an interface rather than .class interface
@@ -162,7 +162,7 @@ Changes are
 	; .inner class x inner y$z outer w ; Jasmin 2.4
 	.inner_class y$z outer w innername x ; Jynx
 ```
-*	.enclosing method -> .enclosing_method or .outer_class
+*	.enclosing method -> .enclosing_method or .outer_class as appropriate
 *	invokedynamic boot method and parameters must be specified
 ```
 	; (a boot method parameter may be dynamic) 
@@ -222,21 +222,23 @@ Changes are
 ```
 *	add support for method-handle to ldc
 ```
+	; examples
+	ldc GS:java/lang/Float.MIN_VALUE()F ; handle for smallest POSITIVE float
+	ldc ST:java/lang/Integer.getInteger(Ljava/lang/String;)java/lang/Integer
+
 	; grammar
 	; ldc <method-handle>
 	; <method-handle> = [<handle-to-method>|<handle-to-field>]
 
 	; <handle-to-method> = <method-handle-type>:<method-name-desc>
 	; <method-handle-type> = [VL|ST|SP|NW|IN]
-	ldc ST:java/lang/Integer/getInteger(Ljava/lang/String;)java/lang/Integer
 
 	; <handle-to-field> = <field-handle-type>:<field-name-desc>
 	; <field-handle-type> = [GF|GS|PF|PS]
 	; <field-nam-desc> = <field-name>()<field-desc>
-	ldc GS:java/lang/Float/MIN_VALUE()F ; handle for smallest POSITIVE float
 	
 ```
-*	dynamic ldc
+*	dynamic ldc ; see examples/Java11/Hi.java
 ```
 	; (a boot method parameter may be dynamic) 
 	; ldc { name desc boot_method_and_parameters } 
@@ -252,10 +254,12 @@ Changes are
 ```
 *	.component
 ```
+	; example
+	.component x I
+
 	; grammar
 	; <component> = [<simple-component>|<compound-component>]
 	; <simple-component> = .component <component-name> <desc>
-	.component x I
 
 	; <compond-component> = .component <component-name> <desc>
 	;	[<signature>]?

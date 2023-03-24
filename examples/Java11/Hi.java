@@ -9,7 +9,7 @@ public class Hi {
 }
 /*
 ; options = [SKIP_FRAMES]
-; Jynx DISASSEMBLY 0+18
+; Jynx DISASSEMBLY 0.20
 .version V11
 .source Hi.java
 .class public Hi
@@ -20,7 +20,7 @@ public class Hi {
     @L0:
     .line 1
     aload_0
-    invokespecial java/lang/Object/<init>()V
+    invokespecial java/lang/Object.<init>()V
     return
     .limit locals 1
     .limit stack 1
@@ -43,13 +43,13 @@ public class Hi {
     @L3:
     .line 5
     aload_1
-    invokedynamic { makeConcatWithConstants (Ljava/lang/String;)Ljava/lang/String; ST:java/lang/invoke/StringConcatFactory/makeConcatWithConstants(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite; "Hi \u0001" }
+    invokedynamic { makeConcatWithConstants (Ljava/lang/String;)Ljava/lang/String; ST:java/lang/invoke/StringConcatFactory.makeConcatWithConstants(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite; "Hi \u0001" }
     astore_2
     @L4:
     .line 6
-    getstatic java/lang/System/out Ljava/io/PrintStream;
+    getstatic java/lang/System.out Ljava/io/PrintStream;
     aload_2
-    invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
+    invokevirtual java/io/PrintStream.println(Ljava/lang/String;)V
     @L5:
     .line 7
     return
