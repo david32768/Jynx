@@ -10,8 +10,6 @@ import static jynx.Directive.dir_comment;
 import static jynx.Directive.dir_module;
 import static jynx.Directive.end_comment;
 import static jynx.Global.*;
-import static jynx.GlobalOption.BASIC_VERIFIER;
-import static jynx.GlobalOption.SIMPLE_VERIFIER;
 import static jynx.Message.*;
 
 import asm.ContextDependent;
@@ -21,13 +19,13 @@ import asm.JynxComponentNode;
 import asm.JynxFieldNode;
 import asm.JynxMethodNode;
 import asm.JynxModule;
-import com.github.david32768.jynx.Main.MainOption;
 import jvm.JvmVersion;
 import jynx.ClassType;
 import jynx.Directive;
 import jynx.Global;
 import jynx.GlobalOption;
 import jynx.LogAssertionError;
+import jynx.MainOption;
 import jynx.SevereError;
 import jynx.State;
 import jynx2asm.ops.JynxOps;
@@ -132,7 +130,6 @@ public class JynxClass implements ContextDependent {
             throw new IllegalStateException();
         }
         this.jvmVersion = jvmversion;
-        Global.resolveAmbiguity(SIMPLE_VERIFIER, BASIC_VERIFIER);
         Global.setJvmVersion(jvmversion);
         if (!OPTIONS().isEmpty()) {
             LOG(M88, OPTIONS());  // "options = %s"

@@ -28,8 +28,10 @@ It supports "macros" as a service.
 
 Usage:
 
+```
  jynx {options} .jx_file
    (produces a class file from a .jx file)
+```
 
 Options are:
 
@@ -39,18 +41,20 @@ Options are:
 *	--WARN_STYLE warn if names non-standard
 *	--GENERATE_LINE_NUMBERS generate line numbers
 *	--SYMBOLIC_LOCAL local variables are symbolic not absolute integers
-*	--BASIC_VERIFIER use ASM BasicVerifier
-*	--SIMPLE_VERIFIER use ASM SimpleVerifier (default)
+*	--BASIC_VERIFIER use ASM BasicVerifier instead of ASM SimpleVerifier
 *	--ALLOW_CLASS_FORNAME let simple verifier use Class.forName() for non-java classes
 *	--CHECK_REFERENCES check that called methods or used fields exist (on class path)
 *	--VALIDATE_ONLY do not output class file
 *	--JVM_OPS_ONLY only JVM specified ops
-*	--TRACE print (jynxifier) trace
+*	--TRACE print (ASMifier) trace
 *	--DEBUG exit with stack trace if error
 *	--VERBOSE print all log messages
 
+```
  2jynx {options}  class-name|class_file > .jx_file
    (produces a .jx file from a class)
+   (any JYNX options are added to .version directive)
+```
 
 Options are:
 
@@ -61,6 +65,19 @@ Options are:
 *	--DOWN_CAST if necessary reduces JVM release to maximum supported by ASM version
 *	--DEBUG exit with stack trace if error
 *	--VERBOSE print all log messages
+
+```
+ roundtrip {options}  class-name|class_file
+   (checks that disassembly followed by assembly produces an equivalent class)
+   (checks that 2JYNX followed by JYNX produces an equivalent class (according to ASM Textifier))
+```
+
+Options are:
+
+*	--USE_STACK_MAP use supplied stack map instead of ASM generated
+*	--BASIC_VERIFIER use ASM BasicVerifier instead of ASM SimpleVerifier
+*	--ALLOW_CLASS_FORNAME let simple verifier use Class.forName() for non-java classes
+*	--SKIP_FRAMES do not produce stack map
 
 ## Jasmin 1.0
 

@@ -226,10 +226,16 @@ public class JynxCodeHdr implements ContextDependent {
         Object frame;
         if (ft.extra()) {
             String arg = line.nextToken().asString(); // verification arg
-            if (ft == FrameType.ft_Uninitialized) {
-                frame = labelmap.codeUseOfJynxLabel(arg, line).asmlabel();
-            } else {
-                frame = arg;
+            switch (ft) {
+                case ft_Uninitialized:
+                    frame = labelmap.codeUseOfJynxLabel(arg, line).asmlabel();
+                    break;
+                case ft_Object:
+                    NameDesc.FRAME_NAME.validate(arg);
+                    frame = arg;
+                    break;
+                default:
+                    throw new EnumConstantNotPresentException(ft.getClass(), ft.name());
             }
         } else {
             frame = ft.asmType();
@@ -277,7 +283,7 @@ public class JynxCodeHdr implements ContextDependent {
             }
         }
         stackLocals.visitFrame(frame_stack, frame_local,dirline);
-        if (SUPPORTS(StackMapTable)) {
+        if (SUPPORTS(StackMapTable) && OPTION(USE_STACK_MAP)) {
             Object[] stackarr = frame_stack.toArray();
             Object[] localarr = frame_local.toArray();
             mnode.visitFrame(Opcodes.F_NEW, localarr.length, localarr, stackarr.length, stackarr);

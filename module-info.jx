@@ -1,0 +1,32 @@
+.version V11
+.source module-info.java
+.define_module
+.module com.github.david32768.jynx 0.20 ; version added by jar tool --module-version
+.main com/github/david32768/jynx/Main ; main added by jar tool --main-class
+.requires mandated java.base 11
+.requires org.objectweb.asm 9.4.0
+.requires org.objectweb.asm.tree 9.4.0
+.requires org.objectweb.asm.tree.analysis 9.4.0
+.requires org.objectweb.asm.util 9.4.0
+.exports com/github/david32768/jynx
+.exports jynx2asm/ops
+.uses jynx2asm/ops/MacroLib
+.provides jynx2asm/ops/MacroLib with .array
+  textifier/ASMTextMacroLib
+.end_array
+.packages .array ; packages added by jar tool -C
+  asm
+  asm/instruction
+  asm2jynx
+  com/github/david32768/jynx
+  jvm
+  jynx
+  jynx2asm
+  jynx2asm/handles
+  jynx2asm/ops
+  roundtrip
+  textifier
+.end_array
+.end_module
+; jar -uf Jynx.jar module-info.class
+; REM move Jynx.jar to a module directory or delete module-info.class

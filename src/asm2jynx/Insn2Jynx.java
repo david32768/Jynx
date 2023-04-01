@@ -103,7 +103,7 @@ public class Insn2Jynx {
         if (labref != null) {
             return labref;
         } else {
-            labref = NameDesc.GENERATED_LABEL_MARKER + "L" + labelMap.size();
+            labref = String.format("%cL%d", NameDesc.GENERATED_LABEL_MARKER, labelMap.size());
             labelMap.put(label,labref);
             return labref;
         }

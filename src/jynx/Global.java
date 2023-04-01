@@ -7,12 +7,10 @@ import java.util.Optional;
 
 import static jynx.Message.M218;
 import static jynx.Message.M219;
-import static jynx.Message.M24;
 import static jynx.Message.M32;
 import static jynx.Message.M4;
 import static jynx.Message.M999;
 
-import com.github.david32768.jynx.Main;
 import jvm.ConstantPoolType;
 import jvm.JvmVersion;
 import jvm.JvmVersioned;
@@ -25,7 +23,7 @@ public class Global {
     private final EnumSet<GlobalOption> options;
     private JvmVersion jvmVersion;
     private String classname;
-    private final Main.MainOption main;
+    private final MainOption main;
     
     private JynxOps opmap;
     
@@ -37,17 +35,17 @@ public class Global {
         this.main = null;
     }
 
-    private Global(EnumSet<GlobalOption> options,Main.MainOption type) {
+    private Global(MainOption type, EnumSet<GlobalOption> options) {
+        this.main = type;
         this.options = options;
         this.logger  = new Logger(type.name().toLowerCase());
         this.jvmVersion = null;
-        this.main = type;
     }
     
     private static Global global = new Global();
     
-    public static void newGlobal(Main.MainOption type, EnumSet<GlobalOption> options) {
-        global = new Global(options,type);
+    public static void newGlobal(MainOption type) {
+        global = new Global(type, EnumSet.noneOf(GlobalOption.class));
         // "%n%s; Java runtime version %s"
         LOG(M4,type.version(),javaRuntimeVersion());
     }
@@ -55,24 +53,6 @@ public class Global {
     public static Logger LOGGER() {
         return global.logger;
     }
-
-    @SuppressWarnings("fallthrough")
-    public static GlobalOption resolveAmbiguity(GlobalOption defaultopt, GlobalOption... otheropt) {
-        EnumSet<GlobalOption> optpos = EnumSet.of(defaultopt,otheropt);
-        optpos.retainAll(global.options);
-        switch (optpos.size()) {
-            default:
-                LOG(M24,optpos,defaultopt); // "ambiguous option %s: %s assumed"
-                global.options.removeAll(optpos);
-                // FALL THROUGH
-            case 0:
-                ADD_OPTION(defaultopt);
-                return defaultopt;
-            case 1:
-                return (GlobalOption)optpos.toArray()[0];
-        }
-    }
-
 
     public static String javaRuntimeVersion() {
         String result = System.getProperty("java.runtime.version");
@@ -132,6 +112,10 @@ public class Global {
     
     public static boolean ADD_OPTION(GlobalOption option) {
         return global.options.add(option);
+    }
+    
+    public static boolean ADD_OPTIONS(EnumSet<GlobalOption> optionset) {
+        return global.options.addAll(optionset);
     }
     
     public static boolean OPTION(GlobalOption option) {
@@ -210,7 +194,7 @@ public class Global {
         return global.logger.printEndInfo(classname);
     }
     
-    public static Main.MainOption MAIN_OPTION() {
+    public static MainOption MAIN_OPTION() {
         return global.main;
     }
 

@@ -4,10 +4,8 @@ import java.util.EnumSet;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static com.github.david32768.jynx.Main.MainOption.*;
+import static jynx.MainOption.*;
 import static jynx.Message.*;
-
-import com.github.david32768.jynx.Main;
 
 public enum GlobalOption {
 
@@ -16,28 +14,27 @@ public enum GlobalOption {
     VERSION(M2,'V'), //"display version information"
 
     SYSIN(M7,ASSEMBLY), // "use SYSIN as input file"
-    USE_STACK_MAP(M19,ASSEMBLY), // "use user stack map instead of ASM generated"
+    USE_STACK_MAP(M19,ASSEMBLY,ROUNDTRIP), // "use supplied stack map instead of ASM generated"
     WARN_UNNECESSARY_LABEL(M10,ASSEMBLY), // "warn if label unreferenced or alias"
     WARN_STYLE(M15,ASSEMBLY), // "warn if names non-standard"
     GENERATE_LINE_NUMBERS(M9,ASSEMBLY), // "generate line numbers"
-    BASIC_VERIFIER(M16,ASSEMBLY), // "use ASM BasicVerifier"
-    SIMPLE_VERIFIER(M17,ASSEMBLY), // "use ASM SimpleVerifier (default)"
-    ALLOW_CLASS_FORNAME(M11,ASSEMBLY), // "let simple verifier use Class.forName() for non-java classes"
+    BASIC_VERIFIER(M16,ASSEMBLY,ROUNDTRIP), // "use ASM BasicVerifier instead of ASM SimpleVerifier"
+    ALLOW_CLASS_FORNAME(M11,ASSEMBLY,ROUNDTRIP), // "let simple verifier use Class.forName() for non-java classes"
     CHECK_REFERENCES(M8,ASSEMBLY), // "check that called methods or used fields exist (on class path)"
     VALIDATE_ONLY(M51,ASSEMBLY), // "do not output class file"
     JVM_OPS_ONLY(M5,ASSEMBLY), // "only JVM specified ops"
-    TRACE(M23,ASSEMBLY), // "print (jynxifier) trace"
+    TRACE(M23,ASSEMBLY), // "print (ASMifier) trace"
     SYMBOLIC_LOCAL(M44,ASSEMBLY), // "local variables are symbolic not absolute integers"
     
     SKIP_CODE(M39,DISASSEMBLY), // "do not produce code"
     SKIP_DEBUG(M29,DISASSEMBLY), // "do not produce debug info"
-    SKIP_FRAMES(M30,DISASSEMBLY), // "do not produce stack map"
+    SKIP_FRAMES(M30,DISASSEMBLY,ROUNDTRIP), // "do not produce stack map"
     SKIP_ANNOTATIONS(M18,DISASSEMBLY), // "do not produce annotations"
     DOWN_CAST(M14,DISASSEMBLY), // "if necessary reduces JVM release to maximum supported by ASM version"
     
     DEBUG(M13,ASSEMBLY,DISASSEMBLY), // "exit with stack trace if error"
     VERBOSE(M27,ASSEMBLY,DISASSEMBLY), // "print all log messages"
-    
+
     // may change
     __TREAT_WARNINGS_AS_ERRORS(M25,ASSEMBLY), // "treat warnings as errors"
     
@@ -53,9 +50,9 @@ public enum GlobalOption {
 
     private final String msg;
     private final Character abbrev;
-    private final EnumSet<Main.MainOption> main;
+    private final EnumSet<MainOption> main;
 
-    private GlobalOption(Message msg, Main.MainOption main1, Main.MainOption... mains) {
+    private GlobalOption(Message msg, MainOption main1, MainOption... mains) {
         this.msg = msg == null?null:msg.format();
         this.abbrev = null;
         this.main = EnumSet.of(main1, mains);
@@ -64,7 +61,7 @@ public enum GlobalOption {
     private GlobalOption(Message msg, char abbrev) {
         this.msg = msg.format();
         this.abbrev = abbrev;
-        this.main = EnumSet.noneOf(Main.MainOption.class);
+        this.main = EnumSet.noneOf(MainOption.class);
     }
     
     public boolean isExternal() {
@@ -92,7 +89,7 @@ public enum GlobalOption {
         return false;
     }
     
-    public boolean isRelevent(Main.MainOption context) {
+    public boolean isRelevent(MainOption context) {
         return main.contains(context);
     }
     
@@ -110,13 +107,17 @@ public enum GlobalOption {
                 .findFirst();
     }
     
-    public static void print(Main.MainOption main) {
-        Global.LOG(M6); // "Options are:%n"
+    public static EnumSet<GlobalOption> getValidFor(MainOption main) {
+        EnumSet<GlobalOption> result = EnumSet.noneOf(GlobalOption.class);
         Stream.of(values())
                 .filter(opt->!opt.name().startsWith("_"))
-                .filter(opt->opt.main.contains(main))
-                .forEach(opt->System.err.println(String.format(" %s%s %s",OPTION_PREFIX,opt.name(),opt.msg)));
-        System.err.println();
+                .filter(opt->opt.isRelevent(main))
+                .forEach(result::add);
+        return result;
+    }
+    
+    public String description() {
+        return String.format("%s%s %s",OPTION_PREFIX,name(),msg);
     }
     
 }

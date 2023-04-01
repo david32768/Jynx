@@ -23,6 +23,7 @@ import org.objectweb.asm.tree.analysis.Interpreter;
 import org.objectweb.asm.tree.InnerClassNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.TypePath;
+import org.objectweb.asm.util.ASMifier;
 import org.objectweb.asm.util.CheckClassAdapter;
 import org.objectweb.asm.util.Printer;
 import org.objectweb.asm.util.TraceClassVisitor;
@@ -54,7 +55,6 @@ import jynx2asm.NameDesc;
 import jynx2asm.ObjectLine;
 import jynx2asm.TokenArray;
 import jynx2asm.TypeHints;
-import textifier.JynxText;
 
 public class JynxClassHdr implements ContextDependent, HasAccessFlags {
 
@@ -99,7 +99,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         this.hints = new TypeHints();
         this.cw = new JynxClassWriter(cwflags,hints);
         if (OPTION(TRACE)) {
-            Printer printer = new JynxText();
+            Printer printer = new ASMifier();
             PrintWriter pw = new PrintWriter(System.out);
             TraceClassVisitor tcv = new TraceClassVisitor(cw, printer, pw);
             this.cv = new CheckClassAdapter(tcv, false);
@@ -541,10 +541,10 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         }
         boolean verified = false;
         Interpreter<BasicValue> verifier;
-        if (OPTION(GlobalOption.SIMPLE_VERIFIER)) {
-            verifier = verifierFactory.getSimpleVerifier(accessName.is(AccessFlag.acc_interface));
-        } else {
+        if (OPTION(GlobalOption.BASIC_VERIFIER)) {
             verifier = new BasicVerifier();
+        } else {
+            verifier = verifierFactory.getSimpleVerifier(accessName.is(AccessFlag.acc_interface));
         }
         Analyzer<BasicValue> analyzer = new Analyzer<>(verifier);
         try {
@@ -552,7 +552,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
             verified =  true;
         } catch (AnalyzerException | IllegalArgumentException e) {
             String emsg = e.getMessage();
-            LOG(M75,mv.name,GlobalOption.SIMPLE_VERIFIER,emsg); // "Method %s failed %s check:%n    %s"
+            LOG(M75,mv.name, emsg); // "Method %s failed simple_verifier check:%n    %s"
         }
         if (verified) {
             try {

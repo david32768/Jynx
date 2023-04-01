@@ -29,7 +29,6 @@ import static jynx.Message.*;
 import static jynx.ReservedWord.*;
 
 import asm.JynxClassReader;
-import com.github.david32768.jynx.Main;
 import jvm.AccessFlag;
 import jvm.Constants;
 import jvm.ConstType;
@@ -38,6 +37,7 @@ import jynx.ClassType;
 import jynx.Directive;
 import jynx.Global;
 import jynx.GlobalOption;
+import jynx.MainOption;
 import jynx2asm.handles.HandlePart;
 
 public class JynxDisassemble {
@@ -372,13 +372,13 @@ public class JynxDisassemble {
         jp.appendComment("options = " + OPTIONS().toString())
                 .nl()
                 .comment()
-                .append(Main.MainOption.DISASSEMBLY.version())
+                .append(MainOption.DISASSEMBLY.version())
                 .nl()
                 .append(dir_version)
                 .append(jvmVersion.asJava());
         OPTIONS().stream()
                 .filter(GlobalOption::isExternal)
-                .filter(opt->opt.isRelevent(Main.MainOption.ASSEMBLY))
+                .filter(opt->opt.isRelevent(MainOption.ASSEMBLY))
                 .filter(opt-> opt != GlobalOption.SYSIN)
                 .forEach(jp::append);
         jp.nl()
