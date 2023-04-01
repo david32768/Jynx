@@ -37,6 +37,7 @@ module com.github.david32768.jynx {
   jynx2asm
   jynx2asm/handles
   jynx2asm/ops
+  roundtrip
   textifier
 .end_array
 .end_module
