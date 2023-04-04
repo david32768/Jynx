@@ -8,6 +8,8 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.function.Predicate;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static jynx.Constants.SUFFIX;
 import static jynx.Global.CLASS_NAME;
@@ -70,7 +72,7 @@ public enum MainOption {
         return String.format("Jynx %s %s",this.name(),Constants.version());
     }
 
-    public void appUsage() {
+    public void appUsageSummary() {
         System.err.println(usage);
         System.err.format("   (%s)%n", longdesc);
         if (adddesc.isEmpty()) {
@@ -78,6 +80,11 @@ public enum MainOption {
         } else {
             System.err.format("   (%s)%n%n", adddesc);
         }
+        System.err.println();
+    }
+
+    public void appUsage() {
+        appUsageSummary();
         Global.LOG(M6); // "Options are:%n"
         for (GlobalOption opt:GlobalOption.getValidFor(this)) {
             System.err.println(" " + opt.description());            
@@ -148,5 +155,11 @@ public enum MainOption {
     
     private static boolean a2j2a(Optional<String> optfname) {
         return RoundTrip.roundTrip(optfname);
+    }
+
+    public static String mains() {
+        return Stream.of(values())
+                .map(MainOption::extname)
+                .collect(Collectors.joining("|", "[", "]"));
     }
 }

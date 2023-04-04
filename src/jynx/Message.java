@@ -28,7 +28,7 @@ public enum Message {
     M21("invalid minor version(%d) - spec table 4.1A"),
     M22(WARNING,"value required (%d) for %s is more than limit value (%d)"),    
     M23(BLANK,"print (ASMifier) trace"),
-
+    M24(BLANK,"%s %s     gives list of options"),
     M25(BLANK,"treat warnings as errors"),
     M26(BLANK,"invalid main-option name - %s"),
     M27(BLANK,"print all log messages"),

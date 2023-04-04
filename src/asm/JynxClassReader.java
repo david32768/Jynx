@@ -99,7 +99,7 @@ public class JynxClassReader extends ClassReader {
         return ba;
     }
     
-    private static int BUFFER_SIZE = 1<<14;
+    private static final int BUFFER_SIZE = 1<<14;
     
     private static byte[] bytes4Class(String name) throws IOException {
         assert !name.endsWith(".class");

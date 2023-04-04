@@ -10,42 +10,42 @@ import static jynx.Message.*;
 public enum GlobalOption {
 
     // information
-    HELP(M1,'h'), // "display help message"
-    VERSION(M2,'V'), //"display version information"
+    HELP(M1, 'h'), // "display help message"
+    VERSION(M2, 'V'), //"display version information"
 
-    SYSIN(M7,ASSEMBLY), // "use SYSIN as input file"
-    USE_STACK_MAP(M19,ASSEMBLY,ROUNDTRIP), // "use supplied stack map instead of ASM generated"
-    WARN_UNNECESSARY_LABEL(M10,ASSEMBLY), // "warn if label unreferenced or alias"
-    WARN_STYLE(M15,ASSEMBLY), // "warn if names non-standard"
-    GENERATE_LINE_NUMBERS(M9,ASSEMBLY), // "generate line numbers"
-    BASIC_VERIFIER(M16,ASSEMBLY,ROUNDTRIP), // "use ASM BasicVerifier instead of ASM SimpleVerifier"
-    ALLOW_CLASS_FORNAME(M11,ASSEMBLY,ROUNDTRIP), // "let simple verifier use Class.forName() for non-java classes"
-    CHECK_REFERENCES(M8,ASSEMBLY), // "check that called methods or used fields exist (on class path)"
-    VALIDATE_ONLY(M51,ASSEMBLY), // "do not output class file"
-    JVM_OPS_ONLY(M5,ASSEMBLY), // "only JVM specified ops"
-    TRACE(M23,ASSEMBLY), // "print (ASMifier) trace"
-    SYMBOLIC_LOCAL(M44,ASSEMBLY), // "local variables are symbolic not absolute integers"
+    SYSIN(M7, ASSEMBLY), // "use SYSIN as input file"
+    USE_STACK_MAP(M19, ASSEMBLY, ROUNDTRIP), // "use supplied stack map instead of ASM generated"
+    WARN_UNNECESSARY_LABEL(M10, ASSEMBLY), // "warn if label unreferenced or alias"
+    WARN_STYLE(M15, ASSEMBLY), // "warn if names non-standard"
+    GENERATE_LINE_NUMBERS(M9, ASSEMBLY), // "generate line numbers"
+    BASIC_VERIFIER(M16, ASSEMBLY, ROUNDTRIP), // "use ASM BasicVerifier instead of ASM SimpleVerifier"
+    ALLOW_CLASS_FORNAME(M11, ASSEMBLY, ROUNDTRIP), // "let simple verifier use Class.forName() for non-java classes"
+    CHECK_REFERENCES(M8, ASSEMBLY), // "check that called methods or used fields exist (on class path)"
+    VALIDATE_ONLY(M51, ASSEMBLY), // "do not output class file"
+    JVM_OPS_ONLY(M5, ASSEMBLY), // "only JVM specified ops"
+    TRACE(M23, ASSEMBLY), // "print (ASMifier) trace"
+    SYMBOLIC_LOCAL(M44, ASSEMBLY), // "local variables are symbolic not absolute integers"
     
-    SKIP_CODE(M39,DISASSEMBLY), // "do not produce code"
-    SKIP_DEBUG(M29,DISASSEMBLY), // "do not produce debug info"
-    SKIP_FRAMES(M30,DISASSEMBLY,ROUNDTRIP), // "do not produce stack map"
-    SKIP_ANNOTATIONS(M18,DISASSEMBLY), // "do not produce annotations"
-    DOWN_CAST(M14,DISASSEMBLY), // "if necessary reduces JVM release to maximum supported by ASM version"
+    SKIP_CODE(M39, DISASSEMBLY), // "do not produce code"
+    SKIP_DEBUG(M29, DISASSEMBLY), // "do not produce debug info"
+    SKIP_FRAMES(M30, DISASSEMBLY, ROUNDTRIP), // "do not produce stack map"
+    SKIP_ANNOTATIONS(M18, DISASSEMBLY), // "do not produce annotations"
+    DOWN_CAST(M14, DISASSEMBLY), // "if necessary reduces JVM release to maximum supported by ASM version"
     
-    DEBUG(M13,ASSEMBLY,DISASSEMBLY), // "exit with stack trace if error"
-    VERBOSE(M27,ASSEMBLY,DISASSEMBLY), // "print all log messages"
-
+    DEBUG(M13, ASSEMBLY, DISASSEMBLY), // "exit with stack trace if error"
+    VERBOSE(M27, ASSEMBLY, DISASSEMBLY), // "print all log messages"
+    
     // may change
-    __TREAT_WARNINGS_AS_ERRORS(M25,ASSEMBLY), // "treat warnings as errors"
+    __TREAT_WARNINGS_AS_ERRORS(M25, ASSEMBLY), // "treat warnings as errors"
     
     // internal
-    __EXIT_IF_ERROR(null,ASSEMBLY), // "exit if error"
-    __PRINT_STACK_TRACES(null,ASSEMBLY), // "print stack trace of exceptions"
+    __EXIT_IF_ERROR(null, ASSEMBLY), // "exit if error"
+    __PRINT_STACK_TRACES(null, ASSEMBLY), // "print stack trace of exceptions"
 
 
-    __STRUCTURED_LABELS(null,ASSEMBLY), // labels are numeric level
-    __UNSIGNED_LONG(null,ASSEMBLY), // allow unsigned long i.e. > Long.MAX_VALUE
-    __WARN_INDENT(null,ASSEMBLY), // "check indent for structured code"
+    __STRUCTURED_LABELS(null, ASSEMBLY), // labels are numeric level
+    __UNSIGNED_LONG(null, ASSEMBLY), // allow unsigned long i.e. > Long.MAX_VALUE
+    __WARN_INDENT(null, ASSEMBLY), // "check indent for structured code"
     ;
 
     private final String msg;
@@ -87,6 +87,10 @@ public enum GlobalOption {
             return isEqual("" + abbrev,option.substring(ABBREV_PREFIX.length()));
         }
         return false;
+    }
+    
+    public String asArg() {
+        return OPTION_PREFIX + name();
     }
     
     public boolean isRelevent(MainOption context) {

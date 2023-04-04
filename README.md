@@ -26,14 +26,27 @@ It supports "macros" as a service.
 
 ## Usage
 
+```
 Usage:
 
-```
  jynx {options} .jx_file
    (produces a class file from a .jx file)
+
+
+ 2jynx {options}  class-name|class_file > .jx_file
+   (produces a .jx file from a class)
+   (any JYNX options are added to .version directive)
+
+
+ roundtrip {options}  class-name|class_file
+   (checks that 2JYNX followed by JYNX produces an equivalent class (according to ASM Textifier))
+
+
+[jynx|2jynx|roundtrip] --HELP     gives list of options
+
 ```
 
-Options are:
+Options for JYNX are:
 
 *	--SYSIN use SYSIN as input file. (omit .jx_file)
 *	--USE_STACK_MAP use user stack map instead of ASM generated
@@ -50,13 +63,8 @@ Options are:
 *	--DEBUG exit with stack trace if error
 *	--VERBOSE print all log messages
 
-```
- 2jynx {options}  class-name|class_file > .jx_file
-   (produces a .jx file from a class)
-   (any JYNX options are added to .version directive)
-```
 
-Options are:
+Options for 2JYNX are:
 
 *	--SKIP_CODE do not produce code
 *	--SKIP_DEBUG do not produce debug info
@@ -66,13 +74,8 @@ Options are:
 *	--DEBUG exit with stack trace if error
 *	--VERBOSE print all log messages
 
-```
- roundtrip {options}  class-name|class_file
-   (checks that disassembly followed by assembly produces an equivalent class)
-   (checks that 2JYNX followed by JYNX produces an equivalent class (according to ASM Textifier))
-```
 
-Options are:
+Options for ROUNDTRIP are:
 
 *	--USE_STACK_MAP use supplied stack map instead of ASM generated
 *	--BASIC_VERIFIER use ASM BasicVerifier instead of ASM SimpleVerifier

@@ -21,9 +21,11 @@ public class Main {
 
     private static void appUsage() {
         LOG(M12); // "%nUsage:%n"
-        for (MainOption mo:MainOption.values()) {
-            mo.appUsage();
+        for (MainOption mo: MainOption.values()) {
+            mo.appUsageSummary();
         }
+        String mainstr = MainOption.mains();
+        LOG(M24,mainstr,GlobalOption.HELP.asArg()); // "%s %s     gives list of options"
     }
 
     private static void appUsage(MainOption mo) {
