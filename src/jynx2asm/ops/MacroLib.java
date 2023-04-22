@@ -1,9 +1,9 @@
 package jynx2asm.ops;
 
+import java.util.Collections;
 import java.util.EnumSet;
-import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
-import java.util.function.UnaryOperator;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public abstract class MacroLib {
@@ -13,14 +13,14 @@ public abstract class MacroLib {
     
     public EnumSet<MacroOption> getOptions() {return EnumSet.noneOf(MacroOption.class);}
     
-    public UnaryOperator<String> parmTranslator() {
-        return null;
+    public Map<String,String> ownerTranslations() {
+        return Collections.emptyMap();
     }
-
-    public BinaryOperator<String> ownerTranslator() {
-        return null;
+    
+    public Map<String,String> parmTranslations() {
+        return Collections.emptyMap();
     }
-
+    
     public Predicate<String> labelTester() {
         return null;
     }

@@ -3,7 +3,6 @@ package jynx2asm.ops;
 import java.io.PrintWriter;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.HashMap;
@@ -35,14 +34,16 @@ public class JynxOps {
     private final JvmVersion jvmVersion;
     
     private Predicate<String> labelTester;
-    private UnaryOperator<String> parmtrans;
-    private BinaryOperator<String> ownertrans;
+    private final Map<String,String> ownerTranslations;
+    private final Map<String,String> parmTranslations;
     
 
     private JynxOps(JvmVersion jvmversion) {
         this.opmap = new HashMap<>(512);
         this.macrolibs = new HashMap<>();
         this.jvmVersion = jvmversion;
+        this.ownerTranslations = new HashMap<>();
+        this.parmTranslations = new HashMap<>();
     }
 
     public static JynxOps getInstance(boolean extensions, JvmVersion jvmversion) {
@@ -104,18 +105,8 @@ public class JynxOps {
                 lib.streamExternal()
                         .forEach(this::addOp);
                 macrolibs.put(libname, lib);
-                if (parmtrans == null) {
-                    parmtrans = lib.parmTranslator();
-                } else if (lib.parmTranslator() != null) {
-                    // "only one parameter translater allowed"
-                    LOG(M314);
-                }
-                if (ownertrans == null) {
-                    ownertrans = lib.ownerTranslator();
-                } else if (lib.ownerTranslator() != null) {
-                    // "only one owner translater allowed"
-                    LOG(M315);
-                }
+                parmTranslations.putAll(lib.parmTranslations());
+                ownerTranslations.putAll(lib.ownerTranslations());
                 if (labelTester == null) {
                     labelTester = lib.labelTester();
                 } else if (lib.labelTester() != null) {
@@ -138,21 +129,59 @@ public class JynxOps {
     public boolean isLabel(String labstr) {
         return labelTester != null && labelTester.test(labstr);
     }
-    
-    public String translateDesc(String str) {
-        if (str == null || parmtrans == null || !str.startsWith("(")) {
-            return str;
+
+    private String translateParm(String parm) {
+        String trans = parmTranslations.get(parm);
+        if (trans == null) {
+            return parm;
         } else {
-            return parmtrans.apply(str);
+            //"parameter type %s changed to %s"
+            LOG(M314, parm, trans);
+            return trans;
         }
     }
     
-    public String translateOwner(String classname, String str) {
-        if (ownertrans == null) {
+    public String translateDesc(String str) {
+        int indexto = str.indexOf("->");
+        if (indexto < 0) { 
             return str;
-        } else {
-            return ownertrans.apply(classname,str);
         }
+        String parm = str.substring(0, indexto);
+        String rtype = str.substring(indexto + 2);
+        if (parm.startsWith("(") && parm.endsWith(")")) {
+            parm = parm.substring(1, parm.length() - 1);
+        } else {
+            return str;
+        }
+        if (rtype.equals("()")) {
+            rtype = "V";
+        } else {
+            rtype = translateParm(rtype);
+        }
+        if (parm.isEmpty()) {
+            return "()" + rtype;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append('(');
+        String[] parms = parm.split(",");
+        for (String p:parms) {
+            sb.append(translateParm(p));
+        }
+        sb.append(')').append(rtype);
+        return sb.toString();
+    }
+    
+    public String translateOwner(String classname, String str) {
+        if (str == null || str.equals("/")) {
+            return classname;
+        }
+        String result = ownerTranslations.get(str);
+        if (result == null) {
+            return str;
+        }
+        // "owner %s translated to %s"
+        LOG(M315, str, result);
+        return result;
     }
     
     public static Integer length(MacroOp macop) {
