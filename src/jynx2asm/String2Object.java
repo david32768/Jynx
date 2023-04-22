@@ -6,6 +6,7 @@ import org.objectweb.asm.Type;
 import static jvm.NumType.*;
 import static jynx.Global.*;
 import static jynx.Message.*;
+import static jynx2asm.NameDesc.CLASS_NAME;
 
 import jvm.ConstType;
 import jvm.HandleType;
@@ -85,6 +86,8 @@ public class String2Object {
         if (array || type || primitive) {
             return Type.getType(token);
         }
+        token = TRANSLATE_OWNER(token);
+        CLASS_NAME.validate(token);
         return Type.getObjectType(token);
     }
 

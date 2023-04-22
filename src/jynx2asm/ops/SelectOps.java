@@ -73,6 +73,10 @@ public enum SelectOps implements SelectOp {
         return new Select(Type.STACK_LENGTH, oplen1, oplen2);
     }
 
+    public static SelectOp stackILFDA(JynxOp iop, JynxOp jop, JynxOp fop, JynxOp dop, JynxOp aop) {
+        return new Select(Type.STACK, iop, jop, fop, dop, aop);
+    }
+
     private static class Select implements SelectOp {
 
         private final Type type;

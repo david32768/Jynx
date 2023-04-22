@@ -9,7 +9,7 @@ public class Constants {
 
     private final static int JYNX_VERSION = 0;
     private final static int JYNX_RELEASE = 20;
-    private final static int JYNX_BUILD = 1;
+    private final static int JYNX_BUILD = 2;
     
     public static String version() {
         if (OPTION(DEBUG)) {

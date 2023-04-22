@@ -1,17 +1,20 @@
 package jvm;
 
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.EnumSet;
+
 import jynx2asm.handles.LocalMethodHandle;
 
 public enum Constants {
     
-    OBJECT_CLASS("java/lang/Object"),
-    STRING_CLASS("java/lang/String"),
-    CLASS_CLASS("java/lang/Class"),
+    OBJECT_CLASS(Object.class),
+    STRING_CLASS(String.class),
+    CLASS_CLASS(Class.class),
     RECORD_SUPER("java/lang/Record"),
-    ENUM_SUPER("java/lang/Enum"),
-    OBJECT_INPUT_STREAM("java/io/ObjectInputStream"),
-    OBJECT_OUTPUT_STREAM("java/io/ObjectOutputStream"),
+    ENUM_SUPER(Enum.class),
+    OBJECT_INPUT_STREAM(ObjectInputStream.class),
+    OBJECT_OUTPUT_STREAM(ObjectOutputStream.class),
     
     JAVA_BASE_MODULE("java.base"),
     MODULE_CLASS_NAME("module-info"),
@@ -48,6 +51,10 @@ public enum Constants {
     
     private final String str;
 
+    private Constants(Class<?> klass) {
+        this(klass.getName().replace(".","/"));
+    }
+    
     private Constants(String str) {
         this.str = str;
     }
