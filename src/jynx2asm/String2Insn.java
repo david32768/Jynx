@@ -189,13 +189,11 @@ public class String2Insn {
     
     private Instruction arg_class(JvmOp jvmop) {
         String typeo = line.nextToken().asString();
-        String type;
+        String type = TRANSLATE_TYPE(typeo, false);
         if (jvmop == JvmOp.asm_new) {
-            type = TRANSLATE_OWNER(typeo);
             CLASS_NAME.validate(type);
             checker.usedNew(type);
         } else {
-            type = typeo;
             OBJECT_NAME.validate(type);
         }
         return new TypeInstruction(jvmop, type);

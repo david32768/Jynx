@@ -199,7 +199,11 @@ public class Global {
     }
 
     public static String TRANSLATE_DESC(String str) {
-        return global.opmap.translateDesc(str);
+        return global.opmap.translateDesc(CLASS_NAME(),str);
+    }
+    
+    public static String TRANSLATE_TYPE(String str, boolean semi) {
+        return global.opmap.translateParm(CLASS_NAME(),str, semi);
     }
     
     public static String TRANSLATE_OWNER(String str) {

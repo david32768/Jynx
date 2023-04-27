@@ -323,8 +323,9 @@ public enum Message {
     M321("%d does not in [0,%d]"),
     M322("use of %s is not supported: %s"),
     M323(WARNING,"by adding dflt entries %s (size %d) would still be smaller than %s (size %d); range = %d labels = %d"),
+    M324("translation %s -> %s is invalid; %s is not a valid key"),
+    M325("translation %s -> %s is invalid; %s is not a valid value"),
 
-    //
     M327(INFO,"added: %s %s"),
     //
     M335("index (%d) is not a current try index [0,%d]"),

@@ -4,7 +4,6 @@ import java.io.PrintWriter;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.function.Predicate;
-import java.util.function.UnaryOperator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +18,10 @@ import static jynx.Message.M314;
 import static jynx.Message.M315;
 import static jynx.Message.M316;
 import static jynx.Message.M318;
+import static jynx.Message.M324;
+import static jynx.Message.M325;
 
+import jvm.ConstType;
 import jvm.Feature;
 import jvm.JvmVersion;
 import jvm.JvmVersionRange;
@@ -105,8 +107,8 @@ public class JynxOps {
                 lib.streamExternal()
                         .forEach(this::addOp);
                 macrolibs.put(libname, lib);
-                parmTranslations.putAll(lib.parmTranslations());
-                ownerTranslations.putAll(lib.ownerTranslations());
+                addTranslations(parmTranslations, lib.parmTranslations(), NameDesc.PARM_VALUE_NAME);
+                addTranslations(ownerTranslations, lib.ownerTranslations(), NameDesc.OWNER_VALUE_NAME);
                 if (labelTester == null) {
                     labelTester = lib.labelTester();
                 } else if (lib.labelTester() != null) {
@@ -126,22 +128,69 @@ public class JynxOps {
         return result;
     }
 
+    private void addTranslations(Map<String, String> map, Map<String, String> add, NameDesc valuetype) {
+        for (Map.Entry<String, String> entry : add.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            if (!NameDesc.KEY_NAME.isValid(key)) {
+                // "translation %s -> %s is invalid; %s is not a valid key"
+                LOG(M324, key, value, key);
+            } else if (!valuetype.isValid(value)) {
+                // "translation %s -> %s is invalid; %s is not a valid value"
+                LOG(M325, key, value, value);
+            } else {
+                map.put(key, value);
+            }
+        }
+    }
+    
     public boolean isLabel(String labstr) {
         return labelTester != null && labelTester.test(labstr);
     }
 
-    private String translateParm(String parm) {
-        String trans = parmTranslations.get(parm);
-        if (trans == null) {
+    public String translateParm(String classname, String parm, boolean semi) {
+        int last = parm.lastIndexOf('[');
+        String type = parm.substring(last + 1); // OK if last == -1
+        String prefix = parm.substring(0, last + 1); // OK if last == -1
+        if (ConstType.isPrimitiveType(type)) {
             return parm;
+        }
+        int indexsemi = type.indexOf(';');
+        boolean owner = type.contains("/") || indexsemi >= 0;
+        if (owner) {
+            if (indexsemi >= 0) {
+                if (!type.startsWith("L") || indexsemi != type.length() - 1) {
+                    return parm; // error
+                }
+                type = type.substring(1, indexsemi);
+            }
+            String trans = translateOwner(classname, type);
+            return construct(prefix, trans, semi);
         } else {
+            String trans = parmTranslations.get(type);
+            if (trans == null) {
+                return parm;
+            }
+            owner = trans.contains("/");
+            if (owner) {
+                type = construct(prefix, trans, semi);
+            } else {
+                type = prefix + trans;
+            }
             //"parameter type %s changed to %s"
-            LOG(M314, parm, trans);
-            return trans;
+            LOG(M314, parm, type);
+            return type;
         }
     }
+
+    private String construct(String prefix, String type, boolean semi) {
+        if (!prefix.isEmpty() || semi) { 
+            return prefix + 'L' + type + ';';
+        }
+        return prefix + type;
+    }
     
-    public String translateDesc(String str) {
+    public String translateDesc(String classname, String str) {
         int indexto = str.indexOf("->");
         if (indexto < 0) { 
             return str;
@@ -156,7 +205,7 @@ public class JynxOps {
         if (rtype.equals("()")) {
             rtype = "V";
         } else {
-            rtype = translateParm(rtype);
+            rtype = translateParm(classname, rtype, true);
         }
         if (parm.isEmpty()) {
             return "()" + rtype;
@@ -165,7 +214,7 @@ public class JynxOps {
         sb.append('(');
         String[] parms = parm.split(",");
         for (String p:parms) {
-            sb.append(translateParm(p));
+            sb.append(translateParm(classname, p, true));
         }
         sb.append(')').append(rtype);
         return sb.toString();

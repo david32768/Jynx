@@ -78,17 +78,9 @@ public class String2Object {
     }
     
     public Type parseType(String token) {
-        char first = token.charAt(0);
-        char last = token.charAt(token.length() - 1);
-        boolean array = first == '[';
-        boolean type = first == 'L' && last == ';';
-        boolean primitive = ConstType.isPrimitiveType(token);
-        if (array || type || primitive) {
-            return Type.getType(token);
-        }
-        token = TRANSLATE_OWNER(token);
-        CLASS_NAME.validate(token);
-        return Type.getObjectType(token);
+        token = TRANSLATE_TYPE(token, true);
+        NameDesc.FIELD_DESC.validate(token);
+        return Type.getType(token);
     }
 
     public Handle parseHandle(String token) {
