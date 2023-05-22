@@ -118,7 +118,7 @@ Changes are:
 		Interface2
 	.end_array
 ```
-*	.throws - use array if more than one throw
+*	.throws - use array if more than one exception
 ```
 	;.throws Exception1
 	;.throws Exception2
