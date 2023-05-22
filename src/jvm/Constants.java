@@ -71,14 +71,18 @@ public enum Constants {
         return str.replace("(", "\\(").replace(")", "\\)");
     }
     
-    public boolean equalString(String other) {
-        return toString().equals(other);
+    public boolean equalsString(String other) {
+        return stringValue().equals(other);
     }
 
     public LocalMethodHandle localMethodHandle() {
         return LocalMethodHandle.getInstance(str);
     }
     
+    public String stringValue() {
+        return str;
+    }
+
     @Override
     public String toString() {
         return str;

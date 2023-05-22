@@ -11,14 +11,21 @@ import jynx.ReservedWord;
 
 class LineArray implements TokenArray {
 
-    private Deque<Deque<Token>> lines;
+    private final Line line;
     
+    private Deque<Deque<Token>> lines;
     private Deque<Token> current;
     
     LineArray(Line line) {
         Objects.nonNull(line);
+        this.line = line;
         this.lines = new ArrayDeque<>();
         readArray(line);
+    }
+
+    @Override
+    public Line line() {
+        return line;
     }
 
     @Override

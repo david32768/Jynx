@@ -109,6 +109,24 @@ Changes are:
 		10 -> Label2
 	.end_array
 ```
+*	.implements - use array if more than one interface
+```
+	;.implements Interface1
+	;.implements Interface2
+	.implements .array
+		Interface1
+		Interface2
+	.end_array
+```
+*	.throws - use array if more than one throw
+```
+	;.throws Exception1
+	;.throws Exception2
+	.throws .array
+		Exception1
+		Exception2
+	.end_array
+```
 *	invokeinterface; omit number as will be calculated and precede method_name with '@'
 ```
 	; invokeinterface java/util/Enumeration/hasMoreElements()Z 1
@@ -234,11 +252,13 @@ Changes are
 ```
 	; .nestmember <member-class-name>
 	.nestmember x/y
+	; may use .array if more than one nest member
 ```
 *	.permittedSubclass
 ```
 	; .permittedSubclass <subclass-name>
 	.permittedSubclass x/y
+	; may use .array if more than one permitted subclass
 ```
 *	add support for method-handle to ldc
 ```

@@ -19,7 +19,7 @@ public enum Directive implements JvmVersioned {
     //  dir_x(after_state,before_states[,feature])
 
     dir_version(START_BLOCK, EnumSet.of(START)),
-    dir_source(COMMON, EnumSet.of(START_BLOCK, END_START, CLASSHDR, PACKAGEHDR, MODULEHDR), SourceFile),
+    dir_source(true, COMMON, EnumSet.of(START_BLOCK, END_START, CLASSHDR, PACKAGEHDR, MODULEHDR), SourceFile),
     dir_macrolib(START_BLOCK, EnumSet.of(START_BLOCK, END_START)),
     
     dir_class(CLASSHDR, EnumSet.of(START_BLOCK, END_START)),
@@ -30,11 +30,11 @@ public enum Directive implements JvmVersioned {
     dir_package(PACKAGEHDR, EnumSet.of(START_BLOCK, END_START)),
     dir_define_annotation(CLASSHDR, EnumSet.of(START_BLOCK, END_START), AnnotationDefault),
 
-    dir_super(HEADER, EnumSet.of(CLASSHDR, PACKAGEHDR)),
+    dir_super(true,HEADER, EnumSet.of(CLASSHDR, PACKAGEHDR)),
     dir_implements(HEADER, EnumSet.of(CLASSHDR)),
     dir_debug(HEADER, EnumSet.of(CLASSHDR,MODULEHDR), SourceDebugExtension),
     
-    dir_signature(COMMON, EnumSet.of(CLASSHDR, FIELD_BLOCK, METHOD_BLOCK, COMPONENT_BLOCK), Signature),
+    dir_signature(true, COMMON, EnumSet.of(CLASSHDR, FIELD_BLOCK, METHOD_BLOCK, COMPONENT_BLOCK), Signature),
     
     dir_inner_class(HEADER, EnumSet.of(CLASSHDR,MODULEHDR),InnerClasses),
     dir_inner_interface(HEADER, EnumSet.of(CLASSHDR,MODULEHDR),InnerClasses),
@@ -42,11 +42,11 @@ public enum Directive implements JvmVersioned {
     dir_inner_record(HEADER, EnumSet.of(CLASSHDR,MODULEHDR),InnerClasses),
     dir_inner_define_annotation(HEADER, EnumSet.of(CLASSHDR,MODULEHDR),InnerClasses),
 
-    dir_nesthost(HEADER, EnumSet.of(CLASSHDR), NestHost),
+    dir_nesthost(true, HEADER, EnumSet.of(CLASSHDR), NestHost),
     dir_nestmember(HEADER, EnumSet.of(CLASSHDR), NestMembers),
     dir_permittedSubclass(HEADER, EnumSet.of(CLASSHDR), PermittedSubclasses),
-    dir_enclosing_method(HEADER, EnumSet.of(CLASSHDR), EnclosingMethod),
-    dir_outer_class(HEADER, EnumSet.of(CLASSHDR), EnclosingMethod),
+    dir_enclosing_method(true, HEADER, EnumSet.of(CLASSHDR), EnclosingMethod),
+    dir_outer_class(true, HEADER, EnumSet.of(CLASSHDR), EnclosingMethod),
     dir_hints(HEADER, EnumSet.of(CLASSHDR)),
 
     dir_comment(COMMON,EnumSet.allOf(State.class)),
@@ -94,7 +94,7 @@ public enum Directive implements JvmVersioned {
     dir_argmethodref_type_annotation(COMMON, EnumSet.of(CODE),
             Feature.type_annotations),
     
-    dir_default_annotation(METHOD_BLOCK, EnumSet.of(METHOD_BLOCK), AnnotationDefault),
+    dir_default_annotation(true, METHOD_BLOCK, EnumSet.of(METHOD_BLOCK), AnnotationDefault),
     dir_parameter_annotation(METHOD_BLOCK, EnumSet.of(METHOD_BLOCK), Feature.annotations),
 
     end_annotation(READ_END, EnumSet.noneOf(State.class)),
@@ -110,8 +110,8 @@ public enum Directive implements JvmVersioned {
     dir_throws(METHOD_BLOCK, EnumSet.of(METHOD_BLOCK),  Exceptions),
     
     dir_parameter(METHOD_BLOCK, EnumSet.of(METHOD_BLOCK), MethodParameters),
-    dir_visible_parameter_count(METHOD_BLOCK,EnumSet.of(METHOD_BLOCK), RuntimeVisibleParameterAnnotations),
-    dir_invisible_parameter_count(METHOD_BLOCK,EnumSet.of(METHOD_BLOCK), RuntimeInvisibleParameterAnnotations),
+    dir_visible_parameter_count(true, METHOD_BLOCK,EnumSet.of(METHOD_BLOCK), RuntimeVisibleParameterAnnotations),
+    dir_invisible_parameter_count(true, METHOD_BLOCK,EnumSet.of(METHOD_BLOCK), RuntimeInvisibleParameterAnnotations),
     
     dir_catch(CODE, EnumSet.of(METHOD_BLOCK, CODE), Exceptions),
     dir_except_type_annotation(CODE, EnumSet.of(CODE),
@@ -136,8 +136,8 @@ public enum Directive implements JvmVersioned {
     end_array(READ_END, EnumSet.noneOf(State.class)),
 
     dir_module(MODULE, EnumSet.of(END_MODULEHDR)),
-    dir_main(MODULE, EnumSet.of(MODULE), ModulePackages),
-    dir_packages(MODULE, EnumSet.of(MODULE), ModulePackages),
+    dir_main(true, MODULE, EnumSet.of(MODULE), ModulePackages),
+    dir_packages(true, MODULE, EnumSet.of(MODULE), ModulePackages),
     dir_uses(MODULE, EnumSet.of(MODULE), Module),
     dir_exports(MODULE, EnumSet.of(MODULE), Module),
     dir_opens(MODULE, EnumSet.of(MODULE), Module),
@@ -149,15 +149,25 @@ public enum Directive implements JvmVersioned {
     end_class(END_CLASS, EnumSet.of(END_CLASSHDR, END_FIELD, END_METHOD,END_MODULE, END_PACKAGEHDR)),
     ;
 
+    private final boolean uniqueWithin;
     private final State after;
     private final EnumSet<State> before;
     private final JvmVersionRange range;
 
     private Directive(State after, EnumSet<State> before) {
-        this(after,before,Feature.unlimited);
+        this(false, after, before, Feature.unlimited);
+    }
+
+    private Directive(boolean uniquewithin, State after, EnumSet<State> before) {
+        this(uniquewithin, after, before, Feature.unlimited);
     }
 
     private Directive(State after, EnumSet<State> before, JvmVersioned range) {
+        this(false, after, before, range);
+    }
+
+    private Directive(boolean uniquewithin, State after, EnumSet<State> before, JvmVersioned range) {
+        this.uniqueWithin = uniquewithin;
         this.after = after;
         this.before = before;
         this.range = range.range();
@@ -167,32 +177,13 @@ public enum Directive implements JvmVersioned {
     public JvmVersionRange range() {
         return range;
     }
-    
-    private boolean isUniqueWithin() {
-        switch(this) {
-            case dir_source:
-            case dir_super:
-            case dir_signature:
-            case dir_nesthost:
-            case dir_enclosing_method:
-            case dir_outer_class:
-            case dir_default_annotation:
-            case dir_packages:
-            case dir_main:
-            case dir_visible_parameter_count:
-            case dir_invisible_parameter_count:
-                return true;
-            default:
-                return false;
-        }
-    }
 
     public boolean isAnotation() {
         return name().endsWith("_annotation");
     }
     
     public void checkUnique(Map<Directive,Line> unique_directives, Line line) {
-        if (isUniqueWithin()) {
+        if (uniqueWithin) {
             Line linex = unique_directives.putIfAbsent(this, line);
             if (linex != null) {
                 throw new LogIllegalStateException(M31,this,linex); // "%s already set in line%n    %s"

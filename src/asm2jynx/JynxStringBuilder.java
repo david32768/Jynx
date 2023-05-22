@@ -168,8 +168,8 @@ public class JynxStringBuilder {
 
     public JynxStringBuilder appendDir(Directive dir, Object[] values) {
         if (values != null) {
-            for (int i = 0; i < values.length; ++i) {
-                append(dir).append(values[i]).nl();
+            for (Object value : values) {
+                appendDir(dir,value);
             }
         }
         return this;
@@ -177,7 +177,7 @@ public class JynxStringBuilder {
 
     public JynxStringBuilder appendDirs(Directive dir, List<String> strs) {
         if (strs != null) {
-            for (Object str:strs) {
+            for (String str:strs) {
                 appendDir(dir,str);
             }
         }

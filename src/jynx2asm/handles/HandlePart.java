@@ -116,7 +116,7 @@ public enum HandlePart {
     private static final String VOID_METHOD = ")V";
 
     public static boolean isInit(String name,String desc) {
-        return Constants.CLASS_INIT_NAME.equalString(name) && desc.endsWith(VOID_METHOD);
+        return Constants.CLASS_INIT_NAME.equalsString(name) && desc.endsWith(VOID_METHOD);
     }
     
     public static String ownerName(String owner, String name) {

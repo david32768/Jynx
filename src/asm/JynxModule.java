@@ -134,7 +134,7 @@ public class JynxModule {
         Access accessname = getAccess(line);
         String mod = accessname.getName();
         MODULE_NAME.validate(mod);
-        javaBase |= Constants.JAVA_BASE_MODULE.equalString(mod);
+        javaBase |= Constants.JAVA_BASE_MODULE.equalsString(mod);
         accessname.check4Require();
         int access = accessname.getAccess();
         Token token = line.nextToken();
@@ -222,7 +222,7 @@ public class JynxModule {
     public void visitEnd() {
         if (!javaBase) {
             LOG(M126,Directive.dir_requires,Constants.JAVA_BASE_MODULE);    // "'%s %s' is required and has been added"
-            modNode.visitRequire(Constants.JAVA_BASE_MODULE.toString(), AccessFlag.acc_mandated.getAccessFlag(), null);
+            modNode.visitRequire(Constants.JAVA_BASE_MODULE.stringValue(), AccessFlag.acc_mandated.getAccessFlag(), null);
         }
         CHECK_SUPPORTS(Feature.modules);
         if (packagesVisited) {

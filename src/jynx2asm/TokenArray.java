@@ -1,5 +1,6 @@
 package jynx2asm;
 
+import java.util.function.Predicate;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -15,15 +16,31 @@ public interface TokenArray extends TokenDeque, AutoCloseable {
     public void close();
     
     public boolean isMultiLine();
+
+    public Line line();
     
     public static TokenArray getInstance(JynxScanner js, Line line) {
         Token token = line.peekToken();
-        boolean multiline = token.is(ReservedWord.dot_array);
-        return multiline? new DotArray(js, line):new LineArray(line);
+        if (token.is(ReservedWord.dot_array)) {
+            return new DotArray(js, line);
+        }
+        if (token.toString().startsWith(ReservedWord.left_array.externalName())) {
+            return new LineArray(line);
+        }
+        return new ElementArray(line);
     }
 
     public static String[] arrayString(Directive dir, Line line, NameDesc nd) {
         Map<String,Line> modlist = new LinkedHashMap<>();
+        arrayString(modlist, dir, line, nd);
+        return modlist.keySet().toArray(new String[0]);
+    }
+
+    public static void arrayString(Map<String,Line> modlist, Directive dir, Line line, NameDesc nd) {
+        arrayString(modlist, dir, line, nd::validate);
+    }
+
+    public static void arrayString(Map<String,Line> modlist, Directive dir, Line line, Predicate<String> checker) {
         try (TokenArray array = line.getTokenArray()) {
             while(true) {
                 Token token = array.firstToken();
@@ -31,8 +48,9 @@ public interface TokenArray extends TokenDeque, AutoCloseable {
                     break;
                 }
                 String mod = token.asString();
-                boolean ok = nd.validate(mod);
+                boolean ok = checker.test(mod);
                 if (ok) {
+                    line = array.line();
                     Line previous = modlist.putIfAbsent(mod,line);
                     if (previous != null) {
                         LOG(M233,mod,dir,previous.getLinect()); // "Duplicate entry %s in %s: previous entry at line %d"
@@ -41,7 +59,6 @@ public interface TokenArray extends TokenDeque, AutoCloseable {
                 array.noMoreTokens();
             }
         }
-        return modlist.keySet().toArray(new String[0]);
     }
 
 }

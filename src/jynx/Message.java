@@ -182,12 +182,12 @@ public enum Message {
     M178("invalid type ref sort - %d"),
     M179("String length of %d exceeds maximum %d"),
     M180("top of stack('%c') and next on stack('%c') are not both 32 bit types"),
-    M181("%s directive is invalid for MODULE - value specifued was %s"),
+
     M182("top of stack is %s but required is %s"),
     M183("Type is not known - %s"),
     M184("current stack is %s but %s is %s"),
     M185("%s required for label %s is %s but currently is %s"),
-    M186("%s directive for %s must be %s but is %s"),
+    M186("%s for %s must be %s"),
     M187("annotation parameter count(%d) not in range[1,%d]"),
     M188("n (%d) is greater than current local size(%d)"),
 
@@ -283,7 +283,7 @@ public enum Message {
     M280(BLANK,"program terminated because of severe error(s)"),
     M281("local variables [%s ] are in a frame but not written"),
     M282("element %s (%c) at top of stack is not one of %s"),
-    M283("class is not a %s but %s is %s"),
+    M283("%s for %s cannot be %s"),
     M284("label %s is not (yet?) known"),
     M285(SEVERE,"magic number is %#x; should be 0xcafebabe"),
     M286(SEVERE,"%s is not (a known) class"),

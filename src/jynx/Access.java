@@ -203,7 +203,7 @@ public class Access {
             }
             noneOf(acc_native,acc_abstract);
         }
-        if (name.equals(Constants.STATIC_INIT.toString())) {
+        if (name.equals(Constants.STATIC_INIT.stringValue())) {
             if (jvmVersion.compareTo(JvmVersion.V1_7) >= 0) {
                 allOf(acc_static);
             }

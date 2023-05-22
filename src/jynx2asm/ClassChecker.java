@@ -91,13 +91,13 @@ public class ClassChecker {
                     .map(Constants::toString)
                     .map(LocalMethodHandle::getInstance)
                     .forEach(lmh -> checker.ownMethods.put(lmh,VIRTUAL_METHOD_HANDLE_LINE));
-            LocalMethodHandle compare = LocalMethodHandle.getInstance(String.format(Constants.COMPARETO_FORMAT.toString(),cname));
+            LocalMethodHandle compare = LocalMethodHandle.getInstance(String.format(Constants.COMPARETO_FORMAT.stringValue(),cname));
             checker.ownMethods.put(compare,VIRTUAL_METHOD_HANDLE_LINE);
         }
-        if (!Constants.OBJECT_CLASS.equalString(cname)
+        if (!Constants.OBJECT_CLASS.equalsString(cname)
                 && classType != ClassType.MODULE_CLASS && classType != ClassType.PACKAGE) {
             Constants.FINAL_OBJECT_METHODS.stream()
-                    .map(Constants::toString)
+                    .map(Constants::stringValue)
                     .map(LocalMethodHandle::getInstance)
                     .forEach(lmh ->checker.ownMethods.put(lmh,VIRTUAL_METHOD_HANDLE_LINE));
         }
@@ -105,29 +105,14 @@ public class ClassChecker {
     }
     
     public String checkSuper(String csuper) {
-        if (csuper == null && !Constants.OBJECT_CLASS.equalString(className)) {
-            switch(classType) {
-                case MODULE_CLASS:
-                    break;
-                case RECORD:
-                    csuper = Constants.RECORD_SUPER.toString();
-                    break;
-                case ENUM:
-                    csuper = Constants.ENUM_SUPER.toString();
-                    break;
-                default:
-                    csuper = Constants.OBJECT_CLASS.toString();
-                    break;
-            }
-            if (csuper != null) {
-                LOG(M327,Directive.dir_super,csuper); // "added: %s %s"
-            }
+        if (csuper == null && !Constants.OBJECT_CLASS.equalsString(className)) {
+            csuper = classType.defaultSuper();
         }
-        if (classType == ClassType.ENUM && Constants.ENUM_SUPER.equalString(csuper)) {
-            String str = String.format(Constants.VALUES_FORMAT.toString(),className);
+        if (classType == ClassType.ENUM && Constants.ENUM_SUPER.equalsString(csuper)) {
+            String str = String.format(Constants.VALUES_FORMAT.stringValue(),className);
             MethodHandle values = MethodHandle.getInstance(str,REF_invokeStatic);
             ownMethodsUsed.put(values,STATIC_METHOD_HANDLE_LINE);
-            str = String.format(Constants.VALUEOF_FORMAT.toString(),className);
+            str = String.format(Constants.VALUEOF_FORMAT.stringValue(),className);
             MethodHandle valueof = MethodHandle.getInstance(str,REF_invokeStatic);
             ownMethodsUsed.put(valueof,STATIC_METHOD_HANDLE_LINE);
         }
@@ -256,7 +241,7 @@ public class ClassChecker {
 
     public void endMethod(JynxMethodNode jmn) {
         if (jmn.getLocalMethodHandle().isInit()) {
-            int standard = Constants.OBJECT_CLASS.equalString(className)?0:1;
+            int standard = Constants.OBJECT_CLASS.equalsString(className)?0:1;
             int net = specialct - newct;
             if (net < standard) {
                 // "init method does not contain this or super: %s = %d %s = %d"

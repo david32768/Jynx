@@ -1,7 +1,7 @@
 package asm;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,7 +35,7 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
     private final Access accessName;
     private final LocalMethodHandle lmh;
     private String signature;
-    private final List<String> exceptions;
+    private final Map<String, Line> exceptions;
 
     private final MethodAnnotationLists annotationLists;
     private final Map<Directive,Line> unique_directives;
@@ -50,7 +50,7 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
         this.accessName = accessname;
         this.numparms = Type.getArgumentTypes(lmh.desc()).length;
         this.methodLine = line;
-        this.exceptions = new ArrayList<>();
+        this.exceptions = new LinkedHashMap<>();
         this.annotationLists = new MethodAnnotationLists(numparms);
         this.signature = null;
         this.unique_directives = new HashMap<>();
@@ -119,7 +119,7 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
 
     private void endHeader() {
       int access = accessName.getAccess();
-      mnode = new MethodNode(access, getName(), getDesc(), signature, exceptions.toArray(new String[0]));
+      mnode = new MethodNode(access, getName(), getDesc(), signature, exceptions.keySet().toArray(new String[0]));
       annotationLists.accept(mnode);
     }
     
@@ -161,8 +161,7 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
             LOG(M128,Directive.dir_throws,getName());   // "% directive not allowed for component method %s"
             return;
         }
-        String exception = line.lastToken().asString();
-        exceptions.add(exception);
+        TokenArray.arrayString(exceptions, Directive.dir_throws, line, NameDesc.CLASS_NAME);
     }
     
     @Override

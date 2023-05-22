@@ -135,7 +135,7 @@ public class JynxDisassemble {
             LOGGER().setLine("module " + cn.name);
             LOGGER().pushContext();
             printModuleHeader();
-        } else if (cn.name.endsWith("/" + Constants.PACKAGE_INFO_NAME.toString())) {
+        } else if (cn.name.endsWith("/" + Constants.PACKAGE_INFO_NAME.stringValue())) {
             LOGGER().setLine("package " + cn.name);
             LOGGER().pushContext();
             printPackage();
@@ -257,7 +257,7 @@ public class JynxDisassemble {
     
     private void printModuleHeader() {
         // specified at end of jvms 4.1
-        assert Constants.MODULE_CLASS_NAME.equalString(cn.name);
+        assert Constants.MODULE_CLASS_NAME.equalsString(cn.name);
         assert getModuleAbsent().isEmpty();
         assert isAbsent(cn.invisibleTypeAnnotations);
         assert isAbsent(cn.visibleTypeAnnotations);

@@ -18,8 +18,8 @@ import jynx.LogIllegalArgumentException;
 
 public enum NameDesc {
 
-    STATIC_INIT_NAME(Constants.STATIC_INIT_NAME.toString()),
-    CLASS_INIT_NAME(Constants.CLASS_INIT_NAME.toString()),
+    STATIC_INIT_NAME(Constants.STATIC_INIT_NAME.stringValue()),
+    CLASS_INIT_NAME(Constants.CLASS_INIT_NAME.stringValue()),
 
     OP_STACK("[AIJFD]"),
     OP_PARMS("\\((%s)*\\)",OP_STACK),

@@ -164,7 +164,7 @@ public class MethodHandle implements JynxHandle, Comparable<MethodHandle> {
     }
     
     private static boolean isStaticInit(String name,String desc) {
-        return desc.charAt(0) == '(' && Constants.STATIC_INIT.equalString(name+desc);
+        return desc.charAt(0) == '(' && Constants.STATIC_INIT.equalsString(name+desc);
     }
     
     private static final char ARRAY_MARKER = '[';

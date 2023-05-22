@@ -111,7 +111,7 @@ public class JynxText extends Textifier {
                 .appendDir(Directive.dir_macrolib, "ASMTextOps")
                 .append(dir);
         if (classtype == ClassType.MODULE_CLASS) {
-            assert Constants.MODULE_CLASS_NAME.equalString(name);
+            assert Constants.MODULE_CLASS_NAME.equalsString(name);
         } else {
             jsb.appendFlags(accflags)
                 .append(name);

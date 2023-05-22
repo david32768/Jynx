@@ -24,6 +24,11 @@ class DotArray implements TokenArray {
     }
 
     @Override
+    public Line line() {
+        return line;
+    }
+
+    @Override
     public boolean isMultiLine() {
         return true;
     }

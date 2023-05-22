@@ -51,7 +51,6 @@ import jynx2asm.handles.EnclosingMethodHandle;
 import jynx2asm.handles.HandlePart;
 import jynx2asm.JynxScanner;
 import jynx2asm.Line;
-import jynx2asm.NameDesc;
 import jynx2asm.ObjectLine;
 import jynx2asm.TokenArray;
 import jynx2asm.TypeHints;
@@ -140,13 +139,13 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         switch (classtype) {
             case MODULE_CLASS:
                 flags = EnumSet.noneOf(AccessFlag.class); // read in JynxModule
-                cname = Constants.MODULE_CLASS_NAME.toString();
+                cname = Constants.MODULE_CLASS_NAME.stringValue();
                 break;
             case PACKAGE:
                 flags = line.getAccFlags();
                 cname = line.nextToken().asName();
                 CLASS_NAME.validate(cname);
-                cname += "/" + Constants.PACKAGE_INFO_NAME.toString();
+                cname += "/" + Constants.PACKAGE_INFO_NAME.stringValue();
                 jvmversion.checkSupports(Feature.package_info);
                 break;
             default:
@@ -260,48 +259,11 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
 
     private void setSuper(Line line) {
         String csuperx = line.lastToken().asString();
-        CLASS_NAME.validate(csuperx);
-        switch(classType) {
-            case MODULE_CLASS:
-                LOG(M181,Directive.dir_super,csuperx);   // "%s directive is invalid for MODULE - value specifued was %s"
-                break;
-            case PACKAGE:
-                if (!Constants.OBJECT_CLASS.equalString(csuperx)) {
-                    // "%s directive for %s must be %s but is %s"
-                    LOG(M186,Directive.dir_super,ClassType.PACKAGE,NameDesc.OBJECT_NAME,csuperx);
-                    csuperx = Constants.RECORD_SUPER.toString();
-                }
-                break;
-            case RECORD:
-                if (!Constants.RECORD_SUPER.equalString(csuperx)) {
-                    // "%s directive for %s must be %s but is %s"
-                    LOG(M186,Directive.dir_super,ClassType.RECORD,Constants.RECORD_SUPER,csuperx);
-                    csuperx = Constants.RECORD_SUPER.toString();
-                }
-                break;
-            case ENUM :
-                //super for enum does not have to be Constants.ENUM_SUPER
-                break;
-            default:
-                if (Constants.RECORD_SUPER.equalString(csuperx)) {
-                    //"class is not a %s but %s is %s"
-                    LOG(M283,ClassType.RECORD,Directive.dir_super,Constants.RECORD_SUPER);
-                } else if (Constants.ENUM_SUPER.equalString(csuperx)) {
-                    //"class is not a %s but %s is %s"
-                    LOG(M283,ClassType.ENUM,Directive.dir_super,Constants.ENUM_SUPER);
-                }
-                break;
-        }
-        csuper = csuperx;
+        csuper = classType.checkSuper(csuperx);
     }
 
     private void setImplements(Line line) {
-        String token = line.lastToken().asString();
-        CLASS_NAME.validate(token);
-        Line previous = this.cimplements.putIfAbsent(token,line);
-        if (previous != null) {
-            LOG(M233,token,Directive.dir_implements,previous.getLinect()); // "Duplicate entry %s in %s: previous entry at line %d"
-        }
+        TokenArray.arrayString(cimplements, Directive.dir_implements, line, CLASS_NAME);
     }
 
     private void setInnerClass(Directive dir,Line line) {
@@ -382,15 +344,17 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         }
     }
 
-    private void sameOwnerAsClass(String token) {
-        if (!HandlePart.isSamePackage(cname, token)) {
+    private boolean sameOwnerAsClass(String token) {
+        boolean ok = CLASS_NAME.validate(token);
+        if (ok && !HandlePart.isSamePackage(cname, token)) {
             LOG(M306,cname,token); // "nested class have different owners; class = %s token = %s",
+            ok = false;
         }
+        return ok;
     }
     
     private void setHostClass(Line line) {
         String hostx = line.lastToken().asName();
-        CLASS_NAME.validate(hostx);
         sameOwnerAsClass(hostx);
         if (!members.isEmpty()) {
             LOG(M289);   // "A nest member has already been defined"
@@ -400,17 +364,10 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     }
 
     private void setMemberClass(Line line) {
-        String member = line.lastToken().asName();
-        CLASS_NAME.validate(member);
-        sameOwnerAsClass(member);
+        TokenArray.arrayString(members, Directive.dir_nestmember, line, this::sameOwnerAsClass);
         Line hostline = unique_directives.get(Directive.dir_nesthost);
         if (hostline != null) {
             LOG(M304,hostline); // "Nest host already defined%n  %s"
-            return;
-        }
-        Line previous = members.putIfAbsent(member,line);
-        if (previous != null) {
-            LOG(M233,member,Directive.dir_nestmember,previous.getLinect()); // "Duplicate entry %s in %s: previous entry at line %d"
         }
     }
 
@@ -419,12 +376,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
             LOG(M313,Directive.dir_permittedSubclass); // "final class cannot have %s"
             return;
         }
-        String subclass = line.lastToken().asString();
-        CLASS_NAME.validate(subclass);
-        Line previous = permittedSubclasses.putIfAbsent(subclass,line);
-        if (previous != null) {
-            LOG(M233,subclass,Directive.dir_permittedSubclass,previous.getLinect()); // "Duplicate entry %s in %s: previous entry at line %d"
-        }
+        TokenArray.arrayString(permittedSubclasses, Directive.dir_permittedSubclass, line, CLASS_NAME);
     }
     
     private void setHints(JynxScanner js, Line line) {
