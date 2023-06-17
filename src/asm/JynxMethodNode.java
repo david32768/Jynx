@@ -161,7 +161,7 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
             LOG(M128,Directive.dir_throws,getName());   // "% directive not allowed for component method %s"
             return;
         }
-        TokenArray.arrayString(exceptions, Directive.dir_throws, line, NameDesc.CLASS_NAME);
+        TokenArray.uniqueArrayString(exceptions, Directive.dir_throws, line, NameDesc.CLASS_NAME);
     }
     
     @Override

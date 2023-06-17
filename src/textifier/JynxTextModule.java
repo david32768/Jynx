@@ -74,13 +74,8 @@ public class JynxTextModule extends AbstractPrinter {
         jsb.start(1)
                 .append(dir_exports)
                 .appendFlags(accflags)
-                .appendName(packaze);
-        if (modules != null && modules.length != 0) {
-            jsb.append(res_to)
-                    .appendDotArray(modules);
-        } else {
-            jsb.nl();
-        }
+                .appendName(packaze)
+                .appendRWArray(res_to, modules);
     }
 
     @Override
@@ -89,13 +84,8 @@ public class JynxTextModule extends AbstractPrinter {
         jsb.start(1)
                 .append(dir_opens)
                 .appendFlags(accflags)
-                .appendName(packaze);
-        if (modules != null && modules.length != 0) {
-            jsb.append(res_to)
-                    .appendDotArray(modules);
-        } else {
-            jsb.nl();
-        }
+                .appendName(packaze)
+                .appendRWArray(res_to, modules);
     }
 
     @Override
@@ -109,8 +99,7 @@ public class JynxTextModule extends AbstractPrinter {
             jsb.start(1)
                     .append(dir_provides)
                     .append(provide)
-                    .append(res_with)
-                    .appendDotArray(providers);
+                    .appendRWArray(res_with, providers);
     }
 
     @Override
@@ -120,14 +109,11 @@ public class JynxTextModule extends AbstractPrinter {
 
     @Override
     public void visitModuleEnd() {
-        if (!packages.isEmpty()) {
             jsb.start(1)
-                    .append(dir_packages)
-                    .appendDotArray(packages);
-        }
-        jsb.start(0)
-                .append(Directive.end_module)
-                .nl();
+                    .appendDirArray(dir_packages, packages)
+                    .start(0)
+                    .append(Directive.end_module)
+                    .nl();
     }
 
 }

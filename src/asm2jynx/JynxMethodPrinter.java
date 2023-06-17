@@ -118,7 +118,7 @@ public class JynxMethodPrinter {
         LOGGER().pushContext();
         jp.incrDepth()
                 .appendDir(dir_signature,mn.signature)
-                .appendDirs(dir_throws, mn.exceptions);
+                .appendDirArray(dir_throws, mn.exceptions);
         int parmnum = 0;
         for (ParameterNode pn : nonNullList(mn.parameters)) {
             EnumSet<AccessFlag> pnaccflags = AccessFlag.getEnumSet(pn.access, PARAMETER,jvmVersion);

@@ -13,7 +13,7 @@ import asm.CheckOpcodes;
 public enum JvmVersion {
 
     // MUST BE IN RELEASE ORDER for compareTo
-    V1_0_2(45), // 45.0 to 45.3
+    V1_0_2(45, 0), // 45.0 to 45.3
     
     V1_1(Opcodes.V1_1), // 45.3 to 45.65535
 
@@ -21,7 +21,7 @@ public enum JvmVersion {
     V1_3(Opcodes.V1_3),
     V1_4(Opcodes.V1_4),
     V1_5(Opcodes.V1_5),
-    V1_6JSR(Opcodes.V1_6), // may contain nuts
+    V1_6JSR(Opcodes.V1_6), // may contain opcodes jsr, ret
     V1_6(Opcodes.V1_6),
     V1_7(Opcodes.V1_7),
     V1_8(Opcodes.V1_8),
@@ -48,47 +48,60 @@ public enum JvmVersion {
     V20_PREVIEW(64 | Opcodes.V_PREVIEW),  // Opcodes.V20
     V21(65), // Opcodes.V21
     V21_PREVIEW(65 | Opcodes.V_PREVIEW),  // Opcodes.V21
+    V22(66), // Opcodes.V22
+    V22_PREVIEW(66 | Opcodes.V_PREVIEW),  // Opcodes.V22
     
     NEVER(-1); // must be last 0xffff ffff
     
+    private final long release; // 0x00000000 major minor
     private final int major;
     private final int minor;
     
-    private JvmVersion(int relver) {
-        this.major = relver & 0xffff;
-        this.minor = relver >>> 16;
-        assert major == checkMajor(major);
-        assert minor == checkMinor(major,minor);
+    private JvmVersion(int release4ASM) {
+        this(release4ASM & 0xffff, release4ASM >>> 16);
     }
 
+    private JvmVersion(int major, int minor) {
+        this.major = major;
+        this.minor = minor;
+        this.release = Integer.toUnsignedLong((major << 16) | minor);
+        // "invalid major version - %s"
+        assert isUnsignedShort(major) && major > MAJOR_BASE:M20.format(this.toString());
+        // "invalid minor version - %s"
+        assert isUnsignedShort(minor):M21.format(this.toString());
+        // "invalid minor version for major version (spec table 4.1A) - %s"
+        assert major < MAJOR_PREVIEW || minor == 0 || minor == PREVIEW:M91.format(this.toString());
+    }
+    
+    private static boolean isUnsignedShort(int ushort) {
+        return ushort == Short.toUnsignedInt((short)ushort);
+    }
+    
     private static final int MAJOR_BASE = 44;
+    private static final int MAJOR_PREVIEW = 56;
     private static final int PREVIEW = 0xffff;
-    
-    private static int checkMinor(int major, int minor) {
-        if (major >= 56 && minor != 0 && minor != PREVIEW || minor < 0 || minor > 0xffff) {
-            LOG(M21, minor); // "invalid minor version(%d) - spec table 4.1A"
-            minor = 0;
-        }
-        return minor;
-    }
-    
-    private static int checkMajor(int major) {
-        int result = Math.max(major,MAJOR_BASE + 1);
-        result = Math.min(result,0xffff);
-        if (result != major) {
-            LOG(M20,major); // "invalid major version(%d)"
-        }
-        return result;
-    }
-    
-    public int getRelease() {
-        return (minor << 16) | major;
+        
+    public int toASM() {
+        return minor << 16 | major;
     }
 
     public boolean isPreview() {
         return minor == PREVIEW && compareTo(V12) >= 0;
     }
 
+    public String asJvm() {
+        return String.format("%d.%d",major, minor);
+    }
+    
+    public String asJava() {
+        return name();
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("%s(%s)",asJava(),asJvm());
+    }
+    
     private static final Map<String,JvmVersion> PARSE_MAP;
     
     public final static JvmVersion MIN_VERSION = V1_0_2;
@@ -102,9 +115,9 @@ public enum JvmVersion {
         for (JvmVersion version:values()) {
             assert last == null
                     || version == V1_6  && last == V1_6JSR
-                    || last.major < version.major
-                    || last.major == version.major && last.minor < version.minor
-                    :String.format("last = %s this = %s",last,version);
+                    || last.release < version.release
+                    // "incorret order: last = %s this = %s"
+                    :M94.format(last,version);
             PARSE_MAP.put(version.asJava(), version);
             last = version;
         }
@@ -134,35 +147,46 @@ public enum JvmVersion {
         return version;
     }
     
-    public static JvmVersion getInstance(int release) {
-        JvmVersion version = V1_0_2;
+    public static JvmVersion fromASM(int release) {
         int major = release & 0xffff;
         int minor = release >>>16;
-        for (JvmVersion jversion:values()) {
-            if (major < jversion.major || major == jversion.minor && minor < jversion.minor) {
-                LOG(M200,release,version); // "unknown release (%d): used %s"
-                break;
-            }
-            version = jversion;
-            if (major == jversion.major && minor == jversion.minor) {
-                break;
-            }
+        return from((major << 16) | minor);
+    }
+    
+    public static JvmVersion from(int major, int minor) {
+        if (!isUnsignedShort(major)) {
+            // "invalid major version - %s"
+            LOG(M20,major);
         }
-        return version;
+        if (!isUnsignedShort(minor)) {
+            // "invalid minor version - %s"
+            LOG(M21,minor);
+        }
+        
+        return from((major << 16) | minor);
+    }
+    
+    private static JvmVersion from(int majmin) {
+        long release = Integer.toUnsignedLong(majmin);
+        JvmVersion last = values()[0];
+        for (JvmVersion version:values()) {
+            if (release < version.release) {
+                // "unknown release (major = %d, minor = %d): used %s"
+                LOG(M200, release >>> 16, release & 0xffff, last);
+                return last;
+            }
+            if (release == version.release) {
+                return version;
+            }
+            last = version;
+        }
+        throw new AssertionError();
     }
     
     public void checkSupported() {
         if (isPreview() || compareTo(SUPPORTED_VERSION) > 0) {
             LOG(M72,this); // "version %s may not be fully supported"
         }
-    }
-    
-    public String asJvm() {
-        return String.format("%d.%d",major, minor);
-    }
-    
-    public String asJava() {
-        return name();
     }
     
     public boolean supports(JvmVersioned versioned) {
@@ -182,13 +206,4 @@ public enum JvmVersion {
         return supported;
     }
 
-    public boolean checkCanLoad(ConstantPoolType cp) {
-        return cp.isLoadableBy(this);
-    }
-
-    @Override
-    public String toString() {
-        return String.format("%s(%s)",asJava(),asJvm());
-    }
-    
 }

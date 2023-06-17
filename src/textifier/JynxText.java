@@ -92,7 +92,7 @@ public class JynxText extends Textifier {
             final String signature,
             final String superName,
             final String[] interfaces) {
-        JvmVersion jvmversion = JvmVersion.getInstance(version);
+        JvmVersion jvmversion = JvmVersion.fromASM(version);
         jvmversion.checkSupported();
         if (jvmversion == JvmVersion.V1_6JSR && !OPTION(GlobalOption.SKIP_FRAMES)) {
             jvmversion = JvmVersion.V1_6;
@@ -119,7 +119,7 @@ public class JynxText extends Textifier {
         jsb.nl()
                 .incrDepth()
                 .appendDir(dir_super, superName)
-                .appendDir(dir_implements, interfaces)
+                .appendDirArray(dir_implements, interfaces)
                 .appendDir(dir_signature, signature);
     }
 

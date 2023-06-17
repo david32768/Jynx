@@ -24,8 +24,8 @@ public enum Message {
 
     M18(BLANK,"do not produce annotations"),
     M19(BLANK,"use supplied stack map instead of ASM generated"),
-    M20("invalid major version(%d)"),
-    M21("invalid minor version(%d) - spec table 4.1A"),
+    M20("invalid major version - %s"),
+    M21("invalid minor version - %s"),
     M22(WARNING,"value required (%d) for %s is more than limit value (%d)"),    
     M23(BLANK,"print (ASMifier) trace"),
     M24(BLANK,"%s %s     gives list of options"),
@@ -95,10 +95,10 @@ public enum Message {
     M88(INFO,"options = %s"),
     M89(INFO,"file = %s version = %s"),
     M90("unused tokens - starting at %s"),
-
+    M91("invalid minor version for major version (spec table 4.1A) - %s"),
     M92("%s count(%d) must be in range [%d,%d]"),
     M93(STYLE,"class name (%s) does not start with uppercase letter"),
-
+    M94("incorret order: last = %s this = %s"),
     M95(ENDINFO,".line directives ignored as %s specified"),
     M96("syntax error in annotation field type"),
     M97("file(%s) does not have %s suffix"),
@@ -200,7 +200,7 @@ public enum Message {
     M197("inner class cannot be module"),
     M198("empty line - should not occur"),
 
-    M200(WARNING,"unknown release (%d): used %s"),
+    M200(WARNING,"unknown release (major = %d, minor = %d): used %s"),
     M201("%s can only occur in locals"),
     M202("unused field(s) in typeref not zero"),
     M203(WARNING,"potential infinite loop - catch using label equals catch from label"),
@@ -255,7 +255,7 @@ public enum Message {
     M252("own init method %s not found"),
     M253("illegal number of dimensions %d; must be in range [0,%d]"),
     M254("%s is used in a macro after a mulit-line op"),
-
+    M255(WARNING,"multiple %s are deprecated: use .array"),
     M256("size of %s is %d which exceeds %d"),
     M257("argument count %d is not in range [0,%d]"),
     M258(WARNING,"%s is a reserved word and cannot be a Java Id"),

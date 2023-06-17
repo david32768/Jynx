@@ -108,7 +108,7 @@ public class JynxTextMethod extends JynxText {
                 .append(name + descriptor)
                 .nl()
                 .appendDir(dir_signature, signature)
-                .appendDir(dir_throws, exceptions);
+                .appendDirArray(dir_throws, exceptions);
         return this;
     }
 

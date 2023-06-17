@@ -117,12 +117,8 @@ public class JynxClass implements ContextDependent {
         LOG(M111, instct, labct, dirct - 1,js.getPreCommentsCount());
         // dirct - 1 as .end class is internal
         assert state == State.END_CLASS;
-        boolean success = END_MESSAGES(getClassName());
+        boolean success = END_MESSAGES(jclasshdr.getClassName());
         return success;
-    }
-
-    public String getClassName() {
-        return jclasshdr.getClassName();
     }
 
     private void visitJvmVersion(JvmVersion jvmversion) {

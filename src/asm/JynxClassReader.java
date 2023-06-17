@@ -82,7 +82,7 @@ public class JynxClassReader extends ClassReader {
             throw new LogIllegalArgumentException(M285,magic);
         }
         int release = bb.getInt();
-        JvmVersion jvmversion = JvmVersion.getInstance(release);
+        JvmVersion jvmversion = JvmVersion.fromASM(release);
         if (jvmversion.compareTo(JvmVersion.MAX_VERSION) > 0) {
             if (OPTION(DOWN_CAST)) {
                 // "JVM version %s is not supported by the version of ASM used; %s substituted"
@@ -90,7 +90,7 @@ public class JynxClassReader extends ClassReader {
                 bb = ByteBuffer.wrap(ba);
                 bb.order(ByteOrder.BIG_ENDIAN);
                 bb.getInt(); // magic
-                bb.putInt(JvmVersion.MAX_VERSION.getRelease());
+                bb.putInt(JvmVersion.MAX_VERSION.toASM());
             } else {
                 // "JVM version %s is not supported by the version of ASM used; maximum version is %s "
                 throw new LogIllegalArgumentException(M288,jvmversion,JvmVersion.MAX_VERSION);

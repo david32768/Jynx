@@ -83,7 +83,7 @@ public class JynxDisassemble {
             crflag |= ClassReader.SKIP_FRAMES;
         }
         cr.accept(cn, crflag);
-        JvmVersion jvmversion = JvmVersion.getInstance(cn.version);
+        JvmVersion jvmversion = JvmVersion.fromASM(cn.version);
         jvmversion.checkSupported();
         if (jvmversion == JvmVersion.V1_6JSR && hasFrames(cn)) {
             jvmversion = JvmVersion.V1_6;
@@ -184,7 +184,7 @@ public class JynxDisassemble {
                 .nl()
                 .incrDepth()
                 .appendDir(dir_super, cn.superName)
-                .appendDirs(dir_implements, cn.interfaces)
+                .appendDirArray(dir_implements, cn.interfaces)
                 .appendDir(dir_signature,cn.signature)
                 .appendDir(dir_debug, cn.sourceDebug);
         printEnclosing(cn.outerClass,cn.outerMethod,cn.outerMethodDesc);
@@ -192,8 +192,8 @@ public class JynxDisassemble {
         annotator.printAnnotations(cn.visibleAnnotations,cn.invisibleAnnotations);
         annotator.printTypeAnnotations(cn.visibleTypeAnnotations, cn.invisibleTypeAnnotations);
         printInner();
-        jp.appendDirs(dir_nestmember,cn.nestMembers)
-                .appendDirs(dir_permittedSubclass,cn.permittedSubclasses)
+        jp.appendDirArray(dir_nestmember,cn.nestMembers)
+                .appendDirArray(dir_permittedSubclass,cn.permittedSubclasses)
                 .decrDepth();
         printComponents();
     }
@@ -331,25 +331,15 @@ public class JynxDisassemble {
             accflags = AccessFlag.getEnumSet(men.access, MODULE,jvmVersion);
             jp.append(dir_exports)
                     .appendFlags(accflags)
-                    .appendName(men.packaze);
-            if(isAbsent(men.modules)) {
-                jp.nl();
-            } else {
-                jp.append(res_to)
-                        .appendDotArray(men.modules);
-            }
+                    .appendName(men.packaze)
+                    .appendRWArray(res_to, men.modules);
         }
         for (ModuleOpenNode mon: nonNullList(module.opens)) {
             accflags = AccessFlag.getEnumSet(mon.access, MODULE,jvmVersion);
             jp.append(dir_opens)
                     .appendFlags(accflags)
-                    .appendName(mon.packaze);
-            if(isAbsent(mon.modules)) {
-                jp.nl();
-            } else {
-                jp.append(res_to)
-                        .appendDotArray(mon.modules);
-            }
+                    .appendName(mon.packaze)
+                    .appendRWArray(res_to, mon.modules);
         }
         for (String use:nonNullList(module.uses)) {
             jp.append(dir_uses).append(use).nl();
@@ -357,13 +347,11 @@ public class JynxDisassemble {
         for (ModuleProvideNode mpn: nonNullList(module.provides)) {
             jp.append(dir_provides)
                     .append(mpn.service)
-                    .append(res_with)
-                    .appendDotArray(mpn.providers);
+                    .appendRWArray(res_with, mpn.providers);
         }
 
         if (isPresent(module.packages)) {
-            jp.append(dir_packages)
-                    .appendDotArray(module.packages);
+            jp.appendDirArray(dir_packages, module.packages);
         }
         jp.decrDepth().append(end_module).nl();
     }

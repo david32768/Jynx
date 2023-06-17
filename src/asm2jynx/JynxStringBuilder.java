@@ -1,5 +1,6 @@
 package asm2jynx;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -166,24 +167,31 @@ public class JynxStringBuilder {
         return append(StringUtil.escapeName(name));
     }
 
-    public JynxStringBuilder appendDir(Directive dir, Object[] values) {
-        if (values != null) {
-            for (Object value : values) {
-                appendDir(dir,value);
-            }
-        }
-        return this;
-    }
-
-    public JynxStringBuilder appendDirs(Directive dir, List<String> strs) {
-        if (strs != null) {
-            for (String str:strs) {
-                appendDir(dir,str);
-            }
+    public JynxStringBuilder appendDirArray(Directive dir, List<String> strs) {
+        if (strs != null && !strs.isEmpty()) {
+            append(dir).appendDotArray(strs);
         }
         return this;
     }
     
+    public JynxStringBuilder appendDirArray(Directive dir, String[] strs) {
+        List<String> strlist = strs == null ? null : Arrays.asList(strs);
+        return appendDirArray(dir, strlist);
+    }
+        
+    public JynxStringBuilder appendRWArray(ReservedWord rw, List<String> strs) {
+        if (strs != null && !strs.isEmpty()) {
+            append(rw).appendDotArray(strs);
+        } else {
+            nl();
+        }
+        return this;
+    }
+    
+    public JynxStringBuilder appendRWArray(ReservedWord rw, String[] strs) {
+        List<String> strlist = strs == null ? null : Arrays.asList(strs);
+        return appendRWArray(rw, strlist);
+    }
     
     public JynxStringBuilder appendFlags(EnumSet<AccessFlag> flags) {
         flags.stream().forEach(this::append);
@@ -239,11 +247,7 @@ public class JynxStringBuilder {
         return this;
     }
     
-    public JynxStringBuilder  appendDotArray(List<String> strings) {
-        return appendDotArray(strings.toArray(new String[0]));
-    }
-    
-    public JynxStringBuilder  appendDotArray(String[] strings) {
+    private JynxStringBuilder appendDotArray(List<String> strings) {
         append(dot_array)
                 .nl()
                 .incrDepth();

@@ -92,53 +92,53 @@ Changes are:
 *	.end_method instead of .end method
 *	tableswitch - new format
 ```
-	; <high> is always omitted
-	; tableswitch <minimum> default <default_label> <label-array>
-	; <label-array> = .array[\n<labael>]+\n.end_array
-	tableswitch 0 default DefaultLabel .array
-		ZeroLabel
-		OneLabel
-	.end_array
+; <high> is always omitted
+; tableswitch <minimum> default <default_label> <label-array>
+; <label-array> = .array[\n<labael>]+\n.end_array
+tableswitch 0 default DefaultLabel .array
+	ZeroLabel
+	OneLabel
+.end_array
 ```		
 *	lookupswitch - new format
 ```
-	; lookupswitch default <default_label> <switch-array>
-	; <switch-array> = .array[\n<num> -> <label>]+\n.end_array
-	lookupswitch default DefaultLabel .array
-		1 -> Label1
-		10 -> Label2
-	.end_array
+; lookupswitch default <default_label> <switch-array>
+; <switch-array> = .array[\n<num> -> <label>]+\n.end_array
+lookupswitch default DefaultLabel .array
+	1 -> Label1
+	10 -> Label2
+.end_array
 ```
-*	.implements - use array if more than one interface
+*	.implements - must use array if more than one interface
 ```
-	;.implements Interface1
-	;.implements Interface2
-	.implements .array
-		Interface1
-		Interface2
-	.end_array
+;.implements Interface1
+;.implements Interface2
+.implements .array
+	Interface1
+	Interface2
+.end_array
 ```
-*	.throws - use array if more than one exception
+*	.throws - must use array if more than one throw
 ```
-	;.throws Exception1
-	;.throws Exception2
-	.throws .array
-		Exception1
-		Exception2
-	.end_array
+;.throws Exception1
+;.throws Exception2
+.throws .array
+	Exception1
+	Exception2
+.end_array
 ```
 *	invokeinterface; omit number as will be calculated and precede method_name with '@'
 ```
-	; invokeinterface java/util/Enumeration/hasMoreElements()Z 1
-	invokeinterface @java/util/Enumeration.hasMoreElements()Z
+; invokeinterface java/util/Enumeration/hasMoreElements()Z 1
+invokeinterface @java/util/Enumeration.hasMoreElements()Z
 ```
 *	if .limit is omitted it will be calculated rather than defaulting to 1
 *	class names etc. must be valid Java names
 *	labels are constrained to be a Java Id or if generated start with an @
 *	.interface must be used to declare an interface rather than .class interface
 ```
-	; .class interface abstract anInterface
-	.interface anInterface
+; .class interface abstract anInterface
+.interface anInterface
 ```
 *	labels in .catch must not be previously defined
 *	if .var labels are omitted then from start_method to end_method is assumed
@@ -154,69 +154,69 @@ Changes are
 *	user attributes are NOT supported
 *	.bytecode -> .version
 ```
-	; .bytecoode 61.0 ; Jasmin 2.4
-	.version V17 ; Jynx
+; .bytecoode 61.0 ; Jasmin 2.4
+.version V17 ; Jynx
 ```
 *	options (without -- prefix) can be on .version directive
 ```
-	.version V17 GENERATE_LINE_NUMBERS JVM_OPS_ONLY
+.version V17 GENERATE_LINE_NUMBERS JVM_OPS_ONLY
 ```
 *	.deprecated removed; use "deprecated" pseudo-access_flag
 ```
-	; .class public aClass
-	; .deprecated ; Jasmin 2.4
-	.class public deprecated aClass ; Jynx
-	; etc.
+; .class public aClass
+; .deprecated ; Jasmin 2.4
+.class public deprecated aClass ; Jynx
+; etc.
 ```
 *	.enum instead of .class enum
 ```
-	; .class enum anEnum ; Jasmin 2.4
-	.enum anEnum [ Jynx
+; .class enum anEnum ; Jasmin 2.4
+.enum anEnum [ Jynx
 ```
 *	.define_annotation instead of .class annotation
 ```
-	; .class annotation interface abstract anAnnotationClass ; Jasmin 2.4
-	.define_annotation anAnnotationClass ; Jynx
+; .class annotation interface abstract anAnnotationClass ; Jasmin 2.4
+.define_annotation anAnnotationClass ; Jynx
 ```
 *	.inner class -> .inner_class, .inner interface -> .inner_interface etc.
 ```
-	; class file (jvms 4.7.6)
-	; InnerClass Attribute is inner_class, outer_class, inner_name, inner_class_flags
-	;	inner_class must be present but outer_class and inner_name may be absent
+; class file (jvms 4.7.6)
+; InnerClass Attribute is inner_class, outer_class, inner_name, inner_class_flags
+;	inner_class must be present but outer_class and inner_name may be absent
 
-	: ASM
-	; visitInnerClass(name,outer_name,inner_name,access)
-	;	name is inner_class
+: ASM
+; visitInnerClass(name,outer_name,inner_name,access)
+;	name is inner_class
 
-	; Jasmin 2,4
-	; .inner class [<access-spec>] [<name>] [inner <classname>] [outer <name>]
-	;	name after access-spec is inner_name (which can be absent)
-	;	classname is inner_class
+; Jasmin 2,4
+; .inner class [<access-spec>] [<name>] [inner <classname>] [outer <name>]
+;	name after access-spec is inner_name (which can be absent)
+;	classname is inner_class
 
-	; Jynx
-	; .inner_class [<access-spec>] <inner_class> [outer <outer_class>] [innername <innername>]
-	;	i.e. change 
+; Jynx
+; .inner_class [<access-spec>] <inner_class> [outer <outer_class>] [innername <innername>]
+;	i.e. change 
 
-	; .inner class x inner y$z outer w ; Jasmin 2.4
-	.inner_class y$z outer w innername x ; Jynx
+; .inner class x inner y$z outer w ; Jasmin 2.4
+.inner_class y$z outer w innername x ; Jynx
 ```
 *	.enclosing method -> .enclosing_method or .outer_class as appropriate
 *	invokedynamic boot method and parameters must be specified
 ```
-	; (a boot method parameter may be dynamic) 
-	; invokedynamic { name desc  boot_method_and_parameters }
-	; see examples/Java11/Hi.java
+; (a boot method parameter may be dynamic) 
+; invokedynamic { name desc  boot_method_and_parameters }
+; see examples/Java11/Hi.java
 ```
 *	An interface method name should be preceded with a '@' in invoke ops and handles
 ```
-	; invokestatic anInterfaceMethod ; Jasmin 2.4
-	invokestatic @anInterfaceMethod ; Jynx
+; invokestatic anInterfaceMethod ; Jasmin 2.4
+invokestatic @anInterfaceMethod ; Jynx
 ```
 *	if signature of a field is present must use .signature directive (NOT appear in .field directive) 
 *	.package
 ```
-	; .class interface abstract aPackage/package-info ; Jasmin 2.4
-	.package aPackage ; Jynx
+; .class interface abstract aPackage/package-info ; Jasmin 2.4
+.package aPackage ; Jynx
 ```
 
 ### ANNOTATIONS
@@ -226,11 +226,11 @@ Changes are
 *	default maxparms annotation is numparms(ASM)
 *	[ annotation values must use .array e.g
 ```
-	; intArrayValue [I = 0 1 ; Jasmin 2,4
-	intArrayValue [I = .array ; Jynx
-		0
-		1
-	.end_array
+; intArrayValue [I = 0 1 ; Jasmin 2,4
+intArrayValue [I = .array ; Jynx
+	0
+	1
+.end_array
 ```
 *	annotation of array of annotations must end line with .annotation_array not .annotation
 *	.end_annotation_array NOT .end_annotation after .annotation_array at end of line
@@ -240,135 +240,135 @@ Changes are
 
 *	.parameter
 ```
-	; .parameter <parameter-number> <access-flags>? <name>
-	.parameter 0 final p0
+; .parameter <parameter-number> <access-flags>? <name>
+.parameter 0 final p0
 ```
 *	.nesthost
 ```
-	; .nesthost <host-class-name>
-	.nesthost x/y
+; .nesthost <host-class-name>
+.nesthost x/y
 ```
 *	.nestmember
 ```
-	; .nestmember <member-class-name>
-	.nestmember x/y
-	; may use .array if more than one nest member
+; .nestmember <member-class-name>
+.nestmember x/y
+; may use .array if more than one nest member
 ```
 *	.permittedSubclass
 ```
-	; .permittedSubclass <subclass-name>
-	.permittedSubclass x/y
-	; may use .array if more than one permitted subclass
+; .permittedSubclass <subclass-name>
+.permittedSubclass x/y
+; may use .array if more than one permitted subclass
 ```
 *	add support for method-handle to ldc
 ```
-	; examples
-	ldc GS:java/lang/Float.MIN_VALUE()F ; handle for smallest POSITIVE float
-	ldc ST:java/lang/Integer.getInteger(Ljava/lang/String;)java/lang/Integer
+; examples
+ldc GS:java/lang/Float.MIN_VALUE()F ; handle for smallest POSITIVE float
+ldc ST:java/lang/Integer.getInteger(Ljava/lang/String;)java/lang/Integer
 
-	; grammar
-	; ldc <method-handle>
-	; <method-handle> = [<handle-to-method>|<handle-to-field>]
+; grammar
+; ldc <method-handle>
+; <method-handle> = [<handle-to-method>|<handle-to-field>]
 
-	; <handle-to-method> = <method-handle-type>:<method-name-desc>
-	; <method-handle-type> = [VL|ST|SP|NW|IN]
+; <handle-to-method> = <method-handle-type>:<method-name-desc>
+; <method-handle-type> = [VL|ST|SP|NW|IN]
 
-	; <handle-to-field> = <field-handle-type>:<field-name-desc>
-	; <field-handle-type> = [GF|GS|PF|PS]
-	; <field-nam-desc> = <field-name>()<field-desc>
+; <handle-to-field> = <field-handle-type>:<field-name-desc>
+; <field-handle-type> = [GF|GS|PF|PS]
+; <field-nam-desc> = <field-name>()<field-desc>
 	
 ```
 *	dynamic ldc ; see examples/Java11/Hi.java
 ```
-	; (a boot method parameter may be dynamic) 
-	; ldc { name desc boot_method_and_parameters } 
+; (a boot method parameter may be dynamic) 
+; ldc { name desc boot_method_and_parameters } 
 ```
 *	.record ; see examples/Java17/Point.java
 ```
-	; grammar
-	; .record <access-spec> <record-name>
-	; [<class-hdr-directive>]*
-	; [<component>]*
-	; [<field>]* ; .field for each component must be present
-	; [<method>]* ; .method for each component must be present
+; grammar
+; .record <access-spec> <record-name>
+; [<class-hdr-directive>]*
+; [<component>]*
+; [<field>]* ; .field for each component must be present
+; [<method>]* ; .method for each component must be present
 ```
 *	.component
 ```
-	; example
-	.component x I
+; example
+.component x I
 
-	; grammar
-	; <component> = [<simple-component>|<compound-component>]
-	; <simple-component> = .component <component-name> <desc>
+; grammar
+; <component> = [<simple-component>|<compound-component>]
+; <simple-component> = .component <component-name> <desc>
 
-	; <compond-component> = .component <component-name> <desc>
-	;	[<signature>]?
-	;	<annotation>|<type-annotation>]*
-	; 	.end_component
+; <compond-component> = .component <component-name> <desc>
+;	[<signature>]?
+;	<annotation>|<type-annotation>]*
+; 	.end_component
 ```
 *	.define_module ; see examples/Java11/module-info.java
 ```
-	; grammar
-	; .define_module
-	; [<class-hdr-directives>]* ; for those which are valid for module (end of jvms 4.1)
-	; .module <access-spec> <module-name> [<version>]?
-	; [<main>|<requires>|<exports>|<open>|<uses>|<supports>|<packages>]*
-	; .end_module
-	; ; end of file
+; grammar
+; .define_module
+; [<class-hdr-directives>]* ; for those which are valid for module (end of jvms 4.1)
+; .module <access-spec> <module-name> [<version>]?
+; [<main>|<requires>|<exports>|<open>|<uses>|<supports>|<packages>]*
+; .end_module
+; ; end of file
 
-	; <main>? = .main <class-name>
+; <main>? = .main <class-name>
 
-	; <requires>* = .requires <access-spec> <module-name> [module-version]?
+; <requires>* = .requires <access-spec> <module-name> [module-version]?
 
-	; <exports> = [<unqualified-export>|<qualified export>]*
-	; <unqualified-export> = .exports <access-spec> <package-name>
-	; <qualified-export> = .exports <access-spec> <package-name> to <module-name-array>
-	; <module-name-array> = .array[\n<module-name>]+\n.end_array
+; <exports> = [<unqualified-export>|<qualified export>]*
+; <unqualified-export> = .exports <access-spec> <package-name>
+; <qualified-export> = .exports <access-spec> <package-name> to <module-name-array>
+; <module-name-array> = .array[\n<module-name>]+\n.end_array
 	
-	; <open>=[<unqualified-open>|<qualified open>]*
-	; <unqualified-open> = open <access-spec> <package-name>
-	; <qualified-open> = .open <access-spec> <package-name> to <module-name-array>
+; <open>=[<unqualified-open>|<qualified open>]*
+; <unqualified-open> = open <access-spec> <package-name>
+; <qualified-open> = .open <access-spec> <package-name> to <module-name-array>
 	
-	; <uses>* = .uses <service-class-name>
+; <uses>* = .uses <service-class-name>
 
-	; <provides>* = .provides <service-class-name> with <class-name-array>
-	; <class-name-array> = .array[\n<class-name>]+\n.end_array
+; <provides>* = .provides <service-class-name> with <class-name-array>
+; <class-name-array> = .array[\n<class-name>]+\n.end_array
 	
-	; <packeges>* = .packages <package-name-array>
-	; <package-name-array> = .array[\n<package-name>]+\n.end_array
+; <packeges>* = .packages <package-name-array>
+; <package-name-array> = .array[\n<package-name>]+\n.end_array
 	
 ```
 *	alias ops
 ```
-	; e.g.
-	ildc 3 : alias for iconst_3
-	ildc 240 ; alias for bipush 240
-	ildc -32767 ; alias for sipush -32767
-	ildc 32768 ; alias for ldc 32768
-	; also lldc, fldc and dldc
+; e.g.
+ildc 3 : alias for iconst_3
+ildc 240 ; alias for bipush 240
+ildc -32767 ; alias for sipush -32767
+ildc 32768 ; alias for ldc 32768
+; also lldc, fldc and dldc
 ```
 *	extended ops
 ```
-	; e.g.
-	if_fcmpge label
+; e.g.
+if_fcmpge label
 	; fcmpl
 	; ifge labal
-	swap2
+swap2
 	; dup2_x2
 	; pop2
 ```
 *	call common java methods
 ```
-	; e.g.
-	iabs ; invokestatic java/lang/Math/iabs(I)I
+; e.g.
+iabs ; invokestatic java/lang/Math/iabs(I)I
 ```
 *	.macrolib <macro-library-name>
 *	type_annotations
 *	.hints ; used to help verification if class(es) not available
 ```
-	; grammar
-	; .hints .array
-	; <subtype-class-name> subtypes <class_name> ; x is subtype of y
-	; <common-class_name> common <class-name1> class_name2> ; x is common of y and z
-	; .end_array
+; grammar
+; .hints .array
+; <subtype-class-name> subtypes <class_name> ; x is subtype of y
+; <common-class_name> common <class-name1> class_name2> ; x is common of y and z
+; .end_array
 ```

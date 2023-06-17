@@ -6,6 +6,7 @@ import java.util.Map;
 
 import static jynx.Global.LOG;
 import static jynx.Message.M233;
+import static jynx.Message.M255;
 
 import jynx.Directive;
 import jynx.ReservedWord;
@@ -40,6 +41,14 @@ public interface TokenArray extends TokenDeque, AutoCloseable {
         arrayString(modlist, dir, line, nd::validate);
     }
 
+    public static void uniqueArrayString(Map<String,Line> modlist, Directive dir, Line line, NameDesc nd) {
+        if (!modlist.isEmpty()) {
+            // "multiple %s are deprecated: use .array"
+            LOG(M255,dir);
+        }
+        arrayString(modlist, dir, line, nd::validate);
+    }
+
     public static void arrayString(Map<String,Line> modlist, Directive dir, Line line, Predicate<String> checker) {
         try (TokenArray array = line.getTokenArray()) {
             while(true) {
@@ -56,6 +65,20 @@ public interface TokenArray extends TokenDeque, AutoCloseable {
                         LOG(M233,mod,dir,previous.getLinect()); // "Duplicate entry %s in %s: previous entry at line %d"
                     }
                 }
+                array.noMoreTokens();
+            }
+        }
+    }
+
+    public static void debugString(StringBuilder sb, Line line) {
+        try (TokenArray array = line.getTokenArray()) {
+            while(true) {
+                Token token = array.firstToken();
+                if (token.is(ReservedWord.right_array)) {
+                    break;
+                }
+                String str = token.asQuoted();
+                sb.append(str);
                 array.noMoreTokens();
             }
         }

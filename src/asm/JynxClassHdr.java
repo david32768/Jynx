@@ -69,7 +69,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
 
     private String source;
     private final String defaultSource;
-    private String debugStr;
+    private StringBuilder debugBuilder;
  
     private final ClassChecker checker;
 
@@ -233,9 +233,10 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     }
 
     private void setDebug(Line line) {
-        String debugx = line.lastToken().asQuoted();
-        if (this.debugStr == null) this.debugStr = "";
-        this.debugStr += debugx;
+        if (this.debugBuilder == null) {
+            this.debugBuilder = new StringBuilder();
+        }
+        TokenArray.debugString(debugBuilder, line);
     }
 
     public String getClassName() {
@@ -263,7 +264,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     }
 
     private void setImplements(Line line) {
-        TokenArray.arrayString(cimplements, Directive.dir_implements, line, CLASS_NAME);
+        TokenArray.uniqueArrayString(cimplements, Directive.dir_implements, line, CLASS_NAME);
     }
 
     private void setInnerClass(Directive dir,Line line) {
@@ -409,7 +410,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         csuper = checker.checkSuper(csuper);
         String[] interfaces = cimplements.keySet().toArray(new String[0]);
         int cflags = accessName.getAccess();
-        cv.visit(jvmVersion.getRelease(), cflags, cname, csignature, csuper, interfaces);
+        cv.visit(jvmVersion.toASM(), cflags, cname, csignature, csuper, interfaces);
         hasBeenVisited = true;
     }
 
@@ -429,8 +430,8 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
             LOG(M143,Directive.dir_source,defaultSource); // "%s %s assumed"
             source = defaultSource;
         }
-        if (source != null || debugStr != null) {
-            cv.visitSource(source, debugStr);
+        if (source != null || debugBuilder != null) {
+            cv.visitSource(source, debugBuilder == null? null : debugBuilder.toString());
         }
         boolean inner = false;
         if (host != null) {
