@@ -7,6 +7,7 @@ import java.util.function.Predicate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ServiceLoader;
 
 import static jynx.Global.ADD_OPTION;
@@ -48,27 +49,15 @@ public class JynxOps {
         this.parmTranslations = new HashMap<>();
     }
 
-    public static JynxOps getInstance(boolean extensions, JvmVersion jvmversion) {
+    public static JynxOps getInstance(JvmVersion jvmversion) {
         JynxOps ops =  new JynxOps(jvmversion);
-        if (extensions) {
-            SelectOps.streamExternal()
-                    .map(op->(JynxOp)op)
-                    .forEach(ops::addOp);
-            ExtendedOps.streamExternal()
-                    .map(op->(JynxOp)op)
-                    .forEach(ops::addOp);
-            JavaCallOps.streamExternal()
-                    .map(op->(JynxOp)op)
-                    .forEach(ops::addOp);
-        }
         Global.setOpMap(ops);
         return ops;
     }
 
     private static final int MAX_SIMPLE = 16;
     
-    private void addOp(JynxOp op) {
-        String name = op.toString();
+    private void addOp(String name, JynxOp op) {
         if (!NameDesc.OP_ID.isValid(name)) {
             // "op %s is not a valid op name"
             throw new LogAssertionError(M318, name);
@@ -104,8 +93,8 @@ public class JynxOps {
         ServiceLoader<MacroLib> libloader = ServiceLoader.load(MacroLib.class);
         for (MacroLib lib : libloader) {
             if (lib.name().equals(libname)) {
-                lib.streamExternal()
-                        .forEach(this::addOp);
+                lib.getMacros().entrySet().stream()
+                        .forEach(me->addOp(me.getKey(), me.getValue()));
                 macrolibs.put(libname, lib);
                 addTranslations(parmTranslations, lib.parmTranslations(), NameDesc.PARM_VALUE_NAME);
                 addTranslations(ownerTranslations, lib.ownerTranslations(), NameDesc.OWNER_VALUE_NAME);
@@ -303,7 +292,7 @@ public class JynxOps {
             System.err.println("Usage: JynxOps [macrolib]* [jynxop]");
             System.exit(1);
         }
-        JynxOps ops  = getInstance(true, JvmVersion.DEFAULT_VERSION);
+        JynxOps ops  = getInstance(JvmVersion.DEFAULT_VERSION);
         int last = args.length - 1;
         for (int i = 0; i < last; ++i) {
             ops.addMacroLib(args[i]);

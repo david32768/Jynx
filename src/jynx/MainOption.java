@@ -69,7 +69,7 @@ public enum MainOption {
     }
 
     public String version() {
-        return String.format("Jynx %s %s",this.name(),Constants.version());
+        return String.format("Jynx %s %s",this.name(),Constants.version(OPTION(GlobalOption.DEBUG)));
     }
 
     public void appUsageSummary() {

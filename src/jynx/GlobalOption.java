@@ -22,7 +22,6 @@ public enum GlobalOption {
     ALLOW_CLASS_FORNAME(M11, ASSEMBLY, ROUNDTRIP), // "let simple verifier use Class.forName() for non-java classes"
     CHECK_REFERENCES(M8, ASSEMBLY), // "check that called methods or used fields exist (on class path)"
     VALIDATE_ONLY(M51, ASSEMBLY), // "do not output class file"
-    JVM_OPS_ONLY(M5, ASSEMBLY), // "only JVM specified ops"
     TRACE(M23, ASSEMBLY), // "print (ASMifier) trace"
     SYMBOLIC_LOCAL(M44, ASSEMBLY), // "local variables are symbolic not absolute integers"
     

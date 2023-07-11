@@ -9,7 +9,7 @@ public enum Message {
     M2(BLANK,"display version information"),
     M3(BLANK,"program terminated because of errors"),
     M4(BLANK,"%n%s; Java runtime version %s"),
-    M5(BLANK,"only JVM specified ops"),
+
     M6(BLANK,"Options are:%n"),
     M7(BLANK,"use SYSIN as input file"),
     M8(BLANK,"check that called methods or used fields exist (on class path)"),

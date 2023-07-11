@@ -1,6 +1,7 @@
 package jynx2asm.ops;
 
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static jynx2asm.ops.JavaCallOps.*;
@@ -13,15 +14,23 @@ public enum ExtendedOps implements MacroOp {
     ext_lconst_3(asm_iconst_3,asm_i2l),
     ext_lconst_4(asm_iconst_4,asm_i2l),
     ext_lconst_5(asm_iconst_5,asm_i2l),
-    ext_lconst_m1(asm_iconst_m1,asm_i2l),
+    ext_lconst_m1(asm_lconst_1,asm_lneg),
     ext_blpush(asm_bipush,asm_i2l),
     ext_slpush(asm_sipush,asm_i2l),
+    
+    ext_inot(asm_iconst_m1,asm_ixor),
+    ext_lnot(ext_lconst_m1,asm_lxor),
     
     ext_isignum(asm_i2l,asm_lconst_0,asm_lcmp),
     // extended stack ops; stack-opcode stack-opcode
     ext_swap2(asm_dup2_x2,asm_pop2),
     ext_swap21(asm_dup_x2,asm_pop),
     ext_swap12(asm_dup2_x1,asm_pop2),
+    // init local
+    ext_izero(asm_iconst_0,asm_istore),
+    ext_lzero(asm_lconst_0,asm_lstore),
+    ext_fzero(asm_fconst_0,asm_fstore),
+    ext_dzero(asm_dconst_0,asm_dstore),
     //
     ext_icmp(inv_icompare, ext_isignum),
     ext_iucmp(inv_iucompare, ext_isignum),
@@ -86,14 +95,12 @@ public enum ExtendedOps implements MacroOp {
         return name().substring(4);
     }
 
-    @Override
-    public boolean isExternal() {
-        return name().startsWith("ext_");
-    }
-
-    public static Stream<ExtendedOps> streamExternal() {
-        return Arrays.stream(values())
-            .filter(ExtendedOps::isExternal);
+    public static Map<String,JynxOp> getMacros() {
+        Map<String,JynxOp> map = new HashMap<>();
+        Stream.of(values())
+                .filter(m -> m.name().startsWith("ext_"))
+                .forEach(m -> map.put(m.toString(), m));
+        return map;
     }
     
 }

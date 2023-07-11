@@ -58,7 +58,6 @@ Options for JYNX are:
 *	--ALLOW_CLASS_FORNAME let simple verifier use Class.forName() for non-java classes
 *	--CHECK_REFERENCES check that called methods or used fields exist (on class path)
 *	--VALIDATE_ONLY do not output class file
-*	--JVM_OPS_ONLY only JVM specified ops
 *	--TRACE print (ASMifier) trace
 *	--DEBUG exit with stack trace if error
 *	--VERBOSE print all log messages
@@ -159,7 +158,7 @@ Changes are
 ```
 *	options (without -- prefix) can be on .version directive
 ```
-.version V17 GENERATE_LINE_NUMBERS JVM_OPS_ONLY
+.version V17 GENERATE_LINE_NUMBERS
 ```
 *	.deprecated removed; use "deprecated" pseudo-access_flag
 ```
@@ -283,6 +282,16 @@ ldc ST:java/lang/Integer.getInteger(Ljava/lang/String;)java/lang/Integer
 ; (a boot method parameter may be dynamic) 
 ; ldc { name desc boot_method_and_parameters } 
 ```
+*	type_annotations
+*	.macrolib <macro-library-name>
+*	.hints ; used to help verification if class(es) not available
+```
+; grammar
+; .hints .array
+; <subtype-class-name> subtypes <class_name> ; x is subtype of y
+; <common-class_name> common <class-name1> class_name2> ; x is common of y and z
+; .end_array
+```
 *	.record ; see examples/Java17/Point.java
 ```
 ; grammar
@@ -337,38 +346,4 @@ ldc ST:java/lang/Integer.getInteger(Ljava/lang/String;)java/lang/Integer
 ; <packeges>* = .packages <package-name-array>
 ; <package-name-array> = .array[\n<package-name>]+\n.end_array
 	
-```
-*	alias ops
-```
-; e.g.
-ildc 3 : alias for iconst_3
-ildc 240 ; alias for bipush 240
-ildc -32767 ; alias for sipush -32767
-ildc 32768 ; alias for ldc 32768
-; also lldc, fldc and dldc
-```
-*	extended ops
-```
-; e.g.
-if_fcmpge label
-	; fcmpl
-	; ifge labal
-swap2
-	; dup2_x2
-	; pop2
-```
-*	call common java methods
-```
-; e.g.
-iabs ; invokestatic java/lang/Math/iabs(I)I
-```
-*	.macrolib <macro-library-name>
-*	type_annotations
-*	.hints ; used to help verification if class(es) not available
-```
-; grammar
-; .hints .array
-; <subtype-class-name> subtypes <class_name> ; x is subtype of y
-; <common-class_name> common <class-name1> class_name2> ; x is common of y and z
-; .end_array
 ```

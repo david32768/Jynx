@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 
 public abstract class MacroLib {
     
-    public abstract Stream<MacroOp> streamExternal();
+    public abstract Map<String,JynxOp> getMacros();
     public abstract String name();
     
     public EnumSet<MacroOption> getOptions() {return EnumSet.noneOf(MacroOption.class);}

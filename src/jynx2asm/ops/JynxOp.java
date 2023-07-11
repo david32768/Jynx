@@ -1,5 +1,6 @@
 package jynx2asm.ops;
 
+import java.util.Optional;
 import jvm.Feature;
 import jvm.JvmVersioned;
 import jvm.JvmVersionRange;
@@ -19,6 +20,4 @@ public interface JynxOp extends JvmVersioned {
         return IndentType.NONE;
     }
     
-    public boolean isExternal();
-
 }

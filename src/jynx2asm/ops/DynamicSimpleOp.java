@@ -8,7 +8,6 @@ import asm.instruction.DynamicInstruction;
 import asm.instruction.Instruction;
 import jynx2asm.ClassChecker;
 import jynx2asm.JynxConstantDynamic;
-import jynx2asm.JynxScanner;
 import jynx2asm.Line;
 import jynx2asm.NameDesc;
 

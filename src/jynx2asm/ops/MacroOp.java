@@ -15,5 +15,9 @@ public interface MacroOp extends JynxOp {
     default public JvmVersionRange range() {
         return JynxOps.range(this);
     }
+
+    public static MacroOp of(JynxOp... jynxops) {
+        return () -> jynxops;
+    }
     
 }

@@ -379,11 +379,6 @@ public enum JvmOp implements JynxOp {
         return length != null && length == 1;
     }
 
-    @Override
-    public boolean isExternal() {
-        return true;
-    }
-
     public boolean isReturn() {
         return toString().contains("return");
     }
@@ -482,6 +477,11 @@ public enum JvmOp implements JynxOp {
         return name().substring(4);
     }
         
+    public static Stream<JvmOp> getASMOps() {
+        return Stream.of(values())
+                .filter(m-> m.name().startsWith("asm_"));
+    }
+    
     public static void main(String[] args) {
         System.out.println("XRETURN");
         Stream.of(values())

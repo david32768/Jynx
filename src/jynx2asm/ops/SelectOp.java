@@ -12,9 +12,4 @@ public interface SelectOp extends JynxOp {
     
     public JynxOp getOp(Line line, InstList instlist);
 
-    @Override
-    public default boolean isExternal() {
-        return false;
-    }
-
 }

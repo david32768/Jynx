@@ -16,7 +16,7 @@ import jynx.SevereError;
 public class Main {
     
     private static void outputVersion() {
-        LOG(M0,Constants.version(),JvmVersion.MAX_VERSION); // "Jynx version %s; maximum Java version is %s"
+        LOG(M0,Constants.version(true),JvmVersion.MAX_VERSION); // "Jynx version %s; maximum Java version is %s"
     }
 
     private static void appUsage() {

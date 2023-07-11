@@ -130,7 +130,7 @@ public class JynxClass implements ContextDependent {
         if (!OPTIONS().isEmpty()) {
             LOG(M88, OPTIONS());  // "options = %s"
         }
-        this.opmap = JynxOps.getInstance(!OPTION(GlobalOption.JVM_OPS_ONLY),jvmVersion);
+        this.opmap = JynxOps.getInstance(jvmVersion);
     }
     
     private void setOptions(Line line) {

@@ -1,9 +1,11 @@
 package jynx2asm.ops;
 
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import jvm.Feature;
+import jvm.JvmVersionRange;
 
 public enum JavaCallOps implements MacroOp {
 
@@ -21,7 +23,7 @@ public enum JavaCallOps implements MacroOp {
     inv_irotl(Integer.class,"rotateLeft","(II)I",Feature.bitops),
     inv_irotr(Integer.class,"rotateRight","(II)I",Feature.bitops),
     inv_iu2l(Integer.class,"toUnsignedLong","(I)J",Feature.unsigned),
-    inv_ibox(Integer.class,"valueOf","(I)Ljava/lang/Integer;"),
+    inv_ibox(Integer.class,"valueOf",CallOp.descFrom(Integer.class, int.class)),
         
     inv_lclz(Long.class,"numberOfLeadingZeros","(J)I",Feature.bitops),
     inv_lctz(Long.class,"numberOfTrailingZeros","(J)I",Feature.bitops),
@@ -30,7 +32,7 @@ public enum JavaCallOps implements MacroOp {
     inv_lurem(Long.class,"remainderUnsigned","(JJ)J",Feature.unsigned),
     inv_lrotl(Long.class,"rotateLeft","(JI)J",Feature.bitops),
     inv_lrotr(Long.class,"rotateRight","(JI)J",Feature.bitops),
-    inv_lbox(Long.class,"valueOf","(J)Ljava/lang/Long;"),
+    inv_lbox(Long.class,"valueOf",CallOp.descFrom(Long.class, long.class)),
 
     // NB compare method spec does NOT say it returns -1,0,1 (m101)
     // so requires inv_isignum after if m101 required
@@ -43,11 +45,11 @@ public enum JavaCallOps implements MacroOp {
     
     inv_iasf(Float.class,"intBitsToFloat","(I)F"),
     inv_fasi(Float.class,"floatToRawIntBits","(F)I",Feature.V3methods),
-    inv_fbox(Float.class,"valueOf","(F)Ljava/lang/Float;"),
+    inv_fbox(Float.class,"valueOf",CallOp.descFrom(Float.class, float.class)),
 
     inv_lasd(Double.class,"longBitsToDouble","(J)D"),
     inv_dasl(Double.class,"doubleToRawLongBits","(D)J",Feature.V3methods),
-    inv_dbox(Double.class,"valueOf","(D)Ljava/lang/Double;"),
+    inv_dbox(Double.class,"valueOf",CallOp.descFrom(Double.class,double.class)),
 
     
     inv_iabs(Math.class,"abs","(I)I"),
@@ -80,34 +82,19 @@ public enum JavaCallOps implements MacroOp {
     ;
 
 
-    private final Class<?> klass;
-    private final String methodName;
-    private final String desc;
-    private final Feature feature;
-    private final JynxOp[] jynxops;
+    private final CallOp callop;
 
     private JavaCallOps(Class<?> klass,String method,String type) {
         this(klass,method,type,Feature.unlimited);
     }
 
-    private JavaCallOps(Class<?> klass, String methodName, String desc, Feature feature) {
-        this.klass = klass;
-        this.methodName = methodName;
-        this.desc = desc;
-        this.feature = feature;
-        this.jynxops = new JynxOp[2];
-        String classname = klass.getName().replace('.', '/');
-        jynxops[0] = AdjustToken.insertMethod(classname,methodName,desc);
-        jynxops[1] = JvmOp.asm_invokestatic;
-    }
-
-    public Feature feature() {
-        return feature;
+    private JavaCallOps(Class<?> klass, String methodname, String desc, Feature feature) {
+        this.callop = CallOp.of(klass, methodname, desc, feature);
     }
 
     @Override
-    public boolean isExternal() {
-        return name().startsWith("inv_");
+    public JvmVersionRange range() {
+        return callop.range();
     }
 
     @Override
@@ -115,14 +102,17 @@ public enum JavaCallOps implements MacroOp {
         return name().substring(4);
     }
     
-    public static Stream<JavaCallOps> streamExternal() {
-        return Arrays.stream(values())
-            .filter(JavaCallOps::isExternal);
-    }
-
     @Override
     public JynxOp[] getJynxOps() {
-        return jynxops;
+        return callop.getJynxOps();
+    }
+    
+    public static Map<String,JynxOp> getMacros() {
+        Map<String,JynxOp> map = new HashMap<>();
+        Stream.of(values())
+                .filter(m -> m.name().startsWith("inv_"))
+                .forEach(m -> map.put(m.toString(), m));
+        return map;
     }
     
 }

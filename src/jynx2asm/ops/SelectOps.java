@@ -1,5 +1,7 @@
 package jynx2asm.ops;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static jynx.Message.M278;
@@ -37,19 +39,17 @@ public enum SelectOps implements SelectOp {
         this.selector = new Select(type, ops);
     }
 
-    @Override
-    public boolean isExternal() {
-        return name().startsWith("opc_");
+    public static Map<String,JynxOp> getMacros() {
+        Map<String,JynxOp> map = new HashMap<>();
+        Stream.of(values())
+                .filter(m -> m.name().startsWith("opc_"))
+                .forEach(m -> map.put(m.toString(), m));
+        return map;
     }
-
+    
     @Override
     public JynxOp getOp(Line line, InstList instlist) {
         return selector.getOp(line,instlist);
-    }
-
-    public static Stream<SelectOps> streamExternal() {
-        return Stream.of(values())
-            .filter(SelectOps::isExternal);
     }
 
     @Override
