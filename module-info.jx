@@ -11,9 +11,6 @@
 .exports com/github/david32768/jynx
 .exports jynx2asm/ops
 .uses jynx2asm/ops/MacroLib
-.provides jynx2asm/ops/MacroLib with .array
-  textifier/ASMTextMacroLib
-.end_array
 .packages .array ; packages added by jar tool -C
   asm
   asm/instruction
