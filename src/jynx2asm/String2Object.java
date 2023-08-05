@@ -79,7 +79,7 @@ public class String2Object {
     
     public Type parseType(String token) {
         token = TRANSLATE_TYPE(token, true);
-        NameDesc.FIELD_DESC.validate(token);
+        NameDesc.OBJECT_NAME.validate(token);
         return Type.getType(token);
     }
 
