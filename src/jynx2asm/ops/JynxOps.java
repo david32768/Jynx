@@ -7,7 +7,6 @@ import java.util.function.Predicate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.ServiceLoader;
 
 import static jynx.Global.ADD_OPTION;
@@ -166,6 +165,36 @@ public class JynxOps {
             } else {
                 type = prefix + trans;
             }
+            //"parameter type %s changed to %s"
+            LOG(M314, parm, type);
+            return type;
+        }
+    }
+
+    public String translateType(String classname, String parm, boolean semi) {
+        int last = parm.lastIndexOf('[');
+        String type = parm.substring(last + 1); // OK if last == -1
+        String prefix = parm.substring(0, last + 1); // OK if last == -1
+        if (ConstType.isPrimitiveType(type)) {
+            return parm;
+        }
+        int indexsemi = type.indexOf(';');
+        boolean owner = type.contains("/") || indexsemi >= 0;
+        if (owner) {
+            if (indexsemi >= 0) {
+                if (!type.startsWith("L") || indexsemi != type.length() - 1) {
+                    return parm; // error
+                }
+                type = type.substring(1, indexsemi);
+            }
+            String trans = translateOwner(classname, type);
+            return construct(prefix, trans, semi);
+        } else {
+            String trans = parmTranslations.get(type);
+            if (trans == null) {
+                trans = type;
+            }
+            type = construct(prefix, trans, semi);
             //"parameter type %s changed to %s"
             LOG(M314, parm, type);
             return type;

@@ -6,7 +6,6 @@ import org.objectweb.asm.Type;
 import static jvm.NumType.*;
 import static jynx.Global.*;
 import static jynx.Message.*;
-import static jynx2asm.NameDesc.CLASS_NAME;
 
 import jvm.ConstType;
 import jvm.HandleType;

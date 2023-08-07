@@ -23,6 +23,7 @@ import static jynx.Message.M6;
 import static jynx.Message.M97;
 
 import asm2jynx.JynxDisassemble;
+import checker.Structure;
 import jynx2asm.JynxClass;
 import jynx2asm.JynxScanner;
 import roundtrip.RoundTrip;
@@ -42,6 +43,10 @@ public enum MainOption {
             " {options}  class-name|class_file",
             String.format("checks that %s followed by %s produces an equivalent class (according to ASM Textifier)",
                     DISASSEMBLY.extname.toUpperCase(), ASSEMBLY.extname.toUpperCase()),
+            ""),
+    STRUCTURE(MainOption::structure,"structure",
+            " {options}  class-name|class_file",
+            "prints a skeleton of class structure",
             ""),
     ;
 
@@ -155,6 +160,10 @@ public enum MainOption {
     
     private static boolean a2j2a(Optional<String> optfname) {
         return RoundTrip.roundTrip(optfname);
+    }
+
+    private static boolean structure(Optional<String> optfname) {
+        return Structure.PrintClassStructure(optfname.get());
     }
 
     public static String mains() {

@@ -42,7 +42,11 @@ Usage:
    (checks that 2JYNX followed by JYNX produces an equivalent class (according to ASM Textifier))
 
 
-[jynx|2jynx|roundtrip] --HELP     gives list of options
+
+ structure {options}  class-name|class_file
+   (prints a skeleton of class structure)
+
+[jynx|2jynx|roundtrip|structure] --HELP     gives list of options
 
 ```
 
@@ -80,6 +84,10 @@ Options for ROUNDTRIP are:
 *	--BASIC_VERIFIER use ASM BasicVerifier instead of ASM SimpleVerifier
 *	--ALLOW_CLASS_FORNAME let simple verifier use Class.forName() for non-java classes
 *	--SKIP_FRAMES do not produce stack map
+
+Options for STRUCTURE are:
+
+*	--CP prints constant pool
 
 ## Jasmin 1.0
 

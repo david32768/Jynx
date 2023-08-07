@@ -43,8 +43,8 @@ public class Object2String {
                 .append(' ')
                 .append(handle2String(dyncst.getBootstrapMethod()));
         for (int i = 0, n = dyncst.getBootstrapMethodArgumentCount(); i < n;++i) {
-            value = dyncst.getBootstrapMethodArgument(i);
-            String cststr = asm2String(value);
+            Object argvalue = dyncst.getBootstrapMethodArgument(i);
+            String cststr = asm2String(argvalue);
             sb.append(' ')
                     .append(cststr);
         }
@@ -103,11 +103,8 @@ public class Object2String {
     public String asm2String(Object value) {
         ConstType ct = ConstType.getFromASM(value,Context.JVMCONSTANT);
         if (ct == ConstType.ct_object) {
-            ct = ConstType.getFromASM(value,Context.JVMCONSTANT);
-            if (ct == ConstType.ct_object) {
-                LOG(M144,value.getClass().getName()); // "unknown value class = %s"
-                throw new UnsupportedOperationException();
-            }
+            LOG(M144,value.getClass().getName()); // "unknown value class = %s"
+            throw new UnsupportedOperationException();
         }
         if (ct == ConstType.ct_class) {
             return ((Type)value).getInternalName();

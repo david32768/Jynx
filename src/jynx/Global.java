@@ -203,7 +203,7 @@ public class Global {
     }
     
     public static String TRANSLATE_TYPE(String str, boolean semi) {
-        return global.opmap.translateParm(CLASS_NAME(),str, semi);
+        return global.opmap.translateType(CLASS_NAME(),str, semi);
     }
     
     public static String TRANSLATE_OWNER(String str) {
