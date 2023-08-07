@@ -15,6 +15,7 @@
   asm
   asm/instruction
   asm2jynx
+  checker
   com/github/david32768/jynx
   jvm
   jynx

@@ -6,7 +6,6 @@ module com.github.david32768.jynx {
 	exports com.github.david32768.jynx;
 	exports jynx2asm.ops;
 	uses jynx2asm.ops.MacroLib;
-	provides jynx2asm.ops.MacroLib with textifier.ASMTextMacroLib;
 }
 // javac -p asmmods -d build\classes module-info.java
 // jar --create --file Jynx.jar --main-class com.github.david32768.jynx.Main --module-version 0.20 -C build\classes\ .
@@ -24,13 +23,11 @@ module com.github.david32768.jynx {
 .exports com/github/david32768/jynx
 .exports jynx2asm/ops
 .uses jynx2asm/ops/MacroLib
-.provides jynx2asm/ops/MacroLib with .array
-  textifier/ASMTextMacroLib
-.end_array
 .packages .array ; packages added by jar tool -C
   asm
   asm/instruction
   asm2jynx
+  checker
   com/github/david32768/jynx
   jvm
   jynx
