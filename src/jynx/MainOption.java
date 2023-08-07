@@ -163,7 +163,8 @@ public enum MainOption {
     }
 
     private static boolean structure(Optional<String> optfname) {
-        return Structure.PrintClassStructure(optfname.get());
+        PrintWriter pw = new PrintWriter(System.out);
+        return Structure.PrintClassStructure(optfname.get(),pw);
     }
 
     public static String mains() {
