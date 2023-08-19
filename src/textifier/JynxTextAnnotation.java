@@ -178,7 +178,7 @@ public class JynxTextAnnotation extends Textifier {
 
     @Override
     public Textifier visitTypeAnnotation(int typeRef, TypePath typePath, String descriptor, boolean visible) {
-        TypeRef tr = TypeRef.getInstance(typeRef);
+        TypeRef tr = TypeRef.fromASM(typeRef);
         Directive dir = tr.getDirective();
         String typepath = typePath == null ? null : typePath.toString();
         String trstr = tr.getTypeRefString(typeRef);

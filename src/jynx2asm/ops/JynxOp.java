@@ -1,6 +1,5 @@
 package jynx2asm.ops;
 
-import java.util.Optional;
 import jvm.Feature;
 import jvm.JvmVersioned;
 import jvm.JvmVersionRange;

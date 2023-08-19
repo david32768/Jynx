@@ -3,8 +3,8 @@ package asm;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 
-import static jvm.AttributeName.LocalVariableTypeTable;
-import static jvm.AttributeName.Signature;
+import static jvm.StandardAttribute.LocalVariableTypeTable;
+import static jvm.StandardAttribute.Signature;
 import static jynx.Global.LOG;
 import static jynx.Message.M217;
 import static jynx.ReservedWord.res_from;

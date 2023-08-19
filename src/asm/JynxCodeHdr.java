@@ -16,7 +16,8 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.TypePath;
 
-import static jvm.AttributeName.*;
+import static jvm.StandardAttribute.Code;
+import static jvm.StandardAttribute.StackMapTable;
 import static jynx.Global.*;
 import static jynx.GlobalOption.*;
 import static jynx.Message.*;
@@ -364,7 +365,7 @@ public class JynxCodeHdr implements ContextDependent {
         (int typeref, TypePath typepath, String desc, boolean visible) {
             Line line = js.getLine();
             AnnotationVisitor av;
-            TypeRef tr = TypeRef.getInstance(typeref);
+            TypeRef tr = TypeRef.fromASM(typeref);
             switch (tr) {
                 case trt_except:
                     av = visitTryCatchAnnotation(typeref, typepath, desc, visible);

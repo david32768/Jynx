@@ -20,7 +20,10 @@ public enum AttributeEntry {
     USHORT,
     LV_INDEX,
     ANNOTATION,
+    DEFAULT_ANNOTATION,
+    PARAMETER_ANNOTATION,
     TYPE_ANNOTATION,
+    BOOTSTRAP,
     FRAME,
     INLINE_UTF8,
     ;

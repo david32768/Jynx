@@ -34,7 +34,7 @@ public enum GlobalOption {
     DEBUG(M13, ASSEMBLY, DISASSEMBLY), // "exit with stack trace if error"
     VERBOSE(M27, ASSEMBLY, DISASSEMBLY), // "print all log messages"
 
-    CP(M17, STRUCTURE),  // "prints constant pool"
+    CP(M17, STRUCTURE),  // "prints constant pool at end"
     // may change
     __TREAT_WARNINGS_AS_ERRORS(M25, ASSEMBLY), // "treat warnings as errors"
     

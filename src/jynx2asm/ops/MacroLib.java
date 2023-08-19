@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.function.Predicate;
 import java.util.Map;
-import java.util.stream.Stream;
 
 public abstract class MacroLib {
     

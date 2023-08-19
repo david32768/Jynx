@@ -28,12 +28,12 @@ import org.objectweb.asm.tree.VarInsnNode;
 import static jynx.Global.*;
 import static jynx.Message.*;
 
-import jvm.AttributeName;
 import jvm.ConstType;
 import jvm.Feature;
 import jvm.JvmVersion;
 import jvm.NumType;
 import jvm.OpArg;
+import jvm.StandardAttribute;
 import jynx.Directive;
 import jynx.LogAssertionError;
 import jynx.ReservedWord;
@@ -239,9 +239,9 @@ public class Insn2Jynx {
     }
 
     private void frame(AbstractInsnNode in) {
-        if (!jvmVersion.supports(AttributeName.StackMapTable)) {
+        if (!jvmVersion.supports(StandardAttribute.StackMapTable)) {
              // "Version %s does not support %s (supported %s)"
-            LOG(M57,jvmVersion,AttributeName.StackMapTable,AttributeName.StackMapTable.range());
+            LOG(M57,jvmVersion,StandardAttribute.StackMapTable,StandardAttribute.StackMapTable.range());
             return;
         }
         FrameNode fn = (FrameNode) in;

@@ -279,7 +279,7 @@ public class JynxTextMethod extends JynxText {
 
     @Override
     public Printer visitLocalVariableAnnotation(int typeRef, TypePath typePath, Label[] start, Label[] end, int[] index, String descriptor, boolean visible) {
-        TypeRef tr = TypeRef.getInstance(typeRef);
+        TypeRef tr = TypeRef.fromASM(typeRef);
         Directive dir = tr.getDirective();
         String typepath = typePath == null ? null : typePath.toString();
         String trstr = tr.getTypeRefString(typeRef);

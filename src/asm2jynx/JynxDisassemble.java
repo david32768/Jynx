@@ -21,7 +21,6 @@ import org.objectweb.asm.tree.RecordComponentNode;
 
 import static asm2jynx.Util.*;
 import static jvm.AccessFlag.*;
-import static jvm.AttributeName.*;
 import static jvm.Context.*;
 import static jynx.Directive.*;
 import static jynx.Global.*;
@@ -33,6 +32,7 @@ import jvm.AccessFlag;
 import jvm.Constants;
 import jvm.ConstType;
 import jvm.JvmVersion;
+import jvm.StandardAttribute;
 import jynx.ClassType;
 import jynx.Directive;
 import jynx.Global;
@@ -290,7 +290,7 @@ public class JynxDisassemble {
                 .appendName(fn.name)
                 .appendNonNull(fn.desc);
         if (fn.value != null) {
-            jvmVersion.checkSupports(ConstantValue);
+            jvmVersion.checkSupports(StandardAttribute.ConstantValue);
             ConstType ct = ConstType.getFromDesc(fn.desc,FIELD);
             jp.append(equals_sign, o2s.stringFrom(ct,fn.value));
         }

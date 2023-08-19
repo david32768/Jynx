@@ -220,19 +220,21 @@ public enum TypeRef {
         return opttr.orElseThrow(()->new LogIllegalArgumentException(M170,dir));
     }
     
-    public static TypeRef getInstance(int typeref) {
+    public static TypeRef fromASM(int typeref) {
         int sort = typeref >> 24;
-        for (TypeRef tr : values()) {
-            if (tr.sort == sort) {
-                return tr;
-            }
-        }
-        // "invalid type ref sort - %d"
-        throw new LogIllegalArgumentException(M178,sort);
+        return fromJVM(sort);
+    }
+
+    public static TypeRef fromJVM(int sort) {
+        return Stream.of(values())
+                .filter(tr->tr.sort == sort)
+                .findAny()
+                // "invalid type ref sort - %d"
+                .orElseThrow(() -> new LogIllegalArgumentException(M178,sort));
     }
 
     public static int getIndexFrom(int typeref) {
-        TypeRef tr = getInstance(typeref);
+        TypeRef tr = fromASM(typeref);
         return tr.getIndex(typeref);
     }
 

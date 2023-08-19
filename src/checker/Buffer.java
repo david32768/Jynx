@@ -1,6 +1,7 @@
 package checker;
 
 import java.nio.ByteBuffer;
+import java.util.Optional;
 
 import static jynx.Global.LOG;
 import static jynx.Message.M501;
@@ -73,10 +74,10 @@ public class Buffer {
         return cp;
     }
     
-    public CPEntry nextOptCPEntry(ConstantPoolType cptype) {
+    public Optional<CPEntry> nextOptCPEntry(ConstantPoolType cptype) {
         int cpindex = nextUnsignedShort();
         if (cpindex == 0) {
-            return null;
+            return Optional.empty();
         }
         CPEntry cp = pool.getEntry(cpindex);
         ConstantPoolType actualcpt = cp.getType();
@@ -84,7 +85,7 @@ public class Buffer {
             // "CP entry is %s but should be %s"
             throw new LogIllegalArgumentException(M506, actualcpt.toString(), cptype.toString());
         }
-        return cp;
+        return Optional.of(cp);
     }
     
     public void advance(int increment) {

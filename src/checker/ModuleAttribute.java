@@ -1,27 +1,27 @@
 package checker;
 
-import java.io.PrintWriter;
-import jvm.AttributeName;
 import jvm.ConstantPoolType;
+import jvm.Context;
+import jvm.StandardAttribute;
 
 public class ModuleAttribute extends AbstractAttribute {
 
-    public ModuleAttribute(int level, AttributeName attr, Buffer buffer) {
-        super(attr,level,attr.name(),buffer);
-        assert attr == AttributeName.Module;
+    public ModuleAttribute(Context context, StandardAttribute attr, Buffer buffer) {
+        super(attr,context,attr.name(),buffer);
+        assert attr == StandardAttribute.Module;
     }
 
     @Override
-    public void checkCPEntries(PrintWriter pw, ConstantPool pool, int codesz, int maxlocals) {
+    public void checkCPEntries(int codesz, int maxlocals) {
         buffer.nextCPEntry(ConstantPoolType.CONSTANT_Module);
         buffer.nextUnsignedShort(); // flags
-        buffer.nextOptCPEntry(ConstantPoolType.CONSTANT_Utf8);
+        buffer.nextOptCPEntry(ConstantPoolType.CONSTANT_Utf8); //version
 
         int ct = buffer.nextUnsignedShort(); // requires
         for (int i = 0; i < ct; ++i) {
             buffer.nextCPEntry(ConstantPoolType.CONSTANT_Module);
             buffer.nextUnsignedShort(); // flags
-            buffer.nextOptCPEntry(ConstantPoolType.CONSTANT_Utf8);
+            buffer.nextOptCPEntry(ConstantPoolType.CONSTANT_Utf8); //version
         }
         
         ct = buffer.nextUnsignedShort(); // exports

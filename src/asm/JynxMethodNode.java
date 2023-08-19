@@ -10,8 +10,9 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.TypePath;
 
-import static jvm.AttributeName.*;
-import static jvm.Context.METHOD;
+import static jvm.StandardAttribute.RuntimeInvisibleParameterAnnotations;
+import static jvm.StandardAttribute.RuntimeVisibleParameterAnnotations;
+import static jvm.StandardAttribute.Signature;
 import static jynx.Global.*;
 import static jynx.Message.*;
 
@@ -58,13 +59,13 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
     }
 
     public static JynxMethodNode getInstance(Line line, ClassChecker checker) {
-        Access accessname = checker.getAccess(METHOD,line);
+        Access accessname = checker.getAccess(Context.METHOD,line);
         line.noMoreTokens();
         LocalMethodHandle lmh = LocalMethodHandle.getInstance(accessname.getName());
         if (lmh.isInit()) {
             accessname.check4InitMethod();
         } else {
-            if (checker.isComponent(METHOD, lmh.name(), lmh.desc())) {
+            if (checker.isComponent(Context.METHOD, lmh.name(), lmh.desc())) {
                 accessname.setComponent();
             }
             accessname.check4Method();
@@ -147,7 +148,7 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
     
     @Override
     public boolean is(AccessFlag flag) {
-        assert flag.isValid(METHOD);
+        assert flag.isValid(Context.METHOD);
         return accessName.is(flag);
     }
 

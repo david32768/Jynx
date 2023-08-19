@@ -13,11 +13,9 @@ import org.objectweb.asm.util.Printer;
 import org.objectweb.asm.util.Textifier;
 import org.objectweb.asm.util.TraceClassVisitor;
 
-import static jvm.AttributeName.ConstantValue;
 import static jvm.Context.CLASS;
 import static jvm.Context.FIELD;
 import static jvm.Context.INNER_CLASS;
-
 import static jynx.Directive.dir_enclosing_method;
 import static jynx.Directive.dir_field;
 import static jynx.Directive.dir_implements;
@@ -26,7 +24,6 @@ import static jynx.Directive.dir_signature;
 import static jynx.Directive.dir_super;
 import static jynx.Directive.dir_version;
 import static jynx.Directive.end_field;
-
 import static jynx.Global.OPTION;
 import static jynx.ReservedWord.equals_sign;
 import static jynx.ReservedWord.res_innername;
@@ -39,6 +36,7 @@ import jvm.AccessFlag;
 import jvm.Constants;
 import jvm.ConstType;
 import jvm.JvmVersion;
+import jvm.StandardAttribute;
 import jynx.ClassType;
 import jynx.Directive;
 import jynx.Global;
@@ -228,7 +226,7 @@ public class JynxText extends Textifier {
                 .append(name)
                 .append(descriptor);
         if (value != null) {
-            jvmVersion.checkSupports(ConstantValue);
+            jvmVersion.checkSupports(StandardAttribute.ConstantValue);
             ConstType ct = ConstType.getFromDesc(descriptor, FIELD);
             jsb.append(equals_sign)
                     .append(o2s.stringFrom(ct, value));

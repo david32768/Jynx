@@ -4,7 +4,7 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
 
-import static jvm.AttributeName.*;
+import static jvm.StandardAttribute.*;
 import static jynx.Global.*;
 import static jynx.Message.*;
 import static jynx.State.*;

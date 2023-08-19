@@ -78,6 +78,13 @@ public enum FrameType {
         return result;
     }
     
+    public static FrameType fromJVMType(int type) {
+        return Stream.of(values())
+                .filter(ft -> ft.tag == type)
+                .findFirst()
+                .orElseThrow(() -> new LogAssertionError(M904,type)); // "unknown JVM stack frame type (%d)"
+    }
+    
     private static Object objectFrom(String tdesc) {
         switch(tdesc.charAt(0)) {
             case 'Z':

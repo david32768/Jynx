@@ -34,7 +34,7 @@ public class PrintAnnotations {
     }
 
     private void printTypeAnnotation(boolean visible,int typeref, TypePath tp, String desc) {
-        TypeRef tr = TypeRef.getInstance(typeref);
+        TypeRef tr = TypeRef.fromASM(typeref);
         Directive dir = tr.getDirective();
         CHECK_SUPPORTS(dir);
         String typepath = tp == null?null:tp.toString();
@@ -303,7 +303,7 @@ public class PrintAnnotations {
     private void printLocalVarAnnotations(boolean visible, List<LocalVariableAnnotationNode> anlist) {
         for (LocalVariableAnnotationNode lvan:nonNullList(anlist)) {
             int typeref = lvan.typeRef;
-            TypeRef tr = TypeRef.getInstance(typeref);
+            TypeRef tr = TypeRef.fromASM(typeref);
             Directive dir = tr.getDirective();
             CHECK_SUPPORTS(dir);
             String typepath = lvan.typePath == null?null:lvan.typePath.toString();

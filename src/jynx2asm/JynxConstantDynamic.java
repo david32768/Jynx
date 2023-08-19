@@ -14,7 +14,7 @@ import org.objectweb.asm.ConstantDynamic;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
 
-import static jvm.AttributeName.BootstrapMethods;
+import static jvm.StandardAttribute.BootstrapMethods;
 import static jynx.Global.*;
 import static jynx.Message.M257;
 import static jynx.Message.M259;

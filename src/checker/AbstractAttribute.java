@@ -1,6 +1,5 @@
 package checker;
 
-import java.io.PrintWriter;
 import static jvm.Context.ATTRIBUTE;
 import static jynx.Global.LOG;
 import static jynx.Message.M508;
@@ -11,20 +10,36 @@ import jvm.JvmVersion;
 
 public abstract class AbstractAttribute implements AttributeInstance {
     
+    protected final Context context;
     protected final int level;
     protected final String name;
     protected final Buffer buffer;
     protected final int size;
     protected final Attribute attr;
+    protected final ConstantPool pool;
 
-    public AbstractAttribute(Attribute attr, int level, String name, Buffer buffer) {
+    public AbstractAttribute(Attribute attr, Context context, String name, Buffer buffer) {
         this.attr = attr;
-        this.level = level;
+        this.context = context;
+        this.level = level(context);
         this.name = name;
         this.buffer = buffer;
+        this.pool = buffer.pool();
         this.size = buffer.limit() - buffer.position();
     }
 
+    private static int level(Context context) {
+        switch(context) {
+                case COMPONENT:
+                case CODE:
+                    return 2;
+                case CLASS:
+                    return 0;
+                default:
+                    return 1;
+        }
+    }
+    
     @Override
     public String toString() {
         return name;
@@ -70,7 +85,7 @@ public abstract class AbstractAttribute implements AttributeInstance {
     }
 
     @Override
-    public String attrDesc(Context context, JvmVersion jvmversion) {
+    public String attrDesc(JvmVersion jvmversion) {
         String attrerror = "(unknown)";
         Attribute uattr = attribute();
         if (uattr != null) {
@@ -86,7 +101,7 @@ public abstract class AbstractAttribute implements AttributeInstance {
     }
     
     @Override
-    public void checkCPEntries(PrintWriter pw, ConstantPool pool, int codesz, int maxlocals) {
+    public void checkCPEntries(int codesz, int maxlocals) {
         throw new AssertionError();
     }
 }

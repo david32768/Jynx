@@ -18,7 +18,7 @@ public class CPEntry {
     private final ConstantPoolType type;
     private final Object value;
 
-    public CPEntry(ConstantPoolType type, Object value) {
+    private CPEntry(ConstantPoolType type, Object value) {
         this.type = type;
         this.value = value;
     }
@@ -31,7 +31,7 @@ public class CPEntry {
         return value;
     }
 
-    public static CPEntry getInstance(ByteBuffer block) {
+    public static CPEntry fromConstantPool(ByteBuffer block) {
         int tag = Byte.toUnsignedInt(block.get());
         Optional<ConstantPoolType> cpopt = ConstantPoolType.getInstance(tag);
         if (!cpopt.isPresent()) {
@@ -92,7 +92,7 @@ public class CPEntry {
 
     private final static int BAD_CHAR = '?';
     
-    private static String fromUTF8CP(ByteBuffer block) {
+    public static String fromUTF8CP(ByteBuffer block) {
         StringBuilder sb = new StringBuilder(block.remaining());
         while (block.hasRemaining()) {
             int x = Byte.toUnsignedInt(block.get());

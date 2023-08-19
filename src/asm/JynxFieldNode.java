@@ -12,8 +12,7 @@ import org.objectweb.asm.TypePath;
 
 import static jvm.AccessFlag.acc_final;
 import static jvm.AccessFlag.acc_static;
-import static jvm.AttributeName.*;
-import static jvm.Context.FIELD;
+import static jvm.StandardAttribute.ConstantValue;
 import static jynx.Global.*;
 import static jynx.Message.*;
 import static jynx.ReservedWord.*;
@@ -57,11 +56,11 @@ public class JynxFieldNode implements ContextDependent, HasAccessFlags {
     }
 
     public static JynxFieldNode getInstance(JynxClassHdr jclasshdr, Line line, ClassChecker checker) {
-        Access accessname = checker.getAccess(FIELD,line);
+        Access accessname = checker.getAccess(Context.FIELD, line);
         String name = accessname.getName();
         String desc = line.nextToken().asString();
         FIELD_DESC.validate(desc);
-        if (checker.isComponent(FIELD, name, desc)) {
+        if (checker.isComponent(Context.FIELD, name, desc)) {
             accessname.setComponent();
         }
         Token token = line.nextToken();
@@ -70,7 +69,7 @@ public class JynxFieldNode implements ContextDependent, HasAccessFlags {
             token.mustBe(equals_sign);
             token = line.lastToken();
             CHECK_SUPPORTS(ConstantValue);
-            ConstType ctf = ConstType.getFromDesc(desc,FIELD);
+            ConstType ctf = ConstType.getFromDesc(desc, Context.FIELD);
             value = token.getValue(ctf);    // check range
             value = ctf.toJvmValue(value);
             if (accessname.is(acc_static)) {
@@ -108,7 +107,7 @@ public class JynxFieldNode implements ContextDependent, HasAccessFlags {
     
     @Override
     public boolean is(AccessFlag flag) {
-        assert flag.isValid(FIELD);
+        assert flag.isValid(Context.FIELD);
         return accessName.is(flag);
     }
 

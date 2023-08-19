@@ -12,7 +12,6 @@ import org.objectweb.asm.tree.TryCatchBlockNode;
 
 import static asm2jynx.Util.*;
 import static jvm.AccessFlag.*;
-import static jvm.AttributeName.*;
 import static jvm.Context.*;
 import static jynx.Directive.*;
 import static jynx.Global.*;
@@ -21,6 +20,7 @@ import static jynx.ReservedWord.*;
 import jvm.AccessFlag;
 import jvm.FrameType;
 import jvm.JvmVersion;
+import jvm.StandardAttribute;
 import jynx.GlobalOption;
 import jynx2asm.handles.LocalMethodHandle;
 
@@ -86,7 +86,7 @@ public class JynxMethodPrinter {
     }
     
     private void printCode(MethodNode mn, String classname) {
-        jvmVersion.checkSupports(Code);
+        jvmVersion.checkSupports(StandardAttribute.Code);
         if (OPTION(GlobalOption.SKIP_CODE)) {
             jp.appendComment(GlobalOption.SKIP_CODE).nl();
             return;

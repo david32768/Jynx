@@ -77,6 +77,10 @@ public enum ConstantPoolType implements JvmVersioned {
     public ConstantPoolType[] getPool() {
         return pool;
     }
+
+    public boolean usesTwoSlots() {
+        return this == CONSTANT_Long || this == CONSTANT_Double;
+    }
     
     public static Optional<ConstantPoolType> getInstance(int tag) {
         return Arrays.stream(values())

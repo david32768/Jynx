@@ -6,23 +6,22 @@ import java.util.Map;
 
 import org.objectweb.asm.tree.ModuleNode;
 
-import static jynx.ClassType.MODULE_CLASS;
 import static jynx.Global.*;
 import static jynx.Message.*;
 import static jynx2asm.NameDesc.*;
 
 import jvm.AccessFlag;
-import jvm.AttributeName;
 import jvm.Constants;
 import jvm.Context;
 import jvm.Feature;
 import jvm.JvmVersion;
+import jvm.StandardAttribute;
 import jynx.Access;
+import jynx.ClassType;
 import jynx.Directive;
 import jynx.LogAssertionError;
 import jynx.LogIllegalStateException;
 import jynx.ReservedWord;
-import jynx2asm.JynxScanner;
 import jynx2asm.Line;
 import jynx2asm.NameDesc;
 import jynx2asm.Token;
@@ -55,7 +54,7 @@ public class JynxModule {
     public static JynxModule getInstance(Line line, JvmVersion jvmversion) {
         EnumSet<AccessFlag> flags = line.getAccFlags();
         String name = line.nextToken().asName();
-        Access accessname = Access.getInstance(flags, jvmversion, name,MODULE_CLASS);
+        Access accessname = Access.getInstance(flags, jvmversion, name, ClassType.MODULE_CLASS);
         MODULE_NAME.validate(name);
         Token token = line.nextToken();
         String version = token == Token.END_TOKEN?null:token.asString();
@@ -89,7 +88,7 @@ public class JynxModule {
     private Access getAccess(Line line) {
         EnumSet<AccessFlag> flags = line.getAccFlags();
         String name = line.nextToken().asName();
-        return Access.getInstance(flags, jvmVersion, name, MODULE_CLASS);
+        return Access.getInstance(flags, jvmVersion, name, ClassType.MODULE_CLASS);
     }
     
     public void visitDirective(Directive dir, Line line) {
@@ -124,7 +123,7 @@ public class JynxModule {
     
     private void visitMain(Line line) {
         String main = line.nextToken().asString();
-        CHECK_SUPPORTS(AttributeName.ModuleMainClass);
+        CHECK_SUPPORTS(StandardAttribute.ModuleMainClass);
         CLASS_NAME_IN_MODULE.validate(main);
         modNode.visitMainClass(main);
         checkClassPackage(main, Directive.dir_main);

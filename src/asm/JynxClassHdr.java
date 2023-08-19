@@ -29,7 +29,7 @@ import org.objectweb.asm.util.Printer;
 import org.objectweb.asm.util.TraceClassVisitor;
 
 import static jvm.AccessFlag.acc_final;
-import static jvm.AttributeName.StackMapTable;
+import static jvm.StandardAttribute.StackMapTable;
 import static jynx.Global.*;
 import static jynx.GlobalOption.TRACE;
 import static jynx.Message.*;
