@@ -60,14 +60,18 @@ public enum NumType {
                 .orElseThrow(()->new LogIllegalArgumentException(M129,typecode)); // "invalid typecode - %d" 
     }
     
+    public String externalName() {
+        return name().substring(2);
+    }
+    
     @Override
     public String toString() {
-        return name().substring(2);
+        return externalName();
     }
     
     public static Optional<NumType> fromString(String token) {
         return Stream.of(values())
-                .filter(nt->token.equals(nt.toString()))
+                .filter(nt->token.equals(nt.externalName()))
                 .findFirst();
     }
 

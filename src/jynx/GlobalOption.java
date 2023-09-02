@@ -31,10 +31,10 @@ public enum GlobalOption {
     SKIP_ANNOTATIONS(M18, DISASSEMBLY), // "do not produce annotations"
     DOWN_CAST(M14, DISASSEMBLY), // "if necessary reduces JVM release to maximum supported by ASM version"
     
-    DEBUG(M13, ASSEMBLY, DISASSEMBLY), // "exit with stack trace if error"
+    DEBUG(M13, ASSEMBLY, DISASSEMBLY,STRUCTURE), // "exit with stack trace if error"
     VERBOSE(M27, ASSEMBLY, DISASSEMBLY), // "print all log messages"
 
-    CP(M17, STRUCTURE),  // "prints constant pool at end"
+    DETAIL(M17, STRUCTURE),  // "prints constant pool, instructions and other detail"
     // may change
     __TREAT_WARNINGS_AS_ERRORS(M25, ASSEMBLY), // "treat warnings as errors"
     

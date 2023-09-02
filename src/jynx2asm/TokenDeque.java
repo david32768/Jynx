@@ -117,6 +117,9 @@ public interface TokenDeque {
           EnumSet<AccessFlag> accflags = EnumSet.noneOf(AccessFlag.class);
           while (true) {
               Token token = peekToken();
+              if (token == END_TOKEN) {
+                  break;
+              }
               Optional<AccessFlag> afopt = AccessFlag.fromString(token.asString());
               if (afopt.isPresent()) {
                   nextToken();

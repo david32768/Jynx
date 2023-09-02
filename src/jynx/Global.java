@@ -98,7 +98,7 @@ public class Global {
     
     public static boolean CHECK_CAN_LOAD(ConstantPoolType cp) {
         if (global.jvmVersion != null) {
-            return cp.isLoadableBy(global.jvmVersion);
+            return cp.checkLoadableBy(global.jvmVersion);
         }
         return true;
     }

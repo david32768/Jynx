@@ -53,7 +53,7 @@ public enum TypeRef {
 
     private TypeRef(int value, Directive dir, Context context, int sort, int... len) {
         this.dir = dir;
-        String dirstr = dir.toString();
+        String dirstr = dir.externalName();
         int index = dirstr.indexOf("_type_annotation");
         assert name().substring(4).equals(dirstr.substring(1,index)):
                 String.format("%s %s",name().substring(4),dirstr.substring(1,index));

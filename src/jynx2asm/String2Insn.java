@@ -282,7 +282,7 @@ public class String2Insn {
                 }
                 return new LineInstruction(lineno, line);
             default:
-                throw new EnumConstantNotPresentException(JvmOp.class, jvmop.toString());
+                throw new EnumConstantNotPresentException(JvmOp.class, jvmop.externalName());
             }
     }
     
@@ -330,6 +330,10 @@ public class String2Insn {
                         LOG(M230,errkey,previous);
                     }
                     return SwitchInstruction.getInstance(jvmop, dflt, swmap);
+                }
+                if (swmap.isEmpty() && jvmop == JvmOp.asm_tableswitch && !dotarray.peekToken().is(right_arrow)) {
+                    // "%s without low value will be parsed as %s"
+                    LOG(M330,JvmOp.asm_tableswitch, JvmOp.opc_switch);
                 }
                 Integer key = token.asInt();
                 if (min == null) {
@@ -396,6 +400,9 @@ public class String2Insn {
     }
 
     private Instruction arg_tableswitch(JvmOp jvmop) {
+        if (line.peekToken().mayBe(res_default).isPresent()) {
+            return arg_lookupswitch(jvmop);
+        }
         int min = line.nextToken().asInt();
         line.nextToken().mustBe(res_default);
         JynxLabel dflt = getJynxLabel(line.nextToken());
@@ -425,7 +432,7 @@ public class String2Insn {
     private Instruction arg_var(JvmOp jvmop) {
         Token token;
         if (jvmop.isImmediate()) {
-            String opname = jvmop.toString();
+            String opname = jvmop.externalName();
             char suffix = opname.charAt(opname.length() - 1);
             token = Token.getInstance("" + suffix);
         } else {

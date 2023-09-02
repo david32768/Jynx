@@ -61,7 +61,7 @@ class ElementArray implements TokenArray {
         if (current != null) {
             noMoreTokens();
             line = null;
-            return Token.getInstance(ReservedWord.right_array.toString());
+            return Token.getInstance(ReservedWord.right_array.externalName());
         }
         current = readArray(line);
         return current.removeFirst();

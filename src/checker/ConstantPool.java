@@ -2,9 +2,11 @@ package checker;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.EnumSet;
 import java.util.List;
 
+import static jynx.Global.LOG;
 import static jynx.Message.M505;
 import static jynx.Message.M514;
 import static jynx.Message.M515;
@@ -15,7 +17,6 @@ import jvm.ConstantPoolType;
 import jvm.HandleType;
 import jvm.JvmVersion;
 import jynx.LogIllegalArgumentException;
-import jynx.LogIllegalStateException;
 
 public class ConstantPool {
 
@@ -34,6 +35,12 @@ public class ConstantPool {
 
     public void addBootstraps(CPEntry[] bootstrap) {
         this.bootstraps.add(bootstrap);
+    }
+    
+    public void addBootstraps(CPEntry[] bootstrap, IndentPrinter ptr) {
+        int index = bootstraps.size();
+        this.bootstraps.add(bootstrap);
+        printBoot(ptr, index);
     }
     
     public int last() {
@@ -110,8 +117,8 @@ public class ConstantPool {
                     int[] indices = (int[])value;
                     ConstantPoolType[] types = cp.getType().getPool();
                     if (indices.length != types.length) {
-                        // "number of cp entries (%d) does not equal number required for type (5d)"
-                        throw new LogIllegalArgumentException(M515, indices.length, types.length);
+                        // "number of cp entries (%d) for entry %d does not equal number required for type (5d)"
+                        throw new LogIllegalArgumentException(M515, indices.length, i, types.length);
                     }
                     for (int j = 0; j < indices.length; ++j) {
                         checkPoolType(i,indices[j],types[j]);
@@ -139,20 +146,26 @@ public class ConstantPool {
         }
     }
     
-    public void checkBootstraps() {
+    public boolean checkBootstraps() {
         int ct = bootstraps.size();
         if (maxboot >= 0 && ct <= maxboot) {
             // "maximum bootcp used by constant pool (%d)  is greater than supplied in attribute (size = %d)"
-            throw new LogIllegalStateException(M505, maxboot, ct);
+            LOG(M505, maxboot, ct);
+            return false;
         }
+        return true;
     }
     
-    private String toString(int index) {
+    private String toString(int index, BitSet bootset) {
         CPEntry cpe = getEntry(index);
-        return stringValue(cpe);
+        return stringValue(cpe, bootset);
     }
     
     public String stringValue(CPEntry cpe) {
+        return stringValue(cpe, new BitSet(bootstraps.size()));
+    }
+    
+    private String stringValue(CPEntry cpe, BitSet bootset) {
         Object value = cpe.getValue();
         switch(cpe.getType().getEntryType()) {
             case INDIRECT:
@@ -163,30 +176,51 @@ public class ConstantPool {
                     if (!first) {
                         sb.append(' ');
                     }
-                    sb.append(toString(i));
+                    sb.append(toString(i,bootset));
                     first = false;
                 }
                 return sb.toString();
             case HANDLE:
                 indices = (int[])value;
                 HandleType ht = HandleType.getInstance(indices[0]);
-                return String.format("%s %s",ht,toString(indices[1]));
+                return String.format("%s %s",ht,toString(indices[1],bootset));
             case BOOTSTRAP:
                 indices = (int[])value;
-                return String.format("BOOTSTRAP %d %s",indices[0],toString(indices[1]));
+                int bootstrap = indices[0];
+                bootset.set(bootstrap);
+                return String.format("BOOTSTRAP %d %s", bootstrap, toString(indices[1], bootset));
         }
-        return value.toString();
+        String suffix = "";
+        if (value instanceof Long) {
+            suffix = "L"; 
+        } else if (value instanceof Float) {
+            suffix = "F";
+        }
+        return value.toString() + suffix;
     }
 
-    public void printCP(IndentPrinter ptr) {
+    public void printCP(IndentPrinter ptr, boolean bootonly) {
         ptr.println("CONSTANT POOL ENTRIES");
         IndentPrinter entryptr = ptr.shift();
+        IndentPrinter bootptr = entryptr.shift();
         for (int i = 0; i < entries.length; ++i) {
             CPEntry cp = entries[i];
             if (cp == null) {
                 continue;
             }
-            entryptr.println("%4d %-24s %s", i,cp.getType(),stringValue(cp));
+            BitSet bootset = new BitSet(bootstraps.size());
+            String cpstr = stringValue(cp, bootset);
+            if (!bootonly || !bootset.isEmpty()) {
+                entryptr.println("%-4d %-24s %s", i,cp.getType(),cpstr);
+                if (bootonly && !bootset.isEmpty()) {
+                    for (int j = bootset.nextSetBit(0); j >= 0; j = bootset.nextSetBit(j+1)) {
+                       printBoot(bootptr,j);
+                       if (j == Integer.MAX_VALUE) {
+                           break; // or (i+1) would overflow
+                       }
+                    }
+                }
+            }
         }
     }
 
@@ -196,17 +230,26 @@ public class ConstantPool {
         }
         ptr.println("BOOTSTRAP ENTRIES");
         IndentPrinter bootptr = ptr.shift();
-        IndentPrinter methodptr = bootptr.shift();
-        IndentPrinter argptr = methodptr.shift();
         for (int i = 0; i < bootstraps.size(); ++i) {
-            CPEntry[] boots = bootstraps.get(i);
-            CPEntry methodcp = boots[0];
-            bootptr.println("BOOTSTRAP %d",i);
-            methodptr.println(stringValue(methodcp));
-            for (int k = 1; k < boots.length; ++k) {
-                CPEntry argcp = boots[k];
-                argptr.println("%d %-24s %s",k - 1,argcp.getType(),stringValue(argcp));
-            }
+            printBoot(bootptr,i);
         }
     }
+
+    public void printBoot(IndentPrinter bootptr, int index) {
+        if (index < 0 || index >= bootstraps.size()) {
+            bootptr.println("BOOTSTRAP %d does not exist; outside range [0,%d)",index,bootstraps.size());
+            return;
+        }
+        CPEntry[] boots = bootstraps.get(index);
+        IndentPrinter methodptr = bootptr.shift();
+        IndentPrinter argptr = methodptr.shift();
+        CPEntry methodcp = boots[0];
+        bootptr.println("BOOTSTRAP %d",index);
+        methodptr.println(stringValue(methodcp));
+        for (int k = 1; k < boots.length; ++k) {
+            CPEntry argcp = boots[k];
+            argptr.println("%d %-24s %s",k - 1,argcp.getType(),stringValue(argcp));
+        }
+    }
+    
 }

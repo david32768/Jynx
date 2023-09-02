@@ -76,7 +76,7 @@ class LineArray implements TokenArray {
         }
         if (lines.isEmpty()) {
             lines = null;
-            return Token.getInstance(ReservedWord.right_array.toString());
+            return Token.getInstance(ReservedWord.right_array.externalName());
         }
         current = lines.removeFirst();
         return current.removeFirst();

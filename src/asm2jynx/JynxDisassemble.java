@@ -380,7 +380,8 @@ public class JynxDisassemble {
                 JynxDisassemble a2j = JynxDisassemble.getInstance(optrdr.get(),pw);
                 return a2j.print();
             } catch (Exception ex) {
-                LOG(M237,ex); // "error accepting class file: %s"
+                LOG(ex);
+                LOG(M237,fname); // "error accepting class file: %s"
                 return false;
             }
         }

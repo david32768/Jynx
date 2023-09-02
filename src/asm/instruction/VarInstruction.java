@@ -20,7 +20,7 @@ public class VarInstruction extends Instruction {
     public void adjust(StackLocals stackLocals) {
         varnum = stackLocals.adjustLoadStore(jvmop, varToken);
         assert varnum >= 0;
-        this.jvmop = JvmOp.exactVar(jvmop, varnum);
+        this.jvmop = jvmop.exactVar(varnum);
     }
 
     @Override

@@ -12,6 +12,7 @@ import static jynx.Global.OPTION;
 import static jynx.Message.M290;
 import static jynx.Message.M291;
 import static jynx.Message.M292;
+import static jynx.Message.M326;
 import static jynx.Message.M34;
 import static jynx.Message.M990;
 import static jynx.ReservedWord.*;
@@ -33,6 +34,7 @@ public class InstList {
     private final boolean expand;
     private final boolean stack;
     private final boolean locals;
+    private final boolean offset;
 
     private boolean addLineNumber;
     
@@ -50,6 +52,7 @@ public class InstList {
         this.expand = options.containsKey(res_expand);
         this.stack = options.containsKey(res_stack);
         this.locals = options.containsKey(res_locals);
+        this.offset = options.containsKey(res_offset);
         this.stackb = this.stack? stackLocals.stringStack(): "";
         this.localsb = this.locals? stackLocals.stringLocals(): "";
         if (!options.isEmpty()) {
@@ -75,6 +78,11 @@ public class InstList {
         }
         localsb = localsa;
     }
+
+    private void printOffset() {
+        // ";%s  offset = [%d,%d]"
+        LOG(M326, spacer, stackLocals.getMinLength(),stackLocals.getMaxLength());
+    }
     
     private void printStackLocals() {
         if (stack) {
@@ -82,6 +90,9 @@ public class InstList {
         }
         if (locals) {
             printLocals();
+        }
+        if (offset) {
+            printOffset();
         }
     }
 

@@ -124,7 +124,7 @@ public class JynxScanner implements Iterator<Line> {
         }
         nextLine();
         if (line == null) {
-            return Line.tokenise(Directive.end_class.toString(), Integer.MAX_VALUE, arrayfn);
+            return Line.tokenise(Directive.end_class.externalName(), Integer.MAX_VALUE, arrayfn);
         }
         return line;
     }

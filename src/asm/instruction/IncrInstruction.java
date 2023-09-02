@@ -22,7 +22,7 @@ public class IncrInstruction extends Instruction {
     @Override
     public void adjust(StackLocals stackLocals) {
         this.varnum = stackLocals.adjustIncr(varToken);
-        this.jvmop = JvmOp.exactIncr(jvmop, varnum, incr);
+        this.jvmop = jvmop.exactIncr(varnum, incr);
     }
 
     @Override

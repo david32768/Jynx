@@ -65,7 +65,7 @@ public class Token {
     }
 
     public static Token getInstance(ReservedWord res) {
-        return getInstance(res.toString());
+        return getInstance(res.externalName());
     }
 
     public Token transform(UnaryOperator<String> op) {
@@ -265,8 +265,12 @@ public class Token {
     }
     
     public ReservedWord expectOneOf(ReservedWord res1,ReservedWord... res) {
-        checkNotEnd();
         EnumSet<ReservedWord> rwset = EnumSet.of(res1,res);
+        return expectOneOf(rwset);
+    }
+    
+    public ReservedWord expectOneOf(EnumSet<ReservedWord> rwset) {
+        checkNotEnd();
         return mayBe(rwset)
                  // "reserved word %s expected but found %s"
                 .orElseThrow(()->new LogIllegalArgumentException(M109,rwset, token));

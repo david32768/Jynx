@@ -1,18 +1,17 @@
 package checker;
 
 import jvm.ConstantPoolType;
-import jvm.Context;
 import jvm.StandardAttribute;
 
-public class ModuleAttribute extends AbstractAttribute {
+public class ModuleAttribute extends AttributeInstance {
 
-    public ModuleAttribute(Context context, StandardAttribute attr, Buffer buffer) {
-        super(attr,context,attr.name(),buffer);
+    public ModuleAttribute(StandardAttribute attr, AttributeBuffer buffer) {
+        super(attr,attr.name(),buffer);
         assert attr == StandardAttribute.Module;
     }
 
     @Override
-    public void checkCPEntries(int codesz, int maxlocals) {
+    public void checkCPEntries(IndentPrinter ptr) {
         buffer.nextCPEntry(ConstantPoolType.CONSTANT_Module);
         buffer.nextUnsignedShort(); // flags
         buffer.nextOptCPEntry(ConstantPoolType.CONSTANT_Utf8); //version

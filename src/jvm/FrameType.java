@@ -51,17 +51,21 @@ public enum FrameType {
         return asmType;
     }
 
+    public String externalName() {
+        return name().substring(3);
+    }
+    
     @Override
     public String toString() {
-        return name().substring(3);
+        return externalName();
     }
     
     public static FrameType fromString(String token) {
         FrameType result = Stream.of(values())
-                .filter(ft -> ft.toString().equals(token))
+                .filter(ft -> ft.externalName().equals(token))
                 .findFirst()
                 .orElse(ft_Top);
-        if (result == ft_Top && !result.toString().equals(token)) {
+        if (result == ft_Top && !result.externalName().equals(token)) {
             LOG(M61,token,result);  // "invalid stack frame type(%s) - %s assumed"
         }
         return result;

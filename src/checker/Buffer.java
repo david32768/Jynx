@@ -4,12 +4,10 @@ import java.nio.ByteBuffer;
 import java.util.Optional;
 
 import static jynx.Global.LOG;
-import static jynx.Message.M501;
-import static jynx.Message.M506;
 import static jynx.Message.M509;
 
 import jvm.ConstantPoolType;
-import jynx.LogIllegalArgumentException;
+import jvm.Context;
 
 public class Buffer {
 
@@ -29,6 +27,10 @@ public class Buffer {
         return pool;
     }
     
+    public int nextByte() {
+        return bb.get();
+    }
+    
     public int nextUnsignedByte() {
         return Byte.toUnsignedInt(bb.get());
     }
@@ -41,13 +43,8 @@ public class Buffer {
         return Short.toUnsignedInt(bb.getShort());
     }
     
-    public int nextLabel(int codesz) {
-        int offset = nextUnsignedShort();
-        if (offset > codesz) {
-            // "label offset (%d) > code size (%d)"
-            LOG(M501, offset, codesz);
-        }
-        return offset;
+    public int nextInt() {
+        return bb.getInt();
     }
     
     public int nextSize() {
@@ -64,14 +61,19 @@ public class Buffer {
         return pool.getEntry(nextUnsignedShort());
     }
     
+    public CPEntry nextCPEntryByte() {
+        return pool.getEntry(nextUnsignedByte());
+    }
+    
     public CPEntry nextCPEntry(ConstantPoolType cptype) {
         CPEntry cp = nextCPEntry();
-        ConstantPoolType actualcpt = cp.getType();
-        if (actualcpt != cptype) {
-            // "CP entry is %s but should be %s"
-            throw new LogIllegalArgumentException(M506, actualcpt.toString(), cptype.toString());
-        }
+        cp.getType().checkCPType(cptype);
         return cp;
+    }
+    
+    
+    public String stringValue(CPEntry cp) {
+        return pool.stringValue(cp);
     }
     
     public Optional<CPEntry> nextOptCPEntry(ConstantPoolType cptype) {
@@ -80,11 +82,7 @@ public class Buffer {
             return Optional.empty();
         }
         CPEntry cp = pool.getEntry(cpindex);
-        ConstantPoolType actualcpt = cp.getType();
-        if (actualcpt != cptype) {
-            // "CP entry is %s but should be %s"
-            throw new LogIllegalArgumentException(M506, actualcpt.toString(), cptype.toString());
-        }
+        cp.getType().checkCPType(cptype);
         return Optional.of(cp);
     }
     
@@ -104,9 +102,24 @@ public class Buffer {
         int methodref = nextUnsignedShort();
         return pool.getType(methodref);
     }
-    
-    public Buffer duplicate() {
+
+    protected Buffer duplicate() {
         return new Buffer(pool,bb.duplicate());
+    }
+    
+    public Buffer extract(int size) {
+        Buffer partbuff = duplicate();
+        advance(size);
+        partbuff.limit(position());
+        return partbuff;
+    }
+    
+    public AttributeBuffer attributeBuffer(Context context) {
+        return new AttributeBuffer(pool, bb, context);
+    }
+    
+    public CodeBuffer codeBuffer(int maxlocals, int codesz) {
+        return new CodeBuffer(pool, bb, maxlocals, codesz);
     }
     
     public int position() {
@@ -132,4 +145,9 @@ public class Buffer {
     public void limit(int limit) {
         bb.limit(limit);
     }
+    
+    public CodeBuffer asCodeBuffer() {
+        throw new UnsupportedOperationException();
+    }
+        
 }

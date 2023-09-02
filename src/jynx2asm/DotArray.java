@@ -38,7 +38,7 @@ class DotArray implements TokenArray {
         Objects.nonNull(line);
         line = js.nextLineNotEnd(Directive.end_array);
         if (line == null) {
-            return Token.getInstance(ReservedWord.right_array.toString());
+            return Token.getInstance(ReservedWord.right_array.externalName());
         }
         return line.firstToken();
     }

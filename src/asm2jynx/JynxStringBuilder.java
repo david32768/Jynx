@@ -167,6 +167,10 @@ public class JynxStringBuilder {
         return append(StringUtil.escapeName(name));
     }
 
+    public JynxStringBuilder appendOptName(String name) {
+        return name == null? this: append(StringUtil.escapeName(name));
+    }
+
     public JynxStringBuilder appendDirArray(Directive dir, List<String> strs) {
         if (strs != null && !strs.isEmpty()) {
             append(dir).appendDotArray(strs);

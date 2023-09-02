@@ -140,16 +140,12 @@ public class JynxCodeHdr implements ContextDependent {
         mnode.visitCode();
         labelmap.start(mnode, js.getLine());
     }
+    
+    private static final EnumSet<ReservedWord> PRINT_OPTIONS = EnumSet.of(res_expand,res_stack,res_locals,res_offset);
 
     private void setPrint(Line line) {
-        ReservedWord rw  = line.nextToken().expectOneOf(res_stack, res_locals, res_on, res_off,res_label);
+        ReservedWord rw  = line.nextToken().expectOneOf(res_on, res_off, res_label);
         switch (rw) {
-            case res_stack:
-                LOG(M294,res_stack, stackLocals.stringStack()); // "%s = %s"
-                break;
-            case res_locals:
-                LOG(M294, res_locals, stackLocals.stringLocals()); // "%s = %s"
-                break;
             case res_label:
                 String lab = line.nextToken().asString();
                 String labelframe = labelmap.printJynxlabelFrame(lab, line);
@@ -159,12 +155,10 @@ public class JynxCodeHdr implements ContextDependent {
                 ++printFlag;
                 Token token = line.nextToken();
                 if (token == Token.END_TOKEN) {
-                    options.putIfAbsent(res_expand,printFlag);
-                    options.putIfAbsent(res_stack,printFlag);
-                    options.putIfAbsent(res_locals,printFlag);
+                    PRINT_OPTIONS.forEach(opt -> options.putIfAbsent(opt,printFlag));
                 } else {
                     while (token != Token.END_TOKEN) {
-                        ReservedWord optrw = token.expectOneOf(res_expand, res_stack,res_locals);
+                        ReservedWord optrw = token.expectOneOf(PRINT_OPTIONS);
                         options.putIfAbsent(optrw,printFlag);
                         token = line.nextToken();
                     }
@@ -176,18 +170,16 @@ public class JynxCodeHdr implements ContextDependent {
                 }
                 break;
             case res_off:
-                if (Objects.equals(printFlag, options.get(res_expand))) {
-                    options.remove(res_expand);
+                if (printFlag > 0) {
+                    PRINT_OPTIONS.stream()
+                            .filter(opt -> (Objects.equals(printFlag, options.get(opt))))
+                            .forEach(opt -> options.remove(opt));
+                    --printFlag;
+                    LOG(M329,options); // "print options = %s"
+                } else {
+                    // "%s nest level is already zero"
+                    LOG(M328,Directive.dir_print);
                 }
-                if (Objects.equals(printFlag, options.get(res_stack))) {
-                    options.remove(res_stack);
-                }
-                if (Objects.equals(printFlag, options.get(res_locals))) {
-                    options.remove(res_locals);
-                }
-                --printFlag;
-                assert printFlag >= 0;
-                LOG(M293,options); // "print options = %s"
                 break;
             default:
                 throw new AssertionError();

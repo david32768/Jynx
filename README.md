@@ -3,7 +3,8 @@
 
 
 This is a rewritten version of [Jasmin](https://github.com/davidar/jasmin)
- using [ASM](https://asm.ow2.io) version 9.4 as a back end.
+ using [ASM](https://asm.ow2.io) version 9.5 as a back end.
+ (versions 9.1 - 9.4 will reduce maximum JVM version).
 It is written in Java V1_8 (apart from module-info.java)
  and supports all features up to V20 except user attributes.
 
@@ -87,7 +88,8 @@ Options for ROUNDTRIP are:
 
 Options for STRUCTURE are:
 
-*	--CP prints constant pool
+*	--DEBUG exit with stack trace if error
+*	--DETAIL prints constant pool, instructions and other detail
 
 ## Jasmin 1.0
 
@@ -97,18 +99,9 @@ Changes are:
 
 *	unicode escape sequences are actioned before parsing line
 *	.end_method instead of .end method
-*	tableswitch - new format
-```
-; <high> is always omitted
-; tableswitch <minimum> default <default_label> <label-array>
-; <label-array> = .array[\n<labael>]+\n.end_array
-tableswitch 0 default DefaultLabel .array
-	ZeroLabel
-	OneLabel
-.end_array
-```		
 *	lookupswitch - new format
 ```
+; grammar
 ; lookupswitch default <default_label> <switch-array>
 ; <switch-array> = .array[\n<num> -> <label>]+\n.end_array
 lookupswitch default DefaultLabel .array
@@ -116,6 +109,26 @@ lookupswitch default DefaultLabel .array
 	10 -> Label2
 .end_array
 ```
+*	switch - new "instruction"
+```
+; same format as lookupswitch but will use tableswitch if that uses less code space
+```
+*	tableswitch - new format
+```
+; <high> is always omitted
+; if <low> is omitted will be parsed as switch i.e. requires <num> -> <label>
+;     but will generate tableswitch if appropriate
+;     and will generate error message if <num> are not consecutive.
+
+; deprecated for removal
+; grammar
+; tableswitch <low> default <default_label> <label-array>
+; <label-array> = .array[\n<labael>]+\n.end_array
+tableswitch 0 default DefaultLabel .array
+	ZeroLabel
+	OneLabel
+.end_array
+```		
 *	.implements - must use array if more than one interface
 ```
 ;.implements Interface1
@@ -247,7 +260,7 @@ intArrayValue [I = .array ; Jynx
 
 *	.parameter
 ```
-; .parameter <parameter-number> <access-flags>? <name>
+; .parameter <parameter-number> <access-flags>? <name>?
 .parameter 0 final p0
 ```
 *	.nesthost
@@ -299,6 +312,16 @@ ldc ST:java/lang/Integer.getInteger(Ljava/lang/String;)java/lang/Integer
 ; <subtype-class-name> subtypes <class_name> ; x is subtype of y
 ; <common-class_name> common <class-name1> class_name2> ; x is common of y and z
 ; .end_array
+```
+*	.print ; used in code to print debugging information
+```
+; ; .print can be nested
+; grammar
+; .print [on|off|label <label-name>|on [locals|stack|offset|expand]+]
+; .print on ; expands "macros" and prints locals, stack, offset for each instruction
+; .print on [locals|stack|offset|expand]+ ; only print specified (but accumulates if nested)
+; .print label <label-name> ; print current information on known label
+; .print off ; reduce nesting level
 ```
 *	.record ; see examples/Java17/Point.java
 ```

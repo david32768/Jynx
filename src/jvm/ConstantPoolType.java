@@ -1,12 +1,15 @@
 package jvm;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Optional;
 
 import static jvm.ConstantPoolType.EntryType.*;
 import static jvm.JvmVersion.*;
 import static jynx.Global.LOG;
 import static jynx.Message.*;
+
+import jynx.LogIllegalArgumentException;
 
 public enum ConstantPoolType implements JvmVersioned {
     // Table 4.4B; and 4.4C
@@ -89,13 +92,28 @@ public enum ConstantPoolType implements JvmVersioned {
     }
     
     public boolean isLoadableBy(JvmVersion jvmversion) {
-        boolean ok = loadable != null && jvmversion.compareTo(loadable)>= 0;
+        return loadable != null && jvmversion.compareTo(loadable) >= 0;
+    }
+
+    public boolean checkLoadableBy(JvmVersion jvmversion) {
+        boolean ok = isLoadableBy(jvmversion);
         if (!ok) {
             LOG(M63,this,jvmversion);    // "Loading of %s not supported in %s"
         }
         return ok;
     }
 
+    public void checkCPType(ConstantPoolType expected) {
+        checkCPType(EnumSet.of(expected));
+    }
+
+    public void checkCPType(EnumSet<ConstantPoolType> expected) {
+        if (!expected.contains(this)) {
+            // "CP entry is %s but should be one of %s"
+            throw new LogIllegalArgumentException(M525, this, expected);
+        }
+    }
+    
     public enum EntryType {
         UTF8,
         INTEGER,

@@ -182,6 +182,13 @@ public class ClassChecker {
         return Access.getInstance(flags, jvmVersion, name,classType);
     }
     
+    public Access getAccessOptName(Context context, Line line) {
+        EnumSet<AccessFlag> flags = line.getAccFlags();
+        Token optname = line.nextToken();
+        String name = optname == Token.END_TOKEN? null: optname.asName();
+        return Access.getInstance(flags, jvmVersion, name,classType);
+    }
+    
     public void checkComponent(JynxComponentNode jcn) {
         String compname = jcn.getName();
         JynxComponentNode previous = components.put(compname,jcn);

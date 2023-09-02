@@ -66,11 +66,11 @@ public enum JvmVersion {
         this.minor = minor;
         this.release = Integer.toUnsignedLong((major << 16) | minor);
         // "invalid major version - %s"
-        assert isUnsignedShort(major) && major > MAJOR_BASE:M20.format(this.toString());
+        assert isUnsignedShort(major) && major > MAJOR_BASE:M20.format(this);
         // "invalid minor version - %s"
-        assert isUnsignedShort(minor):M21.format(this.toString());
+        assert isUnsignedShort(minor):M21.format(this);
         // "invalid minor version for major version (spec table 4.1A) - %s"
-        assert major < MAJOR_PREVIEW || minor == 0 || minor == PREVIEW:M91.format(this.toString());
+        assert major < MAJOR_PREVIEW || minor == 0 || minor == PREVIEW:M91.format(this);
     }
     
     private static boolean isUnsignedShort(int ushort) {

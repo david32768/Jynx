@@ -139,7 +139,7 @@ public class JynxClass implements ContextDependent {
             if (token == Token.END_TOKEN) {
                 break;
             }
-            Optional<GlobalOption> option = GlobalOption.optInstance(token.toString());
+            Optional<GlobalOption> option = GlobalOption.optInstance(token.asString());
             if (option.isPresent() && option.get().isRelevent(MainOption.ASSEMBLY)) {
                 boolean added = ADD_OPTION(option.get());
                 if (added && option.get() == GlobalOption.DEBUG) {

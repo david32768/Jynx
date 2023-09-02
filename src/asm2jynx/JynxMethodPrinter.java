@@ -57,7 +57,7 @@ public class JynxMethodPrinter {
 
     private void printCatchBlocks(MethodNode mn, Insn2Jynx i2s) {
         for (TryCatchBlockNode tcbn : nonNullList(mn.tryCatchBlocks)) {
-            String exception = tcbn.type == null?res_all.toString():tcbn.type;
+            String exception = tcbn.type == null?res_all.externalName():tcbn.type;
             jp.append(dir_catch)
                     .append(exception)
                     .append(res_from, tcbn.start)
@@ -121,11 +121,11 @@ public class JynxMethodPrinter {
                 .appendDirArray(dir_throws, mn.exceptions);
         int parmnum = 0;
         for (ParameterNode pn : nonNullList(mn.parameters)) {
-            EnumSet<AccessFlag> pnaccflags = AccessFlag.getEnumSet(pn.access, PARAMETER,jvmVersion);
+            EnumSet<AccessFlag> pnaccflags = AccessFlag.getEnumSet(pn.access, PARAMETER, jvmVersion);
             jp.append(dir_parameter)
                     .append(parmnum)
                     .appendFlags(pnaccflags)
-                    .appendName(pn.name)
+                    .appendOptName(pn.name)
                     .nl();
             ++parmnum;
         }

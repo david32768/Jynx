@@ -17,6 +17,7 @@ public enum ReservedWord {
 
     res_stack,
     res_locals,
+    res_offset,
     res_use,
     res_reachable,
     res_label,

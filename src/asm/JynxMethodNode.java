@@ -177,7 +177,7 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
 
     private void visitParameter(Line line) {
         int parmnum = line.nextToken().asUnsignedInt();
-        Access accessname = checker.getAccess(Context.PARAMETER, line);
+        Access accessname = checker.getAccessOptName(Context.PARAMETER, line);
         line.noMoreTokens();
         accessname.check4Parameter();
         annotationLists.visitParameter(parmnum, accessname);

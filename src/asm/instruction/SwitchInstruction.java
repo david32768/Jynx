@@ -10,6 +10,8 @@ import static jynx.Global.LOG;
 import static jynx.Message.M244;
 import static jynx.Message.M256;
 import static jynx.Message.M323;
+import static jynx.Message.M331;
+import static jynx2asm.ops.JvmOp.asm_tableswitch;
 import static jynx2asm.ops.JvmOp.opc_switch;
 
 import jynx.LogIllegalArgumentException;
@@ -19,7 +21,6 @@ import jynx2asm.ops.JvmOp;
 public abstract class SwitchInstruction extends Instruction {
 
     private final int unpaddedLength;
-
 
     private int minPadding;
     private int maxPadding;
@@ -60,15 +61,19 @@ public abstract class SwitchInstruction extends Instruction {
 
     public static Instruction getInstance(JvmOp jvmop, JynxLabel dflt, SortedMap<Integer,JynxLabel> swmap) {
         if (swmap.isEmpty()) {
-            if (jvmop == JvmOp.opc_switch) {
-                return new JumpInstruction(JvmOp.asm_goto,dflt);
-            } else {
-                return new LookupInstruction(jvmop,dflt,swmap);        
-            }
+            return new LookupInstruction(jvmop,dflt,swmap);        
         }
         Integer min = swmap.firstKey();
         Integer max = swmap.lastKey();
         long range = max.longValue() - min.longValue() + 1;
+        if (jvmop == JvmOp.asm_tableswitch) {
+            if (range == swmap.size()) {
+                return lookupToTableSwitch(min, max, dflt, swmap);
+            }
+            // "%s without low value changed to %s as entries are not consecutive"
+            LOG(M331, asm_tableswitch,opc_switch);
+            jvmop = opc_switch;
+        }
         long lookupsz = LookupInstruction.minsize(swmap.size());
         long tablesz = TableInstruction.minsize(range);
         boolean consec = range == swmap.size();
@@ -93,7 +98,7 @@ public abstract class SwitchInstruction extends Instruction {
         for (Map.Entry<Integer,JynxLabel> me : swmap.entrySet()) {
             int key = me.getKey();
             for (int i = lastkey + 1; i < key; ++i) {
-                labellist.add(dflt); // fil in gaps with dflt label
+                labellist.add(dflt); // fill in gaps with dflt label
             }
             JynxLabel label = me.getValue();
             labellist.add(label);

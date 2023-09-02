@@ -253,6 +253,7 @@ public enum JvmOp implements JynxOp {
     xxx_line(-2, 0, "()V", arg_dir, -2),
     ;
         
+    private final String externalName ;
     private final int opcode;
     private final Integer length;
     private final String desc;
@@ -265,6 +266,7 @@ public enum JvmOp implements JynxOp {
     }
 
     private JvmOp(int opcode, Integer length, String desc, OpArg args, int asmOpcode, Feature requires) {
+        this.externalName = name().substring(4);
         this.opcode = opcode;
         this.length = length;
         this.asmOpcode = asmOpcode;
@@ -291,7 +293,7 @@ public enum JvmOp implements JynxOp {
             switch (prefix) {
                 case "asm_":
                     assert opcode >= 0 && opcode < 256;
-                    assert opcode == CheckOpcodes.getStaticFieldValue(op.toString().toUpperCase());
+                    assert opcode == CheckOpcodes.getStaticFieldValue(op.externalName.toUpperCase());
                     mapop = CODEMAP[opcode];
                     if (mapop == null) {
                         CODEMAP[opcode] = op;
@@ -332,7 +334,7 @@ public enum JvmOp implements JynxOp {
             }
             last = op.name();
             if (ok) {
-                JvmOp before = OPMAP.putIfAbsent(op.toString(), op);
+                JvmOp before = OPMAP.putIfAbsent(op.externalName, op);
                 ok = before == null;
             }
         }
@@ -347,6 +349,10 @@ public enum JvmOp implements JynxOp {
         Objects.nonNull(result);
         jvmversion.checkSupports(result);
         return result;
+    }
+
+    public String externalName() {
+        return externalName;
     }
     
     public int opcode() {
@@ -380,7 +386,7 @@ public enum JvmOp implements JynxOp {
     }
 
     public boolean isReturn() {
-        return toString().contains("return");
+        return externalName.contains("return");
     }
     
     public boolean isStack() {
@@ -395,17 +401,25 @@ public enum JvmOp implements JynxOp {
     
     public char vartype() {
         checkArg(arg_var);
-        char ctype = Character.toUpperCase(toString().charAt(0));
+        char ctype = Character.toUpperCase(externalName.charAt(0));
         return ctype == 'L'?'J':ctype;
     }
     
     public boolean isStoreVar() {
         checkArg(arg_var);
-        return toString().substring(1).startsWith("store");
+        return externalName.substring(1).startsWith("store");
     }
     
-    public void checkArg(OpArg expected) {
+    private void checkArg(OpArg expected) {
         if (args != expected) {
+            // "expected arg %s but was %s"
+            throw new LogIllegalArgumentException(M362,expected,args);
+        }
+    }
+    
+    private void checkArg(OpArg first, OpArg... rest) {
+        EnumSet<OpArg> expected = EnumSet.of(first, rest);
+        if (!expected.contains(args)) {
             // "expected arg %s but was %s"
             throw new LogIllegalArgumentException(M362,expected,args);
         }
@@ -425,7 +439,7 @@ public enum JvmOp implements JynxOp {
     }
     
     private boolean isWideFormOf(JvmOp base) {
-        return toString().equals(base.toString() + "_w");
+        return externalName.equals(base.externalName + "_w");
     }
 
     public static JvmOp getOp(int code) {
@@ -438,8 +452,8 @@ public enum JvmOp implements JynxOp {
         return OPMAP.get(opstr);
     }
     
-    private static JvmOp getOp(JvmOp jop, Object suffix) {
-        String base = jop.toString();
+    private JvmOp getSuffixedOp(Object suffix) {
+        String base = this.externalName;
         int index = base.indexOf('_');
         if (index >= 0) {
             base = base.substring(0,index);
@@ -447,34 +461,68 @@ public enum JvmOp implements JynxOp {
         String exact = base + "_" + suffix.toString();
         JvmOp result = OPMAP.get(exact);
         Objects.nonNull(result);
-        if (jop.requires != result.requires) {
+        if (requires != result.requires) {
             // "features for %s and %s differ"
-            LOG(M246,jop,result);
+            LOG(M246,this,result);
         }
         return result;
     }
     
-    public  static JvmOp exactVar(JvmOp jop, int v) {
-        jop.checkArg(arg_var);
-        if (v >= 0 && v <= 3 && jop != JvmOp.asm_ret) {
-            return getOp(jop,v);
+    public  JvmOp exactVar(int v) {
+        checkArg(arg_var);
+        if (v >= 0 && v <= 3 && this != JvmOp.asm_ret) {
+            return getSuffixedOp(v);
         } else if (!NumType.t_byte.isInUnsignedRange(v)) {
-            return getOp(jop,'w');
+            return getSuffixedOp('w');
         }
-        return jop;
+        return this;
     }
     
-    public  static JvmOp exactIncr(JvmOp jop, int v, int incr) {
-        jop.checkArg(arg_incr);
+    public JvmOp exactIncr(int v, int incr) {
+        checkArg(arg_incr);
         if (NumType.t_byte.isInUnsignedRange(v) && NumType.t_byte.isInRange(incr)) {
-            return jop;
+            return this;
         }
-        return getOp(jop,'w');
+        return getSuffixedOp('w');
     }
 
+    public JvmOp widePrepended() {
+        checkArg(arg_var,arg_incr);
+        return getSuffixedOp('w');
+    }
+    
+    public JvmOp wideFormOf() {
+        return isWideForm()? this: getSuffixedOp('w');
+    }
+    
+    public boolean isWideForm() {
+        return externalName.endsWith("_w");
+    }
+
+    private String suffix() {
+        int index = externalName.indexOf('_');
+        if (index < 0) {
+            return "";
+        }
+        return externalName.substring(index + 1);
+    }
+    
+    public Integer numericSuffix() {
+        String suffix = suffix();
+        switch(suffix) {
+            case "w":
+            case "":
+                return null;
+            case "m1":
+                return -1;
+            default:
+                return Integer.valueOf(suffix);
+        }
+    }
+    
     @Override
     public String toString() {
-        return name().substring(4);
+        return externalName;
     }
         
     public static Stream<JvmOp> getASMOps() {
@@ -482,29 +530,4 @@ public enum JvmOp implements JynxOp {
                 .filter(m-> m.name().startsWith("asm_"));
     }
     
-    public static void main(String[] args) {
-        System.out.println("XRETURN");
-        Stream.of(values())
-                .filter(JvmOp::isReturn)
-                .forEach(System.out::println);
-        System.out.println();
-        System.out.println();
-        System.out.println("GO or xRETRUN");
-        Stream.of(values())
-                .filter(JvmOp::isUnconditional)
-                .forEach(System.out::println);
-        System.out.println();
-        System.out.println();
-        System.out.println("STACK");
-        Stream.of(values())
-                .filter(JvmOp::isStack)
-                .forEach(System.out::println);
-        System.out.println();
-        System.out.println();
-        System.out.println("VARTYPE");
-        Stream.of(values())
-                .filter(op->op.args == arg_var)
-                .forEach(op->System.out.format("%s '%c'%n", op.name(),op.vartype()));
-    }
-
 }

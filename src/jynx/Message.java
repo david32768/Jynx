@@ -21,7 +21,7 @@ public enum Message {
     M14(BLANK,"if necessary reduces JVM release to maximum supported by ASM version"),
     M15(BLANK,"warn if names non-standard"),
     M16(BLANK,"use ASM BasicVerifier instead of ASM SimpleVerifier"),
-    M17(BLANK,"prints constant pool at end"),
+    M17(BLANK,"prints constant pool, instructions and other detail"),
     M18(BLANK,"do not produce annotations"),
     M19(BLANK,"use supplied stack map instead of ASM generated"),
     M20("invalid major version - %s"),
@@ -325,8 +325,12 @@ public enum Message {
     M323(WARNING,"by adding dflt entries %s (size %d) would still be smaller than %s (size %d); range = %d labels = %d"),
     M324("translation %s -> %s is invalid; %s is not a valid key"),
     M325("translation %s -> %s is invalid; %s is not a valid value"),
-
+    M326(BLANK,";%s  offset = [%d,%d]"),
     M327(INFO,"added: %s %s"),
+    M328(WARNING,"%s nest level is already zero"),
+    M329(INFO,"print options = %s"),
+    M330("%s without low value will be parsed as %s"),
+    M331("%s without low value changed to %s as entries are not consecutive"),
     //
     M335("index (%d) is not a current try index [0,%d]"),
 
@@ -350,12 +354,12 @@ public enum Message {
     M412("%s not supported"),
 
     M500("magic number is %#x; should be %#x"),
-    M501("label offset (%d) > code size (%d)"),
+    M501("label offset (%d) is negative or greater than code size (%d)"),
     M502("%s %s has %d extra bytes at end"),
     M503("startpc (%d) > endpc (%d)"),
-    M504("multiple %s attributes in %s"),
+    M504("offset %d is not an instruction"),
     M505("maximum bootcp used by constant pool (%d)  is greater than supplied in attribute (size = %d)"),
-    M506("CP entry is %s but should be %s"),
+
     M507("boot argument %s is not loadable by %s"),
     M508("actual end(%#x) of %s does not match expected %#x"),
     M509("size (%#x) is greater than (%#x) remaining"),
@@ -364,8 +368,8 @@ public enum Message {
     M512("bad byte sequence %2x %2x %2x"),
     M513("bad byte sequence = %x"),
     M514("entry %d (%s) refers to index %d (%s) but expected to be in %s"),
-    M515("number of cp entries (%d) does not equal number required for type (5d)"),
-    M516("label offset %d length %d is > code size %d"),
+    M515("number of cp entries (%d) for entry %d does not equal number required for type (5d)"),
+    M516("low %d must be less than or equal to high %d"),
     M517("duplicate attribute %s in contexr %s"),
     M518("local variable %d is >= max locals %d"),
     M519("cpentry type %s is invalid for %s"),
@@ -373,6 +377,8 @@ public enum Message {
     M521("invalid tag %d"),
     M522("CPIndex %d is invalid as points to middle of %s entry"),
     M523("typeref %s (%#x) not valid in context %s"),
+    M524("branches to middle of instruction - %s"),
+    M525("CP entry is %s but should be one of %s"),
     
     M800(ENDINFO,"line number 0 changed to 1; ASM Issue #317989"),
     M801(FINE,"min length = %d max length = %d"),

@@ -85,6 +85,14 @@ public class StackLocals {
         return stack;
     }
 
+    public int getMinLength() {
+        return minLength;
+    }
+
+    public int getMaxLength() {
+        return maxLength;
+    }
+
     public JvmOp getReturnOp() {
         return returnOp;
     }

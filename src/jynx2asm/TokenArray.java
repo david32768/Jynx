@@ -25,7 +25,7 @@ public interface TokenArray extends TokenDeque, AutoCloseable {
         if (token.is(ReservedWord.dot_array)) {
             return new DotArray(js, line);
         }
-        if (token.toString().startsWith(ReservedWord.left_array.externalName())) {
+        if (token.asString().startsWith(ReservedWord.left_array.externalName())) {
             return new LineArray(line);
         }
         return new ElementArray(line);

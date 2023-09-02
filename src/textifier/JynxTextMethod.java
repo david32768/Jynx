@@ -164,7 +164,7 @@ public class JynxTextMethod extends JynxText {
     @Override
     public void visitTryCatchBlock(
             final Label start, final Label end, final Label handler, final String type) {
-        String exception = type == null ? res_all.toString() : type;
+        String exception = type == null ? res_all.externalName() : type;
         jsb.start(2)
                 .append(dir_catch)
                 .append(exception)
@@ -233,16 +233,15 @@ public class JynxTextMethod extends JynxText {
         defineLabels(dflt, labels);
         jsb.start(2)
                 .append(JvmOp.asm_tableswitch)
-                .append(min)
                 .append(res_default)
                 .appendLabel(dflt)
                 .append(dot_array)
                 .nl()
                 .incrDepth();
         for (int i = 0; i < labels.length; ++i) {
-            jsb.appendLabel(labels[i])
-                    .comment()
-                    .append(min + i)
+            jsb.append(min + i)
+                    .append("->")
+                    .appendLabel(labels[i])
                     .nl();
         }
         jsb.decrDepth()

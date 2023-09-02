@@ -160,7 +160,7 @@ public class Insn2Jynx {
     
     private void arg_incr(AbstractInsnNode in) {
         IincInsnNode incn = (IincInsnNode)in;
-        JvmOp jop = JvmOp.exactIncr(asmop,incn.var, incn.incr);
+        JvmOp jop = asmop.exactIncr(incn.var, incn.incr);
         lb.append(jop).append(incn.var).append(incn.incr).nl();
     }
 
@@ -215,13 +215,16 @@ public class Insn2Jynx {
     private void arg_tableswitch(AbstractInsnNode in) {
         TableSwitchInsnNode tsin = (TableSwitchInsnNode)in;
         lb.append(JvmOp.asm_tableswitch)
-                .append(tsin.min)
                 .append(ReservedWord.res_default,tsin.dflt)
                 .append(ReservedWord.dot_array)
                 .nl();
+        int i = tsin.min;
         for (LabelNode labelnode:tsin.labels) {
-            lb.appendLabelNode(labelnode)
+            lb.append(i)
+                    .append("->")
+                    .appendLabelNode(labelnode)
                     .nl();
+            ++i;
         }
         lb.append(Directive.end_array)
                 .nl();
@@ -230,7 +233,7 @@ public class Insn2Jynx {
     private void arg_var(AbstractInsnNode in) {
         VarInsnNode varnode = (VarInsnNode)in;
         int v = varnode.var;
-        JvmOp jop = JvmOp.exactVar(asmop,v);
+        JvmOp jop = asmop.exactVar(v);
         if (jop.isImmediate()) {
             lb.append(jop).nl();
         } else {

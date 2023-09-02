@@ -216,8 +216,7 @@ public enum Directive implements JvmVersioned {
         return QUOTED_ARGS.contains(this);
     }
     
-    @Override
-    public String toString() {
+    public String externalName() {
         String name = name();
         if (name.startsWith("dir_")) {
             return Line.DIRECTIVE_INICATOR + name.substring(4);
@@ -226,6 +225,11 @@ public enum Directive implements JvmVersioned {
             return Line.DIRECTIVE_INICATOR + name;
         }
         return name;
+    }
+
+    @Override
+    public String toString() {
+        return externalName();
     }
 
     private static Optional<Directive> getInstance(String dirtoken) {
