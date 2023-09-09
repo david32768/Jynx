@@ -17,6 +17,7 @@ import jvm.ConstantPoolType;
 import jvm.HandleType;
 import jvm.JvmVersion;
 import jynx.LogIllegalArgumentException;
+import jynx.StringUtil;
 
 public class ConstantPool {
 
@@ -167,7 +168,8 @@ public class ConstantPool {
     
     private String stringValue(CPEntry cpe, BitSet bootset) {
         Object value = cpe.getValue();
-        switch(cpe.getType().getEntryType()) {
+        ConstantPoolType cpt = cpe.getType();
+        switch(cpt.getEntryType()) {
             case INDIRECT:
                 int[] indices = (int[])value;
                 StringBuilder sb = new StringBuilder();
@@ -189,14 +191,13 @@ public class ConstantPool {
                 int bootstrap = indices[0];
                 bootset.set(bootstrap);
                 return String.format("BOOTSTRAP %d %s", bootstrap, toString(indices[1], bootset));
+            case LONG:
+                return value.toString() + 'L';
+            case FLOAT:
+                return value.toString() + 'F';
+            default:
+                return value.toString();
         }
-        String suffix = "";
-        if (value instanceof Long) {
-            suffix = "L"; 
-        } else if (value instanceof Float) {
-            suffix = "F";
-        }
-        return value.toString() + suffix;
     }
 
     public void printCP(IndentPrinter ptr, boolean bootonly) {
@@ -211,7 +212,11 @@ public class ConstantPool {
             BitSet bootset = new BitSet(bootstraps.size());
             String cpstr = stringValue(cp, bootset);
             if (!bootonly || !bootset.isEmpty()) {
-                entryptr.println("%-4d %-24s %s", i,cp.getType(),cpstr);
+                ConstantPoolType cpt = cp.getType();
+                if (cpt == ConstantPoolType.CONSTANT_String) {
+                    cpstr = StringUtil.QuoteEscape(cpstr);
+                }
+                entryptr.println("%-4d %-24s %s", i,cpt,cpstr);
                 if (bootonly && !bootset.isEmpty()) {
                     for (int j = bootset.nextSetBit(0); j >= 0; j = bootset.nextSetBit(j+1)) {
                        printBoot(bootptr,j);

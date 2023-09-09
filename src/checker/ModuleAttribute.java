@@ -6,7 +6,7 @@ import jvm.StandardAttribute;
 public class ModuleAttribute extends AttributeInstance {
 
     public ModuleAttribute(StandardAttribute attr, AttributeBuffer buffer) {
-        super(attr,attr.name(),buffer);
+        super(attr, buffer);
         assert attr == StandardAttribute.Module;
     }
 

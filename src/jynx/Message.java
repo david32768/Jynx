@@ -359,7 +359,7 @@ public enum Message {
     M503("startpc (%d) > endpc (%d)"),
     M504("offset %d is not an instruction"),
     M505("maximum bootcp used by constant pool (%d)  is greater than supplied in attribute (size = %d)"),
-
+    M506("non-optional constant pool entry is missing; expected %s"),
     M507("boot argument %s is not loadable by %s"),
     M508("actual end(%#x) of %s does not match expected %#x"),
     M509("size (%#x) is greater than (%#x) remaining"),
@@ -379,6 +379,8 @@ public enum Message {
     M523("typeref %s (%#x) not valid in context %s"),
     M524("branches to middle of instruction - %s"),
     M525("CP entry is %s but should be one of %s"),
+    M526("type_path_kind = %d is not in range [0,3]"),
+    M527("type_argument_index is %d but must be 0 for type_path_kind [0,2]"),
     
     M800(ENDINFO,"line number 0 changed to 1; ASM Issue #317989"),
     M801(FINE,"min length = %d max length = %d"),

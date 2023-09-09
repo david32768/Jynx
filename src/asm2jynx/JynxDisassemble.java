@@ -125,6 +125,7 @@ public class JynxDisassemble {
                 .incrDepth()
                 .appendDir(dir_super, cn.superName);
         annotator.printAnnotations(cn.visibleAnnotations,cn.invisibleAnnotations);
+        printInner();
         jp.decrDepth();
     }
     

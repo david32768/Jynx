@@ -11,8 +11,8 @@ import jvm.Context;
 
 public class Buffer {
 
-    private final ConstantPool pool;
-    private final ByteBuffer bb;
+    protected final ConstantPool pool;
+    protected final ByteBuffer bb;
 
     public Buffer(ConstantPool pool, ByteBuffer bb) {
         this.pool = pool;
@@ -77,12 +77,17 @@ public class Buffer {
     }
     
     public Optional<CPEntry> nextOptCPEntry(ConstantPoolType cptype) {
+        Optional<CPEntry> optentry = nextOptCPEntry();
+        optentry.ifPresent(cp->cp.getType().checkCPType(cptype));
+        return optentry;
+    }
+    
+    public Optional<CPEntry> nextOptCPEntry() {
         int cpindex = nextUnsignedShort();
         if (cpindex == 0) {
             return Optional.empty();
         }
         CPEntry cp = pool.getEntry(cpindex);
-        cp.getType().checkCPType(cptype);
         return Optional.of(cp);
     }
     
@@ -103,23 +108,8 @@ public class Buffer {
         return pool.getType(methodref);
     }
 
-    protected Buffer duplicate() {
-        return new Buffer(pool,bb.duplicate());
-    }
-    
-    public Buffer extract(int size) {
-        Buffer partbuff = duplicate();
-        advance(size);
-        partbuff.limit(position());
-        return partbuff;
-    }
-    
-    public AttributeBuffer attributeBuffer(Context context) {
-        return new AttributeBuffer(pool, bb, context);
-    }
-    
-    public CodeBuffer codeBuffer(int maxlocals, int codesz) {
-        return new CodeBuffer(pool, bb, maxlocals, codesz);
+    public AttributeBuffer attributeBuffer(Context context, String name, int size) {
+        return new AttributeBuffer(pool, extract(size), context, name);
     }
     
     public int position() {
@@ -150,4 +140,11 @@ public class Buffer {
         throw new UnsupportedOperationException();
     }
         
+    protected ByteBuffer extract(int size) {
+        ByteBuffer tobb = bb.duplicate();
+        advance(size);
+        tobb.limit(position());
+        return tobb;
+    }
+    
 }

@@ -121,6 +121,33 @@ public class Structure {
         }
     }
 
+    private void check_attrs(Context context, IndentPrinter ptr, Buffer buffer) {
+
+        Set<Attribute> attrset = new HashSet<>();
+        int attrs_ct = buffer.nextUnsignedShort();
+        for (int i = 0; i < attrs_ct; ++i) {
+            int start_offset = buffer.position();
+            String attrnamestr = (String)buffer.nextPoolValue();
+            int size = buffer.nextSize();
+            AttributeBuffer attrbuff = buffer.attributeBuffer(context, attrnamestr, size);
+            AttributeInstance attr = AttributeInstance.getInstance(attrbuff);
+            String attrdesc = attr.attrDesc(jvmVersion);
+            ptr.println("%s start = %#x length = %#x",
+                    attrdesc, start_offset, attr.sizs());
+            if (!attr.isKnown()) {
+                continue;
+            }
+            Attribute attribute = attr.attribute();
+            boolean added = attrset.add(attribute);
+            if (!added && attribute.isUnique()) {
+                // "duplicate attribute %s in contexr %s"
+                LOG(M517,attr,context);
+            }
+            checkAttributeStructure(ptr.shift(),attr);
+            attr.checkAtLimit();
+        }
+    }
+
     private void checkAttributeStructure(IndentPrinter ptr,AttributeInstance attrx) {
         Attribute attr = attrx.attribute();
         AttributeBuffer attrbuff = attrx.buffer();
@@ -143,40 +170,8 @@ public class Structure {
         }
     }
 
-    private void check_attrs(Context context, IndentPrinter ptr, Buffer buffer) {
-
-        Set<Attribute> attrset = new HashSet<>();
-        int attrs_ct = buffer.nextUnsignedShort();
-        for (int i = 0; i < attrs_ct; ++i) {
-            int start_offset = buffer.position();
-            String attrnamestr = (String)buffer.nextPoolValue();
-            int size = buffer.nextSize();
-            AttributeBuffer attrbuff = buffer.extract(size).attributeBuffer(context);
-            AttributeInstance attr = AttributeInstance.getInstance(attrnamestr, attrbuff);
-            String attrdesc = attr.attrDesc(jvmVersion);
-            ptr.println("%s start = %#x length = %#x",
-                    attrdesc, start_offset, attr.sizs());
-            if (!attr.isKnown()) {
-                continue;
-            }
-            Attribute attribute = attr.attribute();
-            boolean added = attrset.add(attribute);
-            if (!added && attribute.isUnique()) {
-                // "duplicate attribute %s in contexr %s"
-                LOG(M517,attr,context);
-            }
-            checkAttributeStructure(ptr.shift(),attr);
-            attr.checkAtLimit();
-        }
-    }
-
     private void checkCode(IndentPrinter ptr, AttributeBuffer attrbuff) {
-        attrbuff.nextShort(); // max stack
-        int maxlocals = attrbuff.nextShort(); //max locals
-        int codesz = attrbuff.nextSize(); // code length
-        CodeBuffer codebuff = attrbuff.codeBuffer(maxlocals, codesz);
-        CodeBuffer instbuff = codebuff.extract(codesz);
-        checkInsn(ptr.shift(), instbuff);
+        CodeBuffer codebuff = attrbuff.codeBuffer(ptr);
         int ct = codebuff.nextUnsignedShort();
         for (int i = 0; i < ct; ++i) {
             int startpc = codebuff.nextLabel();
@@ -191,148 +186,6 @@ public class Structure {
         check_attrs(CODE, ptr, codebuff);
     }
 
-    private void checkInsn(IndentPrinter ptr, CodeBuffer instbuff) {
-        int start = instbuff.position();
-        while(instbuff.hasRemaining()) {
-            int instoff = instbuff.position() - start;
-            instbuff.setPosLabel(instoff);
-            int opcode = instbuff.nextUnsignedByte();
-            int read = 1;
-            JvmOp jop = JvmOp.getOp(opcode);
-            if (jop == JvmOp.opc_wide) {
-                opcode = instbuff.nextUnsignedByte();
-                jop = JvmOp.getOp(opcode);
-                jop = jop.widePrepended();
-                read = 2;
-            }
-            OpArg arg = jop.args();
-            boolean print = OPTION(GlobalOption.DETAIL);
-            switch(arg) {
-                case arg_lookupswitch:
-                    instbuff.align4(instoff + 1);
-                    int deflab = instbuff.nextBranchLabel(instoff);
-                    if (print) {
-                        ptr.println("%5d:  %s default @%d .array", instoff, jop, deflab);
-                    }
-                    int n = instbuff.nextSize();
-                    for (int i = 0; i < n; ++i) {
-                        int value = instbuff.nextInt();
-                        int brlab = instbuff.nextBranchLabel(instoff);
-                        if (print) {
-                            ptr.println("             %d -> @%d", value, brlab);
-                        }
-                    }
-                    if (print) {
-                        ptr.println("        .end_array");
-                    }
-                    break;
-                case arg_tableswitch:
-                    instbuff.align4(instoff + 1);
-                    deflab = instbuff.nextBranchLabel(instoff);
-                    if (print) {
-                        ptr.println("%5d:  %s default @%d .array", instoff, jop, deflab);
-                    }
-                    int low = instbuff.nextInt();
-                    int high = instbuff.nextInt();
-                    if (low > high) {
-                        // "low %d must be less than or equal to high %d"
-                        LOG(M516,low,high);
-                    }
-                    for (int i = low; i <= high; ++i) {
-                        int brlab = instbuff.nextBranchLabel(instoff);
-                        if (print) {
-                            ptr.println("             %d -> @%d", i, brlab);
-                        }
-                    }
-                    if (print) {
-                        ptr.println("        .end_array");
-                    }
-                    break;
-                default:
-                    String extra = extra(instbuff, jop, instoff);
-                    if (print) {
-                        ptr.println("%5d:  %s%s", instoff, jop, extra);
-                    }
-                    assert start + instoff + jop.length() == instbuff.position();
-                    break;
-            }
-        }
-        instbuff.checkLabels();
-    }
-    
-    public String extra(CodeBuffer instbuff, JvmOp jop, int instoff) {
-        OpArg arg = jop.args();
-        String result = "";
-        for (OpPart fmt:arg.getParts()) {
-            String extra;
-            switch(fmt) {
-                case CP:
-                    CPEntry cp;
-                    if (jop == JvmOp.asm_ldc) {
-                        cp = instbuff.nextCPEntryByte();
-                    } else {
-                        cp = instbuff.nextCPEntry();
-                    }
-                    extra = instbuff.stringValue(cp);
-                    arg.checkCPType(cp.getType());
-                    break;
-                case LABEL:
-                    int jmplab = jop.isWideForm()?
-                            instbuff.nextBranchLabel(instoff):
-                            instbuff.nextIfLabel(instoff);
-                    extra = "@" + Integer.toString(jmplab);
-                    break;
-                case VAR:
-                    int var;
-                    if (jop.isImmediate()) {
-                        var = jop.numericSuffix();
-                    } else if (jop.isWideForm()) {
-                        var = instbuff.nextUnsignedShort();
-                    } else {
-                        var = instbuff.nextUnsignedByte();
-                    }
-                    instbuff.checkLocalVar(var);
-                    extra = jop.isImmediate()? "": Integer.toString(var);
-                    break;
-                case INCR:
-                    int incr;
-                    if (jop.isWideForm()) {
-                        incr = instbuff.nextShort();
-                    } else {
-                        incr = instbuff.nextByte();
-                    }
-                    extra = Integer.toString(incr);
-                    break;
-                case BYTE:
-                    int b = instbuff.nextByte();
-                    extra = Integer.toString(b); 
-                    break;
-                case SHORT:
-                    int s = instbuff.nextShort();
-                    extra = Integer.toString(s);
-                    break;
-                case TYPE:
-                    int t = instbuff.nextUnsignedByte();
-                    extra = NumType.getInstance(t).externalName();
-                    break;
-                case UBYTE:
-                    int u = instbuff.nextUnsignedByte();
-                    extra = Integer.toString(u);
-                    break;
-                case ZERO:
-                    int z = instbuff.nextByte();
-                    extra = "";
-                    break;
-                default:
-                    throw new EnumConstantNotPresentException(fmt.getClass(), fmt.name());
-            }
-            if (!extra.isEmpty()) {
-                result += " " + extra;
-            }
-        }
-        return result;
-    }
-    
     private void checkRecord(IndentPrinter ptr, AttributeBuffer attrbuff) {
         int ct = attrbuff.nextUnsignedShort();
         for (int j = 0; j < ct;++j) {

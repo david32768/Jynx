@@ -2,7 +2,10 @@ package checker;
 
 import java.util.function.BiConsumer;
 
+import static jynx.Global.LOG;
 import static jynx.Message.M523;
+import static jynx.Message.M526;
+import static jynx.Message.M527;
 
 import jvm.AttributeEntry;
 import jvm.ConstantPoolType;
@@ -56,7 +59,7 @@ public class AnnotationEntry {
     }
     
     private void checkAnnotation() {
-        buffer.nextCPEntry(ConstantPoolType.CONSTANT_Utf8); // type
+        CPEntry cpe = buffer.nextCPEntry(ConstantPoolType.CONSTANT_Utf8); // type
         checkAnnotationValues();
     }
 
@@ -202,11 +205,13 @@ public class AnnotationEntry {
         for (int i = 0; i < path_length; ++i) {
             int type_path_kind = buffer.nextUnsignedByte();
             if (type_path_kind > 4) {
-                
+                // "type_path_kind = %d is not in range [0,3]"
+                LOG(M526, type_path_kind);
             }
             int type_argument_index = buffer.nextUnsignedByte();
             if (type_argument_index != 0 && type_path_kind != 3) {
-                
+                // "type_argument_index is %d but must be 0 for type_path_kind [0,2]"
+                LOG(M527, type_argument_index);
             }
         }
         checkAnnotation();

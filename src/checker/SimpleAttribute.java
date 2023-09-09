@@ -1,16 +1,19 @@
 package checker;
 
+import java.util.Optional;
 import static jynx.Global.LOG;
+import static jynx.Message.M506;
 import static jynx.Message.M519;
 
 import jvm.AttributeEntry;
 import jvm.ConstantPoolType;
 import jvm.StandardAttribute;
+import jynx.LogIllegalArgumentException;
 
 public class SimpleAttribute extends AttributeInstance {
 
     public SimpleAttribute(StandardAttribute attr, AttributeBuffer buffer) {
-        super(attr, attr.name(), buffer);
+        super(attr, buffer);
     }
 
     @Override
@@ -23,11 +26,12 @@ public class SimpleAttribute extends AttributeInstance {
                     AttributeChecker.check(entry, ptr, buffer);
                     continue;
                 }
-                int cpindex = buffer.nextUnsignedShort();
-                if (entry.isOptional() && cpindex == 0) {
-                    continue;
+                Optional<CPEntry> optentry = buffer.nextOptCPEntry();
+                if (!optentry.isPresent() && entry.isOptional()) {
+                        continue;
                 }
-                CPEntry cp = pool.getEntry(cpindex);
+                // "non-optional constant pool entry is missing; expected %s"
+                CPEntry cp = optentry.orElseThrow(() -> new LogIllegalArgumentException(M506,entry));
                 ConstantPoolType cptype = cp.getType();
                 if (!entry.contains(cptype)) {
                     // "cpentry type %s is invalid for %s"

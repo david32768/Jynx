@@ -5,40 +5,23 @@ import static jynx.Global.LOG;
 import static jynx.Message.M508;
 
 import jvm.Attribute;
-import jvm.Context;
 import jvm.JvmVersion;
 import jvm.StandardAttribute;
 
 public abstract class AttributeInstance {
     
-    protected final int level;
     protected final String name;
     protected final AttributeBuffer buffer;
     protected final int size;
     protected final Attribute attr;
-    protected final ConstantPool pool;
 
-    public AttributeInstance(Attribute attr, String name, AttributeBuffer buffer) {
+    public AttributeInstance(Attribute attr, AttributeBuffer buffer) {
         this.attr = attr;
-        this.level = level(buffer.context());
-        this.name = name;
+        this.name = buffer.name();
         this.buffer = buffer;
-        this.pool = buffer.pool();
         this.size = buffer.limit() - buffer.position();
     }
 
-    private static int level(Context context) {
-        switch(context) {
-                case COMPONENT:
-                case CODE:
-                    return 2;
-                case CLASS:
-                    return 0;
-                default:
-                    return 1;
-        }
-    }
-    
     @Override
     public String toString() {
         return name;
@@ -50,10 +33,6 @@ public abstract class AttributeInstance {
 
     public AttributeBuffer buffer() {
         return buffer;
-    }
-
-    public int level() {
-        return level;
     }
 
     public boolean isKnown() {
@@ -95,12 +74,12 @@ public abstract class AttributeInstance {
         throw new AssertionError();
     }
 
-    public static AttributeInstance getInstance(String attrname, AttributeBuffer attrbuff) {
+    public static AttributeInstance getInstance(AttributeBuffer attrbuff) {
         
-       StandardAttribute uattr = StandardAttribute.getInstance(attrname);
+       StandardAttribute uattr = StandardAttribute.getInstance(attrbuff.name());
         try {
             if (uattr == null) {
-                return new UnknownAttribute(attrname, attrbuff);
+                return new UnknownAttribute(attrbuff);
             } else {
                 switch(uattr.type()) {
                     case MODULE:
