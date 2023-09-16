@@ -16,8 +16,8 @@ public class LookupInstruction extends SwitchInstruction {
     private final JynxLabel dflt;
     private final Map<Integer,JynxLabel> intlabels;
 
-    public LookupInstruction(JvmOp jop, JynxLabel dflt, Map<Integer,JynxLabel> intlabels) {
-        super(jop, minsize(intlabels.size()));
+    public LookupInstruction(JynxLabel dflt, Map<Integer,JynxLabel> intlabels) {
+        super(JvmOp.asm_lookupswitch, minsize(intlabels.size()));
         this.dflt = dflt;
         this.intlabels = intlabels;
     }

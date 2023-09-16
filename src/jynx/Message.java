@@ -230,7 +230,7 @@ public enum Message {
     M227(WARNING,"possible serialization method %s does not match %s"),
     M228(WARNING,"indent %d found but expected %d"),
     M229("duplicate key %d; previous target = %s, current target = %s"),
-    M230(WARNING,"keys should be in ascending order; key = %d; previous key = %s"),
+
     M231(WARNING,"Last instruction was %s: expected %s"),
     M232("Last instruction was %s: expected %s"),
     M233("Duplicate entry %s in %s: previous entry at line %d"),
@@ -329,8 +329,8 @@ public enum Message {
     M327(INFO,"added: %s %s"),
     M328(WARNING,"%s nest level is already zero"),
     M329(INFO,"print options = %s"),
-    M330("%s without low value will be parsed as %s"),
-    M331("%s without low value changed to %s as entries are not consecutive"),
+    M330(WARNING,"%s will be parsed as %s (remove low and add <number> -> )"),
+    M331("%s changed to %s as entries are not consecutive"),
     //
     M335("index (%d) is not a current try index [0,%d]"),
 

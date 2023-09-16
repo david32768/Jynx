@@ -18,8 +18,9 @@ public class TableInstruction extends SwitchInstruction {
     private final JynxLabel dflt;
     private final Collection<JynxLabel> labels;
 
-    public TableInstruction(JvmOp jop, int min, int max, JynxLabel dflt, Collection<JynxLabel> labels) {
-        super(jop, minsize(labels.size()));
+    public TableInstruction(int min, int max, JynxLabel dflt, Collection<JynxLabel> labels) {
+        super(JvmOp.asm_tableswitch, minsize(labels.size()));
+        assert min <= max;
         this.min = min;
         this.max = max;
         this.dflt = dflt;

@@ -154,13 +154,12 @@ public class String2Insn {
             case arg_field:insn = arg_field(jvmop);break;
             case arg_incr:insn = arg_incr(jvmop);break;
             case arg_label:insn = arg_label(jvmop,instlist.isUnreachable());break;
-            case arg_lookupswitch:insn = arg_lookupswitch(jvmop);break;
             case arg_marray:insn = arg_marray(jvmop);break;
             case arg_method:case arg_interface:insn = arg_method(jvmop);break;
             case arg_none:insn = arg_none(jvmop);break;
             case arg_short:insn = arg_short(jvmop);break;
             case arg_stack:insn = arg_stack(jvmop);break;
-            case arg_tableswitch:insn = arg_tableswitch(jvmop);break;
+            case arg_switch:insn = arg_switch(jvmop);break;
             case arg_var:insn = arg_var(jvmop);break;
             default:
                 throw new EnumConstantNotPresentException(oparg.getClass(), oparg.name());
@@ -312,49 +311,6 @@ public class String2Insn {
         return new JumpInstruction(jvmop,jlab);
     }
 
-    private Instruction arg_lookupswitch(JvmOp jvmop) {
-        line.nextToken().mustBe(res_default);
-        JynxLabel dflt = getJynxLabel(line.nextToken());
-        SortedMap<Integer,JynxLabel> swmap = new TreeMap<>();
-        Integer min = null;
-        Integer lastkey = null;
-        Integer errkey = null;
-        Integer previous = null;
-        try (TokenArray dotarray = line.getTokenArray()) {
-            multi |= dotarray.isMultiLine(); 
-            while (true) {
-                Token token = dotarray.firstToken();
-                if (token.is(right_array)) {
-                    if (errkey != null) {
-                        // "keys should be in ascending order; key = %d; previous key = %s"
-                        LOG(M230,errkey,previous);
-                    }
-                    return SwitchInstruction.getInstance(jvmop, dflt, swmap);
-                }
-                if (swmap.isEmpty() && jvmop == JvmOp.asm_tableswitch && !dotarray.peekToken().is(right_arrow)) {
-                    // "%s without low value will be parsed as %s"
-                    LOG(M330,JvmOp.asm_tableswitch, JvmOp.opc_switch);
-                }
-                Integer key = token.asInt();
-                if (min == null) {
-                    min = key;
-                }
-                dotarray.nextToken().mustBe(right_arrow);
-                JynxLabel target = getJynxLabel(dotarray.nextToken());
-                JynxLabel mustbenull = swmap.put(key, target);
-                if (mustbenull != null) {
-                    // "duplicate key %d; previous target = %s, current target = %s"
-                    LOG(M229,key,mustbenull.name(),target.name());
-                } else if (errkey == null && lastkey != null && key <= lastkey) {
-                    errkey = key;
-                    previous = lastkey;
-                }
-                lastkey = key;
-                dotarray.noMoreTokens();
-            }
-        }
-    }
-
     private Instruction arg_marray(JvmOp jvmop) {
         String desc = line.nextToken().asString();
         ARRAY_DESC.validate(desc);
@@ -390,6 +346,51 @@ public class String2Insn {
         return new StackInstruction(jvmop);
     }
 
+    private Instruction arg_switch(JvmOp jvmop) {
+        Token token1 = line.nextToken();
+        int low = 0;
+        if (jvmop == JvmOp.asm_tableswitch && !token1.mayBe(res_default).isPresent()) {
+            // "%s will be parsed as %s (remove low and add <number> -> )"
+            LOG(M330,JvmOp.asm_tableswitch, JvmOp.opc_switch);
+            low = token1.asInt();
+            token1 = line.nextToken();
+        }
+        token1.mustBe(res_default);
+        JynxLabel dflt = getJynxLabel(line.nextToken());
+        SortedMap<Integer,JynxLabel> swmap = new TreeMap<>();
+        try (TokenArray dotarray = line.getTokenArray()) {
+            multi |= dotarray.isMultiLine(); 
+            while (true) {
+                Token value = dotarray.firstToken();
+                Token label;
+                if (value.is(right_array)) {
+                    return SwitchInstruction.getInstance(jvmop, dflt, swmap);
+                }
+                int key;
+                if (jvmop == JvmOp.asm_tableswitch && !dotarray.peekToken().is(right_arrow)) {
+                    if (swmap.isEmpty()) {
+                        // "%s will be parsed as %s (remove low and add <number> -> )"
+                        LOG(M330,JvmOp.asm_tableswitch, JvmOp.opc_switch);
+                    }
+                    key = low;
+                    ++low;
+                    label = value;
+                } else {
+                    key = value.asInt();
+                    dotarray.nextToken().mustBe(right_arrow);
+                    label = dotarray.nextToken();
+                }
+                JynxLabel target = getJynxLabel(label);
+                JynxLabel mustbenull = swmap.put(key, target);
+                if (mustbenull != null && !mustbenull.equals(target)) {
+                    // "duplicate key %d; previous target = %s, current target = %s"
+                    LOG(M229,key,mustbenull.name(),target.name());
+                }
+                dotarray.noMoreTokens();
+            }
+        }
+    }
+
     private JynxLabel getJynxLabel(Token token) {
         String labstr = token.asString();
         if (OPTION(GlobalOption.__STRUCTURED_LABELS) && Character.isDigit(labstr.codePointAt(0))) {
@@ -399,36 +400,6 @@ public class String2Insn {
         return labelMap.codeUseOfJynxLabel(labstr, line);
     }
 
-    private Instruction arg_tableswitch(JvmOp jvmop) {
-        if (line.peekToken().mayBe(res_default).isPresent()) {
-            return arg_lookupswitch(jvmop);
-        }
-        int min = line.nextToken().asInt();
-        line.nextToken().mustBe(res_default);
-        JynxLabel dflt = getJynxLabel(line.nextToken());
-        List<JynxLabel> labellist = new ArrayList<>();
-        int lct = 0;
-        try (TokenArray dotarray = line.getTokenArray()) {
-            multi |= dotarray.isMultiLine(); 
-            while (true) {
-                Token token = dotarray.firstToken();
-                if (token.is(right_array)) {
-                    break;
-                }
-                JynxLabel label = getJynxLabel(token);
-                labellist.add(label);
-                ++lct;
-                dotarray.noMoreTokens();
-            }
-        }
-        if (lct == 0) {
-            LOG(M224,jvmop,res_default); // "invalid %s as only has %s"
-            labellist.add(dflt);
-            ++lct;
-        }
-        return new TableInstruction(jvmop, min, min + lct - 1,dflt,labellist);
-    }
-    
     private Instruction arg_var(JvmOp jvmop) {
         Token token;
         if (jvmop.isImmediate()) {

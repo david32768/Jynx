@@ -18,13 +18,12 @@ public enum OpArg {
     arg_incr(3, VAR, INCR),
     arg_interface(5, CONSTANT_InterfaceMethodref, CP, UBYTE, ZERO),
     arg_label(3, LABEL),
-    arg_lookupswitch(null, LOOKUPSWITCH),
     arg_marray(4, CONSTANT_Class, CP, UBYTE),
     arg_method(3, EnumSet.of(CONSTANT_Methodref, CONSTANT_InterfaceMethodref), CP),
     arg_none(1),
     arg_short(3, SHORT),
     arg_stack(1),
-    arg_tableswitch(null, TABLESWITCH),
+    arg_switch(null, SWITCH),
     arg_var(2, VAR),
     ;
 

@@ -60,40 +60,24 @@ public class InstBuffer extends AbstractCodeBuffer {
             OpArg arg = jop.args();
             boolean print = OPTION(GlobalOption.DETAIL);
             switch(arg) {
-                case arg_lookupswitch:
+                case arg_switch:
                     align4(instoff + 1);
                     int deflab = nextBranchLabel(instoff);
                     if (print) {
                         ptr.println("%5d:  %s default @%d .array", instoff, jop, deflab);
                     }
-                    int n = nextSize();
-                    for (int i = 0; i < n; ++i) {
-                        int value = nextInt();
-                        int brlab = nextBranchLabel(instoff);
-                        if (print) {
-                            ptr.println("             %d -> @%d", value, brlab);
-                        }
-                    }
-                    if (print) {
-                        ptr.println("        .end_array");
-                    }
-                    break;
-                case arg_tableswitch:
-                    align4(instoff + 1);
-                    deflab = nextBranchLabel(instoff);
-                    if (print) {
-                        ptr.println("%5d:  %s default @%d .array", instoff, jop, deflab);
-                    }
-                    int low = nextInt();
-                    int high = nextInt();
-                    if (low > high) {
+                    boolean lookup = jop == JvmOp.asm_lookupswitch;
+                    long low = lookup? 1: nextInt();
+                    long high = lookup? nextSize(): nextInt();
+                    if (!lookup && low > high) {
                         // "low %d must be less than or equal to high %d"
                         LOG(M516,low,high);
                     }
-                    for (int i = low; i <= high; ++i) {
+                    for (long i = low; i <= high; ++i) {
+                        int value = lookup? nextInt(): (int)i;
                         int brlab = nextBranchLabel(instoff);
                         if (print) {
-                            ptr.println("             %d -> @%d", i, brlab);
+                            ptr.println("             %d -> @%d", value, brlab);
                         }
                     }
                     if (print) {

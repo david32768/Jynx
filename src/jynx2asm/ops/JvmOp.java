@@ -157,7 +157,7 @@ public enum JvmOp implements JynxOp {
     asm_lload(22, 2, "()J", arg_var, LLOAD),
     asm_lmul(105, 1, "(JJ)J", arg_none, LMUL),
     asm_lneg(117, 1, "(J)J", arg_none, LNEG),
-    asm_lookupswitch(171, null, "(I)V", arg_lookupswitch, LOOKUPSWITCH),
+    asm_lookupswitch(171, null, "(I)V", arg_switch, LOOKUPSWITCH),
     asm_lor(129, 1, "(JJ)J", arg_none, LOR),
     asm_lrem(113, 1, "(JJ)J", arg_none, LREM),
     asm_lreturn(173, 1, "(J)V", arg_none, LRETURN),
@@ -183,7 +183,7 @@ public enum JvmOp implements JynxOp {
     asm_sastore(86, 1, "(AII)V", arg_none, SASTORE),
     asm_sipush(17, 3, "()I", arg_short, SIPUSH),
     asm_swap(95, 1, "nt->tn", arg_stack, SWAP),
-    asm_tableswitch(170, null, "(I)V", arg_tableswitch, TABLESWITCH),
+    asm_tableswitch(170, null, "(I)V", arg_switch, TABLESWITCH),
 
     opc_aload_0(42, 1, "()A", arg_var, ALOAD),
     opc_aload_1(43, 1, "()A", arg_var, ALOAD),
@@ -243,7 +243,7 @@ public enum JvmOp implements JynxOp {
     opc_lstore_w(55, 4, "(J)V", arg_var, LSTORE),
     opc_ret_w(169, 4, "()V", arg_var, RET, Feature.subroutines),
 
-    opc_switch(171, null, "(I)V", arg_lookupswitch, LOOKUPSWITCH),
+    opc_switch(171, null, "(I)V", arg_switch, LOOKUPSWITCH),
 
     opc_wide(196, null, "()V", arg_none, NOP),
 

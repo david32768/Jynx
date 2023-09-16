@@ -2,7 +2,9 @@ package asm2jynx;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.objectweb.asm.ConstantDynamic;
@@ -80,13 +82,12 @@ public class Insn2Jynx {
             case arg_field:arg_field(in);break;
             case arg_incr:arg_incr(in);break;
             case arg_label:arg_label(in);break;
-            case arg_lookupswitch:arg_lookupswitch(in);break;
             case arg_marray:arg_marray(in);break;
             case arg_method:case arg_interface:arg_method(in);break;
             case arg_none:arg_none(in);break;
             case arg_short:arg_short(in);break;
             case arg_stack:arg_none(in);break;
-            case arg_tableswitch:arg_tableswitch(in);break;
+            case arg_switch:arg_switch(in);break;
             case arg_var:arg_var(in);break;
             default:
                 throw new EnumConstantNotPresentException(oparg.getClass(), oparg.name());
@@ -171,23 +172,6 @@ public class Insn2Jynx {
     }
 
     
-    private void arg_lookupswitch(AbstractInsnNode in) {
-        LookupSwitchInsnNode lsin = (LookupSwitchInsnNode)in;
-        lb.append(asmop)
-                .append(ReservedWord.res_default,lsin.dflt)
-                .append(ReservedWord.dot_array)
-                .nl();
-        int i = 0;
-        for (LabelNode labelnode:lsin.labels) {
-            lb.append(lsin.keys.get(i))
-                    .append(ReservedWord.right_arrow,labelnode)
-                    .nl();
-            ++i;
-        }
-        lb.append(Directive.end_array)
-                .nl();
-    }
-
     private void arg_marray(AbstractInsnNode in) {
         MultiANewArrayInsnNode manan = (MultiANewArrayInsnNode)in;
         lb.append(asmop).append(manan.desc).append(manan.dims).nl();
@@ -211,18 +195,31 @@ public class Insn2Jynx {
         lb.append(asmop).append(i).nl();
     }
 
-    
-    private void arg_tableswitch(AbstractInsnNode in) {
-        TableSwitchInsnNode tsin = (TableSwitchInsnNode)in;
-        lb.append(JvmOp.asm_tableswitch)
-                .append(ReservedWord.res_default,tsin.dflt)
+    private void arg_switch(AbstractInsnNode in) {
+        LabelNode dflt;
+        int[] keys;
+        List<LabelNode> labels;
+        
+        if (in instanceof LookupSwitchInsnNode) {
+            LookupSwitchInsnNode lsin = (LookupSwitchInsnNode)in;
+            dflt = lsin.dflt;
+            keys = lsin.keys.stream().mapToInt(Integer::intValue).toArray();
+            labels = lsin.labels;
+        } else {
+            TableSwitchInsnNode tsin = (TableSwitchInsnNode)in;
+            dflt = tsin.dflt;
+            keys = IntStream.rangeClosed(tsin.min,tsin.max).toArray();
+            labels = tsin.labels;
+        }
+        assert keys.length == labels.size();
+        lb.append(asmop)
+                .append(ReservedWord.res_default, dflt)
                 .append(ReservedWord.dot_array)
                 .nl();
-        int i = tsin.min;
-        for (LabelNode labelnode:tsin.labels) {
-            lb.append(i)
-                    .append("->")
-                    .appendLabelNode(labelnode)
+        int i = 0;
+        for (LabelNode labelnode:labels) {
+            lb.append(keys[i])
+                    .append(ReservedWord.right_arrow,labelnode)
                     .nl();
             ++i;
         }
