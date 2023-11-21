@@ -12,7 +12,7 @@ import static jynx.Message.*;
 import jynx.LogIllegalArgumentException;
 
 public enum ConstantPoolType implements JvmVersioned {
-    // Table 4.4B; and 4.4C
+    // Table 4.4B and 4.4C
     CONSTANT_Utf8(1,Feature.v1_0_2,null,UTF8),
     CONSTANT_Integer(3,Feature.v1_0_2,V1_0_2,INTEGER),
     CONSTANT_Float(4,Feature.v1_0_2,V1_0_2,FLOAT),

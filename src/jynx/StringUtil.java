@@ -31,7 +31,7 @@ public class StringUtil {
                             c = (char)Integer.parseInt(unicode, 16);
                             i += 4;
                         } catch (NumberFormatException | IndexOutOfBoundsException ex) {
-                            sb.append('\\'); // Bad unicode sequence;
+                            sb.append('\\'); // Bad unicode sequence
                         }
                     } else sb.append('\\');
                     sb.append(c);

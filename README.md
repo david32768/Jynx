@@ -3,10 +3,10 @@
 
 
 This is a rewritten version of [Jasmin](https://github.com/davidar/jasmin)
- using [ASM](https://asm.ow2.io) version 9.5 as a back end.
- (versions 9.1 - 9.4 will reduce maximum JVM version).
+ using [ASM](https://asm.ow2.io) version 9.6 as a back end.
+ (versions 9.1 - 9.5 will reduce maximum JVM version supported).
 It is written in Java V1_8 (apart from module-info.java)
- and supports all features up to V20 except user attributes.
+ and supports all features up to V21 except user attributes.
 
 More checking is done before using ASM. For example
  stack and local variables types are checked assuming
@@ -40,7 +40,8 @@ Usage:
 
 
  roundtrip {options}  class-name|class_file
-   (checks that 2JYNX followed by JYNX produces an equivalent class (according to ASM Textifier))
+   (checks that 2JYNX followed by JYNX produces an equivalent class
+       (according to ASM Textifier))
 
 
 
@@ -53,7 +54,7 @@ Usage:
 
 Options for JYNX are:
 
-*	--SYSIN use SYSIN as input file. (omit .jx_file)
+*	--SYSIN use SYSIN as input file (it can be abbreviated to '-'). (omit .jx_file)
 *	--USE_STACK_MAP use user stack map instead of ASM generated
 *	--WARN_UNNECESSARY_LABEL warn if label unreferenced or alias
 *	--WARN_STYLE warn if names non-standard
@@ -66,7 +67,7 @@ Options for JYNX are:
 *	--TRACE print (ASMifier) trace
 *	--DEBUG exit with stack trace if error
 *	--VERBOSE print all log messages
-
+*	 --TREAT_WARNINGS_AS_ERRORS treat warnings as errors
 
 Options for 2JYNX are:
 
@@ -111,12 +112,14 @@ lookupswitch default DefaultLabel .array
 ```
 *	switch - new "instruction"
 ```
-; same format as lookupswitch but will use tableswitch if that uses less code space
+; same format as lookupswitch but will use tableswitch
+;   if that uses less code space.
 ```
 *	tableswitch - new format
 ```
 ; <high> is always omitted
-; if <low> is omitted will be parsed as switch i.e. requires <num> -> <label>
+; if <low> is omitted will be parsed as switch
+;     i.e. requires <num> -> <label>
 ;     but will generate tableswitch if appropriate
 ;     and will generate error message if <num> are not consecutive.
 
@@ -208,15 +211,14 @@ Changes are
 ; visitInnerClass(name,outer_name,inner_name,access)
 ;	name is inner_class
 
-; Jasmin 2,4
-; .inner class [<access-spec>] [<name>] [inner <classname>] [outer <name>]
+; Jasmin 2.4
+; .inner class <access-spec>? <name>? [inner <classname>] [outer <name>]?
 ;	name after access-spec is inner_name (which can be absent)
 ;	classname is inner_class
 
 ; Jynx
-; .inner_class [<access-spec>] <inner_class> [outer <outer_class>] [innername <innername>]
+; .inner_class <access-spec>? <inner_class> [outer <outer_class>]? [innername <inner_name>]?
 ;	i.e. change 
-
 ; .inner class x inner y$z outer w ; Jasmin 2.4
 .inner_class y$z outer w innername x ; Jynx
 ```
@@ -246,7 +248,7 @@ invokestatic @anInterfaceMethod ; Jynx
 *	default maxparms annotation is numparms(ASM)
 *	[ annotation values must use .array e.g
 ```
-; intArrayValue [I = 0 1 ; Jasmin 2,4
+; intArrayValue [I = 0 1 ; Jasmin 2.4
 intArrayValue [I = .array ; Jynx
 	0
 	1
@@ -283,7 +285,8 @@ intArrayValue [I = .array ; Jynx
 *	add support for method-handle to ldc
 ```
 ; examples
-ldc GS:java/lang/Float.MIN_VALUE()F ; handle for smallest POSITIVE float
+; handle for smallest POSITIVE float
+ldc GS:java/lang/Float.MIN_VALUE()F
 ldc ST:java/lang/Integer.getInteger(Ljava/lang/String;)java/lang/Integer
 
 ; grammar
@@ -350,7 +353,7 @@ ldc ST:java/lang/Integer.getInteger(Ljava/lang/String;)java/lang/Integer
 ```
 ; grammar
 ; .define_module
-; [<class-hdr-directives>]* ; for those which are valid for module (end of jvms 4.1)
+; [<class-hdr-directives>]* ; for those which are valid for module
 ; .module <access-spec> <module-name> [<version>]?
 ; [<main>|<requires>|<exports>|<open>|<uses>|<supports>|<packages>]*
 ; .end_module
@@ -374,7 +377,7 @@ ldc ST:java/lang/Integer.getInteger(Ljava/lang/String;)java/lang/Integer
 ; <provides>* = .provides <service-class-name> with <class-name-array>
 ; <class-name-array> = .array[\n<class-name>]+\n.end_array
 	
-; <packeges>* = .packages <package-name-array>
+; <packages>* = .packages <package-name-array>
 ; <package-name-array> = .array[\n<package-name>]+\n.end_array
 	
 ```

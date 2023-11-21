@@ -13,7 +13,6 @@ import static jynx.Global.*;
 import static jynx.Message.M500;
 import static jynx.Message.M502;
 import static jynx.Message.M503;
-import static jynx.Message.M516;
 import static jynx.Message.M517;
 
 
@@ -23,12 +22,8 @@ import jvm.AttributeType;
 import jvm.ConstantPoolType;
 import jvm.Context;
 import jvm.JvmVersion;
-import jvm.NumType;
-import jvm.OpArg;
-import jvm.OpPart;
 import jynx.GlobalOption;
 import jynx.LogIllegalArgumentException;
-import jynx2asm.ops.JvmOp;
 
 public class Structure {
 

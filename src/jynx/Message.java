@@ -9,7 +9,7 @@ public enum Message {
     M2(BLANK,"display version information"),
     M3(BLANK,"program terminated because of errors"),
     M4(BLANK,"%n%s; Java runtime version %s"),
-
+    M5(BLANK, "  %s%n"),
     M6(BLANK,"Options are:%n"),
     M7(BLANK,"use SYSIN as input file"),
     M8(BLANK,"check that called methods or used fields exist (on class path)"),
@@ -331,8 +331,11 @@ public enum Message {
     M329(INFO,"print options = %s"),
     M330(WARNING,"%s will be parsed as %s (remove low and add <number> -> )"),
     M331("%s changed to %s as entries are not consecutive"),
-    //
+    M332(BLANK,"GlobalOption abbreviations are not unique after transform"),
+    M333(BLANK,"GlobalOption names are not unique after transform"),
+    M334("abbrev '%s' for option %s has invalid name"),
     M335("index (%d) is not a current try index [0,%d]"),
+    M336("option '%s' has invalid name"),
 
     M362("expected arg %s but was %s"),
 

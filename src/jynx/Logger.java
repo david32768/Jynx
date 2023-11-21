@@ -103,7 +103,7 @@ public class Logger {
 
     private static LogMsgType msgType(Message msg) {
         LogMsgType logtype = msg.getLogtype();
-        if (logtype == LogMsgType.WARNING && OPTION(GlobalOption.__TREAT_WARNINGS_AS_ERRORS)) {
+        if (logtype == LogMsgType.WARNING && OPTION(GlobalOption.TREAT_WARNINGS_AS_ERRORS)) {
             logtype = LogMsgType.ERROR;
         }
         if (logtype == LogMsgType.ERROR && OPTION(GlobalOption.__EXIT_IF_ERROR)) {

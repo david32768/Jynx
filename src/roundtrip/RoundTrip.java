@@ -29,7 +29,7 @@ import jynx2asm.JynxScanner;
 public class RoundTrip {
 
     private static String textify(byte[] ba, int len) {
-        ClassReader cr = JynxClassReader.getClassReader(ba); // new ClassReader(ba);
+        ClassReader cr = JynxClassReader.getClassReader(ba);
         ClassNode cn = new ClassNode();
         cr.accept(cn,ClassReader.EXPAND_FRAMES);
         Printer printer = new Textifier();

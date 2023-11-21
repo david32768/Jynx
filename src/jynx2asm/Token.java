@@ -236,7 +236,8 @@ public class Token {
         if (token.charAt(0) == Line.DIRECTIVE_INICATOR) {
             String dirstr = token.substring(1);
             return  Directive.getDirInstance(dirstr)
-                        .orElseThrow(()->new LogIllegalStateException(M245,dirstr)); // "Unknown directive = %s";
+                        // "Unknown directive = %s"
+                        .orElseThrow(()->new LogIllegalStateException(M245,dirstr));
         }
         return null;
     }

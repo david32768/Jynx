@@ -2,9 +2,7 @@ package jynx2asm;
 
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.objectweb.asm.tree.ParameterNode;
@@ -19,15 +17,15 @@ import jynx.LogIllegalArgumentException;
 
 public class LocalVars {
 
-    private static final int MAXSTACK = 1 << 16;
+    private static final int MAXLOCALS = 1 << 16;
     
     private final LimitValue localsz;
     private final FrameElement[] locals;
     private final boolean isStatic;
     private final VarAccess varAccess;
     private final int parmsz;
-    private final Map<String,Integer> varmap;
     private final boolean symbolic;
+    private final SymbolicVars symVars;
     
     private int sz;
     private boolean startblock;
@@ -35,7 +33,7 @@ public class LocalVars {
     
     private LocalVars(OperandStackFrame parmlocals, boolean isStatic, BitSet finalparms) {
         this.localsz = new LimitValue(LimitValue.Type.locals);
-        this.locals = new FrameElement[MAXSTACK];
+        this.locals = new FrameElement[MAXLOCALS];
         this.isStatic = isStatic;
         this.varAccess = new VarAccess(finalparms);
         this.sz = 0;
@@ -44,7 +42,7 @@ public class LocalVars {
         this.parmsz = sz;
         varAccess.completeInit(this.parmsz);
         this.symbolic = OPTION(GlobalOption.SYMBOLIC_LOCAL);
-        this.varmap = new HashMap<>();
+        this.symVars = new SymbolicVars(isStatic);
     }
 
     public static LocalVars getInstance(List<Object> localstack, List<ParameterNode> parameters,
@@ -53,38 +51,32 @@ public class LocalVars {
         LocalVars lv = new LocalVars(parmosf,isStatic,finalparms);
         if (lv.symbolic) {
             lv.setParms(parmosf);
-            if (parameters != null) {
-                int parmnum = 0;
-                for (ParameterNode parameter:parameters) {
-                    lv.setParmName(parmnum,parameter.name);
-                    ++parmnum;
-                }
-            }
+            lv.setParmNames(parameters);
         }
         return lv;
     }
 
     private void setParms(OperandStackFrame osf) {
         assert symbolic;
-        int parm0 = 0;
-        if (!isStatic) {
-            varmap.put("$this",0);
-            parm0 = 1;
-        }
+        int parm0 = isStatic? 0: 1;
         int current = parm0;
         for (int i = parm0; i < osf.size(); ++i) {
             FrameElement fe = osf.at(i);
             String parmnumstr = "" + (i - parm0);
-            varmap.put(parmnumstr, current);
+            symVars.setNumber(parmnumstr, fe, current);
             current += fe.isTwo()?2:1;
         }
     }
 
-    private void setParmName(int parmnum, String name) {
+    private void setParmNames(List<ParameterNode> parameters) {
         assert symbolic;
-        Integer jvmnum = varmap.get("" + parmnum);
-        assert jvmnum != null && parmnum >= 0;
-        varmap.put(name, jvmnum);
+        if (parameters != null) {
+            int parmnum = 0;
+            for (ParameterNode parameter:parameters) {
+                symVars.setAlias(parmnum, parameter.name);
+                ++parmnum;
+            }
+        }
     }
     
     public LocalFrame currentFrame() {
@@ -102,24 +94,13 @@ public class LocalVars {
     
     private int getSymbolicVarNumber(Token token, FrameElement fe) {
         String tokenstr = token.asString();
-        Integer number = varmap.get(tokenstr);
-        if (fe != null) {
-            if (number == null) {
-                number = sz;
-                varmap.put(tokenstr,sz);
-            } else {
-                if (peek(number) != fe) {
-                    // "different types for %s; was %s but now %s"
-                    LOG(M204,tokenstr,peek(number),fe);
-                }
-            }
-        } else if (number == null) {
-            //"unknown variable: %s"
-            LOG(M211,tokenstr);
+        int number = symVars.getNumber(tokenstr, fe, sz);
+        if (number == sz) {
+            adjustMax(symVars.getFrameElement(number),number);
         }
         return number;
     }
-    
+
     private int getActualVarNumber(Token token) {
         return token.asUnsignedShort();
     }

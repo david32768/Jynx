@@ -1,19 +1,21 @@
 package jynx;
 
 import java.util.EnumSet;
+import java.util.function.Function;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import static jynx.MainOption.*;
 import static jynx.Message.*;
+import jynx2asm.NameDesc;
 
 public enum GlobalOption {
 
     // information
-    HELP(M1, 'h'), // "display help message"
-    VERSION(M2, 'V'), //"display version information"
+    HELP("h", M1), // "display help message"
+    VERSION("V", M2), //"display version information"
 
-    SYSIN(M7, ASSEMBLY), // "use SYSIN as input file"
+    SYSIN("", M7, ASSEMBLY), // "use SYSIN as input file"
     USE_STACK_MAP(M19, ASSEMBLY, ROUNDTRIP), // "use supplied stack map instead of ASM generated"
     WARN_UNNECESSARY_LABEL(M10, ASSEMBLY), // "warn if label unreferenced or alias"
     WARN_STYLE(M15, ASSEMBLY), // "warn if names non-standard"
@@ -36,7 +38,7 @@ public enum GlobalOption {
 
     DETAIL(M17, STRUCTURE),  // "prints constant pool, instructions and other detail"
     // may change
-    __TREAT_WARNINGS_AS_ERRORS(M25, ASSEMBLY), // "treat warnings as errors"
+    TREAT_WARNINGS_AS_ERRORS(M25, ASSEMBLY), // "treat warnings as errors"
     
     // internal
     __EXIT_IF_ERROR(null, ASSEMBLY), // "exit if error"
@@ -49,30 +51,62 @@ public enum GlobalOption {
     ;
 
     private final String msg;
-    private final Character abbrev;
+    private final String abbrev;
     private final EnumSet<MainOption> main;
 
-    private GlobalOption(Message msg, MainOption main1, MainOption... mains) {
-        this.msg = msg == null?null:msg.format();
-        this.abbrev = null;
-        this.main = EnumSet.of(main1, mains);
-    }
-
-    private GlobalOption(Message msg, char abbrev) {
-        this.msg = msg.format();
-        this.abbrev = abbrev;
-        this.main = EnumSet.noneOf(MainOption.class);
+    private GlobalOption(String abbrev, Message msg) {
+        this(abbrev, msg, EnumSet.noneOf(MainOption.class));
     }
     
+    private GlobalOption(Message msg, MainOption main1, MainOption... mains) {
+        this(null, msg, EnumSet.of(main1, mains));
+    }
+
+    private GlobalOption(String abbrev, Message msg, MainOption main1, MainOption... mains) {
+        this(abbrev, msg, EnumSet.of(main1, mains));
+    }
+
+    private GlobalOption(String abbrev, Message msg, EnumSet<MainOption> main) {
+        this.msg = msg == null? null: msg.format();
+        this.abbrev = abbrev;
+        this.main = main;
+        // "abbrev '%s' for option %s has invalid name"
+        assert abbrev == null || abbrev.isEmpty() || NameDesc.OPTION.isValid(abbrev):M334.format(abbrev,name());
+        // "option '%s' has invalid name"
+        assert msg == null && name().startsWith("__") || NameDesc.OPTION.isValid(name()):M336.format(name());
+    }
+
     public boolean isExternal() {
         return msg != null;
     }
 
+    private static boolean unique(Function<GlobalOption,String> strfn) {
+       String[] abbrevs = Stream.of(values())
+                .map(strfn)
+                .filter(a -> a != null)
+                .map(a -> a.replace('-', '_').toLowerCase())
+                .toArray(String[]::new);
+       return abbrevs.length == Stream.of(abbrevs)
+               .distinct()
+               .count();
+    }
+    
+    static {
+        // "GlobalOption abbreviations are not unique after transform"
+        assert unique(opt->opt.abbrev): M332.format();
+        // "GlobalOption names are not unique after transform"
+        assert unique(opt->opt.name()): M333.format();
+    }
+    
     private final static String OPTION_PREFIX = "--";
     private final static String ABBREV_PREFIX = "-";
 
-    private static boolean isEqual(String myname, String option) {
-        return option.replace('-', '_').equalsIgnoreCase(myname);
+    private static boolean isEqual(String myname, String option, String prefix) {
+        return myname != null && option.startsWith(prefix)
+                && option
+                    .substring(prefix.length())
+                    .replace('-', '_')
+                    .equalsIgnoreCase(myname);
     }
     
     public static boolean mayBeOption(String option) {
@@ -80,13 +114,7 @@ public enum GlobalOption {
     }
     
     public boolean isArg(String option) {
-        assert OPTION_PREFIX.length() > ABBREV_PREFIX.length();
-        if (option.startsWith(OPTION_PREFIX)) {
-            return isEqual(name(),option.substring(OPTION_PREFIX.length()));
-        } else if (abbrev != null && option.startsWith(ABBREV_PREFIX)) {
-            return isEqual("" + abbrev,option.substring(ABBREV_PREFIX.length()));
-        }
-        return false;
+        return isEqual(name(), option, OPTION_PREFIX) || isEqual(abbrev, option, ABBREV_PREFIX);
     }
     
     public String asArg() {
@@ -100,7 +128,7 @@ public enum GlobalOption {
     public static Optional<GlobalOption> optInstance(String str) {
         return Stream.of(values())
                 .filter(GlobalOption::isExternal)
-                .filter(g -> isEqual(g.name(),str))
+                .filter(g -> isEqual(g.name(), str, ""))
                 .findFirst();
     }
 

@@ -16,11 +16,14 @@ import jynx.SevereError;
 public class Main {
     
     private static void outputVersion() {
-        LOG(M0,Constants.version(true),JvmVersion.MAX_VERSION); // "Jynx version %s; maximum Java version is %s"
+        // // "Jynx version %s; maximum Java version is %s"
+        LOG(M0,Constants.version(true),JvmVersion.MAX_VERSION);
     }
 
     private static void appUsage() {
         LOG(M12); // "%nUsage:%n"
+        LOG(M5, GlobalOption.VERSION.description()); // "  %s%n"
+        LOG(M5, GlobalOption.HELP.description());
         for (MainOption mo: MainOption.values()) {
             mo.appUsageSummary();
         }

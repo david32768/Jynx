@@ -18,6 +18,8 @@ import jynx.LogIllegalArgumentException;
 
 public enum NameDesc {
 
+    OPTION("[A-Za-z][A-Za-z_]*"),
+    
     STATIC_INIT_NAME(Constants.STATIC_INIT_NAME.stringValue()),
     CLASS_INIT_NAME(Constants.CLASS_INIT_NAME.stringValue()),
 

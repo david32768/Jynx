@@ -19,13 +19,13 @@ public interface JynxHandle {
     }
     
     public default HandleType ht() {
-        throw new AssertionError(); // return null;
+        throw new AssertionError();
     }
 
     public String name();
 
     public default String owner() {
-        throw new AssertionError(); // return null;
+        throw new AssertionError();
     }
 
     public default String ownerL() {
