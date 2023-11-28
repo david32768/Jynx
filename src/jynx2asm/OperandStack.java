@@ -3,6 +3,7 @@ package jynx2asm;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.objectweb.asm.Type;
 
@@ -82,21 +83,18 @@ public class OperandStack {
         return fe;
     }
     
-    private FrameElement checkType(char type, FrameElement fe) {
-        char tos = fe.typeLetter();
-        if (tos == type || type == 'A' && fe == FrameElement.THIS) {
-            return fe;
+    private FrameElement checkType(FrameElement tos, FrameElement required) {
+        if (tos.matchStack(required)) {
+            return tos;
         } else {
-            FrameElement required = FrameElement.fromStack(type);
-            LOG(M182,fe,required); // "top of stack is %s but required is %s"
+            LOG(M182,tos,required); // "top of stack is %s but required is %s"
             return required;
         }
     }
     
-    private char popChar(char type) {
+    private void pop(FrameElement required) {
         FrameElement fe = pop();
-        fe = checkType(type,fe);
-        return fe.typeLetter(); 
+        checkType(fe, required);
     }
 
     private void push(FrameElement fe) {
@@ -110,44 +108,32 @@ public class OperandStack {
         ++endpos;
     }
     
-    private void pushChar(char x) {
-        if (x == 'V') {
-            return;
-        }
-        push(FrameElement.fromStack(x));
-    }
-    
-    private void pushString(String str) {
-        for (int i = 0; i < str.length(); ++i) {
-            pushChar(str.charAt(i));
+    private void push(FrameElement[] fes) {
+        for (FrameElement fe:fes) {
+            push(fe);
         }
     }
     
-    private String pop32() {
-        FrameElement fe = pop();
-        char tos = fe.typeLetter();
-        if (fe.isTwo()) {
-            LOG(M166,tos); // "top of stack('%c') is not a 32 bit type"
-            tos = FrameElement.ERROR.typeLetter();
+    private FrameElement[] pop32() {
+        FrameElement tos = pop();
+        if (tos.isTwo()) {
+            LOG(M166,tos); // "top of stack(%s) is not a 32 bit type"
+            tos = FrameElement.ERROR;
         }
-        return String.valueOf(tos);
+        return new FrameElement[]{tos};
     }
     
-    private String pop64() {
-        FrameElement fe = pop();
-        char tos = fe.typeLetter();
-        String result = String.valueOf(tos);
-        if (fe.isTwo()) {
-            return result;
+    private FrameElement[] pop64() {
+        FrameElement tos = pop();
+        if (tos.isTwo()) {
+            return new FrameElement[]{tos};
         }
-        fe = pop();
-        char nos = fe.typeLetter();
-        if (fe.isTwo()) {
-            LOG(M180, tos, nos); // "top of stack('%c') and next on stack('%c') are not both 32 bit types"
-            nos = FrameElement.ERROR.typeLetter();
+        FrameElement nos = pop();
+        if (nos.isTwo()) {
+            LOG(M180, nos, nos); // "top of stack(%s) and next on stack('%c') are not both 32 bit types"
+            nos = FrameElement.ERROR;
         }
-        result = nos + result;
-        return result;
+        return new FrameElement[]{nos,tos};
     }
     
     private void setStack(OperandStackFrame osf) {
@@ -156,18 +142,24 @@ public class OperandStack {
                 .forEach(this::push);
     }
     
-    public void adjust(String parms, char rt) {
-        for (int i = parms.length() - 1; i >= 0; --i) {
-            char parm = parms.charAt(i); 
-            popChar(parm);
+    private void adjust(FrameElement[] parms, char rt) {
+        for (int i = parms.length - 1; i >= 0; --i) {
+            FrameElement required = parms[i];
+            pop(required);
         }
-        pushChar(rt);
+        if (rt == 'V') {
+            return;
+        }
+        push(FrameElement.fromStack(rt));
     }
 
     public void adjustDesc(String desc) {
         assert desc.charAt(0) == '(';
         assert desc.charAt(desc.length() - 2) == ')';
-        String parms = desc.substring(1, desc.length() - 2);
+        String parmstr = desc.substring(1, desc.length() - 2);
+        FrameElement[] parms = parmstr.chars()
+                .mapToObj(c -> FrameElement.fromStack((char)c))
+                .toArray(FrameElement[]::new);
         adjust(parms,desc.charAt(desc.length() - 1));
     }
 
@@ -191,29 +183,22 @@ public class OperandStack {
         adjustOperand(stackdesc);
     }
     
-    private char typeLetter(Type type) {
-        if (type.equals(Type.VOID_TYPE)) {
-            return 'V';
-        }
-        return FrameElement.fromType(type).typeLetter();
-    }
-
     public void adjustOperand(String desc) {
         Type mt = Type.getMethodType(desc);
         Type[] args = mt.getArgumentTypes();
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < args.length; ++i) {
-            char parm = typeLetter(args[i]);
-            sb.append(parm);
-        }
-        adjust(sb.toString(),typeLetter(mt.getReturnType()));
+        FrameElement[] parms = Stream.of(args)
+                .map(FrameElement::fromType)
+                .toArray(FrameElement[]::new);
+        Type rtype = mt.getReturnType();
+        char rt = FrameElement.returnTypeLetter(rtype);
+        adjust(parms, rt);
     }
 
     public void adjustStackOp(JvmOp op) {
         String manstr = op.stackManipulate();
         int arrowidx = manstr.indexOf("->");
-        String tos = null;
-        String nos = null;
+        FrameElement[] tos = null;
+        FrameElement[] nos = null;
         int idx = arrowidx;
         while (--idx >= 0) {
             switch (manstr.charAt(idx)) {
@@ -243,12 +228,12 @@ public class OperandStack {
             switch(ch) {
                 case 't':
                 case 'T':
-                    pushString(tos);
+                    push(tos);
                     break;
                 case 'n':
                 case 'N':
                     assert nos != null;
-                    pushString(nos);
+                    push(nos);
                     break;
                 default:
                     throw new AssertionError();
@@ -336,7 +321,8 @@ public class OperandStack {
         if (fe == FrameElement.RETURN_ADDRESS && type == 'A') {
             type = 'R';
         }
-        fe = checkType(type,fe);
+        FrameElement required = FrameElement.fromStack(type);
+        fe = checkType(fe, required);
         return fe;
     }
     

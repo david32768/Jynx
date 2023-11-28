@@ -1,5 +1,9 @@
 package jynx2asm;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.objectweb.asm.Type;
 
 import static jynx.Message.M206;
@@ -11,21 +15,23 @@ import jynx.LogIllegalArgumentException;
 
 public enum FrameElement {
 
-    UNUSED('_',' ',true),
-    RETURN_ADDRESS('R',' '),
+    IRRELEVANT(' ','?',true),
+    ERROR('X','?',true),
+    UNUSED('_', '?',true),
+    TOP('2','?',true),
+
+    RETURN_ADDRESS('R','?'),
+    THIS('T','a'), // uninitialised this and this in <init> methods
+    EXCEPTION('E','a'),
+
+    OBJECT('A','a'),
     INTEGER('I','i'),
     FLOAT('F','f'),
     DOUBLE('D','d'),
-    TOP('2', ' ',true),
     LONG('J','l'),
-    OBJECT('A','a'),
-    EXCEPTION('A','a'),
-    THIS('T','a'), // uninitialised this and this in <init> methods
-    ERROR('X',' ',true),
-    IRRELEVANT(' ',' ',true),
 ;
 
-    private final char typeLetter;
+    private final char typeChar;
     private final char instChar;
     private final boolean localsOnly;
 
@@ -33,16 +39,41 @@ public enum FrameElement {
         this(typeLetter, instChar, false);
     }
 
-    private FrameElement(char typeLetter, char instChar, boolean localsOnly) {
-        this.typeLetter = typeLetter;
+    private FrameElement(char typeChar, char instChar, boolean localsOnly) {
+        this.typeChar = typeChar;
         this.instChar = instChar;
         this.localsOnly = localsOnly;
     }
 
-    public char typeLetter() {
-        return typeLetter;
+    private final static Map<Character, FrameElement> TYPE_MAP;
+    
+    static {
+        TYPE_MAP = new HashMap<>();
+        for (FrameElement fe:values()) {
+            FrameElement shouldbenull = TYPE_MAP.put(fe.typeChar,fe);
+            assert shouldbenull == null;
+        }
     }
 
+    private boolean isObject() {
+        return instChar == 'a';
+    }
+    
+    private char typeLetter() {
+        return this == EXCEPTION? 'A': typeChar;
+    }
+
+    public boolean isCompatibleWith(FrameElement that) {
+        return this.typeLetter() == that.typeLetter() || this == ERROR;
+    }
+    
+    public boolean isCompatibleWithAfter(FrameElement after) {
+        return this.typeLetter() == after.typeLetter() 
+                || after == FrameElement.UNUSED
+                || after == FrameElement.IRRELEVANT
+                || after == FrameElement.ERROR;
+    }
+    
     public char instLetter() {
         return instChar;
     }
@@ -70,52 +101,55 @@ public enum FrameElement {
         return isTwo() && fe == TOP;
     } 
 
-    public static FrameElement fromStack(char type) {
-        switch (type) {
-            case 'I':
-                return INTEGER;
-            case 'F':
-                return FLOAT;
-            case 'J':
-                return LONG;
-            case 'D':
-                return DOUBLE;
-            case 'A':
-                return OBJECT;
-            case 'R':
-                return RETURN_ADDRESS;
-            case 'T':
-                return THIS;
-            default:
-                throw new LogIllegalArgumentException(M206, type,(int)type); // "Invalid type letter '%c' (%d)"
+    public boolean matchStack(FrameElement required) {
+        assert !required.isLocalsOnly();
+        return this == required || isObject() && required == FrameElement.OBJECT;
+    }
+    
+    public boolean matchLocal(FrameElement required) {
+        return this == required || isObject() && required == FrameElement.OBJECT;
+    }
+    
+    public static FrameElement combine(FrameElement fe1, FrameElement fe2) {
+        if (fe1 == fe2) {
+            return fe1;
         }
+        if (fe1.isObject() && fe2.isObject()) {
+            return OBJECT;
+        }
+        return ERROR;
+    }
+
+    public static boolean equivalent(FrameElement fe1, FrameElement fe2) {
+        return fe1.compLetter() == fe2.compLetter();
+    }
+    
+    private char compLetter() {
+        return isObject()? OBJECT.typeChar: typeChar;
+    }
+    
+    public static FrameElement fromStack(char type) {
+        FrameElement stack = TYPE_MAP.get(type);
+        if (stack == null || stack.isLocalsOnly()) {
+            throw new LogIllegalArgumentException(M206, type,(int)type); // "Invalid type letter '%c' (%d)"
+        }
+        return stack;
     }
     
     public static FrameElement fromLocal(char type) {
-        switch (type) {
-            case 'I':
-                return INTEGER;
-            case 'F':
-                return FLOAT;
-            case 'J':
-                return LONG;
-            case 'D':
-                return DOUBLE;
-            case 'A':
-                return OBJECT;
-            case 'R':
-                return RETURN_ADDRESS;
-            case 'T':
-                return THIS;
-            case 'X':
-                return ERROR;
-            case 'U':
-                return UNUSED;
-            case '2' :
-                return TOP;
-            default:
-                throw new LogIllegalArgumentException(M206, type,(int)type); // "Invalid type letter '%c' (%d)"
+        FrameElement local = TYPE_MAP.get(type);
+        if (local == null) {
+            throw new LogIllegalArgumentException(M206, type,(int)type); // "Invalid type letter '%c' (%d)"
         }
+        return local;
+    }
+    
+    public static String stringForm(Stream<FrameElement> festream) {
+        return festream
+                .map(fe -> fe == null?FrameElement.UNUSED:fe)
+                .map(FrameElement::typeLetter)
+                .map(String::valueOf)
+                .collect(Collectors.joining()); 
     }
     
     public static FrameElement fromType(Type type) {
@@ -139,6 +173,10 @@ public enum FrameElement {
             default:
                 throw new LogAssertionError(M906, type); // "unknown ASM type - %s"
         }
+    }
+    
+    public static char returnTypeLetter(Type rtype) {
+        return rtype.equals(Type.VOID_TYPE)? 'V': FrameElement.fromType(rtype).typeLetter();
     }
     
     public static FrameElement fromDesc(String typestr) {

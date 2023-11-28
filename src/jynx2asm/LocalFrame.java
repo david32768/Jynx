@@ -49,9 +49,7 @@ public class LocalFrame {
         if (locals.length == 0) {
             return "empty";
         }
-        return stream()
-                .map(fe -> String.valueOf(fe.typeLetter()))
-                .collect(Collectors.joining());
+        return FrameElement.stringForm(Stream.of(locals));
     }
 
     // static because may be null
@@ -67,11 +65,7 @@ public class LocalFrame {
         for (int i = 0; i < maxlen;++i) {
             FrameElement fe1 = osf1.atUnchecked(i);
             FrameElement fe2 = osf2.atUnchecked(i);
-            if (fe1.typeLetter() == fe2.typeLetter()) {
-                fes[i] = fe1;
-            } else {
-                fes[i] = FrameElement.ERROR;
-            }
+            fes[i] = FrameElement.combine(fe1, fe2);
         }
         return new LocalFrame(fes);
     }
@@ -86,7 +80,7 @@ public class LocalFrame {
         for (int i = 0; i < this.size();++i) {
             FrameElement fe1 = this.at(i);
             FrameElement fe2 = osf2.atUnchecked(i);
-            if (fe1.typeLetter() != fe2.typeLetter() && fe1 != FrameElement.ERROR) {
+            if (!fe1.isCompatibleWith(fe2)) {
                 return false;
             }
         }
@@ -99,10 +93,7 @@ public class LocalFrame {
             FrameElement labfe = labosf.atUnchecked(i);
             FrameElement stackfe = stackosf.atUnchecked(i);
             FrameElement afterfe = afterlab.atUnchecked(i);
-            if (afterfe == FrameElement.UNUSED || afterfe == FrameElement.IRRELEVANT || afterfe == FrameElement.ERROR) {
-                continue;
-            }
-            if (afterfe.typeLetter() != stackfe.typeLetter()) {
+            if (!stackfe.isCompatibleWithAfter(afterfe)) {
                 LOG(M221,afterfe,i,stackfe); // "required %s for var %d but found %s"
             }
         }

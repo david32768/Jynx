@@ -134,8 +134,9 @@ public enum SelectOps implements SelectOp {
             char fetype = fe.instLetter();
             int index = ILFDA.indexOf(fetype);
             if (index < 0 || index >= ops.length) {
-                // "element %s (%c) at top of stack is not one of %s"
-                throw new LogIllegalArgumentException(M282,fe,fetype,ILFDA.substring(0,Math.min(ILFDA.length(),ops.length)));
+                String valid = ILFDA.substring(0,Math.min(ILFDA.length(),ops.length));
+                // "instruction type '%c' (%s) of element at top of stack is not one of %s"
+                throw new LogIllegalArgumentException(M282,fetype,fe,valid);
             }
             assert ops[index].toString().charAt(0) == fetype:
                     String.format("%s %c", ops[index],fetype);

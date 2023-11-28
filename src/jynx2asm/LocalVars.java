@@ -155,21 +155,24 @@ public class LocalVars {
     }
     
     private FrameElement peekType(char type, int num) {
+        FrameElement required = FrameElement.fromLocal(type);
+        return peekType(num, required);
+    }
+
+    private FrameElement peekType(int num, FrameElement required) {
         FrameElement fe;
         if (num < sz) {
             fe = peek(num);
-            char local0 = fe.typeLetter();
-            if (type != local0 && type != 'A' && fe != FrameElement.THIS) {
-                LOG(M190,num,FrameElement.fromLocal(type),fe); // "mismatched local %d: required %s but found %s"
+            if (!fe.matchLocal(required)) {
+                LOG(M190,num,required,fe); // "mismatched local %d: required %s but found %s"
                 if (fe == FrameElement.UNUSED) {
-                    fe = FrameElement.fromLocal(type);
-                    store(num,fe);
+                    store(num,required);
                 }
             }
         } else {
             LOG(M212,num,sz); // "attempting to load variable %d but current max is %d"
-            fe = FrameElement.fromLocal(type);
-            store(num, fe);
+            fe = required;
+            store(num, required);
         }
         adjustMax(fe,num);
         return fe;
@@ -193,7 +196,7 @@ public class LocalVars {
     public int storeFrameElement(FrameElement fe, Token vartoken) {
         int num = storeVarNumber(vartoken, fe);
         store(num,fe);
-        if (fe != FrameElement.UNUSED && fe != FrameElement.ERROR) {
+        if (fe != FrameElement.UNUSED) {
             varAccess.setWrite(num, fe);
         }
         return num;
@@ -265,11 +268,10 @@ public class LocalVars {
         sz = 0;
         for (int i = 0; i < osf.size(); ++i) {
             FrameElement fe = osf.at(i);
-            char type = fe.typeLetter();
-            if (check && type != FrameElement.TOP.typeLetter()) {
+            if (check && fe != FrameElement.TOP) {
                 int num = sz;
                 sz += 2;
-                peekType(type,num);
+                peekType(num,fe);
                 sz -=2;
             }
             varAccess.setFrame(sz, fe);

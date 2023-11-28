@@ -36,7 +36,7 @@ public class SymbolicVars {
         boolean load = fe == null;
         if (load) {
             if (number == null) {
-                //"unknown variable: %s"
+                //"unknown symbolic variable: %s"
                 LOG(M211,token);
                 fe = FrameElement.ERROR;
             } else {

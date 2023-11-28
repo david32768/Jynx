@@ -45,11 +45,18 @@ public class OperandStackFrame {
     }
 
     public FrameElement at(int index) {
-        if (index >= stack.length) {
+        if (index < 0 || index >= stack.length) {
             throw new IllegalArgumentException();
         }
         FrameElement fe = stack[index];
         return fe == null?FrameElement.UNUSED:fe;
+    }
+    
+    public FrameElement atUnchecked(int index) {
+        if (index >= stack.length) {
+            return FrameElement.UNUSED;
+        }
+        return at(index);
     }
     
     public Stream<FrameElement> stream() {
@@ -61,18 +68,9 @@ public class OperandStackFrame {
         if (stack.length == 0) {
             return "empty";
         }
-        return stream()
-                .map(fe -> String.valueOf(fe.typeLetter()))
-                .collect(Collectors.joining());
+        return FrameElement.stringForm(Stream.of(stack));
     }
 
-    private String compareForm() {
-        return stream()
-                .map(fe-> fe == FrameElement.THIS?FrameElement.OBJECT:fe)
-                .map(fe -> String.valueOf(fe.typeLetter()))
-                .collect(Collectors.joining());
-    }
-    
     @Override
     public String toString() {
         return stringForm();
@@ -85,8 +83,15 @@ public class OperandStackFrame {
         }
         if (obj instanceof OperandStackFrame) {
             OperandStackFrame that = (OperandStackFrame)obj;
-            return this.stack.length == that.stack.length
-                    && this.compareForm().equals(that.compareForm());
+            int max = Math.max(this.stack.length, that.stack.length);
+            for (int i = 0; i < max; ++i) {
+                FrameElement fe1 = this.atUnchecked(i);
+                FrameElement fe2 = that.atUnchecked(i);
+                if (!FrameElement.equivalent(fe1, fe2)) {
+                    return false;
+                }
+            }
+            return true;
         }
         return false;
     }
