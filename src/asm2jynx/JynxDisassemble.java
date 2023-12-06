@@ -358,6 +358,8 @@ public class JynxDisassemble {
     }
 
     private void printVersionSource() {
+        // "options = %s"
+        LOG(M88, OPTIONS());
         jp.appendComment("options = " + OPTIONS().toString())
                 .nl()
                 .comment()

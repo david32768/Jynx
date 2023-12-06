@@ -73,7 +73,7 @@ public enum FrameElement {
                 || after == FrameElement.IRRELEVANT
                 || after == FrameElement.ERROR;
     }
-    
+
     public char instLetter() {
         return instChar;
     }
@@ -110,6 +110,20 @@ public enum FrameElement {
         return this == required || isObject() && required == FrameElement.OBJECT;
     }
     
+    public boolean isValidInContext(FrameClass fc) {
+        switch(fc) {
+            case STACK:
+                return !isLocalsOnly();
+            case LOCALS:
+                return true;
+            case MAPLOCALS:
+                return !isLocalsOnly() || this == TOP;
+            default:
+                throw new EnumConstantNotPresentException(fc.getClass(), fc.name());
+        }
+    }
+    
+
     public static FrameElement combine(FrameElement fe1, FrameElement fe2) {
         if (fe1 == fe2) {
             return fe1;
@@ -146,7 +160,6 @@ public enum FrameElement {
     
     public static String stringForm(Stream<FrameElement> festream) {
         return festream
-                .map(fe -> fe == null?FrameElement.UNUSED:fe)
                 .map(FrameElement::typeLetter)
                 .map(String::valueOf)
                 .collect(Collectors.joining()); 

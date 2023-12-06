@@ -11,6 +11,10 @@ import org.objectweb.asm.Label;
 import static jynx.Global.*;
 import static jynx.Message.*;
 
+import jynx2asm.frame.JynxLabelFrame;
+import jynx2asm.frame.LocalFrame;
+import jynx2asm.frame.OperandStackFrame;
+
 public class JynxLabel {
 
     private final String name;

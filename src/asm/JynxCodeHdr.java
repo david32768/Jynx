@@ -275,8 +275,8 @@ public class JynxCodeHdr implements ContextDependent {
                 }
             }
         }
-        stackLocals.visitFrame(frame_stack, frame_local,dirline);
-        if (SUPPORTS(StackMapTable) && OPTION(USE_STACK_MAP)) {
+        stackLocals.visitFrame(frame_stack, frame_local, dirline);
+        if (SUPPORTS(StackMapTable) && OPTION(USE_STACK_MAP) && !OPTION(SYMBOLIC_LOCAL)) {
             Object[] stackarr = frame_stack.toArray();
             Object[] localarr = frame_local.toArray();
             mnode.visitFrame(Opcodes.F_NEW, localarr.length, localarr, stackarr.length, stackarr);
@@ -295,6 +295,11 @@ public class JynxCodeHdr implements ContextDependent {
     }
     
     private void visitVar(Line line) {
+        if (OPTION(SYMBOLIC_LOCAL)) {
+            // "%s not supported if %s specified"
+            LOG(M212,Directive.dir_var,SYMBOLIC_LOCAL);
+            return;
+        }
         JynxVar jvar = JynxVar.getInstance(line, labelmap);
         vars.add(jvar);
     }

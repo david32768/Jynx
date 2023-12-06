@@ -134,10 +134,9 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
         JynxLabelMap labelmap = new JynxLabelMap();
         String virtclname = isStatic? null: checker.getClassName();
         List<Object> localStack = FrameType.getInitFrame(virtclname, lmh); // classname set non null for virtual methods
-        LocalVars lv = LocalVars.getInstance(localStack, mnode.parameters, isStatic, annotationLists.getFinalParms());
         JvmOp returnop = JynxHandle.getReturnOp(lmh);
-        OperandStack opstack = OperandStack.getInstance(localStack);
-        StackLocals stackLocals = StackLocals.getInstance(lv, opstack, labelmap, returnop);
+        StackLocals stackLocals = StackLocals.getInstance(localStack, mnode.parameters,
+                isStatic, annotationLists.getFinalParms(), labelmap, returnop);
         String2Insn s2a = String2Insn.getInstance(labelmap, checker, opmap);
         return JynxCodeHdr.getInstance(js, mnode, stackLocals, localStack, s2a);
     }

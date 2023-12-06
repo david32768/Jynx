@@ -401,6 +401,10 @@ public class String2Insn {
     private Instruction arg_var(JvmOp jvmop) {
         Token token;
         if (jvmop.isImmediate()) {
+            if (OPTION(GlobalOption.SYMBOLIC_LOCAL)) {
+                // "%s not supported if %s specified"
+                LOG(M212, jvmop, GlobalOption.SYMBOLIC_LOCAL);
+            }
             String opname = jvmop.externalName();
             char suffix = opname.charAt(opname.length() - 1);
             token = Token.getInstance("" + suffix);

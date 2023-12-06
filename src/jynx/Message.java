@@ -78,8 +78,8 @@ public enum Message {
     M71(WARNING,"as %s is not a final static field, ' = %s' may be silently ignored by JVM (JVMS 5.5 6)"),
     M72(WARNING,"version %s may not be fully supported"),
     M73(WARNING,"irrelevant option %s ignored"),
-    M74("Invalid variable number (%d + %d is not unsigned short)"),
-    M75("Method %s failed simple_verifier check:%n    %s"),
+
+    M75("Method %s failed %s check:%n    %s"),
     M76("unknown handle tag: %d"),
     M77("%s value %d is not in range [%d,%d]"),
     M78("%s has different signature %s to component %s"),
@@ -104,7 +104,7 @@ public enum Message {
     M97("file(%s) does not have %s suffix"),
     M98("Unsupported version of %s: first parms are not compatible with:%n   %s"),
     M99("Separator \'%s\' not found in %s"),
-
+    
     M101("unknown handle mnemonic: %s"),
     M102("init method does not contain this or super: %s = %d %s = %d"),
     M103(WARNING,"init method contains %d %s and %d %s for net of %d"),
@@ -116,7 +116,7 @@ public enum Message {
     M109("reserved word %s expected but found %s"),
     M110("access flag(s) %s not valid for version %s"),
     M111(ENDINFO,"instructions = %d labels = %d directives = %d pre_comments = %d"),
-
+    M112(ENDINFO,"stackmap locals have been ignored as %s specified"),
     M113(WARNING,"value %s requires 'L' suffix as is a long constant"),
     M114("Requires at most one of {%s} specified"),
     M115("Not first token - token = %s"),
@@ -126,7 +126,7 @@ public enum Message {
     M119("this and following lines skipped until %s"),
     M120("Requires only one of {%s} specified"),
     M121("Instruction \'%s\' dropped as unreachable after '%s' without intervening label"),
-
+    M122("invalid index (%d) for %s frame array [0,%d]"),
     M123("compilation of %s failed because of %s"),
     M124("stack frame is definitely required here"),
     M125("Requires none of {%s} specified"),
@@ -201,7 +201,7 @@ public enum Message {
     M198("empty line - should not occur"),
 
     M200(WARNING,"unknown release (major = %d, minor = %d): used %s"),
-    M201("%s can only occur in locals"),
+    M201("frame element %s is not valid in %s context"),
     M202("unused field(s) in typeref not zero"),
     M203(WARNING,"potential infinite loop - catch using label equals catch from label"),
     M204("different types for %s; was %s but now %s"),
@@ -212,7 +212,7 @@ public enum Message {
     M209("code not complete - last was %s"),
     M210(ENDINFO,"%s instruction ignored as not required"),
     M211("unknown symbolic variable: %s"),
-    M212("attempting to load variable %d but current max is %d"),
+    M212("%s not supported if %s specified"),
     M213(WARNING,"label %s defined before use - locals assumed as before last unconditional op"),
     M214(WARNING,"field %s %s does not exist in this class but may exist in superclass/superinterface"),
     M215(" %s field %s accessed by %s op %s"),
@@ -230,7 +230,7 @@ public enum Message {
     M227(WARNING,"possible serialization method %s does not match %s"),
     M228(WARNING,"indent %d found but expected %d"),
     M229("duplicate key %d; previous target = %s, current target = %s"),
-
+    M230("attempting to overwrite %s using %s"),
     M231(WARNING,"Last instruction was %s: expected %s"),
     M232("Last instruction was %s: expected %s"),
     M233("Duplicate entry %s in %s: previous entry at line %d"),

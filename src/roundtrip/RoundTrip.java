@@ -68,7 +68,7 @@ public class RoundTrip {
         String result = sw.toString();
         System.err.println();
         Global.newGlobal(MainOption.ASSEMBLY);
-        byte[] ba1 = JynxClass.getBytes("RoundTrip", JynxScanner.getInstance(result));
+        byte[] ba1 = JynxClass.getBytes(classname, JynxScanner.getInstance(result));
         if (ba1 == null) {
             System.out.format("assembly of %s failed%n", classname);
             return false;

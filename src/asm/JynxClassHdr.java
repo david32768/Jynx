@@ -493,11 +493,14 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
             return;
         }
         boolean verified = false;
+        String verifiername;
         Interpreter<BasicValue> verifier;
         if (OPTION(GlobalOption.BASIC_VERIFIER)) {
             verifier = new BasicVerifier();
+            verifiername = GlobalOption.BASIC_VERIFIER.name();
         } else {
             verifier = verifierFactory.getSimpleVerifier(accessName.is(AccessFlag.acc_interface));
+            verifiername = "SIMPLE_VERIFIER";
         }
         Analyzer<BasicValue> analyzer = new Analyzer<>(verifier);
         try {
@@ -505,7 +508,8 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
             verified =  true;
         } catch (AnalyzerException | IllegalArgumentException e) {
             String emsg = e.getMessage();
-            LOG(M75,mv.name, emsg); // "Method %s failed simple_verifier check:%n    %s"
+            // "Method %s failed %s check:%n    %s"
+            LOG(e, M75,mv.name, verifiername, emsg);
         }
         if (verified) {
             try {

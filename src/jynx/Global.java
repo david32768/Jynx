@@ -174,6 +174,13 @@ public class Global {
         global.logger.log(linestr,msg, objs);
     }
 
+    public static void LOG(Throwable ex, Message msg, Object... objs) {
+        if (OPTION(GlobalOption.__PRINT_STACK_TRACES)) {
+            ex.printStackTrace();;
+        }
+        global.logger.log(msg, objs);
+    }
+
     public static void LOG(Throwable ex) {
         if (OPTION(GlobalOption.__PRINT_STACK_TRACES)) {
             ex.printStackTrace();;

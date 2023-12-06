@@ -33,7 +33,7 @@ public enum GlobalOption {
     SKIP_ANNOTATIONS(M18, DISASSEMBLY), // "do not produce annotations"
     DOWN_CAST(M14, DISASSEMBLY), // "if necessary reduces JVM release to maximum supported by ASM version"
     
-    DEBUG(M13, ASSEMBLY, DISASSEMBLY,STRUCTURE), // "exit with stack trace if error"
+    DEBUG(M13, ASSEMBLY, DISASSEMBLY, ROUNDTRIP, STRUCTURE), // "exit with stack trace if error"
     VERBOSE(M27, ASSEMBLY, DISASSEMBLY), // "print all log messages"
 
     DETAIL(M17, STRUCTURE),  // "prints constant pool, instructions and other detail"
@@ -41,8 +41,8 @@ public enum GlobalOption {
     TREAT_WARNINGS_AS_ERRORS(M25, ASSEMBLY), // "treat warnings as errors"
     
     // internal
-    __EXIT_IF_ERROR(null, ASSEMBLY), // "exit if error"
-    __PRINT_STACK_TRACES(null, ASSEMBLY), // "print stack trace of exceptions"
+    __EXIT_IF_ERROR(null, ASSEMBLY, ROUNDTRIP), // "exit if error"
+    __PRINT_STACK_TRACES(null, ASSEMBLY, ROUNDTRIP), // "print stack trace of exceptions"
 
 
     __STRUCTURED_LABELS(null, ASSEMBLY), // labels are numeric level

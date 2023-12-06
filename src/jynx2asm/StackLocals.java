@@ -1,9 +1,12 @@
 package jynx2asm;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+
+import org.objectweb.asm.tree.ParameterNode;
 
 import static jvm.Constants.MAX_CODE;
 import static jynx.Global.LOG;
@@ -18,6 +21,11 @@ import asm.instruction.LineInstruction;
 import asm.JynxVar;
 import jvm.Feature;
 import jynx.GlobalOption;
+import jynx2asm.frame.LocalFrame;
+import jynx2asm.frame.LocalVars;
+import jynx2asm.frame.OperandStack;
+import jynx2asm.frame.OperandStackFrame;
+import jynx2asm.frame.StackMapLocals;
 import jynx2asm.handles.JynxHandle;
 import jynx2asm.ops.JvmOp;
 
@@ -73,7 +81,10 @@ public class StackLocals {
         this.maxLength = 0;
     }
     
-    public static StackLocals getInstance(LocalVars lv, OperandStack os, JynxLabelMap labelmap, JvmOp returnop) {
+    public static StackLocals getInstance(List<Object> parms, List<ParameterNode> parameters,
+            boolean isStatic, BitSet finalparms, JynxLabelMap labelmap, JvmOp returnop) {
+        OperandStack os = OperandStack.getInstance(parms);
+        LocalVars lv = LocalVars.getInstance(parms, parameters, isStatic, finalparms);
         return new StackLocals(lv, os, labelmap, returnop);
     }
 
@@ -173,8 +184,13 @@ public class StackLocals {
         if (lastLab.isPresent()) {
             labelmap.weakUseOfJynxLabel(lastLab.get(), line);
         }
-        stack.visitFrame(OperandStackFrame.getInstance(stackarr, true),lastLab);
-        locals.visitFrame(OperandStackFrame.getInstance(localarr,false),lastLab);
+        stack.visitFrame(OperandStackFrame.getInstance(stackarr),lastLab);
+        if (OPTION(GlobalOption.SYMBOLIC_LOCAL)) {
+            // "stackmap locals have been ignored as %s specified"
+            LOG(M112, GlobalOption.SYMBOLIC_LOCAL);
+        } else {
+            locals.visitFrame(StackMapLocals.getInstance(localarr),lastLab);
+        }
         frameRequired = false;
         completion = Last.FRAME;
     }
