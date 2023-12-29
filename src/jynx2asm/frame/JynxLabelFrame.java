@@ -71,7 +71,7 @@ public class JynxLabelFrame {
         } else {
             locals = LocalFrame.combine(locals, osfx);
         }
-        if (localsInFrame != null && !localsInFrame.check(locals)) {
+        if (localsInFrame != null && locals != null && !localsInFrame.isCompatibleWith(locals)) {
             // "frame locals %s incompatible with current locals %s"
             throw new LogIllegalArgumentException(M216,localsInFrame,locals);
         }

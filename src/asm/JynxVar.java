@@ -73,13 +73,19 @@ public class JynxVar {
             Global.CHECK_SUPPORTS(Signature);
             NameDesc.FIELD_SIGNATURE.validate(vsignature);
         }
-        return new JynxVar(varnum,name, desc, vsignature, fromref, toref, line);
+        return new JynxVar(varnum, name, desc, vsignature, fromref, toref, line);
     }
     
-    public void accept(MethodVisitor mv) {
-        Label from = fromref.asmlabel();
-        Label to = toref.asmlabel();
-        if (fromref.isLessThan(toref)) {
+    public static JynxVar getIntance(int varnum, String name, String desc) {
+        return new JynxVar(varnum, name, desc, null, null, null, Line.GENERATED);
+    }
+    
+    public void accept(MethodVisitor mv, JynxLabelMap labelmap) {
+        JynxLabel jfrom = fromref == null? labelmap.startLabel(): fromref;
+        JynxLabel jto = toref == null? labelmap.endLabel(): toref;
+        if (jfrom.isLessThan(jto)) {
+            Label from = jfrom.asmlabel();
+            Label to = jto.asmlabel();
             mv.visitLocalVariable(name, desc, signature, from, to, varnum);
         } else {
             LOG(line,M217,fromref.name(),toref.name()); //"from label %s is not before to label %s"

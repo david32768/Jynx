@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.tree.ParameterNode;
 
 import static jvm.Constants.MAX_CODE;
@@ -108,10 +109,6 @@ public class StackLocals {
         return returnOp;
     }
 
-    public Optional<JynxLabel> lastLab() {
-        return lastLab;
-    }
-
     public JvmOp lastOp() {
         return lastLab.isPresent()?null:lastop;
     }
@@ -130,14 +127,6 @@ public class StackLocals {
     public void visitTryCatchBlock(JynxCatch jcatch) {
         JynxLabel usingref = jcatch.usingLab();
         stack.checkCatch(usingref);
-        usingref.addCatch(jcatch);
-    }
-    
-    public void startBlock() {
-        lastLab = Optional.empty();
-        stack.startBlock();
-        locals.startBlock();
-        activeLabels.clear();
     }
     
     public void adjustLabelDefine(JynxLabel target) {
@@ -149,8 +138,9 @@ public class StackLocals {
             LOG(M802, target,minLength, oldmax, maxLength,adjustmax);
             assert maxLength >= minLength;
         }
-        if (target.isCatch()) {
-            target.visitCatch();
+        List<JynxCatch> catchlist = labelmap.getCatches(target);
+        if (!catchlist.isEmpty()) {
+            target.visitCatch(catchlist);
         }
         if (lastLab.isPresent()) { // new label is alias
             JynxLabel base = lastLab.get();
@@ -167,9 +157,7 @@ public class StackLocals {
             lastLab = Optional.of(target);
             activeLabels.add(target);
             frameRequired = lastop.isUnconditional();
-            if (target.isUsedInCode()) {
-                completion = Last.LABEL;
-            }
+            changeCompletionTo(Last.LABEL);
         }
     }
 
@@ -177,7 +165,7 @@ public class StackLocals {
         if (lastLab.isPresent()) {
             JynxLabel jlabel = labelmap.weakUseOfJynxLabel(lastLab.get(), line);
         }
-        completion = Last.LINE;
+        changeCompletionTo(Last.LINE);
     }
     
     public void visitFrame(List<Object> stackarr, List<Object> localarr, Line line) {
@@ -192,24 +180,15 @@ public class StackLocals {
             locals.visitFrame(StackMapLocals.getInstance(localarr),lastLab);
         }
         frameRequired = false;
-        completion = Last.FRAME;
+        changeCompletionTo(Last.FRAME);
     }
     
-    private void visitPreJvmOp(JvmOp asmop) {
-        locals.preVisitJvmOp(lastLab);
-        stack.preVisitJvmOp(lastLab);
-        lastLab = Optional.empty();
-        lastop = asmop;
-    }
-
-    private void visitPostJvmOp(JvmOp asmop) {
-        boolean startblock = asmop.isUnconditional();
-        if (startblock) {
-            startBlock();
+    private void changeCompletionTo(Last next) {
+        if (next != completion) {
+            completion = next;
         }
-        completion = Last.OP;
     }
-
+    
     private void checkMethodLength(Instruction in) {
         int minbefore = minLength;
         int maxbefore = maxLength;
@@ -257,16 +236,47 @@ public class StackLocals {
                 LOG(M124);  // "stack frame is definitely required here"
         }
         frameRequired = false; // to prevent multiple error messages
+
         visitPreJvmOp(jvmop);
         in.adjust(this);
         checkMethodLength(in);
         visitPostJvmOp(jvmop);
+        changeCompletionTo(Last.OP);
         return true;
     }
 
-    public boolean visitVarDirective(JynxVar jvar) {
+    private void visitPreJvmOp(JvmOp asmop) {
+        locals.preVisitJvmOp(lastLab);
+        stack.preVisitJvmOp(lastLab);
+        lastLab = Optional.empty();
+        lastop = asmop;
+    }
+
+    private void visitPostJvmOp(JvmOp asmop) {
+        boolean startblock = asmop.isUnconditional();
+        if (startblock) {
+            stack.startBlock();
+            locals.startBlock();
+            activeLabels.clear();
+        }
+    }
+
+    public void acceptVarDirectives(MethodVisitor mv, List<JynxVar> jvars) {
+        locals().addSymbolicVars(jvars);
+        for (JynxVar jvar:jvars) {
+            boolean ok = visitVarDirective(jvar);
+            if (ok) {
+                jvar.accept(mv, labelmap);
+            } else {
+                LOG(jvar.getLine(), M54, jvar.varnum()); // "variable %d has not been written to"
+            }
+        }
+    }
+    
+    private boolean visitVarDirective(JynxVar jvar) {
         return locals().visitVarDirective(FrameElement.fromDesc(jvar.desc()), jvar.varnum());
     }
+
     
     public void visitVarAnnotation(int num) {
         locals.visitVarAnnotation(num);
@@ -285,7 +295,9 @@ public class StackLocals {
                 break;
             case LABEL:
                 JynxLabel jlabel = lastLab.get();
-                LOG(M208,completion,jlabel.name()); // "code not complete - last %s was %s"
+                if (jlabel.isUsedInCode() || !lastop.isUnconditional()) {
+                    LOG(M208,completion,jlabel.name()); // "code not complete - last %s was %s"
+                }
                 break;
             case LINE:
             case FRAME:
@@ -303,14 +315,13 @@ public class StackLocals {
     }
     
 
-    private void updateLocal(JynxLabel label) {
-        LocalFrame osf = locals.currentFrame();
-        updateLocal(label,osf);
-    }
-    
     public void adjustLabelJump(JynxLabel label, boolean jsr) {
         stack.checkStack(label, jsr);
-        updateLocal(label);
+        LocalFrame osf = locals.currentFrame();
+        updateLocal(label, osf);
+        for (JynxLabel using:labelmap.getThrowsTo(label)) {
+            updateLocal(using, osf);
+        }
     }
     
     private void updateLocal(JynxLabel dflt,Collection<JynxLabel> labels) {

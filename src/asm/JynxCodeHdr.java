@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.TypePath;
@@ -304,23 +303,6 @@ public class JynxCodeHdr implements ContextDependent {
         vars.add(jvar);
     }
     
-    private void acceptVars(MethodVisitor mv) {
-        if (vars.isEmpty()) {
-            return;
-        }
-        LOGGER().pushCurrent();
-        for (JynxVar jvar:vars) {
-            LOGGER().setLine(jvar.getLine().toString());
-            boolean ok = stackLocals.visitVarDirective(jvar);
-            if (ok) {
-                jvar.accept(mv);
-            } else {
-                LOG(M54,jvar.varnum()); // "variable %d has not been written to"
-            }
-        }
-        LOGGER().popCurrent();
-    }
-    
     private void undefinedLabel(JynxLabel lr) {
         String usage = lr.used()
                 .map(Line::toString)
@@ -338,7 +320,7 @@ public class JynxCodeHdr implements ContextDependent {
         s2a.visitEnd();
         labelmap.end(mnode, line);
         stackLocals.visitEnd();
-        acceptVars(mnode);
+        stackLocals.acceptVarDirectives(mnode, vars);
         labelmap.checkCatch();
         labelmap.stream()
                 .filter(lr->!lr.isDefined())

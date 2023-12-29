@@ -308,7 +308,7 @@ public enum Message {
     M306("nested class have different owners; class = %s token = %s"),
     M307("final parameters [%s ] are overwritten"),
     M308("parameter number %d is not in range [0,%d]"),
-    M309("missing %s %d : %s parameter added"),
+    M309("missing %s %d : null parameter added"),
     M310("parameter %d has already been defined: %s"),
     M311("maximum code size exceeded"),
     M312(WARNING,"maximum code size may have been exceeded"),
@@ -336,7 +336,8 @@ public enum Message {
     M334("abbrev '%s' for option %s has invalid name"),
     M335("index (%d) is not a current try index [0,%d]"),
     M336("option '%s' has invalid name"),
-
+    M337("%s is predefined"),
+    
     M362("expected arg %s but was %s"),
 
     M370("Type annotations not allowed for Module"),

@@ -4,11 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import org.objectweb.asm.Type;
 
 import static jynx.Message.M206;
 import static jynx.Message.M906;
 
+import jvm.ConstType;
 import jvm.FrameType;
 import jynx.LogAssertionError;
 import jynx.LogIllegalArgumentException;
@@ -220,4 +222,15 @@ public enum FrameElement {
         }
     }
 
+    public String desc() {
+       switch(this) {
+           case INTEGER:
+           case LONG:
+           case FLOAT:
+           case DOUBLE:
+               return "" + typeChar;
+           default:
+               return ConstType.ct_object.getDesc();
+       } 
+    }
 }

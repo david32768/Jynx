@@ -36,7 +36,7 @@ public class AfterFrame extends FrameArray {
     }
     
     @Override
-    public boolean check(FrameArray fa2) {
+    public boolean isCompatibleWith(FrameArray fa2) {
         throw new UnsupportedOperationException();
     }
     

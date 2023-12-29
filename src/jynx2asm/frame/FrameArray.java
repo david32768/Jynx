@@ -176,10 +176,7 @@ public class FrameArray {
         return stringForm();
     }
 
-    public boolean check(FrameArray fa2) {
-        if (fa2 == null) {
-            return true;
-        }
+    public boolean isCompatibleWith(FrameArray fa2) {
         return equivalent(this, fa2, (fe1,fe2) -> fe1.isCompatibleWith(fe2));
     }
     
@@ -187,7 +184,7 @@ public class FrameArray {
         return equivalent(this, fa2,  FrameElement::equivalent);
     }
     
-    public static boolean equivalent(FrameArray fa1, FrameArray fa2, BiPredicate<FrameElement,FrameElement> compfn) {
+    private static boolean equivalent(FrameArray fa1, FrameArray fa2, BiPredicate<FrameElement,FrameElement> compfn) {
         if (fa1 == fa2) {
             return true;
         }

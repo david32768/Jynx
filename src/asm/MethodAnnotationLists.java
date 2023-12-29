@@ -150,9 +150,9 @@ public class MethodAnnotationLists {
             int parmnum = 0;
             for (ParameterNode pn: parameters) {
                 if (pn == null) {
-                    // "missing %s %d : %s parameter added"
-                    LOG(M309,Directive.dir_parameter,parmnum,AccessFlag.acc_synthetic);
-                    mv.visitParameter("" + parmnum, AccessFlag.acc_synthetic.getAccessFlag());
+                    // "missing %s %d : null parameter added"
+                    LOG(M309, Directive.dir_parameter, parmnum);
+                    mv.visitParameter(null, 0);
                 } else {
                     mv.visitParameter(pn.name, pn.access);
                 }

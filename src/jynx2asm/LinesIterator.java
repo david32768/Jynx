@@ -57,7 +57,7 @@ public class LinesIterator implements Iterator<Line>,AutoCloseable {
         if (hasNext()) {
             next().skipTokens();;
             while(hasNext()) {
-            next().skipTokens();;
+                next().skipTokens();;
             }
         }
         LOGGER().popCurrent();

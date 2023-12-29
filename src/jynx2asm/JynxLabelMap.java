@@ -1,7 +1,11 @@
 package jynx2asm;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.objectweb.asm.MethodVisitor;
@@ -104,17 +108,47 @@ public class JynxLabelMap {
         for (Map.Entry<JynxCatch,Line>  me:catches.entrySet()) {
             JynxCatch jcatch = me.getKey();
             Line line = me.getValue();
-            JynxLabel from = jcatch.fromLab();
-            from = labelmap.get(from.base());
-            JynxLabel to = jcatch.toLab();
-            to = labelmap.get(to.base());
+            JynxLabel from = getBase(jcatch.fromLab());
+            JynxLabel to = getBase(jcatch.toLab());
             if (!from.isLessThan(to)) {
                 LOG(line,M217,from,to); // "from label %s is not before to label %s"
             }
         }
     }
    
-     public Stream<JynxLabel> stream() {
+    private JynxLabel getBase(JynxLabel label) {
+        return labelmap.get(label.base());
+    }
+    
+    public List<JynxCatch> getCatches(JynxLabel label) {
+        label = getBase(label);
+        List<JynxCatch> result = new ArrayList<>(); 
+        for (Map.Entry<JynxCatch,Line>  me:catches.entrySet()) {
+            JynxCatch jcatch = me.getKey();
+            JynxLabel using = getBase(jcatch.usingLab());
+            if (using == label) {
+                result.add(jcatch);
+            }
+        }
+        return result;
+    }
+   
+    public Set<JynxLabel> getThrowsTo(JynxLabel label) {
+        label = getBase(label);
+        Set<JynxLabel> result = new HashSet<>();
+        for (Map.Entry<JynxCatch,Line>  me:catches.entrySet()) {
+            JynxCatch jcatch = me.getKey();
+            JynxLabel from = getBase(jcatch.fromLab());
+            JynxLabel to = getBase(jcatch.toLab());
+            if (from.isLessThan(label) && !to.isLessThan(label) && (!to.isStartBlock() || to != label)) {
+                JynxLabel using = getBase(jcatch.usingLab());
+                result.add(using);
+            }
+        }
+        return result;
+    }
+    
+    public Stream<JynxLabel> stream() {
         return labelmap.entrySet().stream()
                 .filter(me->me.getKey().equals(me.getValue().name())) // remove aliases
                 .map(me->me.getValue());

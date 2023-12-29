@@ -10,12 +10,12 @@ import static jynx.Global.LOG;
 import static jynx.Global.OPTION;
 import static jynx.Message.*;
 
+import asm.JynxVar;
 import jynx.GlobalOption;
 import jynx2asm.FrameElement;
 import jynx2asm.JynxLabel;
 import jynx2asm.LimitValue;
 import jynx2asm.Line;
-import jynx2asm.SymbolicVars;
 import jynx2asm.Token;
 import jynx2asm.VarAccess;
 
@@ -23,34 +23,30 @@ public class LocalVars {
 
     private final LimitValue localsz;
     private final FrameArray locals;
-    private final boolean isStatic;
     private final VarAccess varAccess;
     private final int parmsz;
-    private final boolean symbolic;
-    private final SymbolicVars symVars;
     
     private boolean startblock;
     private LocalFrame lastlocals;
     
-    private LocalVars(StackMapLocals parmlocals, boolean isStatic, BitSet finalparms, SymbolicVars symvars) {
+    protected LocalVars(StackMapLocals parmlocals, BitSet finalparms) {
         this.localsz = new LimitValue(LimitValue.Type.locals);
         this.locals = new FrameArray();
-        this.isStatic = isStatic;
         this.varAccess = new VarAccess(finalparms);
         this.startblock = true;
         visitFrame(parmlocals, Optional.empty());  // wiil set startblock to false
         this.parmsz = locals.size();
         varAccess.completeInit(this.parmsz);
-        this.symbolic = symvars != null;
-        this.symVars = symvars;
     }
 
     public static LocalVars getInstance(List<Object> localstack, List<ParameterNode> parameters,
             boolean isStatic, BitSet finalparms) {
         StackMapLocals parmosf = StackMapLocals .getInstance(localstack);
         boolean symbolic = OPTION(GlobalOption.SYMBOLIC_LOCAL);
-        SymbolicVars symvar = symbolic? SymbolicVars.getInstance(isStatic, parmosf, parameters): null;
-        return new LocalVars(parmosf,isStatic,finalparms, symvar);
+        if(symbolic) {
+            return SymbolicVars.getInstance(isStatic, parmosf, parameters, finalparms);
+        }
+        return new LocalVars(parmosf, finalparms);
     }
 
     public LocalFrame currentFrame() {
@@ -62,18 +58,10 @@ public class LocalVars {
     }
 
     public int loadVarNumber(Token token) {
-        return symbolic?
-                symVars.getLoadNumber(token.asString()):
-                getActualVarNumber(token);
+        return token.asUnsignedShort();
     }
     
-    private int storeVarNumber(Token token, FrameElement fe) {
-        return symbolic?
-                symVars.getStoreNumber(token.asString(), fe):
-                getActualVarNumber(token);
-    }
-    
-    private int getActualVarNumber(Token token) {
+    protected int storeVarNumber(Token token, FrameElement fe) {
         return token.asUnsignedShort();
     }
     
@@ -170,6 +158,7 @@ public class LocalVars {
             if (labosf != null) {
                 setLocals(labosf, lastLab);
             }
+            label.setStartBlock();
             b4osf = lastlocals;
         } else {
             b4osf = currentFrame();
@@ -249,4 +238,6 @@ public class LocalVars {
         return  stringForm();
     }
     
+    public void addSymbolicVars(List<JynxVar> jvars) {
+    }
 }

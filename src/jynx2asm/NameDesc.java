@@ -40,6 +40,9 @@ public enum NameDesc {
     UNQUALIFIED_NAME(JAVA_ID),
     OP_ID(JAVA_ID),
 
+    NUMERIC("[0-9]+"),
+    SYMBOLIC_VAR("($%s|%s)", NUMERIC, JAVA_ID),
+    
     MODULE_ID(JAVA_ID),
     METHOD_ID(JAVA_ID),
     CLASS_NAME(Style.CLASS_NAME,"%s(/%s)*", UNQUALIFIED_NAME,UNQUALIFIED_NAME),

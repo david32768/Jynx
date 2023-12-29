@@ -17,6 +17,7 @@ import static jynx.Message.M517;
 
 
 import asm.JynxClassReader;
+import jvm.AccessFlag;
 import jvm.Attribute;
 import jvm.AttributeType;
 import jvm.ConstantPoolType;
@@ -66,16 +67,20 @@ public class Structure {
         int x = value[0];
         String klassname = (String)pool.getValue(x);
         Structure struct =  new Structure(klassname, jvmversion);
-        struct.checkClass(ptr,buffer);
+        struct.checkClass(ptr,buffer,access);
         boolean bootok = pool.checkBootstraps();
         if (!bootok) {
             pool.printCP(ptr,true);
         }
     }
+    
+    private String accessString(Context context, int access) {
+        return AccessFlag.getEnumSet(access, context, jvmVersion).toString();
+    }
 
-    public void checkClass(IndentPrinter ptr, Buffer buffer) {
+    private void checkClass(IndentPrinter ptr, Buffer buffer, int access) {
         try {
-            ptr.println("CLASS %s", classname);
+            ptr.println("CLASS %s %s", classname, accessString(CLASS, access));
             buffer.nextShort(); // super
             int ct = buffer.nextUnsignedShort();
             buffer.advance(2*ct);
@@ -96,10 +101,10 @@ public class Structure {
         Context context = FIELD;
         int ct = buffer.nextUnsignedShort();
         for (int i = 0; i < ct; ++i) {
-            buffer.nextShort();
+            int access = buffer.nextShort();
             String name = (String)buffer.nextPoolValue();
             String type = (String)buffer.nextPoolValue();
-            ptr.println("%s %s %s", context, name,type);
+            ptr.println("%s %s %s %s %s", context, name, type, accessString(FIELD, access));
             check_attrs(context,ptr.shift(),buffer);
         }
     }
@@ -108,10 +113,10 @@ public class Structure {
         Context context = METHOD;
         int ct = buffer.nextUnsignedShort();
         for (int i = 0; i < ct; ++i) {
-            buffer.nextShort();
+            int access = buffer.nextShort();
             String name = (String)buffer.nextPoolValue();
             String type = (String)buffer.nextPoolValue();
-            ptr.println("%s %s%s", context, name,type);
+            ptr.println("%s %s%s %s", context, name, type, accessString(METHOD, access));
             check_attrs(context,ptr.shift(),buffer);
         }
     }

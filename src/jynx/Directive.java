@@ -36,11 +36,11 @@ public enum Directive implements JvmVersioned {
     
     dir_signature(true, COMMON, EnumSet.of(CLASSHDR, FIELD_BLOCK, METHOD_BLOCK, COMPONENT_BLOCK), Signature),
     
-    dir_inner_class(HEADER, EnumSet.of(CLASSHDR,MODULEHDR),InnerClasses),
-    dir_inner_interface(HEADER, EnumSet.of(CLASSHDR,MODULEHDR),InnerClasses),
-    dir_inner_enum(HEADER, EnumSet.of(CLASSHDR,MODULEHDR),InnerClasses),
-    dir_inner_record(HEADER, EnumSet.of(CLASSHDR,MODULEHDR),InnerClasses),
-    dir_inner_define_annotation(HEADER, EnumSet.of(CLASSHDR,MODULEHDR),InnerClasses),
+    dir_inner_class(HEADER, EnumSet.of(CLASSHDR, PACKAGEHDR, MODULEHDR),InnerClasses),
+    dir_inner_interface(HEADER, EnumSet.of(CLASSHDR, PACKAGEHDR, MODULEHDR),InnerClasses),
+    dir_inner_enum(HEADER, EnumSet.of(CLASSHDR, PACKAGEHDR, MODULEHDR),InnerClasses),
+    dir_inner_record(HEADER, EnumSet.of(CLASSHDR, PACKAGEHDR, MODULEHDR),InnerClasses),
+    dir_inner_define_annotation(HEADER, EnumSet.of(CLASSHDR, PACKAGEHDR, MODULEHDR),InnerClasses),
 
     dir_nesthost(true, HEADER, EnumSet.of(CLASSHDR), NestHost),
     dir_nestmember(HEADER, EnumSet.of(CLASSHDR), NestMembers),

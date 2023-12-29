@@ -21,12 +21,12 @@ public class JynxLabel {
     private final ArrayList<Line> usedList;
     private final ArrayList<Line> weakList;
     private final Label asmlab;
-    private final List<JynxCatch> catchList;
     private final Map<Integer,Integer> usedAtMap;
 
     private Line defined;
     private boolean usedInCode;
     private JynxLabelFrame jlf;
+    private boolean startBlock;
     
     private int minLimit;
     private int maxLimit;
@@ -39,10 +39,10 @@ public class JynxLabel {
         this.weakList = new ArrayList<>();
         this.asmlab = new Label();
         this.jlf = new JynxLabelFrame(name);
-        this.catchList = new ArrayList<>();
         this.minLimit = Integer.MAX_VALUE;
         this.maxLimit = Integer.MIN_VALUE;
         this.usedAtMap = new HashMap<>();
+        this.startBlock = false;
     }
     
     public boolean isDefined() {
@@ -59,6 +59,14 @@ public class JynxLabel {
 
     public boolean isLessThan(JynxLabel after) {
         return this.isDefined() && after.isDefined() && this.definedLine().getLinect() < after.definedLine().getLinect();
+    }
+
+    public boolean isStartBlock() {
+        return startBlock;
+    }
+
+    public void setStartBlock() {
+        this.startBlock = true;
     }
     
     public void setOffset(int minoffset, int maxoffset) {
@@ -140,16 +148,8 @@ public class JynxLabel {
         return usedList.stream();
     }
     
-    public void addCatch(JynxCatch jcatch) {
-        catchList.add(jcatch);
-    }
-    
-    public boolean isCatch() {
-        return !catchList.isEmpty();
-    }
-
-    public void visitCatch() {
-        for (JynxCatch jcatch:catchList) {
+    public void visitCatch(List<JynxCatch> catchlist) {
+        for (JynxCatch jcatch:catchlist) {
             JynxLabel fromref = jcatch.fromLab();
             JynxLabel toref = jcatch.toLab();
             if (!this.equals(fromref) ) {
@@ -165,7 +165,6 @@ public class JynxLabel {
         base.usedInCode |= usedInCode;
         base.usedList.addAll(usedList);
         base.weakList.addAll(weakList);
-        base.catchList.addAll(catchList);
     }
     
     public void updateLocal(LocalFrame osfx) {
