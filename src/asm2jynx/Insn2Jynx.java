@@ -72,6 +72,9 @@ public class Insn2Jynx {
     }
 
     private void switchArg(OpArg oparg, AbstractInsnNode in) {
+        if (oparg != OpArg.arg_dir) {
+            lb.incrDepth();
+        }
         switch(oparg) {
             case arg_atype:arg_atype(in);break;
             case arg_byte:arg_byte(in);break;
@@ -91,6 +94,9 @@ public class Insn2Jynx {
             case arg_var:arg_var(in);break;
             default:
                 throw new EnumConstantNotPresentException(oparg.getClass(), oparg.name());
+        }
+        if (oparg != OpArg.arg_dir) {
+            lb.decrDepth();
         }
     }
     
@@ -217,12 +223,14 @@ public class Insn2Jynx {
                 .append(ReservedWord.dot_array)
                 .nl();
         int i = 0;
+        lb.incrDepth();
         for (LabelNode labelnode:labels) {
             lb.append(keys[i])
                     .append(ReservedWord.right_arrow,labelnode)
                     .nl();
             ++i;
         }
+        lb.decrDepth();
         lb.append(Directive.end_array)
                 .nl();
     }

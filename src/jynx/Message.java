@@ -199,7 +199,7 @@ public enum Message {
     M196(WARNING,"no %s instruction found"),
     M197("inner class cannot be module"),
     M198("empty line - should not occur"),
-
+    M199("field %s %s does not exist"),
     M200(WARNING,"unknown release (major = %d, minor = %d): used %s"),
     M201("frame element %s is not valid in %s context"),
     M202("unused field(s) in typeref not zero"),

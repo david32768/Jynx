@@ -51,6 +51,7 @@ public class ClassChecker {
     private final ClassType classType;
     private final JvmVersion jvmVersion;
     private String superClassName;
+    private boolean hasImplements;
 
     private int specialct;
     private int newct;
@@ -62,6 +63,7 @@ public class ClassChecker {
         this.jvmVersion = jvmversion;
         this.ownMethodsUsed = new TreeMap<>(); // sorted for reproducibilty
         this.ownMethods = new TreeMap<>(); // sorted for reproducibilty
+        this.hasImplements = false;
     }
 
     public final static LocalMethodHandle EQUALS_METHOD = Constants.EQUALS.localMethodHandle();
@@ -118,6 +120,10 @@ public class ClassChecker {
         }
         superClassName = csuper;
         return csuper;
+    }
+    
+    public void hasImplements() {
+        hasImplements = true;
     }
     
     public String getClassName() {
@@ -308,8 +314,13 @@ public class ClassChecker {
             boolean instance = ht == REF_getField || ht == REF_putField;
             JynxFieldNode jfn = fields.get(fh.name());
             if (jfn == null || !fh.desc().equals(jfn.getDesc())) {
-                // "field %s %s does not exist in this class but may exist in superclass/superinterface"
-                LOG(M214,fh.name(), fh.desc());
+                if (Constants.OBJECT_CLASS.equalsString(superClassName) && !hasImplements) {
+                    // "field %s %s does not exist"
+                    LOG(M199,fh.name(), fh.desc());
+                } else {
+                    // "field %s %s does not exist in this class but may exist in superclass/superinterface"
+                    LOG(M214,fh.name(), fh.desc());
+                }
             } else if (jfn.isStatic() == instance) {
                 String fieldtype = jfn.isStatic()?"static":"instance";
                 String optype = instance?"instance":"static";

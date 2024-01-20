@@ -265,6 +265,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
 
     private void setImplements(Line line) {
         TokenArray.uniqueArrayString(cimplements, Directive.dir_implements, line, CLASS_NAME);
+        checker.hasImplements();
     }
 
     private void setInnerClass(Directive dir,Line line) {

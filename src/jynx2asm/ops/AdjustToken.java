@@ -68,9 +68,9 @@ public class AdjustToken implements LineOp{
     }
     
     public static LineOp insertMethod(String klass, String method, String desc) {
-        assert NameDesc.CLASS_NAME.validate(klass);
-        assert NameDesc.METHOD_ID.validate(method);
-        assert NameDesc.DESC.validate(desc);
+        NameDesc.CLASS_NAME.validate(klass);
+        NameDesc.METHOD_ID.validate(method);
+        NameDesc.DESC.validate(desc);
         return new AdjustToken(AdjustToken.Adjustment.INSERT, klass + '.' + method + desc);
     }
     

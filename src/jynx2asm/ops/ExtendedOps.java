@@ -6,6 +6,7 @@ import java.util.stream.Stream;
 
 import static jynx2asm.ops.JavaCallOps.*;
 import static jynx2asm.ops.JvmOp.*;
+import static jynx2asm.ops.LineOps.*;
 
 
 public enum ExtendedOps implements MacroOp {
@@ -21,11 +22,26 @@ public enum ExtendedOps implements MacroOp {
     ext_inot(asm_iconst_m1,asm_ixor),
     ext_lnot(ext_lconst_m1,asm_lxor),
     
-    ext_isignum(asm_i2l,asm_lconst_0,asm_lcmp),
+    ext_lsignum(asm_lconst_0,asm_lcmp),
+    ext_isignum(asm_i2l, ext_lsignum),
+    ext_fsignumg(asm_fconst_0,asm_fcmpg),
+    ext_dsignumg(asm_dconst_0,asm_dcmpg),
+    ext_fsignuml(asm_fconst_0,asm_fcmpl),
+    ext_dsignuml(asm_dconst_0,asm_dcmpl),
+    
     // extended stack ops; stack-opcode stack-opcode
     ext_swap2(asm_dup2_x2,asm_pop2),
     ext_swap21(asm_dup_x2,asm_pop),
     ext_swap12(asm_dup2_x1,asm_pop2),
+    // conversion
+    // zbcsildf
+    
+    ext_i2z(ext_isignum, asm_iconst_1, asm_iand),
+    ext_l2z(ext_lsignum, asm_iconst_1, asm_iand),
+    ext_f2z(ext_fsignumg, asm_iconst_1, asm_iand),
+    ext_d2z(ext_dsignumg, asm_iconst_1, asm_iand),
+    ext_a2z(asm_iconst_0,asm_swap,asm_aconst_null,mac_label,asm_if_acmpeq,asm_pop,asm_iconst_1,mac_label,xxx_label),
+    
     // init local
     ext_izero(asm_iconst_0,asm_istore),
     ext_lzero(asm_lconst_0,asm_lstore),

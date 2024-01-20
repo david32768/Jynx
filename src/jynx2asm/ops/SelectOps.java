@@ -31,6 +31,7 @@ public enum SelectOps implements SelectOp {
     
     xxx_xload(Type.LOCAL,asm_iload,asm_lload,asm_fload,asm_dload,asm_aload),
     xxx_xstore(Type.STACK,asm_istore,asm_lstore,asm_fstore,asm_dstore,asm_astore),
+    xxx_x2z(Type.STACK,ext_i2z,ext_l2z,ext_f2z,ext_d2z,ext_a2z),
     ;
         
     private final Select selector;
