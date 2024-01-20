@@ -19,7 +19,8 @@ public enum Feature implements JvmVersioned {
     deprecated(V1_1),
     inner_classes(V1_1),
     signature(V1_1),
-    synthetic(V1_1),
+    synthetic(V1_1), // synthetic attribute in [V1_1, V1_4], real acc flag from V1_5 
+    synthetic_attribute(V1_1, V1_5),
     
     fpstrict(V1_2,V17),
     strictfp_rw(V1_2,NEVER),

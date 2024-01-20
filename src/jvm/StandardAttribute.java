@@ -18,7 +18,7 @@ public enum StandardAttribute implements Attribute {
     Exceptions(Feature.v1_0_2,EnumSet.of(METHOD),ARRAY,CLASSNAME),
     InnerClasses(Feature.inner_classes,EnumSet.of(CLASS),ARRAY,CLASSNAME,OPT_CLASSNAME,OPT_UTF8,ACCESS),
     EnclosingMethod(Feature.enclosing_method, EnumSet.of(CLASS),FIXED,CLASSNAME,OPT_NAME_TYPE),
-    Synthetic(false,Feature.synthetic,EnumSet.of(CLASS,FIELD,METHOD),FIXED),
+    Synthetic(false,Feature.synthetic_attribute,EnumSet.of(CLASS,FIELD,METHOD),FIXED),
     Signature(Feature.signature,EnumSet.of(CLASS,FIELD,METHOD,COMPONENT),FIXED,UTF8),
     SourceFile(Feature.v1_0_2,EnumSet.of(CLASS,MODULE),FIXED,UTF8),
     SourceDebugExtension(Feature.source_debug,EnumSet.of(CLASS),FIXED,INLINE_UTF8),

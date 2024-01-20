@@ -104,7 +104,7 @@ public class Structure {
             int access = buffer.nextShort();
             String name = (String)buffer.nextPoolValue();
             String type = (String)buffer.nextPoolValue();
-            ptr.println("%s %s %s %s %s", context, name, type, accessString(FIELD, access));
+            ptr.println("%s %s %s %s", context, name, type, accessString(FIELD, access));
             check_attrs(context,ptr.shift(),buffer);
         }
     }
