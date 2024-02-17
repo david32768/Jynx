@@ -329,7 +329,7 @@ public enum Message {
     M327(INFO,"added: %s %s"),
     M328(WARNING,"%s nest level is already zero"),
     M329(INFO,"print options = %s"),
-    M330(WARNING,"%s will be parsed as %s (remove low and add <number> -> )"),
+
     M331("%s changed to %s as entries are not consecutive"),
     M332(BLANK,"GlobalOption abbreviations are not unique after transform"),
     M333(BLANK,"GlobalOption names are not unique after transform"),

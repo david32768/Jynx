@@ -2,7 +2,7 @@ package asm.instruction;
 
 import org.objectweb.asm.MethodVisitor;
 
-import jynx2asm.ops.JvmOp;;
+import jynx2asm.ops.JvmOp;
 import jynx2asm.StackLocals;
 
 public class StackInstruction extends Instruction {

@@ -54,19 +54,24 @@ public class JynxClass implements ContextDependent {
     private JynxOps opmap;
     
 
-    private JynxClass(String file_source, JynxScanner js) {
+    private JynxClass(String file_source, String default_source, JynxScanner js) {
         this.js = js;
         this.file_source = file_source;
-        int index = file_source.lastIndexOf(File.separatorChar);
-        this.defaultSource = file_source.substring(index + 1);
+        this.defaultSource = default_source;
         this.source = null;
         this.unique_directives = new HashMap<>();
         this.sd = this;
     }
 
-    public static byte[] getBytes(String default_source, JynxScanner lines) {
+    public static byte[] getBytes(String file_source, JynxScanner lines) {
+        int index = file_source.lastIndexOf(File.separatorChar);
+        String default_source = file_source.substring(index + 1);
+        return getBytes(file_source, default_source, lines);
+    }
+    
+    public static byte[] getBytes(String source, String default_source, JynxScanner lines) {
         try {
-            JynxClass jclass =  new JynxClass(default_source, lines);
+            JynxClass jclass =  new JynxClass(source, default_source, lines);
             boolean ok = jclass.assemble();
             if (!ok) {
                 return null;
@@ -76,7 +81,7 @@ public class JynxClass implements ContextDependent {
             if (OPTION(GlobalOption.__PRINT_STACK_TRACES)) {
                 rtex.printStackTrace();;
             }
-            LOG(M123,default_source,rtex); // "compilation of %s failed because of %s"
+            LOG(M123, source, rtex); // "compilation of %s failed because of %s"
             return null;
         }
     }

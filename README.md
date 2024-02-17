@@ -5,7 +5,7 @@
 This is a rewritten version of [Jasmin](https://github.com/davidar/jasmin)
  using [ASM](https://asm.ow2.io) version 9.6 as a back end.
  (versions 9.1 - 9.5 will reduce maximum JVM version supported).
-It is written in Java V1_8 (apart from module-info.java)
+It is written in Java V11
  and supports all features up to V21 except user attributes.
 
 More checking is done before using ASM. For example
@@ -67,7 +67,7 @@ Options for JYNX are:
 *	--TRACE print (ASMifier) trace
 *	--DEBUG exit with stack trace if error
 *	--VERBOSE print all log messages
-*	 --TREAT_WARNINGS_AS_ERRORS treat warnings as errors
+*	--TREAT_WARNINGS_AS_ERRORS treat warnings as errors
 
 Options for 2JYNX are:
 
@@ -100,36 +100,31 @@ Changes are:
 
 *	unicode escape sequences are actioned before parsing line
 *	.end_method instead of .end method
+*	switch - new "instruction"
+```
+; generates the [lookup|table]switch instruction which has the smallest code size
+; grammar
+; switch default <default_label> <switch-array>
+; <switch-array> = .array[\n<num> -> <label>]+\n.end_array
+switch default DefaultLabel .array
+	1 -> Label1
+	10 -> Label2
+.end_array
+```
 *	lookupswitch - new format
 ```
-; grammar
-; lookupswitch default <default_label> <switch-array>
-; <switch-array> = .array[\n<num> -> <label>]+\n.end_array
+; same format as switch
 lookupswitch default DefaultLabel .array
 	1 -> Label1
 	10 -> Label2
 .end_array
 ```
-*	switch - new "instruction"
-```
-; same format as lookupswitch but will use tableswitch
-;   if that uses less code space.
-```
 *	tableswitch - new format
 ```
-; <high> is always omitted
-; if <low> is omitted will be parsed as switch
-;     i.e. requires <num> -> <label>
-;     but will generate tableswitch if appropriate
-;     and will generate error message if <num> are not consecutive.
-
-; deprecated for removal
-; grammar
-; tableswitch <low> default <default_label> <label-array>
-; <label-array> = .array[\n<labael>]+\n.end_array
-tableswitch 0 default DefaultLabel .array
-	ZeroLabel
-	OneLabel
+; same format as switch
+tableswitch default DefaultLabel .array
+	0 -> ZeroLabel
+	1 -> OneLabel
 .end_array
 ```		
 *	.implements - must use array if more than one interface

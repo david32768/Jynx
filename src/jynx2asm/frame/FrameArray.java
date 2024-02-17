@@ -184,7 +184,7 @@ public class FrameArray {
         return equivalent(this, fa2,  FrameElement::equivalent);
     }
     
-    private static boolean equivalent(FrameArray fa1, FrameArray fa2, BiPredicate<FrameElement,FrameElement> compfn) {
+    protected static boolean equivalent(FrameArray fa1, FrameArray fa2, BiPredicate<FrameElement,FrameElement> compfn) {
         if (fa1 == fa2) {
             return true;
         }

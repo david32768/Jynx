@@ -426,8 +426,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     }
     
     private void visitHeader() {
-        boolean usestack = OPTION(GlobalOption.USE_STACK_MAP);
-        if (source == null && !usestack) {
+        if (source == null && defaultSource != null) {
             LOG(M143,Directive.dir_source,defaultSource); // "%s %s assumed"
             source = defaultSource;
         }

@@ -8,7 +8,7 @@ import jynx2asm.FrameElement;
 public class OperandStackFrame extends ConstantFrameArray {
 
     public static final OperandStackFrame EMPTY = new OperandStackFrame();
-    public static final OperandStackFrame EXCEPTION = new OperandStackFrame(FrameElement.EXCEPTION);
+    public static final OperandStackFrame EXCEPTION = new OperandStackFrame(FrameElement.OBJECT);
     
     public OperandStackFrame(FrameElement... fes) {
         this(fes,fes.length);

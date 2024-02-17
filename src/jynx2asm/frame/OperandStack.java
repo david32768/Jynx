@@ -105,7 +105,7 @@ public class OperandStack {
         stack.addLast(fe);
     }
     
-    private void push(FrameElement[] fes) {
+    private void pushArray(FrameElement[] fes) {
         for (FrameElement fe:fes) {
             push(fe);
         }
@@ -139,15 +139,12 @@ public class OperandStack {
                 .forEach(this::push);
     }
     
-    private void adjust(FrameElement[] parms, char rt) {
+    private void adjust(FrameElement[] parms, Optional<FrameElement> rfe) {
         for (int i = parms.length - 1; i >= 0; --i) {
             FrameElement required = parms[i];
             pop(required);
         }
-        if (rt == 'V') {
-            return;
-        }
-        push(FrameElement.fromStack(rt));
+        rfe.ifPresent(this::push);
     }
 
     public void adjustDesc(String desc) {
@@ -157,7 +154,9 @@ public class OperandStack {
         FrameElement[] parms = parmstr.chars()
                 .mapToObj(c -> FrameElement.fromStack((char)c))
                 .toArray(FrameElement[]::new);
-        adjust(parms,desc.charAt(desc.length() - 1));
+        char rtype = desc.charAt(desc.length() - 1);
+        Optional<FrameElement> rfe = FrameElement.fromReturn(rtype);
+        adjust(parms, rfe);
     }
 
     public void adjustInvoke(JvmOp jvmop, JynxHandle mh) {
@@ -187,8 +186,8 @@ public class OperandStack {
                 .map(FrameElement::fromType)
                 .toArray(FrameElement[]::new);
         Type rtype = mt.getReturnType();
-        char rt = FrameElement.returnTypeLetter(rtype);
-        adjust(parms, rt);
+        Optional<FrameElement> rfe = FrameElement.fromReturnType(rtype);
+        adjust(parms, rfe);
     }
 
     public void adjustStackOp(JvmOp op) {
@@ -225,12 +224,12 @@ public class OperandStack {
             switch(ch) {
                 case 't':
                 case 'T':
-                    push(tos);
+                    pushArray(tos);
                     break;
                 case 'n':
                 case 'N':
                     assert nos != null;
-                    push(nos);
+                    pushArray(nos);
                     break;
                 default:
                     throw new AssertionError();

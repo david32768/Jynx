@@ -2,6 +2,7 @@ package jynx2asm;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -17,14 +18,13 @@ import jynx.LogIllegalArgumentException;
 
 public enum FrameElement {
 
-    IRRELEVANT(' ','?',true),
+    ANY(' ','?',true),
     ERROR('X','?',true),
     UNUSED('_', '?',true),
     TOP('2','?',true),
 
     RETURN_ADDRESS('R','?'),
     THIS('T','a'), // uninitialised this and this in <init> methods
-    EXCEPTION('E','a'),
 
     OBJECT('A','a'),
     INTEGER('I','i'),
@@ -62,18 +62,17 @@ public enum FrameElement {
     }
     
     private char typeLetter() {
-        return this == EXCEPTION? 'A': typeChar;
+        return typeChar;
     }
 
     public boolean isCompatibleWith(FrameElement that) {
-        return this.typeLetter() == that.typeLetter() || this == ERROR;
+        return this == that || this == ERROR;
     }
     
-    public boolean isCompatibleWithAfter(FrameElement after) {
-        return this.typeLetter() == after.typeLetter() 
-                || after == FrameElement.UNUSED
-                || after == FrameElement.IRRELEVANT
-                || after == FrameElement.ERROR;
+    public boolean isAfterCompatibleWith(FrameElement that) {
+        return isCompatibleWith(that) 
+                || this == FrameElement.UNUSED
+                || this == FrameElement.ANY;
     }
 
     public char instLetter() {
@@ -152,6 +151,13 @@ public enum FrameElement {
         return stack;
     }
     
+    public static Optional<FrameElement> fromReturn(char type) {
+        if (type == 'V') {
+            return Optional.empty();
+        }
+        return Optional.of(fromStack(type));
+    }
+    
     public static FrameElement fromLocal(char type) {
         FrameElement local = TYPE_MAP.get(type);
         if (local == null) {
@@ -190,8 +196,11 @@ public enum FrameElement {
         }
     }
     
-    public static char returnTypeLetter(Type rtype) {
-        return rtype.equals(Type.VOID_TYPE)? 'V': FrameElement.fromType(rtype).typeLetter();
+    public static Optional<FrameElement> fromReturnType(Type rt) {
+        if (rt == Type.VOID_TYPE) {
+            return Optional.empty();
+        }
+        return Optional.of(fromType(rt));
     }
     
     public static FrameElement fromDesc(String typestr) {

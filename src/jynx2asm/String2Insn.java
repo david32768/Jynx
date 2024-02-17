@@ -346,13 +346,6 @@ public class String2Insn {
 
     private Instruction arg_switch(JvmOp jvmop) {
         Token token1 = line.nextToken();
-        int low = 0;
-        if (jvmop == JvmOp.asm_tableswitch && !token1.mayBe(res_default).isPresent()) {
-            // "%s will be parsed as %s (remove low and add <number> -> )"
-            LOG(M330,JvmOp.asm_tableswitch, JvmOp.opc_switch);
-            low = token1.asInt();
-            token1 = line.nextToken();
-        }
         token1.mustBe(res_default);
         JynxLabel dflt = getJynxLabel(line.nextToken());
         SortedMap<Integer,JynxLabel> swmap = new TreeMap<>();
@@ -364,20 +357,9 @@ public class String2Insn {
                 if (value.is(right_array)) {
                     return SwitchInstruction.getInstance(jvmop, dflt, swmap);
                 }
-                int key;
-                if (jvmop == JvmOp.asm_tableswitch && !dotarray.peekToken().is(right_arrow)) {
-                    if (swmap.isEmpty()) {
-                        // "%s will be parsed as %s (remove low and add <number> -> )"
-                        LOG(M330,JvmOp.asm_tableswitch, JvmOp.opc_switch);
-                    }
-                    key = low;
-                    ++low;
-                    label = value;
-                } else {
-                    key = value.asInt();
-                    dotarray.nextToken().mustBe(right_arrow);
-                    label = dotarray.nextToken();
-                }
+                int key = value.asInt();
+                dotarray.nextToken().mustBe(right_arrow);
+                label = dotarray.nextToken();
                 JynxLabel target = getJynxLabel(label);
                 JynxLabel mustbenull = swmap.put(key, target);
                 if (mustbenull != null && !mustbenull.equals(target)) {

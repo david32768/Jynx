@@ -21,7 +21,7 @@ public class JynxLabelFrame {
     private LocalFrame localsInFrame;
 
     private LocalFrame localsBefore;
-    private FrameArray afterframe;
+    private AfterFrameArray afterframe;
 
     public JynxLabelFrame(String name) {
         this.name = name;
@@ -112,14 +112,14 @@ public class JynxLabelFrame {
     
     public void store(FrameElement fe, int num) {
         assert isFrozen();
-        afterframe.set(num, FrameElement.IRRELEVANT);
+        afterframe.set(num, FrameElement.ANY);
         if (fe.isTwo()) {
-            afterframe.set(num+1,FrameElement.IRRELEVANT);
+            afterframe.set(num+1,FrameElement.ANY);
         }
     }
     
     public void freeze() {
-        afterframe = new AfterFrame(locals.size());
+        afterframe = new AfterFrameArray(locals.size());
     }
     
     public String print() {

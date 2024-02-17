@@ -36,13 +36,15 @@ public class LocalFrame extends ConstantFrameArray {
     }
     
     public static boolean checkLabel(LocalFrame labosf, LocalFrame stackosf, LocalFrame afterlab) {
-        boolean result = true;
-        for (int i = 0; i < labosf.size();++i) {
-            FrameElement labfe = labosf.atUnchecked(i);
-            FrameElement stackfe = stackosf.atUnchecked(i);
-            FrameElement afterfe = afterlab.atUnchecked(i);
-            if (!stackfe.isCompatibleWithAfter(afterfe)) {
-                LOG(M221,afterfe,i,stackfe); // "required %s for var %d but found %s"
+        boolean result = afterlab.isCompatibleWith(stackosf);
+        if (!result) {
+            for (int i = 0; i < labosf.size();++i) {
+//                FrameElement labfe = labosf.atUnchecked(i);
+                FrameElement stackfe = stackosf.atUnchecked(i);
+                FrameElement afterfe = afterlab.atUnchecked(i);
+                if (!afterfe.isAfterCompatibleWith(stackfe)) {
+                    LOG(M221,afterfe,i,stackfe); // "required %s for var %d but found %s"
+                }
             }
         }
         return result;

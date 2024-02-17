@@ -8,7 +8,6 @@ import jynx2asm.FrameElement;
 public class StackMapLocals extends ConstantFrameArray {
 
     public static final StackMapLocals EMPTY = new StackMapLocals();
-    public static final StackMapLocals EXCEPTION = new StackMapLocals(FrameElement.EXCEPTION);
     
     public StackMapLocals(FrameElement... fes) {
         this(fes,fes.length);
