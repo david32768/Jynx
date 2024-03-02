@@ -269,13 +269,13 @@ intArrayValue [I = .array ; Jynx
 ```
 ; .nestmember <member-class-name>
 .nestmember x/y
-; may use .array if more than one nest member
+; must use .array if more than one nest member
 ```
 *	.permittedSubclass
 ```
 ; .permittedSubclass <subclass-name>
 .permittedSubclass x/y
-; may use .array if more than one permitted subclass
+; must use .array if more than one permitted subclass
 ```
 *	add support for method-handle to ldc
 ```
