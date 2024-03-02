@@ -1,10 +1,7 @@
 package jynx2asm.frame;
 
-import java.util.BitSet;
 import java.util.List;
 import java.util.Optional;
-
-import org.objectweb.asm.tree.ParameterNode;
 
 import static jynx.Global.LOG;
 import static jynx.Global.OPTION;
@@ -22,31 +19,29 @@ import jynx2asm.VarAccess;
 public class LocalVars {
 
     private final LimitValue localsz;
-    private final FrameArray locals;
+    private final Locals locals;
     private final VarAccess varAccess;
     private final int parmsz;
     
     private boolean startblock;
     private LocalFrame lastlocals;
     
-    protected LocalVars(StackMapLocals parmlocals, BitSet finalparms) {
+    protected LocalVars(MethodParameters parameters) {
         this.localsz = new LimitValue(LimitValue.Type.locals);
-        this.locals = new FrameArray();
-        this.varAccess = new VarAccess(finalparms);
+        this.locals = new Locals();
+        this.varAccess = new VarAccess(parameters.getFinalParms());
         this.startblock = true;
-        visitFrame(parmlocals, Optional.empty());  // wiil set startblock to false
+        adjustFrame(parameters.getInitFrame(), Optional.empty());  // wiil set startblock to false
         this.parmsz = locals.size();
         varAccess.completeInit(this.parmsz);
     }
 
-    public static LocalVars getInstance(List<Object> localstack, List<ParameterNode> parameters,
-            boolean isStatic, BitSet finalparms) {
-        StackMapLocals parmosf = StackMapLocals .getInstance(localstack);
+    public static LocalVars getInstance(MethodParameters parameters) {
         boolean symbolic = OPTION(GlobalOption.SYMBOLIC_LOCAL);
         if(symbolic) {
-            return SymbolicVars.getInstance(isStatic, parmosf, parameters, finalparms);
+            return SymbolicVars.getInstance(parameters);
         }
-        return new LocalVars(parmosf, finalparms);
+        return new LocalVars(parameters);
     }
 
     public LocalFrame currentFrame() {
@@ -172,7 +167,12 @@ public class LocalVars {
         visitLabel(base,lastLab);
     }
     
-    public final void visitFrame(StackMapLocals smlocals, Optional<JynxLabel> lastLab) {
+    public void visitFrame(List<Object> localarr, Optional<JynxLabel> lastLab) {
+        adjustFrame(localarr, lastLab);
+    }
+
+    private void adjustFrame(List<Object> localarr, Optional<JynxLabel> lastLab) {
+        StackMapLocals smlocals = StackMapLocals.getInstance(localarr);
         if (!startblock) {
             checkFrame(smlocals);
         }

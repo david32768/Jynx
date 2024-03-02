@@ -29,6 +29,7 @@ import jvm.TypeRef;
 import jynx.Directive;
 import jynx.ReservedWord;
 import jynx2asm.*;
+import jynx2asm.frame.MethodParameters;
 import jynx2asm.ops.JvmOp;
 
 public class JynxCodeHdr implements ContextDependent {
@@ -68,11 +69,12 @@ public class JynxCodeHdr implements ContextDependent {
         this.options = new EnumMap<>(ReservedWord.class);
     }
 
-    public static JynxCodeHdr getInstance(JynxScanner js, MethodNode mnode, StackLocals stackLocals,
-            List<Object> localStack, String2Insn s2a) {
+    public static JynxCodeHdr getInstance(JynxScanner js, MethodNode mnode,
+            MethodParameters parameters, String2Insn s2a) {
         
         CHECK_SUPPORTS(Code);
-        return new JynxCodeHdr(js, mnode, stackLocals, localStack, s2a);
+        StackLocals stackLocals = StackLocals.getInstance(parameters, s2a.getLabelMap());
+        return new JynxCodeHdr(js, mnode, stackLocals, parameters.getInitFrame(), s2a);
     }
 
     @Override

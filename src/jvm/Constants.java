@@ -87,6 +87,10 @@ public enum Constants {
     public String toString() {
         return str;
     }
+    
+    public static boolean isObjectClass(String classname) {
+        return OBJECT_CLASS.equalsString(classname);
+    }
 
     public static final EnumSet<Constants> ARRAY_METHODS
             = EnumSet.of(CLONE,EQUALS,HASHCODE,TOSTRING,GETCLASS,NOTIFY,NOTIFYALL,WAIT,WAITJ,WAITJI);

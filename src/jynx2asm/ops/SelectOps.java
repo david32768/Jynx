@@ -223,7 +223,7 @@ public enum SelectOps implements SelectOp {
                 return 3;
             }
             float fval = token.asFloat();
-            if (fval == 0.0F && 1/fval > 0.0F) { // +0.0f not -0.0F
+            if (Float.compare(fval, +0.0F) == 0) { // NOT -0/0F
                 assert ops[0] == asm_fconst_0;
                 return 0;
             } else if (fval == 1.0f) {
@@ -279,7 +279,7 @@ public enum SelectOps implements SelectOp {
                 return 2;
             }
             double dval = token.asDouble();
-            if (dval == 0.0 && 1/dval > 0.0) { // +0.0 not -0.0
+            if (Double.compare(dval,0.0) == 0) { // Not -0.0
                 assert ops[0] == asm_dconst_0;
                 return 0;
             } else if (dval == 1.0) {

@@ -1,14 +1,15 @@
 package jynx2asm.frame;
 
-import java.util.BitSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.objectweb.asm.tree.ParameterNode;
 
 import static jynx.Global.LOG;
+import static jynx.Message.M112;
 import static jynx.Message.M204;
 import static jynx.Message.M211;
 import static jynx.Message.M230;
@@ -18,6 +19,7 @@ import asm.JynxVar;
 import jynx.GlobalOption;
 import jynx.LogIllegalArgumentException;
 import jynx2asm.FrameElement;
+import jynx2asm.JynxLabel;
 import jynx2asm.NameDesc;
 import jynx2asm.Token;
 
@@ -31,38 +33,22 @@ public class SymbolicVars extends LocalVars {
     
     private int next;
 
-    private SymbolicVars(StackMapLocals parmlocals, boolean isstatic, BitSet finalparms) {
-        super(parmlocals, finalparms);
+    private SymbolicVars(MethodParameters parameters) {
+        super(parameters);
         this.varmap = new LinkedHashMap<>();
         this.typemap = new HashMap<>();
-        this.isVirtual = !isstatic;
+        this.isVirtual = !parameters.isStatic();
         this.next = 0;
     }
     
-    public static SymbolicVars getInstance(boolean isstatic, StackMapLocals parmlocals,
-            List<ParameterNode> parameters, BitSet finalparms) {
-        SymbolicVars sv = new SymbolicVars(parmlocals, isstatic, finalparms);
-        String[] parmnames;
-        if (parameters == null) {
-            parmnames = sv.defaultParmNames(parmlocals.size());
-        } else {
-            parmnames = parameters.stream()
-                    .map(p -> p.name)
-                    .toArray(String[]::new);
-        }
-        sv.setParms(parmlocals, parmnames);
+    public static SymbolicVars getInstance(MethodParameters parameters) {
+        SymbolicVars sv = new SymbolicVars(parameters);
+        ParameterNode[] parmnodes = parameters.getParameters();
+        StackMapLocals smlocals = StackMapLocals.getInstance(parameters.getInitFrame());
+        sv.setParms(smlocals, parmnodes);
         return sv;
     }
 
-    private String[] defaultParmNames(int num) {
-        String[] parmnames = new String[num];
-        for (int i = 0; i < num; ++i) {
-            String name = defaultParmName(i);
-            parmnames[i] = name;
-        }
-        return parmnames;
-    }
-    
     private String defaultParmName(int num) {
         if (isVirtual && num == 0) {
             return THIS;
@@ -72,13 +58,16 @@ public class SymbolicVars extends LocalVars {
         }
     }
     
-    private void setParms(StackMapLocals  smlocals, String[] parmnames) {
-        assert smlocals.size() == parmnames.length;
+    private void setParms(StackMapLocals  smlocals, ParameterNode[] parmnodes) {
+        assert smlocals.size() == parmnodes.length;
         for (int i = 0; i < smlocals.size(); ++i) {
             FrameElement fe = smlocals.at(i);
-            String name = parmnames[i];
-            if (name == null) {
+            ParameterNode pni = parmnodes[i];
+            String name;
+            if (pni == null) {
                 name = defaultParmName(i);
+            } else {
+                name = pni.name;
             }
             newNumber(name, fe);
         }
@@ -139,4 +128,11 @@ public class SymbolicVars extends LocalVars {
             jvars.add(jvar);
         }
     }
+    
+    @Override
+    public void visitFrame(List<Object> localarr, Optional<JynxLabel> lastLab) {
+        // "stackmap locals have been ignored as %s specified"
+        LOG(M112, GlobalOption.SYMBOLIC_LOCAL);
+    }
+
 }

@@ -1,37 +1,16 @@
 package asm;
 
-import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.ClassTooLargeException;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.MethodTooLargeException;
-import org.objectweb.asm.RecordComponentVisitor;
-import org.objectweb.asm.tree.analysis.Analyzer;
-import org.objectweb.asm.tree.analysis.AnalyzerException;
-import org.objectweb.asm.tree.analysis.BasicValue;
-import org.objectweb.asm.tree.analysis.BasicVerifier;
-import org.objectweb.asm.tree.analysis.Interpreter;
 import org.objectweb.asm.tree.InnerClassNode;
-import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.TypePath;
-import org.objectweb.asm.util.ASMifier;
-import org.objectweb.asm.util.CheckClassAdapter;
-import org.objectweb.asm.util.Printer;
-import org.objectweb.asm.util.TraceClassVisitor;
 
 import static jvm.AccessFlag.acc_final;
-import static jvm.StandardAttribute.StackMapTable;
 import static jynx.Global.*;
-import static jynx.GlobalOption.TRACE;
 import static jynx.Message.*;
 import static jynx.ReservedWord.*;
 import static jynx2asm.NameDesc.*;
@@ -39,14 +18,11 @@ import static jynx2asm.NameDesc.*;
 import jvm.AccessFlag;
 import jvm.Constants;
 import jvm.Context;
-import jvm.Feature;
 import jvm.JvmVersion;
 import jynx.Access;
 import jynx.ClassType;
 import jynx.Directive;
-import jynx.GlobalOption;
 import jynx.LogIllegalStateException;
-import jynx2asm.ClassChecker;
 import jynx2asm.handles.EnclosingMethodHandle;
 import jynx2asm.handles.HandlePart;
 import jynx2asm.JynxScanner;
@@ -57,10 +33,7 @@ import jynx2asm.TypeHints;
 
 public class JynxClassHdr implements ContextDependent, HasAccessFlags {
 
-    private final ClassVisitor cv;
-    private final JynxClassWriter cw;
-
-    private boolean hasBeenVisited;
+    private ASMClassHeaderNode hdrnode;
 
     private final JvmVersion jvmVersion;
     private final ClassType classType;
@@ -71,41 +44,23 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     private final String defaultSource;
     private StringBuilder debugBuilder;
  
-    private final ClassChecker checker;
-
-    private String csignature;
     private String csuper;
-    private String outerClass;
-    private EnclosingMethodHandle encloseMethod;
     private Line outerLine;
-    private String host;
 
-    private final Map<String,Line> cimplements;
     private final Map<String,ObjectLine<InnerClassNode>> innerClasses;
-    private final Map<String,Line> members;
-
-    private final List<AcceptsVisitor> annotations;
-
-    private final Map<String,Line> permittedSubclasses;
-    
-    private VerifierFactory verifierFactory;
     
     private final Map<Directive,Line> unique_directives;
     private final TypeHints hints;
+    
+    private boolean inner;
 
-    private JynxClassHdr(int cwflags, JvmVersion version, ObjectLine<String> sourcex, String defaultsource,
-            String cname, Access accessname, ClassType classtype) {
-        this.hints = new TypeHints();
-        this.cw = new JynxClassWriter(cwflags,hints);
-        if (OPTION(TRACE)) {
-            Printer printer = new ASMifier();
-            PrintWriter pw = new PrintWriter(System.out);
-            TraceClassVisitor tcv = new TraceClassVisitor(cw, printer, pw);
-            this.cv = new CheckClassAdapter(tcv, false);
-        } else {
-            this.cv = new CheckClassAdapter(cw, false);
-        }
-        this.jvmVersion = version;
+    private JynxClassHdr(ObjectLine<String> sourcex, String defaultsource, 
+            Access accessname, TypeHints hints) {
+        this.jvmVersion = accessname.jvmVersion();
+        this.cname = accessname.name();
+        this.classType = accessname.classType();
+        this.hdrnode = new ASMClassHeaderNode(jvmVersion.toASM(), cname, accessname.getAccess());
+        this.hints = hints;
         this.unique_directives = new HashMap<>();
         if (sourcex == null) {
             this.source = null;
@@ -114,64 +69,35 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
             Directive.dir_source.checkUnique(unique_directives, sourcex.line());
         }
         this.defaultSource = defaultsource;
-        this.cname = cname;
         this.accessName = accessname;
-        this.cimplements = new LinkedHashMap<>();
         this.innerClasses = new LinkedHashMap<>();
-        this.classType = classtype;
-        this.checker = ClassChecker.getInstance(cname,accessname,classtype,version);
-        this.members = new LinkedHashMap<>();
-        this.permittedSubclasses = new LinkedHashMap<>();
-        this.annotations = new ArrayList<>();
-        this.csignature = null;
         this.csuper = null;
-        this.outerClass = null;
-        this.encloseMethod = null;
         this.outerLine = null;
-        this.host = null;
+        this.inner = false;
         LOGGER().pushContext();
     }
     
-    public static JynxClassHdr getInstance(JvmVersion jvmversion, ObjectLine<String> source, String defaultsource,
-            Line line, ClassType classtype) {
-        String cname;
-        EnumSet<AccessFlag> flags;
-        switch (classtype) {
-            case MODULE_CLASS:
-                flags = EnumSet.noneOf(AccessFlag.class); // read in JynxModule
-                cname = Constants.MODULE_CLASS_NAME.stringValue();
-                break;
-            case PACKAGE:
-                flags = line.getAccFlags();
-                cname = line.nextToken().asName();
-                CLASS_NAME.validate(cname);
-                cname += "/" + Constants.PACKAGE_INFO_NAME.stringValue();
-                jvmversion.checkSupports(Feature.package_info);
-                break;
-            default:
-                flags = line.getAccFlags();
-                cname = line.nextToken().asName();
-                CLASS_NAME.validate(cname);
-                break;
-        }
-        line.noMoreTokens();
-        flags.addAll(classtype.getMustHave4Class(jvmversion)); 
-        Access accessname = Access.getInstance(flags, jvmversion, cname,classtype);
-        accessname.check4Class();
-        boolean usestack = OPTION(GlobalOption.USE_STACK_MAP);
-        int cwflags;
-        if (jvmversion.supports(StackMapTable)) {
-            cwflags = usestack?0:ClassWriter.COMPUTE_FRAMES;
-        } else {
-            cwflags = usestack?0:ClassWriter.COMPUTE_MAXS;
-        }
-        return new JynxClassHdr(cwflags,jvmversion, source, defaultsource, cname, accessname,classtype);
+    public static JynxClassHdr getInstance(Access accessname, ObjectLine<String> source,
+            String defaultsource, TypeHints hints) {
+        return new JynxClassHdr(source, defaultsource, accessname, hints);
     }
 
     @Override
     public void visitDirective(Directive dir, JynxScanner js) {
         Line line = js.getLine();
         dir.checkUnique(unique_directives, line);
+        if (Constants.isObjectClass(cname)) {
+            switch(dir) {
+                case dir_debug:
+                case dir_source:
+                    break;
+                default:
+                    line.skipTokens();
+                    // "Directive %s is not valid for %s"
+                    LOG(M100,dir,cname);
+                    return;
+            }
+        }
         switch(dir) {
             case dir_debug:
                 setDebug(line);
@@ -211,16 +137,6 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         }
     }
     
-    public byte[] toByteArray() {
-        byte[] ba = null;
-        try {
-            ba = cw.toByteArray();
-        } catch (ClassTooLargeException | MethodTooLargeException ex) {
-            LOG(ex);
-        }
-        return ba;
-    }
-
     @Override
     public boolean is(AccessFlag flag) {
         assert flag.isValid(Context.CLASS);
@@ -240,17 +156,14 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     }
 
     public String getClassName() {
-        if (cname == null) {
-            throw new IllegalStateException();
-        }
         return cname;
     }
     
     @Override
     public void setSignature(Line line) {
-        String signaturex = line.lastToken().asQuoted();
-        CLASS_SIGNATURE.validate(signaturex);
-        csignature = signaturex;
+        String signature = line.lastToken().asQuoted();
+        CLASS_SIGNATURE.validate(signature);
+        hdrnode.signature = signature;
     }
 
     @Override
@@ -264,8 +177,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     }
 
     private void setImplements(Line line) {
-        TokenArray.uniqueArrayString(cimplements, Directive.dir_implements, line, CLASS_NAME);
-        checker.hasImplements();
+        hdrnode.interfaces = TokenArray.listString(Directive.dir_implements, line, CLASS_NAME);
     }
 
     private void setInnerClass(Directive dir,Line line) {
@@ -309,15 +221,17 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         InnerClassNode in = new InnerClassNode(innerclass, outerclass,innername, flags);
         ObjectLine<InnerClassNode> inline = new ObjectLine<>(in,line);
         ObjectLine<InnerClassNode> previous = innerClasses.putIfAbsent(innerclass, inline);
-        if (previous != null) {
+        if (previous == null) {
+            in.accept(hdrnode);
+        } else {
             LOG(M233,innerclass,dir,previous.line().getLinect()); // "Duplicate entry %s in %s: previous entry at line %d"
-            return;
         }
     }
 
     private void setOuterClass(Directive dir, Line line) {
         String mspec = line.nextToken().asString();
         line.noMoreTokens();
+        inner = true;
         switch(dir) {
             case dir_outer_class:
                 if (!cname.startsWith(mspec)) {    // jls 13.1
@@ -326,16 +240,18 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
                 }
                 if (outerLine == null) {
                     outerLine = line;
-                    outerClass = mspec;
+                    String outerClass = mspec;
+                    hdrnode.visitOuterClass(outerClass,null,null);
                 } else {
                     // "enclosing instance has already been defined%n   %s"
                     LOG(M268,outerLine);
-        }
+                }
                 break;
             case dir_enclosing_method:
                 if (outerLine == null) {
-                    encloseMethod = EnclosingMethodHandle.getInstance(mspec);
+                    EnclosingMethodHandle encloseMethod = EnclosingMethodHandle.getInstance(mspec);
                     outerLine = line;
+                    hdrnode.visitOuterClass(encloseMethod.owner(), encloseMethod.name(), encloseMethod.desc());
                 } else {
                     // "enclosing instance has already been defined%n   %s"
                     LOG(M268,outerLine);
@@ -356,20 +272,25 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     }
     
     private void setHostClass(Line line) {
-        String hostx = line.lastToken().asName();
-        sameOwnerAsClass(hostx);
-        if (!members.isEmpty()) {
-            LOG(M289);   // "A nest member has already been defined"
-            return;
+        String host = line.lastToken().asName();
+        sameOwnerAsClass(host);
+        Line hostline = unique_directives.get(Directive.dir_nestmember);
+        if (hostline == null) {
+            hdrnode.nestHostClass = host;
+            inner = true;
+        } else {
+            LOG(M304, Directive.dir_nestmember, hostline); // "%s has already been defined%n  %s"
         }
-        host = hostx;
     }
 
     private void setMemberClass(Line line) {
-        TokenArray.arrayString(members, Directive.dir_nestmember, line, this::sameOwnerAsClass);
         Line hostline = unique_directives.get(Directive.dir_nesthost);
-        if (hostline != null) {
-            LOG(M304,hostline); // "Nest host already defined%n  %s"
+        if (hostline == null) {
+            TokenArray.listString(Directive.dir_nestmember, line, this::sameOwnerAsClass)
+                    .stream()
+                    .forEach(hdrnode::visitNestMember);
+        } else {
+            LOG(M304, Directive.dir_nesthost, hostline); // "%s has already been defined%n  %s"
         }
     }
 
@@ -378,7 +299,9 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
             LOG(M313,Directive.dir_permittedSubclass); // "final class cannot have %s"
             return;
         }
-        TokenArray.arrayString(permittedSubclasses, Directive.dir_permittedSubclass, line, CLASS_NAME);
+        TokenArray.listString(Directive.dir_permittedSubclass, line, CLASS_NAME)
+                .stream()
+                .forEach(hdrnode::visitPermittedSubclass);
     }
     
     private void setHints(JynxScanner js, Line line) {
@@ -389,9 +312,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     
     @Override
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-        JynxAnnotationNode jan = JynxAnnotationNode.getInstance(desc,visible);
-        annotations.add(jan);
-        return jan;
+        return hdrnode.visitAnnotation(desc, visible);
     }
 
     @Override
@@ -399,30 +320,26 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         if (classType == ClassType.MODULE_CLASS) {
             throw new LogIllegalStateException(M370); // "Type annotations not allowed for Module"
         }
-        JynxTypeAnnotationNode tan = JynxTypeAnnotationNode.getInstance(typeref, tp, desc,visible);
-        annotations.add(tan);
-        return tan;
+        return hdrnode.visitTypeAnnotation(typeref, tp, desc, visible);
     }
 
-    private void visit() {
-        if (hasBeenVisited) {
+    public ASMClassHeaderNode endHeader() {
+        if (hdrnode == null) {
             throw new IllegalStateException();
         }
-        csuper = checker.checkSuper(csuper);
-        String[] interfaces = cimplements.keySet().toArray(new String[0]);
-        int cflags = accessName.getAccess();
-        cv.visit(jvmVersion.toASM(), cflags, cname, csignature, csuper, interfaces);
-        hasBeenVisited = true;
-    }
-
-    public void endHeader() {
-        visit();
+        if (csuper == null && !Constants.isObjectClass(cname)) {
+            csuper = classType.defaultSuper();
+        }
+        hdrnode.superName = csuper;
         try {
             visitHeader();
         } catch (IllegalArgumentException | IllegalStateException ex) {
             LOG(M394,ex.toString()); // "END OF CLASS HEADER - SHOULD NOT APPEAR!; %s"
             throw new AssertionError();
         }
+        ASMClassHeaderNode result = hdrnode;
+        hdrnode = null;
+        return result;
     }
     
     private void visitHeader() {
@@ -431,31 +348,10 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
             source = defaultSource;
         }
         if (source != null || debugBuilder != null) {
-            cv.visitSource(source, debugBuilder == null? null : debugBuilder.toString());
-        }
-        boolean inner = false;
-        if (host != null) {
-            cv.visitNestHost(host);
-            inner = true;
-        }
-        if (outerClass != null) {
-            cv.visitOuterClass(outerClass,null,null);
-            inner = true;
-        } else if(encloseMethod != null) {
-            cv.visitOuterClass(encloseMethod.owner(), encloseMethod.name(), encloseMethod.desc());
-            inner = true;
-        }
-        annotations.stream()
-                .forEach(jan -> jan.accept(cv));
-        for (String  member:members.keySet()) {
-            cv.visitNestMember(member);
-        }
-        for (String subclass:permittedSubclasses.keySet()) {
-            cv.visitPermittedSubclass(subclass);
+            hdrnode.visitSource(source, debugBuilder == null? null : debugBuilder.toString());
         }
         for (ObjectLine<InnerClassNode> inline:innerClasses.values()) {
             InnerClassNode in = inline.object();
-            in.accept(cv);
             if (in.name.equals(cname)) {
                 inner = true;
             }
@@ -463,73 +359,6 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
         if (cname.contains("$") && !inner) {
             LOG(M52); // "class name contains '$' but is not an internal class"
         }
-        verifierFactory = new VerifierFactory(cname, csuper, cimplements.keySet(), permittedSubclasses.keySet(), hints);
-
-    }
-
-    public JynxMethodNode getJynxMethodNode(Line line) {
-        JynxMethodNode jmn =  JynxMethodNode.getInstance(line,checker);
-        return jmn;
-    }
-
-    public JynxFieldNode getJynxFieldNode(Line line) {
-         JynxFieldNode jfn = JynxFieldNode.getInstance(this,line,checker);
-         return jfn;
-    }
-    
-    public JynxComponentNode getJynxComponentNode(Line line) {
-        JynxComponentNode jcn = JynxComponentNode.getInstance(line,checker);
-        return jcn;
-    }
-    
-    public void visitEnd() {
-        checker.visitEnd();
-        cv.visitEnd();
-    }
-    
-    public void acceptMethod(JynxMethodNode jmethodnode) {
-        MethodNode mv = jmethodnode.visitEnd();
-        if (mv == null) {
-            return;
-        }
-        boolean verified = false;
-        String verifiername;
-        Interpreter<BasicValue> verifier;
-        if (OPTION(GlobalOption.BASIC_VERIFIER)) {
-            verifier = new BasicVerifier();
-            verifiername = GlobalOption.BASIC_VERIFIER.name();
-        } else {
-            verifier = verifierFactory.getSimpleVerifier(accessName.is(AccessFlag.acc_interface));
-            verifiername = "SIMPLE_VERIFIER";
-        }
-        Analyzer<BasicValue> analyzer = new Analyzer<>(verifier);
-        try {
-            analyzer.analyze(cname, mv);
-            verified =  true;
-        } catch (AnalyzerException | IllegalArgumentException e) {
-            String emsg = e.getMessage();
-            // "Method %s failed %s check:%n    %s"
-            LOG(e, M75,mv.name, verifiername, emsg);
-        }
-        if (verified) {
-            try {
-                mv.accept(cv);
-            } catch (TypeNotPresentException ex) {
-                LOG(M411,ex.typeName()); // "type %s not found"
-            }
-        }
-    }
-    
-    public RecordComponentVisitor visitRecordComponent(String name, String desc, String signature) {
-        return cv.visitRecordComponent(name, desc, signature);
-    }
-    
-    public FieldVisitor visitField(int access, String name,String desc,String signature,Object value) {
-        return cv.visitField(access, name, desc, signature, value);
-    }
-    
-    public void acceptModule(JynxModule jmodule) {
-        jmodule.getModNode().accept(cv);
     }
 
 }

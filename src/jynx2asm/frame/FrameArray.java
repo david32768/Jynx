@@ -14,7 +14,7 @@ import jynx.LogIllegalArgumentException;
 import jynx2asm.FrameClass;
 import jynx2asm.FrameElement;
 
-public class FrameArray {
+public abstract class FrameArray {
 
     private final static int MAXSZ = 1 << 16;
 
@@ -37,11 +37,11 @@ public class FrameArray {
         assert validate(this.array, this.fc);
     }
 
-    public FrameArray(int sz) {
+    protected FrameArray(int sz) {
         this(sz,sz);
     }
 
-    public FrameArray() {
+    protected FrameArray() {
         this(0,MAXSZ);
     }
 

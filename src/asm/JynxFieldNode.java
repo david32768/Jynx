@@ -1,13 +1,10 @@
 package asm;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.TypePath;
 
 import static jvm.AccessFlag.acc_final;
@@ -30,34 +27,24 @@ import jynx2asm.Token;
 
 public class JynxFieldNode implements ContextDependent, HasAccessFlags {
 
-    private final JynxClassHdr jclasshdr;
-    private final String name;
-    private final String desc;
-    private String signature;
-    private final Optional<Object> value;
-    private final List<AcceptsVisitor> annotations;
+    private final FieldNode fnode;
     private final Line line;
     private final Access accessName;
     private final ClassChecker checker;
     
     private final Map<Directive,Line> unique_directives;
 
-    private JynxFieldNode(JynxClassHdr jclasshdr, Line line, Access accessname,
-            String name, String desc, Optional<Object> value,ClassChecker checker) {
-        this.jclasshdr = jclasshdr;
+    private JynxFieldNode(Line line, FieldNode fnode, Access accessname,ClassChecker checker) {
+        this.fnode = fnode;
         this.checker = checker;
         this.accessName = accessname;
         this.line = line;
-        this.name = name;
-        this.desc = desc;
-        this.value = value;
-        this.annotations = new ArrayList<>();
         this.unique_directives = new HashMap<>();
     }
 
-    public static JynxFieldNode getInstance(JynxClassHdr jclasshdr, Line line, ClassChecker checker) {
+    public static JynxFieldNode getInstance(Line line, ClassChecker checker) {
         Access accessname = checker.getAccess(Context.FIELD, line);
-        String name = accessname.getName();
+        String name = accessname.name();
         String desc = line.nextToken().asString();
         FIELD_DESC.validate(desc);
         if (checker.isComponent(Context.FIELD, name, desc)) {
@@ -84,11 +71,11 @@ public class JynxFieldNode implements ContextDependent, HasAccessFlags {
             }
             FIELD_NAME.validate(accessname);
         } else {
-            FIELD_NAME.validate(accessname.getName());
+            FIELD_NAME.validate(accessname.name());
         }
         accessname.check4Field();
-        Optional<Object> optvalue = value==null?Optional.empty():Optional.of(value);
-        JynxFieldNode jfn = new JynxFieldNode(jclasshdr, line, accessname, name, desc, optvalue, checker);
+        FieldNode fnode = new FieldNode(accessname.getAccess(), name, desc, null, value);
+        JynxFieldNode jfn = new JynxFieldNode(line, fnode, accessname, checker);
         checker.checkField(jfn);
         return jfn;
     }
@@ -98,11 +85,11 @@ public class JynxFieldNode implements ContextDependent, HasAccessFlags {
     }
 
     public String getName() {
-        return name;
+        return fnode.name;
     }
     
     public String getDesc() {
-        return desc;
+        return fnode.desc;
     }
     
     @Override
@@ -129,43 +116,45 @@ public class JynxFieldNode implements ContextDependent, HasAccessFlags {
     
     @Override
     public void setSignature(Line line) {
-        signature = line.nextToken().asQuoted();
+        assert fnode.signature == null; // dir_signature is unique within
+        String signature = line.nextToken().asQuoted();
         FIELD_SIGNATURE.validate(signature);
         if (isComponent()) {
-            checker.checkSignature4Field(signature, name);
+            checker.checkSignature4Field(signature, fnode.name);
         }
+        fnode.signature = signature;
     }
 
     @Override
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-        JynxAnnotationNode jan = JynxAnnotationNode.getInstance(desc,visible);
-        annotations.add(jan);
-        return jan;
+        return fnode.visitAnnotation(desc, visible);
     }
 
     @Override
     public AnnotationVisitor visitTypeAnnotation(int typeref, TypePath tp, String desc, boolean visible) {
-        JynxTypeAnnotationNode tan = JynxTypeAnnotationNode.getInstance(typeref, tp, desc,visible);
-        annotations.add(tan);
-        return tan;
+        return fnode.visitTypeAnnotation(typeref, tp, desc, visible);
     }
 
-    public void visitEnd(Directive dir) {
+    private boolean hasAnnotations() {
+        return fnode.invisibleAnnotations != null || fnode.invisibleTypeAnnotations != null
+                || fnode.visibleAnnotations != null || fnode.visibleTypeAnnotations != null;
+    }
+    
+    public FieldNode visitEnd(Directive dir) {
+        String signature = fnode.signature;
+        String name = fnode.name;
         if (signature == null && isComponent()) {
             checker.checkSignature4Field(signature, name);
         }
-        int access = accessName.getAccess();
-        FieldVisitor fv = jclasshdr.visitField(access, name, desc, signature, value.orElse(null));
-        if (dir ==  null && !annotations.isEmpty()) {
+        if (dir ==  null && hasAnnotations()) {
             LOG(M270, Directive.end_field); // "%s directive missing but assumed"
         }
-        annotations.stream()
-                .forEach(jan -> jan.accept(fv));
+        return fnode;
     }
     
     @Override
     public String toString() {
-        return String.format("[%s %s %s]",name,desc,signature);
+        return String.format("[%s %s %s]",fnode.name,fnode.desc,fnode.signature);
     }
     
 }

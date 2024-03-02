@@ -2,11 +2,11 @@ package jynx2asm;
 
 import java.util.function.Predicate;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static jynx.Global.LOG;
 import static jynx.Message.M233;
-import static jynx.Message.M255;
 
 import jynx.Directive;
 import jynx.ReservedWord;
@@ -34,22 +34,26 @@ public interface TokenArray extends TokenDeque, AutoCloseable {
     public static String[] arrayString(Directive dir, Line line, NameDesc nd) {
         Map<String,Line> modlist = new LinkedHashMap<>();
         arrayString(modlist, dir, line, nd);
-        return modlist.keySet().toArray(new String[0]);
+        return modlist.keySet().toArray(String[]::new);
     }
 
-    public static void arrayString(Map<String,Line> modlist, Directive dir, Line line, NameDesc nd) {
+    public static List<String> listString(Directive dir, Line line, NameDesc nd) {
+        Map<String,Line> modlist = new LinkedHashMap<>();
+        arrayString(modlist, dir, line, nd);
+        return List.copyOf(modlist.keySet());
+    }
+
+    public static List<String> listString(Directive dir, Line line, Predicate<String> checker) {
+        Map<String,Line> modlist = new LinkedHashMap<>();
+        arrayString(modlist, dir, line, checker);
+        return List.copyOf(modlist.keySet());
+    }
+
+    private static void arrayString(Map<String,Line> modlist, Directive dir, Line line, NameDesc nd) {
         arrayString(modlist, dir, line, nd::validate);
     }
 
-    public static void uniqueArrayString(Map<String,Line> modlist, Directive dir, Line line, NameDesc nd) {
-        if (!modlist.isEmpty()) {
-            // "multiple %s are deprecated: use .array"
-            LOG(M255,dir);
-        }
-        arrayString(modlist, dir, line, nd::validate);
-    }
-
-    public static void arrayString(Map<String,Line> modlist, Directive dir, Line line, Predicate<String> checker) {
+    private static void arrayString(Map<String,Line> modlist, Directive dir, Line line, Predicate<String> checker) {
         try (TokenArray array = line.getTokenArray()) {
             while(true) {
                 Token token = array.firstToken();

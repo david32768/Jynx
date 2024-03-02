@@ -2,7 +2,6 @@ package asm;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.objectweb.asm.tree.analysis.SimpleVerifier;
 import org.objectweb.asm.Type;
@@ -17,12 +16,15 @@ public class VerifierFactory {
     private final List<String> permitted;
     private final TypeHints hints;
 
-    public VerifierFactory(String classname, String supername, Set<String> interfaces,
-            Set<String> permitted, TypeHints hints) {
+    public VerifierFactory(ASMClassHeaderNode hdrnode, TypeHints hints) {
+        String classname = hdrnode.name;
+        String supername = hdrnode.superName;
+        List<String> interfaces = hdrnode.interfaces;
+        List<String> permitted = hdrnode.permittedSubclasses;
         this.classNameType = Type.getObjectType(classname);
         this.superType = supername == null ? null : Type.getObjectType(supername);
         this.interfaceTypes = new ArrayList<>();
-        this.permitted = new ArrayList<>(permitted);
+        this.permitted = permitted;
         this.hints = hints;
         for (String itf : interfaces) {
             this.interfaceTypes.add(Type.getObjectType(itf));

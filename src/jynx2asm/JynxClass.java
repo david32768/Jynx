@@ -6,20 +6,28 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static jynx.ClassType.MODULE_CLASS;
+import static jynx.ClassType.PACKAGE;
 import static jynx.Directive.dir_comment;
 import static jynx.Directive.dir_module;
 import static jynx.Directive.end_comment;
 import static jynx.Global.*;
 import static jynx.Message.*;
+import static jynx2asm.NameDesc.CLASS_NAME;
 
 import asm.ContextDependent;
 import asm.JynxClassHdr;
+import asm.JynxClassNode;
 import asm.JynxCodeHdr;
 import asm.JynxComponentNode;
 import asm.JynxFieldNode;
 import asm.JynxMethodNode;
 import asm.JynxModule;
+import jvm.AccessFlag;
+import jvm.Constants;
+import jvm.Feature;
 import jvm.JvmVersion;
+import jynx.Access;
 import jynx.ClassType;
 import jynx.Directive;
 import jynx.Global;
@@ -41,6 +49,7 @@ public class JynxClass implements ContextDependent {
 
     private State state;
 
+    private JynxClassNode jclassnode;
     private JynxClassHdr jclasshdr;
     private JynxComponentNode jcompnode;
     private JynxFieldNode jfieldnode;
@@ -122,7 +131,7 @@ public class JynxClass implements ContextDependent {
         LOG(M111, instct, labct, dirct - 1,js.getPreCommentsCount());
         // dirct - 1 as .end class is internal
         assert state == State.END_CLASS;
-        boolean success = END_MESSAGES(jclasshdr.getClassName());
+        boolean success = END_MESSAGES(jclassnode.getClassName());
         return success;
     }
 
@@ -201,11 +210,41 @@ public class JynxClass implements ContextDependent {
                 throw new LogAssertionError(M907,dir,State.START_BLOCK);
         }
     }
+
+    private Access getAccess(Line line, ClassType classtype, JvmVersion jvmversion) {
+        String cname;
+        EnumSet<AccessFlag> flags;
+        switch (classtype) {
+            case MODULE_CLASS:
+                flags = EnumSet.noneOf(AccessFlag.class); // read in JynxModule
+                cname = Constants.MODULE_CLASS_NAME.stringValue();
+                break;
+            case PACKAGE:
+                flags = line.getAccFlags();
+                cname = line.nextToken().asName();
+                CLASS_NAME.validate(cname);
+                cname += "/" + Constants.PACKAGE_INFO_NAME.stringValue();
+                jvmversion.checkSupports(Feature.package_info);
+                break;
+            default:
+                flags = line.getAccFlags();
+                cname = line.nextToken().asName();
+                CLASS_NAME.validate(cname);
+                break;
+        }
+        line.noMoreTokens();
+        flags.addAll(classtype.getMustHave4Class(jvmversion)); 
+        Access accessname = Access.getInstance(flags, jvmversion, cname, classtype);
+        accessname.check4Class();
+        return accessname;
+    }
     
     public void setClass(Directive dir) {
         ClassType classtype = ClassType.of(dir);
         LOG(M89, file_source,jvmVersion); // "file = %s version = %s"
-        jclasshdr = JynxClassHdr.getInstance(jvmVersion, source, defaultSource, js.getLine(), classtype);
+        Access accessname = getAccess(js.getLine(), classtype, jvmVersion);
+        jclassnode = JynxClassNode.getInstance(accessname);
+        jclasshdr = jclassnode.getJynxClassHdr(source, defaultSource);
         Global.setClassName(jclasshdr.getClassName());
         state = State.getState(classtype);
         sd = jclasshdr;
@@ -234,13 +273,14 @@ public class JynxClass implements ContextDependent {
     
     public void endHeader(Directive dir) {
         assert dir == null;
-        jclasshdr.endHeader();
+        jclassnode.acceptClassHdr(jclasshdr);
+        jclasshdr = null;
         sd = null;
     }
 
     public void setComponent(Directive dir) {
         assert dir == Directive.dir_component;
-        jcompnode = jclasshdr.getJynxComponentNode(js.getLine());
+        jcompnode = jclassnode.getJynxComponentNode(js.getLine());
         sd = jcompnode;
         LOGGER().pushContext();
     }
@@ -249,7 +289,7 @@ public class JynxClass implements ContextDependent {
         if (jcompnode == null) {
             throw new IllegalStateException();
         }
-        jcompnode.visitEnd(jclasshdr,dir);
+        jclassnode.acceptComponent(jcompnode, dir);
         jcompnode = null;
         sd = null;
         LOGGER().popContext();
@@ -257,7 +297,7 @@ public class JynxClass implements ContextDependent {
     
     public void setField(Directive dir) {
         assert dir == Directive.dir_field;
-        jfieldnode = jclasshdr.getJynxFieldNode(js.getLine());
+        jfieldnode = jclassnode.getJynxFieldNode(js.getLine());
         sd = jfieldnode;
         LOGGER().pushContext();
     }
@@ -266,7 +306,7 @@ public class JynxClass implements ContextDependent {
         if (jfieldnode == null) {
             throw new IllegalStateException();
         }
-        jfieldnode.visitEnd(dir);
+        jclassnode.acceptField(jfieldnode,dir);
         jfieldnode = null;
         sd = null;
         LOGGER().popContext();
@@ -280,7 +320,7 @@ public class JynxClass implements ContextDependent {
                     throw new IllegalStateException();
                 }
                 Line line = js.getLine();
-                jmethodnode = jclasshdr.getJynxMethodNode(line);
+                jmethodnode = jclassnode.getJynxMethodNode(line);
                 sd = jmethodnode;
                 LOGGER().pushContext();
                 break;
@@ -321,7 +361,7 @@ public class JynxClass implements ContextDependent {
             }
         }
         if (ok) {
-            jclasshdr.acceptMethod(jmethodnode);
+            jclassnode.acceptMethod(jmethodnode);
         }
         jmethodnode = null;
         jcodehdr = null;
@@ -341,8 +381,7 @@ public class JynxClass implements ContextDependent {
     public void endModule(Directive dir) {
         assert dir == Directive.end_module;
         assert jmodule != null;
-        jmodule.visitEnd();
-        jclasshdr.acceptModule(jmodule);
+        jclassnode.acceptModule(jmodule);
     }
     
     public void endClass(Directive dir) {
@@ -353,14 +392,14 @@ public class JynxClass implements ContextDependent {
         if (errct != 0) {
             return;
         }
-        jclasshdr.visitEnd();
+        jclassnode.visitEnd();
     }
     
     public byte[] toByteArray() {
         if (LOGGER().numErrors() != 0) {
             return null;
         }
-        return jclasshdr.toByteArray();
+        return jclassnode.toByteArray();
     }
 
 }

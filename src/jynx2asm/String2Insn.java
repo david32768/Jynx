@@ -46,8 +46,9 @@ public class String2Insn {
         this.indent = IndentType.BEGIN.after();
     }
 
-    public static String2Insn getInstance(JynxLabelMap labmap, ClassChecker checker, JynxOps opmap) {
-        return new String2Insn(labmap, checker, opmap);
+    public static String2Insn getInstance(ClassChecker checker, JynxOps opmap) {
+        JynxLabelMap labelmap = new JynxLabelMap();
+        return new String2Insn(labelmap, checker, opmap);
     }
 
     public JynxLabelMap getLabelMap() {

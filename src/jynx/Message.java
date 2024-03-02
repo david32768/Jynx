@@ -78,7 +78,7 @@ public enum Message {
     M71(WARNING,"as %s is not a final static field, ' = %s' may be silently ignored by JVM (JVMS 5.5 6)"),
     M72(WARNING,"version %s may not be fully supported"),
     M73(WARNING,"irrelevant option %s ignored"),
-
+    M74(BLANK,"use java.lang.classfile"),
     M75("Method %s failed %s check:%n    %s"),
     M76("unknown handle tag: %d"),
     M77("%s value %d is not in range [%d,%d]"),
@@ -104,7 +104,7 @@ public enum Message {
     M97("file(%s) does not have %s suffix"),
     M98("Unsupported version of %s: first parms are not compatible with:%n   %s"),
     M99("Separator \'%s\' not found in %s"),
-    
+    M100("Directive %s is not valid for %s"),
     M101("unknown handle mnemonic: %s"),
     M102("init method does not contain this or super: %s = %d %s = %d"),
     M103(WARNING,"init method contains %d %s and %d %s for net of %d"),
@@ -121,7 +121,7 @@ public enum Message {
     M114("Requires at most one of {%s} specified"),
     M115("Not first token - token = %s"),
     M116(BLANK,"%s created - size %d bytes"),
-
+    M117(WARNING,"%s not supported; ASM ClassWriter used"),
     M118("Requires all of {%s} specified"),
     M119("this and following lines skipped until %s"),
     M120("Requires only one of {%s} specified"),
@@ -255,7 +255,7 @@ public enum Message {
     M252("own init method %s not found"),
     M253("illegal number of dimensions %d; must be in range [0,%d]"),
     M254("%s is used in a macro after a mulit-line op"),
-    M255(WARNING,"multiple %s are deprecated: use .array"),
+
     M256("size of %s is %d which exceeds %d"),
     M257("argument count %d is not in range [0,%d]"),
     M258(WARNING,"%s is a reserved word and cannot be a Java Id"),
@@ -289,7 +289,7 @@ public enum Message {
     M286(SEVERE,"%s is not (a known) class"),
     M287(WARNING,"JVM version %s is not supported by the version of ASM used; %s substituted"),
     M288(SEVERE,"JVM version %s is not supported by the version of ASM used; maximum version is %s "),
-    M289("A nest member has already been defined"),
+
     M290(BLANK,";%s  %s -> %s"),
     M291(BLANK,";%s  %s = %s"),
     M292(BLANK,"%s  +%s"),
@@ -303,7 +303,7 @@ public enum Message {
     M300("required %s is missing"),
     M302("%s is null or has different feature requirement than %s"),
     M303("Enclosing method cannot be in enclosed class"),
-    M304("Nest host already defined%n  %s"),
+    M304("%s has already been defined%n  %s"),
     M305(ENDINFO,"it is preferred that name is separated from owner by '%c' not '%c'"),
     M306("nested class have different owners; class = %s token = %s"),
     M307("final parameters [%s ] are overwritten"),
@@ -337,6 +337,7 @@ public enum Message {
     M335("index (%d) is not a current try index [0,%d]"),
     M336("option '%s' has invalid name"),
     M337("%s is predefined"),
+    M338("code missing but method is not native or abstract"),
     
     M362("expected arg %s but was %s"),
 

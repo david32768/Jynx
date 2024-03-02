@@ -1,4 +1,4 @@
-module com.github.david32768.jynx {
+module com.github.david32768x.jynx {
 	exports com.github.david32768.jynx;
 	exports jynx2asm.ops;
 	requires org.objectweb.asm;

@@ -1,8 +1,6 @@
 package asm;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.objectweb.asm.AnnotationVisitor;
@@ -18,42 +16,36 @@ import static jynx.Message.*;
 
 import jvm.AccessFlag;
 import jvm.Context;
-import jvm.FrameType;
 import jynx.Access;
 import jynx.Directive;
 
 import jynx2asm.*;
-import jynx2asm.handles.JynxHandle;
+import jynx2asm.frame.MethodParameters;
 import jynx2asm.handles.LocalMethodHandle;
-import jynx2asm.ops.JvmOp;
 import jynx2asm.ops.JynxOps;
 
 public class JynxMethodNode implements ContextDependent, HasAccessFlags {
 
-    private MethodNode mnode;
+    private final MethodNode mnode;
     private final Line methodLine;
-    private final int numparms;
     private final Access accessName;
     private final LocalMethodHandle lmh;
-    private String signature;
-    private final Map<String, Line> exceptions;
 
-    private final MethodAnnotationLists annotationLists;
+    private final MethodParametersBuilder parametersBuilder;
     private final Map<Directive,Line> unique_directives;
 
     private final ClassChecker checker;
     
     private final int errorsAtStart;
     
-    private JynxMethodNode(Line line, Access accessname, LocalMethodHandle lmh,  ClassChecker checker) {
+    private JynxMethodNode(Line line, MethodNode mnode, Access accessname, LocalMethodHandle lmh,  ClassChecker checker) {
         this.errorsAtStart = LOGGER().numErrors();
+        this.mnode = mnode;
         this.lmh = lmh;
         this.accessName = accessname;
-        this.numparms = Type.getArgumentTypes(lmh.desc()).length;
         this.methodLine = line;
-        this.exceptions = new LinkedHashMap<>();
-        this.annotationLists = new MethodAnnotationLists(numparms);
-        this.signature = null;
+        int numparms = Type.getArgumentTypes(lmh.desc()).length;
+        this.parametersBuilder = new MethodParametersBuilder(numparms);
         this.unique_directives = new HashMap<>();
         this.checker = checker;
     }
@@ -61,7 +53,7 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
     public static JynxMethodNode getInstance(Line line, ClassChecker checker) {
         Access accessname = checker.getAccess(Context.METHOD,line);
         line.noMoreTokens();
-        LocalMethodHandle lmh = LocalMethodHandle.getInstance(accessname.getName());
+        LocalMethodHandle lmh = LocalMethodHandle.getInstance(accessname.name());
         if (lmh.isInit()) {
             accessname.check4InitMethod();
         } else {
@@ -70,21 +62,19 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
             }
             accessname.check4Method();
         }
-        JynxMethodNode jmn =  new JynxMethodNode(line,accessname,lmh,checker);
+        MethodNode mnode = new MethodNode(accessname.getAccess(), lmh.name(), lmh.desc(), null, null);
+        JynxMethodNode jmn =  new JynxMethodNode(line, mnode, accessname, lmh, checker);
+        // signature and exceptions to be set later if required
         checker.checkMethod(jmn);
         return jmn;
     }
 
-    public boolean hasAnnotations() {
-        return annotationLists.hasAnnotations();
-    }
-    
     public String getName() {
-        return lmh.name();
+        return mnode.name;
     }
     
     public String getDesc() {
-        return lmh.desc();
+        return mnode.desc;
     }
     
     public Line getLine() {
@@ -119,9 +109,7 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
     }
 
     private void endHeader() {
-      int access = accessName.getAccess();
-      mnode = new MethodNode(access, getName(), getDesc(), signature, exceptions.keySet().toArray(new String[0]));
-      annotationLists.accept(mnode);
+      parametersBuilder.accept(mnode);
     }
     
     public JynxCodeHdr getJynxCodeHdr(JynxScanner js, JynxOps opmap) {
@@ -131,18 +119,18 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
             return null;
         }
         boolean isStatic = is(AccessFlag.acc_static);
-        JynxLabelMap labelmap = new JynxLabelMap();
-        String virtclname = isStatic? null: checker.getClassName();
-        List<Object> localStack = FrameType.getInitFrame(virtclname, lmh); // classname set non null for virtual methods
-        JvmOp returnop = JynxHandle.getReturnOp(lmh);
-        StackLocals stackLocals = StackLocals.getInstance(localStack, mnode.parameters,
-                isStatic, annotationLists.getFinalParms(), labelmap, returnop);
-        String2Insn s2a = String2Insn.getInstance(labelmap, checker, opmap);
-        return JynxCodeHdr.getInstance(js, mnode, stackLocals, localStack, s2a);
+        String classname = checker.getClassName();
+        MethodParameters parameters = parametersBuilder.getMethodParameters(lmh, isStatic, classname);
+        String2Insn s2a = String2Insn.getInstance(checker, opmap);
+        return JynxCodeHdr.getInstance(js, mnode, parameters, s2a);
     }
 
     public LocalMethodHandle getLocalMethodHandle() {
         return lmh;
+    }
+    
+    public boolean isInit() {
+        return lmh.isInit();
     }
     
     @Override
@@ -161,17 +149,19 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
             LOG(M128,Directive.dir_throws,getName());   // "% directive not allowed for component method %s"
             return;
         }
-        TokenArray.uniqueArrayString(exceptions, Directive.dir_throws, line, NameDesc.CLASS_NAME);
+        mnode.exceptions = TokenArray.listString(Directive.dir_throws, line, NameDesc.CLASS_NAME);
     }
     
     @Override
     public void setSignature(Line line) {
+        assert mnode.signature == null; // dir_signature is unique within
         CHECK_SUPPORTS(Signature);
-        signature = line.lastToken().asQuoted();
+        String signature = line.lastToken().asQuoted();
         NameDesc.METHOD_SIGNATURE.validate(signature);
         if (isComponent()) {
             checker.checkSignature4Method(signature, getName(), getDesc());
         }
+        mnode.signature = signature;
     }
 
     private void visitParameter(Line line) {
@@ -179,40 +169,46 @@ public class JynxMethodNode implements ContextDependent, HasAccessFlags {
         Access accessname = checker.getAccessOptName(Context.PARAMETER, line);
         line.noMoreTokens();
         accessname.check4Parameter();
-        annotationLists.visitParameter(parmnum, accessname);
+        parametersBuilder.visitParameter(parmnum, accessname);
     }
     
     @Override
     public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
-        return annotationLists.visitAnnotation(descriptor,visible);
+        return mnode.visitAnnotation(descriptor,visible);
     }
 
     @Override
     public AnnotationVisitor visitAnnotationDefault() {
-        return annotationLists.visitAnnotationDefault();
+        return mnode.visitAnnotationDefault();
     }
 
     @Override
     public AnnotationVisitor visitTypeAnnotation(int typeref, TypePath tp, String descriptor, boolean visible) {
-        return annotationLists.visitTypeAnnotation(typeref, tp, descriptor, visible);
+        return mnode.visitTypeAnnotation(typeref, tp, descriptor, visible);
     }
 
     private void visitAnnotableCount(Line line,boolean visible) {
         int count = line.nextToken().asInt();
         line.noMoreTokens();
         CHECK_SUPPORTS(visible?RuntimeVisibleParameterAnnotations:RuntimeInvisibleParameterAnnotations);
-        annotationLists.visitAnnotableCount(count, visible);
+        parametersBuilder.visitAnnotableCount(count, visible);
     }
 
     @Override
     public AnnotationVisitor visitParameterAnnotation(String classdesc,int parameter, boolean visible) {
-        return annotationLists.visitParameterAnnotation(parameter, classdesc, visible);
+        parametersBuilder.checkParameterAnnotation(parameter, visible);
+        return mnode.visitParameterAnnotation(parameter, classdesc, visible);
     }
 
     public MethodNode visitEnd() {
-        if (mnode == null) {
+        if (mnode.instructions == null || mnode.instructions.size() == 0) {
+            if (!isAbstractOrNative()) {
+                LOG(M338); // "code missing but method is not native or abstract"
+                return null;
+            }
             endHeader();
         }
+        String signature = mnode.signature;
         if (signature == null && isComponent()) {
             checker.checkSignature4Method(signature, getName(), getDesc());
         }

@@ -150,7 +150,7 @@ public enum NameDesc {
     }
 
     public boolean validate(Access accessname) {
-        String name = accessname.getName();
+        String name = accessname.name();
         switch (this) {
             case FIELD_NAME:
                 boolean ok = validate(name);

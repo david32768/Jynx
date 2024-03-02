@@ -56,11 +56,11 @@ public class ClassChecker {
     private int specialct;
     private int newct;
     
-    private ClassChecker(String cname, Access classAccess, ClassType classType, JvmVersion jvmversion) {
-        this.className = cname;
+    private ClassChecker(Access classAccess) {
+        this.className = classAccess.name();
         this.classAccess = classAccess;
-        this.classType = classType;
-        this.jvmVersion = jvmversion;
+        this.classType = classAccess.classType();
+        this.jvmVersion = classAccess.jvmVersion();
         this.ownMethodsUsed = new TreeMap<>(); // sorted for reproducibilty
         this.ownMethods = new TreeMap<>(); // sorted for reproducibilty
         this.hasImplements = false;
@@ -85,31 +85,32 @@ public class ClassChecker {
     private final static ObjectLine<HandleType> VIRTUAL_METHOD_HANDLE_LINE = new ObjectLine<>(REF_invokeVirtual, Line.EMPTY);
     private final static ObjectLine<HandleType> STATIC_METHOD_HANDLE_LINE = new ObjectLine<>(REF_invokeStatic, Line.EMPTY);
     
-    public static ClassChecker getInstance(String cname, Access classAccess,
-            ClassType classType, JvmVersion jvmversion) {
-        ClassChecker checker = new ClassChecker(cname, classAccess, classType, jvmversion);
+    public static ClassChecker getInstance(Access classAccess) {
+        ClassChecker checker = new ClassChecker(classAccess);
+        checker.addStandardMethods();
+        return checker;
+    }
+
+    private void addStandardMethods() {
         if (classType == ClassType.ENUM) { // final methods in java/lang/Enum
             Constants.FINAL_ENUM_METHODS.stream()
                     .map(Constants::toString)
                     .map(LocalMethodHandle::getInstance)
-                    .forEach(lmh -> checker.ownMethods.put(lmh,VIRTUAL_METHOD_HANDLE_LINE));
-            LocalMethodHandle compare = LocalMethodHandle.getInstance(String.format(Constants.COMPARETO_FORMAT.stringValue(),cname));
-            checker.ownMethods.put(compare,VIRTUAL_METHOD_HANDLE_LINE);
+                    .forEach(lmh -> ownMethods.put(lmh,VIRTUAL_METHOD_HANDLE_LINE));
+            LocalMethodHandle compare = LocalMethodHandle.getInstance(String.format(
+                    Constants.COMPARETO_FORMAT.stringValue(), className));
+            ownMethods.put(compare,VIRTUAL_METHOD_HANDLE_LINE);
         }
-        if (!Constants.OBJECT_CLASS.equalsString(cname)
+        if (!Constants.isObjectClass(className)
                 && classType != ClassType.MODULE_CLASS && classType != ClassType.PACKAGE) {
             Constants.FINAL_OBJECT_METHODS.stream()
                     .map(Constants::stringValue)
                     .map(LocalMethodHandle::getInstance)
-                    .forEach(lmh ->checker.ownMethods.put(lmh,VIRTUAL_METHOD_HANDLE_LINE));
+                    .forEach(lmh -> ownMethods.put(lmh,VIRTUAL_METHOD_HANDLE_LINE));
         }
-        return checker;
     }
     
-    public String checkSuper(String csuper) {
-        if (csuper == null && !Constants.OBJECT_CLASS.equalsString(className)) {
-            csuper = classType.defaultSuper();
-        }
+    public void setSuper(String csuper) {
         if (classType == ClassType.ENUM && Constants.ENUM_SUPER.equalsString(csuper)) {
             String str = String.format(Constants.VALUES_FORMAT.stringValue(),className);
             MethodHandle values = MethodHandle.getInstance(str,REF_invokeStatic);
@@ -119,7 +120,6 @@ public class ClassChecker {
             ownMethodsUsed.put(valueof,STATIC_METHOD_HANDLE_LINE);
         }
         superClassName = csuper;
-        return csuper;
     }
     
     public void hasImplements() {
@@ -206,12 +206,13 @@ public class ClassChecker {
 
     public void checkMethod(JynxMethodNode jmn) {
         LocalMethodHandle lmh = jmn.getLocalMethodHandle();
+        String name = jmn.getName();
         specialct = 0;
         newct = 0;
         HandleType ht;
         if (jmn.isStatic()) {
             ht = REF_invokeStatic;
-        } else if (lmh.isInit()){
+        } else if (jmn.isInit()){
             ht = REF_newInvokeSpecial;
         } else if (classType == ClassType.INTERFACE) {
             ht = REF_invokeInterface;
@@ -220,9 +221,9 @@ public class ClassChecker {
         }
         switch (classType) {
             case ANNOTATION_CLASS:
-                if (jmn.isStatic() || !jmn.isAbstract() || !lmh.desc().startsWith("()")) {
+                if (jmn.isStatic() || !jmn.isAbstract() || !jmn.getDesc().startsWith("()")) {
                     // "method %s in %s class must be %s, not %s and have no parameters"
-                    LOG(M406,lmh.ond(),classType,AccessFlag.acc_abstract,AccessFlag.acc_static);
+                    LOG(M406, lmh.ond(), classType,AccessFlag.acc_abstract, AccessFlag.acc_static);
                 }
                 break;
         }
@@ -234,27 +235,27 @@ public class ClassChecker {
                 LOG(M262,lmh.ond());
             } else {
                 // "duplicate %s: %s already defined at line %d"            
-                LOG(M40,Directive.dir_method,lmh.ond(),previous.line().getLinect());
+                LOG(M40, Directive.dir_method, lmh.ond(), previous.line().getLinect());
             }
         }
         if (classAccess.is(acc_final) && jmn.isAbstract()) {
-            LOG(M59,jmn.getName());  // "method %s cannot be abstract in final class"
+            LOG(M59, name);  // "method %s cannot be abstract in final class"
         }
-        LocalMethodHandle sermd = SERIAL_METHODS.get(lmh.name());
+        LocalMethodHandle sermd = SERIAL_METHODS.get(name);
         if (sermd != null) {
             if (sermd.equals(lmh)) {
                 if (!jmn.isPrivate()) {
-                    LOG(M207,lmh.name()); // "possible serialization method %s is not private"
+                    LOG(M207, name); // "possible serialization method %s is not private"
                 }
             } else if (jmn.isPrivate()) {
-                LOG(M227,lmh.ond(),sermd.ond()); // "possible serialization method %s does not match %s"
+                LOG(M227, lmh.ond(), sermd.ond()); // "possible serialization method %s does not match %s"
             }
         }
    }    
 
     public void endMethod(JynxMethodNode jmn) {
-        if (jmn.getLocalMethodHandle().isInit()) {
-            int standard = Constants.OBJECT_CLASS.equalsString(className)?0:1;
+        if (jmn.isInit()) {
+            int standard = Constants.isObjectClass(className)? 0: 1;
             int net = specialct - newct;
             if (net < standard) {
                 // "init method does not contain this or super: %s = %d %s = %d"
@@ -314,7 +315,7 @@ public class ClassChecker {
             boolean instance = ht == REF_getField || ht == REF_putField;
             JynxFieldNode jfn = fields.get(fh.name());
             if (jfn == null || !fh.desc().equals(jfn.getDesc())) {
-                if (Constants.OBJECT_CLASS.equalsString(superClassName) && !hasImplements) {
+                if (Constants.isObjectClass(superClassName) && !hasImplements) {
                     // "field %s %s does not exist"
                     LOG(M199,fh.name(), fh.desc());
                 } else {

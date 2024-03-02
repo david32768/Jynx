@@ -127,9 +127,9 @@ public enum FrameType {
     }
     
     // set classname == null for static method
-    public static ArrayList<Object> getInitFrame(String classname, LocalMethodHandle lmh) {
+    public static ArrayList<Object> getInitFrame(String classname, boolean isstatic, LocalMethodHandle lmh) {
         ArrayList<Object> localStack = new ArrayList<>();
-        if (classname != null) {
+        if (!isstatic) {
             if (lmh.isInit()) {
                 localStack.add(ft_UninitializedThis.asmType());
             } else {

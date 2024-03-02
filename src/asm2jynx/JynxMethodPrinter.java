@@ -85,14 +85,14 @@ public class JynxMethodPrinter {
         annotator.printLocalVarAnnotations(mn.visibleLocalVariableAnnotations, mn.invisibleLocalVariableAnnotations);
     }
     
-    private void printCode(MethodNode mn, String classname) {
+    private void printCode(MethodNode mn, String classname, boolean isstatic) {
         jvmVersion.checkSupports(StandardAttribute.Code);
         if (OPTION(GlobalOption.SKIP_CODE)) {
             jp.appendComment(GlobalOption.SKIP_CODE).nl();
             return;
         }
         LocalMethodHandle lmh = LocalMethodHandle.of(mn);
-        Object[] initstack = FrameType.getInitFrame(classname, lmh).toArray(new Object[0]);
+        Object[] initstack = FrameType.getInitFrame(classname, isstatic, lmh).toArray(new Object[0]);
         Insn2Jynx i2s = new Insn2Jynx(jp,jvmVersion,o2s,initstack);
         printCatchBlocks(mn, i2s);
         printInstructions(mn.instructions, i2s);
@@ -137,8 +137,7 @@ public class JynxMethodPrinter {
         boolean isAbstract = accflags.contains(acc_abstract) || accflags.contains(acc_native);
         if (!isAbstract) {
             jp.incrDepth();
-            String classname = accflags.contains(acc_static)?null:cname;
-            printCode(mn,classname);
+            printCode(mn,cname,accflags.contains(acc_static));
             jp.decrDepth();
         }
         jp.decrDepth();

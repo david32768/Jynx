@@ -28,22 +28,19 @@ public class OperandStack {
 
     private final Deque<FrameElement> stack;
     private final LimitValue stacksz;
-    private final boolean isInit;
     
     private int sz;
     private boolean startblock;
     
-    private OperandStack(boolean isinit) {
-        this.isInit = isinit;
+    private OperandStack() {
         this.stacksz = new LimitValue(LimitValue.Type.stack);
         this.stack = new ArrayDeque<>();
         this.sz = 0;
         this.startblock = false;
     }
 
-    public static OperandStack getInstance(List<Object> parms) {
-        boolean isinit = !parms.isEmpty() && parms.get(0) == FrameElement.THIS;
-        return new OperandStack(isinit);
+    public static OperandStack getInstance() {
+        return new OperandStack();
     }
     
     public void setLimit(int num, Line line) {
@@ -255,7 +252,8 @@ public class OperandStack {
         visitLabel(base);
     }
     
-    public void visitFrame(OperandStackFrame framesf, Optional<JynxLabel> lastLab) {
+    public void visitFrame(List<Object> stackarr, Optional<JynxLabel> lastLab) {
+        OperandStackFrame framesf = OperandStackFrame.getInstance(stackarr);
         OperandStackFrame osf = currentFrame();
         if (!startblock && !framesf.isEquivalent(osf)) {
             LOG(M184,osf,dir_stack,framesf); // "current stack is %s but %s is %s"
@@ -281,7 +279,7 @@ public class OperandStack {
     }
 
     public OperandStackFrame currentFrame() {
-        FrameElement[] array = stack.toArray(new FrameElement[0]);
+        FrameElement[] array = stack.toArray(FrameElement[]::new);
         return new OperandStackFrame(array);
     }
     

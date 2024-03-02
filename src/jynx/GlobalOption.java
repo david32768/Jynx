@@ -26,6 +26,7 @@ public enum GlobalOption {
     VALIDATE_ONLY(M51, ASSEMBLY), // "do not output class file"
     TRACE(M23, ASSEMBLY), // "print (ASMifier) trace"
     SYMBOLIC_LOCAL(M44, ASSEMBLY), // "local variables are symbolic not absolute integers"
+    USE_CLASSFILE(M74, ASSEMBLY), // "use java.lang.classfile"
     
     SKIP_CODE(M39, DISASSEMBLY), // "do not produce code"
     SKIP_DEBUG(M29, DISASSEMBLY), // "do not produce debug info"

@@ -65,10 +65,6 @@ public class JynxModule {
         return new JynxModule(mnode, jvmversion);
     }
 
-    public ModuleNode getModNode() {
-        return modNode;
-    }
-
     private void checkPackage(String packaze, Directive dir) {
         boolean added = packageUse.computeIfAbsent(packaze, v -> EnumSet.noneOf(Directive.class))
                 .add(dir);
@@ -131,7 +127,7 @@ public class JynxModule {
     
     private void visitRequires(Line line) {
         Access accessname = getAccess(line);
-        String mod = accessname.getName();
+        String mod = accessname.name();
         MODULE_NAME.validate(mod);
         javaBase |= Constants.JAVA_BASE_MODULE.equalsString(mod);
         accessname.check4Require();
@@ -144,7 +140,7 @@ public class JynxModule {
 
     private void visitExports(Line line) {
         Access accessname = getAccess(line);
-        String packaze = accessname.getName();
+        String packaze = accessname.name();
         checkPackage(packaze, Directive.dir_exports);
         PACKAGE_NAME.validate(packaze);
         accessname.check4Export();
@@ -160,7 +156,7 @@ public class JynxModule {
 
     private void visitOpens(Line line) {
         Access accessname = getAccess(line);
-        String packaze = accessname.getName();
+        String packaze = accessname.name();
         checkPackage(packaze, Directive.dir_opens);
         PACKAGE_NAME.validate(packaze);
         accessname.check4Open();
@@ -218,7 +214,7 @@ public class JynxModule {
         }
     }
 
-    public void visitEnd() {
+    public ModuleNode visitEnd() {
         if (!javaBase) {
             LOG(M126,Directive.dir_requires,Constants.JAVA_BASE_MODULE);    // "'%s %s' is required and has been added"
             modNode.visitRequire(Constants.JAVA_BASE_MODULE.stringValue(), AccessFlag.acc_mandated.getAccessFlag(), null);
@@ -240,6 +236,7 @@ public class JynxModule {
             }
         }
         modNode.visitEnd();
+        return modNode;
     }
     
 }

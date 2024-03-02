@@ -106,7 +106,7 @@ public enum JvmVersion {
     
     public final static JvmVersion MIN_VERSION = V1_0_2;
     public final static JvmVersion DEFAULT_VERSION = V17;
-    public final static JvmVersion SUPPORTED_VERSION = V21;
+    public final static JvmVersion SUPPORTED_VERSION = V22;
     public final static JvmVersion MAX_VERSION;
 
     static {

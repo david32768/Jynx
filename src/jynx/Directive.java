@@ -31,7 +31,7 @@ public enum Directive implements JvmVersioned {
     dir_define_annotation(CLASSHDR, EnumSet.of(START_BLOCK, END_START), AnnotationDefault),
 
     dir_super(true,HEADER, EnumSet.of(CLASSHDR, PACKAGEHDR)),
-    dir_implements(HEADER, EnumSet.of(CLASSHDR)),
+    dir_implements(true,HEADER, EnumSet.of(CLASSHDR)),
     dir_debug(HEADER, EnumSet.of(CLASSHDR,MODULEHDR), SourceDebugExtension),
     
     dir_signature(true, COMMON, EnumSet.of(CLASSHDR, FIELD_BLOCK, METHOD_BLOCK, COMPONENT_BLOCK), Signature),
@@ -43,8 +43,8 @@ public enum Directive implements JvmVersioned {
     dir_inner_define_annotation(HEADER, EnumSet.of(CLASSHDR, PACKAGEHDR, MODULEHDR),InnerClasses),
 
     dir_nesthost(true, HEADER, EnumSet.of(CLASSHDR), NestHost),
-    dir_nestmember(HEADER, EnumSet.of(CLASSHDR), NestMembers),
-    dir_permittedSubclass(HEADER, EnumSet.of(CLASSHDR), PermittedSubclasses),
+    dir_nestmember(true,HEADER, EnumSet.of(CLASSHDR), NestMembers),
+    dir_permittedSubclass(true,HEADER, EnumSet.of(CLASSHDR), PermittedSubclasses),
     dir_enclosing_method(true, HEADER, EnumSet.of(CLASSHDR), EnclosingMethod),
     dir_outer_class(true, HEADER, EnumSet.of(CLASSHDR), EnclosingMethod),
     dir_hints(HEADER, EnumSet.of(CLASSHDR)),
@@ -107,7 +107,7 @@ public enum Directive implements JvmVersioned {
     end_field(END_FIELD, EnumSet.of(FIELD_BLOCK)),
     
     dir_method(METHOD_BLOCK, EnumSet.of(END_CLASSHDR, END_FIELD, END_METHOD)),
-    dir_throws(METHOD_BLOCK, EnumSet.of(METHOD_BLOCK),  Exceptions),
+    dir_throws(true,METHOD_BLOCK, EnumSet.of(METHOD_BLOCK),  Exceptions),
     
     dir_parameter(METHOD_BLOCK, EnumSet.of(METHOD_BLOCK), MethodParameters),
     dir_visible_parameter_count(true, METHOD_BLOCK,EnumSet.of(METHOD_BLOCK), RuntimeVisibleParameterAnnotations),

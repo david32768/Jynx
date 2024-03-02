@@ -37,8 +37,16 @@ public class Access {
         return new Access(accflags, jvmversion, name, classtype);
     }
 
-    public String getName() {
+    public String name() {
         return name;
+    }
+
+    public ClassType classType() {
+        return classType;
+    }
+
+    public JvmVersion jvmVersion() {
+        return jvmVersion;
     }
 
     public boolean is(AccessFlag af) {

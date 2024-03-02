@@ -1,25 +1,20 @@
 package asm;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.RecordComponentVisitor;
+import org.objectweb.asm.tree.RecordComponentNode;
 import org.objectweb.asm.TypePath;
 
-import static jynx.ClassType.RECORD;
 import static jynx.Global.*;
 import static jynx.Message.*;
 import static jynx2asm.NameDesc.*;
 
 import jvm.Constants;
 import jvm.Context;
-import jynx.ClassType;
 import jynx.Directive;
-import jynx2asm.ClassChecker;
 import jynx2asm.handles.LocalFieldHandle;
 import jynx2asm.handles.LocalMethodHandle;
 import jynx2asm.JynxScanner;
@@ -27,17 +22,16 @@ import jynx2asm.Line;
 
 public class JynxComponentNode implements ContextDependent {
 
+    private final RecordComponentNode compnode;
     private final Line line;
-    private final List<AcceptsVisitor> annotations;
     private final LocalFieldHandle compfh;
     private final LocalMethodHandle compmh;
-    private String signature;
     private boolean endVisited;
    
     private final Map<Directive,Line> unique_directives;
 
-    private JynxComponentNode(Line line, LocalFieldHandle compfh, LocalMethodHandle compmh) {
-        this.annotations = new ArrayList<>();
+    private JynxComponentNode(Line line, RecordComponentNode compnode, LocalFieldHandle compfh, LocalMethodHandle compmh) {
+        this.compnode = compnode;
         this.compfh = compfh;
         this.compmh = compmh;
         this.line = line;
@@ -45,11 +39,7 @@ public class JynxComponentNode implements ContextDependent {
         this.unique_directives = new HashMap<>();
     }
 
-    public static JynxComponentNode getInstance(Line line, ClassChecker checker) {
-        ClassType classtype = checker.getClassType();
-        if (classtype != RECORD) {
-            LOG(M41);    // "component can only appear in a record"
-        }
+    public static JynxComponentNode getInstance(Line line) {
         String name = line.nextToken().asName();
         String descriptor = line.nextToken().asString();
         LocalFieldHandle compfh = LocalFieldHandle.getInstance(name, descriptor);
@@ -57,13 +47,8 @@ public class JynxComponentNode implements ContextDependent {
         if (Constants.isNameIn(compmh.name(),Constants.INVALID_COMPONENTS)) {
             LOG(M47,compfh.name());   // "Invalid component name - %s"
         }
-        JynxComponentNode jcn = new JynxComponentNode(line, compfh, compmh);
-        checker.checkComponent(jcn);
-        return jcn;
-    }
-
-    public boolean hasAnnotations() {
-        return !annotations.isEmpty();
+        RecordComponentNode compnode = new RecordComponentNode(name, descriptor, null);
+        return new JynxComponentNode(line, compnode, compfh, compmh);
     }
 
     @Override
@@ -79,6 +64,7 @@ public class JynxComponentNode implements ContextDependent {
     
     private String getSignature(Context context) {
         assert endVisited;
+        String signature = compnode.signature;
         if (signature != null && context == Context.METHOD) {
             return "()" + signature;
         }
@@ -116,40 +102,38 @@ public class JynxComponentNode implements ContextDependent {
 
     @Override
     public void setSignature(Line line) {
-        String signaturex = line.nextToken().asQuoted();
-        FIELD_SIGNATURE.validate(signaturex);
-        signature = signaturex;
+        assert compnode.signature == null; // dir_signature is unique within
+        String signature = line.nextToken().asQuoted();
+        FIELD_SIGNATURE.validate(signature);
+        compnode.signature = signature;
     }
 
     @Override
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-        JynxAnnotationNode jan = JynxAnnotationNode.getInstance(desc,visible);
-        annotations.add(jan);
-        return jan;
+        return compnode.visitAnnotation(desc, visible);
     }
 
     @Override
     public AnnotationVisitor visitTypeAnnotation(int typeref, TypePath tp, String desc, boolean visible) {
-        JynxTypeAnnotationNode tan = JynxTypeAnnotationNode.getInstance(typeref, tp, desc,visible);
-        annotations.add(tan);
-        return tan;
+        return compnode.visitTypeAnnotation(typeref, tp, desc, visible);
     }
 
-    public void visitEnd(JynxClassHdr jclasshdr, Directive dir) {
-        RecordComponentVisitor rcv;
-        rcv = jclasshdr.visitRecordComponent(compfh.name(), compfh.desc(), signature);
-        if (dir ==  null && !annotations.isEmpty()) {
+    private boolean hasAnnotations() {
+        return compnode.invisibleAnnotations != null || compnode.invisibleTypeAnnotations != null
+                || compnode.visibleAnnotations != null || compnode.visibleTypeAnnotations != null;
+    }
+    
+    public RecordComponentNode visitEnd(Directive dir) {
+        if (dir ==  null && hasAnnotations()) {
             LOG(M270, Directive.end_component); // "%s directive missing but assumed"
         }
-        annotations.stream()
-                .forEach(jan -> jan.accept(rcv));
-        rcv.visitEnd();
         endVisited = true;
+        return compnode;
     }
     
     @Override
     public String toString() {
-        return String.format("[%s %s %s]",compfh.name(), compfh.desc(),signature);
+        return String.format("[%s %s %s]",compfh.name(), compfh.desc(),compnode.signature);
     }
     
 }
