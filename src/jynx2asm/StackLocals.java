@@ -307,8 +307,8 @@ public class StackLocals {
     }
     
 
-    public void adjustLabelJump(JynxLabel label, boolean jsr) {
-        stack.checkStack(label, jsr);
+    public void adjustLabelJump(JynxLabel label, JvmOp jvmop) {
+        stack.checkStack(label, jvmop);
         LocalFrame osf = locals.currentFrame();
         updateLocal(label, osf);
         for (JynxLabel using:labelmap.getThrowsTo(label)) {

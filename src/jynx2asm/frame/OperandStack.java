@@ -2,6 +2,7 @@ package jynx2asm.frame;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -292,7 +293,8 @@ public class OperandStack {
         checkStack(label,OperandStackFrame.EXCEPTION);
     }
     
-    public void checkStack(JynxLabel label, boolean jsr) {
+    public void checkStack(JynxLabel label, JvmOp jvmop) {
+        boolean jsr = EnumSet.of(JvmOp.asm_jsr, JvmOp.opc_jsr_w).contains(jvmop);
         if (jsr) {
             push(FrameElement.RETURN_ADDRESS);
         }

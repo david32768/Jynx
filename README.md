@@ -100,6 +100,12 @@ Changes are:
 
 *	unicode escape sequences are actioned before parsing line
 *	.end_method instead of .end method
+*	newarray - new format
+```
+; use Z,B,S,C,I,J,F,D for boolean, byte, short, int, long, float, double
+; newarray long
+newarray J
+```
 *	switch - new "instruction"
 ```
 ; generates the [lookup|table]switch instruction which has the smallest code size

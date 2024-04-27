@@ -32,8 +32,7 @@ public class JumpInstruction extends Instruction {
     @Override
     public void adjust(StackLocals stackLocals) {
         super.adjust(stackLocals);
-        boolean jsr = jvmop == JvmOp.asm_jsr;
-        stackLocals.adjustLabelJump(jlab, jsr);
+        stackLocals.adjustLabelJump(jlab, jvmop);
     }
 
     private int wideLength() {

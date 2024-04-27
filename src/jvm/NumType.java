@@ -13,31 +13,34 @@ import jynx.LogIllegalArgumentException;
 
 public enum NumType {
 
-    t_boolean(T_BOOLEAN,0, 1),
-    t_byte(T_BYTE, Byte.MIN_VALUE, Byte.MAX_VALUE, Byte.toUnsignedLong((byte)-1)),
-    t_char(T_CHAR, Character.MIN_VALUE, Character.MAX_VALUE),
-    t_short(T_SHORT, Short.MIN_VALUE, Short.MAX_VALUE, Short.toUnsignedLong((short)-1)),
-    t_int(T_INT, Integer.MIN_VALUE, Integer.MAX_VALUE, Integer.toUnsignedLong(-1)),
-    t_long(T_LONG,  Long.MIN_VALUE, Long.MAX_VALUE),
-    t_float(T_FLOAT),
-    t_double(T_DOUBLE),
+    t_boolean('Z', T_BOOLEAN,0, 1),
+    t_byte('B', T_BYTE, Byte.MIN_VALUE, Byte.MAX_VALUE, Byte.toUnsignedLong((byte)-1)),
+    t_char('C', T_CHAR, Character.MIN_VALUE, Character.MAX_VALUE),
+    t_short('S', T_SHORT, Short.MIN_VALUE, Short.MAX_VALUE, Short.toUnsignedLong((short)-1)),
+    t_int('I', T_INT, Integer.MIN_VALUE, Integer.MAX_VALUE, Integer.toUnsignedLong(-1)),
+    t_long('J', T_LONG,  Long.MIN_VALUE, Long.MAX_VALUE),
+    t_float('F', T_FLOAT),
+    t_double('D', T_DOUBLE),
     ;
 
+    private final String classtype;
     private final int typecode;
     private final long minvalue;
     private final long maxvalue;
     private final long unsignedMaxvalue;
     
 
-    private NumType(int typecode) {
-        this(typecode, 0, 0, 0);
+    private NumType(char classtype, int typecode) {
+        this(classtype, typecode, 0, 0, 0);
     }
     
-    private NumType(int typecode, long minvalue, long maxvalue) {
-        this(typecode,minvalue, maxvalue, maxvalue);
+    private NumType(char classtype, int typecode, long minvalue, long maxvalue) {
+        this(classtype, typecode,minvalue, maxvalue, maxvalue);
     }
 
-    private NumType(int typecode, long minvalue, long maxvalue, long unsignedmaxvalue) {
+    private NumType(char classtype, int typecode, long minvalue, long maxvalue, long unsignedmaxvalue) {
+        assert Character.isUpperCase(classtype);
+        this.classtype = "" + classtype;
         this.typecode = typecode;
         this.minvalue = minvalue;
         this.maxvalue = maxvalue;
@@ -57,7 +60,8 @@ public enum NumType {
         return Stream.of(values())
                 .filter(nt->nt.typecode == typecode)
                 .findFirst()
-                .orElseThrow(()->new LogIllegalArgumentException(M129,typecode)); // "invalid typecode - %d" 
+                // "invalid typecode - %d" 
+                .orElseThrow(()->new LogIllegalArgumentException(M129,typecode));
     }
     
     public String externalName() {
@@ -71,7 +75,7 @@ public enum NumType {
     
     public static Optional<NumType> fromString(String token) {
         return Stream.of(values())
-                .filter(nt->token.equals(nt.externalName()))
+                .filter(nt->token.equals(nt.externalName()) || token.equals(nt.classtype))
                 .findFirst();
     }
 
