@@ -4,8 +4,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.EnumSet;
 
-import jynx2asm.handles.LocalMethodHandle;
-
 public enum Constants {
     
     OBJECT_CLASS(Object.class),
@@ -75,10 +73,6 @@ public enum Constants {
         return stringValue().equals(other);
     }
 
-    public LocalMethodHandle localMethodHandle() {
-        return LocalMethodHandle.getInstance(str);
-    }
-    
     public String stringValue() {
         return str;
     }

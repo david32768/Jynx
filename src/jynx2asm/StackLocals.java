@@ -260,7 +260,7 @@ public class StackLocals {
             if (ok) {
                 jvar.accept(mv, labelmap);
             } else {
-                LOG(jvar.getLine(), M54, jvar.varnum()); // "variable %d has not been written to"
+                LOG(jvar.getLine().toString(), M54, jvar.varnum()); // "variable %d has not been written to"
             }
         }
     }
@@ -299,7 +299,7 @@ public class StackLocals {
                 throw new AssertionError();
         }
         // "min length = %d max length = %d"
-        LOG(M801,minLength,maxLength);
+        LOG(M801, minLength, maxLength);
     }
 
     private void updateLocal(JynxLabel label, LocalFrame osf) {
@@ -389,7 +389,7 @@ public class StackLocals {
         if (opdesc == null) {
             throw new AssertionError("" + jop);
         } else {
-            stack.adjustDesc(opdesc);
+            stack.adjustOpDesc(opdesc);
         }
     }
     

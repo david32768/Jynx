@@ -25,7 +25,7 @@ public class JumpInstruction extends Instruction {
         this.isDefinitelyNotWide = jlab.isDefinitelyNotWide(minoffset, maxoffset);
         this.isDefinitelyWide = jlab.isDefinitelyWide(minoffset, maxoffset);
         
-        jlab.usedAt(minoffset, maxoffset,maxLength() - minLength());
+        jlab.usedAt(minoffset, maxoffset, maxLength() - minLength());
         return jvmop;
     }
 

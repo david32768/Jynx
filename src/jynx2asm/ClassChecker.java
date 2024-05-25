@@ -66,18 +66,18 @@ public class ClassChecker {
         this.hasImplements = false;
     }
 
-    public final static LocalMethodHandle EQUALS_METHOD = Constants.EQUALS.localMethodHandle();
-    public final static LocalMethodHandle TOSTRING_METHOD = Constants.TOSTRING.localMethodHandle();
-    public final static LocalMethodHandle HASHCODE_METHOD = Constants.HASHCODE.localMethodHandle();
+    public final static LocalMethodHandle EQUALS_METHOD = LocalMethodHandle.of(Constants.EQUALS);
+    public final static LocalMethodHandle TOSTRING_METHOD = LocalMethodHandle.of(Constants.TOSTRING);
+    public final static LocalMethodHandle HASHCODE_METHOD = LocalMethodHandle.of(Constants.HASHCODE);
 
-    public final static LocalMethodHandle FINALIZE_METHOD = Constants.FINALIZE.localMethodHandle();
+    public final static LocalMethodHandle FINALIZE_METHOD = LocalMethodHandle.of(Constants.FINALIZE);
 
     public final static Map<String,LocalMethodHandle> SERIAL_METHODS;
     
     static {
         SERIAL_METHODS = new HashMap<>();
         for (Constants method: Constants.PRIVATE_SERIALIZATION_METHODS) {
-            LocalMethodHandle mh = method.localMethodHandle();
+            LocalMethodHandle mh = LocalMethodHandle.of(method);
             SERIAL_METHODS.put(mh.name(),mh);
         }
     }
@@ -191,7 +191,7 @@ public class ClassChecker {
     public Access getAccessOptName(Context context, Line line) {
         EnumSet<AccessFlag> flags = line.getAccFlags();
         Token optname = line.nextToken();
-        String name = optname == Token.END_TOKEN? null: optname.asName();
+        String name = optname.isEndToken()? null: optname.asName();
         return Access.getInstance(flags, jvmVersion, name,classType);
     }
     
@@ -411,7 +411,7 @@ public class ClassChecker {
                 .forEach(me->{
                     if (!isMethodDefined(me.getKey(),REF_newInvokeSpecial)) {
                          // "own init method %s not found"
-                        LOG(me.getValue().line(),M252,me.getKey().name());
+                        LOG(me.getValue().line().toString(), M252, me.getKey().name());
                     }
                 });
         checkMissing(REF_invokeVirtual);
@@ -461,7 +461,7 @@ public class ClassChecker {
                 .forEach(me->{
                     if (!isMethodDefined(me.getKey(), REF_invokeStatic)) {
                          // "own static method %s not found (but may be in super class)"
-                        LOG(me.getValue().line(),M251,me.getKey().name());
+                        LOG(me.getValue().line().toString(), M251, me.getKey().name());
                     }
                 });
         if (ownMethods.containsKey(FINALIZE_METHOD) && classType != ClassType.ENUM ) {

@@ -134,14 +134,14 @@ public enum Message {
     M127("directive %s reached before %s"),
     M128("% directive not allowed for component method %s"),
     M129("invalid typecode - %d"),
-
+    M130("unknown attribute %s"),
     M131(BLANK,"class %s %s completed  unsuccesfully - number of errors is %d"),
     M132("%s must have a %s method of type %s"),
     M133("package %s has already appeared in %s"),
     M134("boolean value is neither Boolean or Integer 0/1: value = %s class = %s"),
     M135(ENDINFO,"for consistency add %s prefix to method name for %s"),
     M136("Extraneous directive %s"),
-
+    M137("local variable name %s is different from name in type %s"),
     M138("%s cannot be used for constant - %s"),
     M139("%s prefix is invalid for %s"),
     M140("reading next token after reaching last"),
@@ -152,6 +152,7 @@ public enum Message {
     M145("Invalid method description %s"),
     M146("constant type = %s not valid in this context"),
     M147(WARNING,"unknown Java version %s - %s used"),
+    M148("unknown access flag %s"),
     
     M150("expected equal values for index length = %d numind = %d"),
     M151(ENDINFO,"Class.forName(%s) has been used"),

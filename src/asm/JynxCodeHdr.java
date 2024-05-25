@@ -155,10 +155,10 @@ public class JynxCodeHdr implements ContextDependent {
             case res_on:
                 ++printFlag;
                 Token token = line.nextToken();
-                if (token == Token.END_TOKEN) {
+                if (token.isEndToken()) {
                     PRINT_OPTIONS.forEach(opt -> options.putIfAbsent(opt,printFlag));
                 } else {
-                    while (token != Token.END_TOKEN) {
+                    while (!token.isEndToken()) {
                         ReservedWord optrw = token.expectOneOf(PRINT_OPTIONS);
                         options.putIfAbsent(optrw,printFlag);
                         token = line.nextToken();
@@ -240,7 +240,7 @@ public class JynxCodeHdr implements ContextDependent {
     private void visitStackFrame(Line line) {
         List<Object> frame_local = new ArrayList<>();
         Token use = line.nextToken();
-        if (use != Token.END_TOKEN) {
+        if (!use.isEndToken()) {
             use.mustBe(res_use);
             Token nstr = line.nextToken();
             int n;

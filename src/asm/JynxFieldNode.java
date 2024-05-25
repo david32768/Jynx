@@ -52,7 +52,7 @@ public class JynxFieldNode implements ContextDependent, HasAccessFlags {
         }
         Token token = line.nextToken();
         Object value = null;
-        if (token != Token.END_TOKEN) {
+        if (!token.isEndToken()) {
             token.mustBe(equals_sign);
             token = line.lastToken();
             CHECK_SUPPORTS(ConstantValue);

@@ -36,7 +36,7 @@ class ElementArray implements TokenArray {
 
         while(true) {
             Token token = line.nextToken();
-            if (token == Token.END_TOKEN) {
+            if (token.isEndToken()) {
                 break;
             }
             tokens.addLast(token);

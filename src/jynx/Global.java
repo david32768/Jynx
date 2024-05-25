@@ -14,8 +14,6 @@ import static jynx.Message.M999;
 import jvm.ConstantPoolType;
 import jvm.JvmVersion;
 import jvm.JvmVersioned;
-import jynx2asm.Line;
-import jynx2asm.ops.JynxOps;
 
 public class Global {
 
@@ -25,7 +23,7 @@ public class Global {
     private String classname;
     private final MainOption main;
     
-    private JynxOps opmap;
+    private Translator ttanslator;
     
     private Global() {
         this.options = EnumSet.noneOf(GlobalOption.class);
@@ -69,9 +67,9 @@ public class Global {
         global.jvmVersion = jvmversion;
     }
     
-    public static void setOpMap(JynxOps opmap) {
-        assert global.opmap == null;
-        global.opmap = opmap;
+    public static void setTranslator(Translator translator) {
+        assert global.ttanslator == null;
+        global.ttanslator = translator;
     }
     
     public static void setClassName(String classname) {
@@ -166,12 +164,8 @@ public class Global {
         global.logger.log(msg,objs);
     }
 
-    public static void LOG(Line line, Message msg, Object... objs) {
-        global.logger.log(line.toString(),msg, objs);
-    }
-
     public static void LOG(String linestr, Message msg, Object... objs) {
-        global.logger.log(linestr,msg, objs);
+        global.logger.log(linestr, msg, objs);
     }
 
     public static void LOG(Throwable ex, Message msg, Object... objs) {
@@ -206,14 +200,18 @@ public class Global {
     }
 
     public static String TRANSLATE_DESC(String str) {
-        return global.opmap.translateDesc(CLASS_NAME(),str);
+        return global.ttanslator.translateDesc(CLASS_NAME(),str);
+    }
+    
+    public static String TRANSLATE_PARMS(String str) {
+        return global.ttanslator.translateParms(CLASS_NAME(),str);
     }
     
     public static String TRANSLATE_TYPE(String str, boolean semi) {
-        return global.opmap.translateType(CLASS_NAME(),str, semi);
+        return global.ttanslator.translateType(CLASS_NAME(),str, semi);
     }
     
     public static String TRANSLATE_OWNER(String str) {
-        return global.opmap.translateOwner(CLASS_NAME(),str);
+        return global.ttanslator.translateOwner(CLASS_NAME(),str);
     }
 }

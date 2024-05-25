@@ -206,9 +206,13 @@ public enum TypeRef {
         return sb.toString();
     }
 
+    public String externalName() {
+        return name().substring(4);
+    }
+    
     @Override
     public String toString() {
-        return name().substring(4);
+        return externalName();
     }
 
     public static TypeRef getInstance(Directive dir, Context context) {

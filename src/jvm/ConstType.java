@@ -3,7 +3,6 @@ package jvm;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodType;
 import java.util.EnumSet;
-import java.util.function.Function;
 import java.util.Optional;
 
 import org.objectweb.asm.ConstantDynamic;
@@ -18,42 +17,40 @@ import static jynx.Message.M175;
 import static jynx.Message.M183;
 
 import jynx.LogIllegalArgumentException;
-import jynx2asm.Token;
 
 public enum ConstType {
 
-    ct_boolean('Z', Boolean.class,EnumSet.of(FIELD,ANNOTATION),Token::asBoolean),
-    ct_byte('B', Byte.class,EnumSet.of(FIELD,ANNOTATION),Token::asByte),
-    ct_char('C', Character.class,EnumSet.of(FIELD,ANNOTATION),Token::asChar),
-    ct_short('S', Short.class,EnumSet.of(FIELD,ANNOTATION),Token::asShort),
+    ct_boolean('Z', Boolean.class, EnumSet.of(FIELD,ANNOTATION)),
+    ct_byte('B', Byte.class, EnumSet.of(FIELD,ANNOTATION)),
+    ct_char('C', Character.class, EnumSet.of(FIELD,ANNOTATION)),
+    ct_short('S', Short.class, EnumSet.of(FIELD,ANNOTATION)),
     
-    ct_int('I', Integer.class,EnumSet.of(JVMCONSTANT,FIELD,ANNOTATION),Token::asInt),
-    ct_long('J', Long.class,EnumSet.of(JVMCONSTANT,FIELD,ANNOTATION),Token::asLong),
-    ct_float('F', Float.class,EnumSet.of(JVMCONSTANT,FIELD,ANNOTATION),Token::asFloat),
-    ct_double('D', Double.class,EnumSet.of(JVMCONSTANT,FIELD,ANNOTATION),Token::asDouble),
+    ct_int('I', Integer.class, EnumSet.of(JVMCONSTANT,FIELD,ANNOTATION)),
+    ct_long('J', Long.class, EnumSet.of(JVMCONSTANT,FIELD,ANNOTATION)),
+    ct_float('F', Float.class, EnumSet.of(JVMCONSTANT,FIELD,ANNOTATION)),
+    ct_double('D', Double.class, EnumSet.of(JVMCONSTANT,FIELD,ANNOTATION)),
     
-    ct_string('s', String.class,EnumSet.of(JVMCONSTANT,FIELD,ANNOTATION),Token::asQuoted),
+    ct_string('s', String.class, EnumSet.of(JVMCONSTANT,FIELD,ANNOTATION)),
 
-    ct_class('c', Class.class,EnumSet.of(JVMCONSTANT,ANNOTATION),Token::asType, Type.class),
-    ct_method_handle('h', MethodHandle.class,EnumSet.of(JVMCONSTANT),Token::asHandle, Handle.class),
-    ct_method_type('t',MethodType.class,EnumSet.of(JVMCONSTANT),Token::asMethodType, Type.class),
-    ct_const_dynamic('k',ConstantDynamic.class,EnumSet.of(JVMCONSTANT),null),
-    ct_enum('e',(new String[0]).getClass(),EnumSet.of(JVMCONSTANT,ANNOTATION),Token::asQuoted),
-    ct_annotation('@',AnnotationNode.class,EnumSet.of(JVMCONSTANT,ANNOTATION),null),
+    ct_class('c', Class.class, EnumSet.of(JVMCONSTANT,ANNOTATION), Type.class),
+    ct_method_handle('h', MethodHandle.class, EnumSet.of(JVMCONSTANT), Handle.class),
+    ct_method_type('t', MethodType.class, EnumSet.of(JVMCONSTANT), Type.class),
+    ct_const_dynamic('k', ConstantDynamic.class, EnumSet.of(JVMCONSTANT)),
+    ct_enum('e', (new String[0]).getClass(), EnumSet.of(JVMCONSTANT,ANNOTATION)),
+    ct_annotation('@', AnnotationNode.class, EnumSet.of(JVMCONSTANT,ANNOTATION)),
 
-    ct_object('o',Object.class,EnumSet.of(JVMCONSTANT),Token::getConst),    // must be last
-    ;
+    ct_object('o',Object.class,EnumSet.of(JVMCONSTANT));    // must be last
 
-    private final Class<?> klass;
     private final String desc;
     private final char jynx_desc;
     private final Class<?> ASMklass;
     private final EnumSet<Context> contexts;
-    private final Function<Token,Object> tokenfn;
     
-    private ConstType(char jynx_desc, Class<?> klass,EnumSet<Context> contexts,
-            Function<Token,Object> tokenfn, Class<?> ASMklass) {
-        this.klass = klass;
+    private ConstType(char jynx_desc, Class<?> klass,EnumSet<Context> contexts) {
+        this(jynx_desc, klass, contexts, klass);
+    }
+
+    private ConstType(char jynx_desc, Class<?> klass, EnumSet<Context> contexts, Class<?> ASMklass) {
         this.contexts = contexts;
         if (Character.isUpperCase(jynx_desc)) {
             this.desc = String.valueOf(jynx_desc);
@@ -62,12 +59,6 @@ public enum ConstType {
         }
         this.jynx_desc = jynx_desc;
         this.ASMklass = ASMklass;
-        this.tokenfn = tokenfn;
-    }
-
-    private ConstType(char jynx_desc, Class<?> klass,EnumSet<Context> contexts,
-            Function<Token,Object> tokenfn) {
-        this(jynx_desc, klass, contexts,tokenfn,klass);
     }
 
     public String getJynxDesc(boolean isArray) {
@@ -87,10 +78,6 @@ public enum ConstType {
         return Character.isUpperCase(jynx_desc);
     }
     
-    public Object getValue(Token token) {
-        return tokenfn.apply(token);
-    }
-
     public boolean inContext(Context context) {
         return contexts.contains(context);
     }

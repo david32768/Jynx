@@ -266,7 +266,7 @@ public class Insn2Jynx {
         thislocal = Arrays.copyOfRange(thislocal, match, thislocal.length);
         FrameTypeValue[] locals = FrameTypeValue.from(Stream.of(thislocal), this::getLabelName);
         FrameTypeValue[] stacks = FrameTypeValue.from(fn.stack.stream(), this::getLabelName);
-        lb.append(Directive.dir_stack);
+        lb.append(Directive.dir_stack).incrDepth();
         if (match != 0) {
             lb.append(ReservedWord.res_use);
             if (match != lastLocalStack.length) {
@@ -282,7 +282,7 @@ public class Insn2Jynx {
         for (FrameTypeValue ftv:stacks) {
           lb.append(ReservedWord.res_stack).append(ftv.ft()).appendNonNull(ftv.value()).nl();
         }
-        lb.append(Directive.end_stack).nl();
+        lb.decrDepth().append(Directive.end_stack).nl();
     }
     
     private void arg_dir(AbstractInsnNode in) {

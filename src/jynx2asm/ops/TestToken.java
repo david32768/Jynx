@@ -47,7 +47,7 @@ public class TestToken implements LineOp {
                 break;
             case CHECKNOT:
                 token = line.peekToken();
-                if (token != Token.END_TOKEN && token.asString().equals(aux)) {
+                if (!token.isEndToken() && token.asString().equals(aux)) {
                     throw new LogIllegalStateException(type.msg,aux);
                 }
                 break;

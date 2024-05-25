@@ -34,8 +34,12 @@ public class Token {
         this.token = token;
     }
 
+    public boolean isEndToken() {
+        return this == END_TOKEN;
+    }
+    
     public Token checkNotEnd() {
-        if (this == END_TOKEN) {
+        if (isEndToken()) {
             throw new LogIllegalArgumentException(M409); // "illegal operation on END_TOKEN"
         }
         return this;
@@ -197,7 +201,7 @@ public class Token {
     }
     
     public Optional<Integer> asOptInt() {
-        if (this == END_TOKEN) {
+        if (isEndToken()) {
             return Optional.empty();
         }
         return Optional.of(asInt());
@@ -206,7 +210,42 @@ public class Token {
 
     public Object getValue(ConstType ct) {
         checkNotEnd();
-        return ct.getValue(this);
+        switch(ct) {
+            case ct_boolean:
+                return asBoolean();
+            case ct_byte:
+                return asByte();
+            case ct_char:
+                return asChar();
+            case ct_short:
+                return asShort();
+            case ct_int:
+                return asInt();
+            case ct_long:
+                return asLong();
+            case ct_float:
+                return asFloat();
+            case ct_double:
+                return asDouble();
+            case ct_string:
+                return asQuoted();
+            case ct_class:
+                return asType();
+            case ct_method_handle:
+                return asHandle();
+            case ct_method_type:
+                return asMethodType();
+            case ct_const_dynamic:
+                throw new AssertionError(ct.name());
+            case ct_enum:
+                return asQuoted();
+            case ct_annotation:
+                throw new AssertionError(ct.name());
+            case ct_object:
+                return getConst();
+            default:
+                throw new EnumConstantNotPresentException(ct.getClass(), ct.name());
+        }
     }
     
     public Object getConst() {
@@ -243,11 +282,11 @@ public class Token {
     }
 
     public boolean is(ReservedWord res) {
-        return this != END_TOKEN && res.externalName().equals(token);
+        return !isEndToken() && res.externalName().equals(token);
     }
     
     private Optional<ReservedWord> mayBe(EnumSet<ReservedWord> rwset) {
-        if (this == END_TOKEN) {
+        if (isEndToken()) {
             return Optional.empty();
         }
         return ReservedWord.getOptInstance(token)
@@ -287,7 +326,7 @@ public class Token {
     
     @Override
     public String toString() {
-        if (this == END_TOKEN) {
+        if (isEndToken()) {
             return "\\n";
         }
         return token;
@@ -297,7 +336,7 @@ public class Token {
     public boolean equals(Object obj) {
         if (obj instanceof Token) {
             Token other = (Token)obj;
-            if (this == END_TOKEN || other == END_TOKEN) {
+            if (isEndToken() || other.isEndToken()) {
                 return this == other;
             }
             return token.equals(other.token);

@@ -5,6 +5,7 @@
 This is a rewritten version of [Jasmin](https://github.com/davidar/jasmin)
  using [ASM](https://asm.ow2.io) version 9.6 as a back end.
  (versions 9.1 - 9.5 will reduce maximum JVM version supported).
+ (version 9.7 sometimes fails [BASIC|SIMPLE] Verifier checks because of ASM issue #318014).
 It is written in Java V11
  and supports all features up to V21 except user attributes.
 
@@ -260,6 +261,18 @@ intArrayValue [I = .array ; Jynx
 
 
 ## Additions
+
+*	able to state stack state on label
+```
+; use if label after unconditional branch is not previously mentioned and stack not empty
+
+; grammar
+; label-name: [stack-desc]?
+; stack-desc = parm-desc
+; parm-desc = ([classdesc]*)
+L1: (ILjava/lang/String;)
+
+```
 
 *	.parameter
 ```

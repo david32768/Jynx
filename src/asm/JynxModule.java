@@ -57,7 +57,7 @@ public class JynxModule {
         Access accessname = Access.getInstance(flags, jvmversion, name, ClassType.MODULE_CLASS);
         MODULE_NAME.validate(name);
         Token token = line.nextToken();
-        String version = token == Token.END_TOKEN?null:token.asString();
+        String version = token.isEndToken()?null:token.asString();
         line.noMoreTokens();
         accessname.check4Module();
         int access = accessname.getAccess();
@@ -133,7 +133,7 @@ public class JynxModule {
         accessname.check4Require();
         int access = accessname.getAccess();
         Token token = line.nextToken();
-        String version = token == Token.END_TOKEN?null:token.asString();
+        String version = token.isEndToken()?null:token.asString();
         line.noMoreTokens();
         modNode.visitRequire(mod, access, version);
     }
@@ -147,7 +147,7 @@ public class JynxModule {
         int access = accessname.getAccess();
         String[] modarr = new String[0];
         Token to = line.nextToken();
-        if (to != Token.END_TOKEN) {
+        if (!to.isEndToken()) {
             to.mustBe(ReservedWord.res_to);
             modarr = TokenArray.arrayString(Directive.dir_exports, line, MODULE_NAME);
         }
@@ -163,7 +163,7 @@ public class JynxModule {
         int access = accessname.getAccess();
         String[] modarr = new String[0];
         Token to = line.nextToken();
-        if (to != Token.END_TOKEN) {
+        if (!to.isEndToken()) {
             to.mustBe(ReservedWord.res_to);
             modarr = TokenArray.arrayString(Directive.dir_opens, line, MODULE_NAME);
         }

@@ -150,7 +150,7 @@ public class JynxClass implements ContextDependent {
     private void setOptions(Line line) {
         while (true) {
             Token token = line.nextToken();
-            if (token == Token.END_TOKEN) {
+            if (token.isEndToken()) {
                 break;
             }
             Optional<GlobalOption> option = GlobalOption.optInstance(token.asString());

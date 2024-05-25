@@ -8,7 +8,6 @@ import static jynx.Global.LOG;
 import static jynx.Message.M140;
 import static jynx.Message.M402;
 import static jynx.Message.M90;
-import static jynx2asm.Token.END_TOKEN;
 
 import jvm.AccessFlag;
 import jynx.LogIllegalStateException;
@@ -38,7 +37,7 @@ public interface TokenDeque {
     }
 
     public default void insert(Token insert) {
-        if (insert == Token.END_TOKEN) {
+        if (insert.isEndToken()) {
             throw new LogIllegalStateException(M402);  // "cannot insert end_token"
         }
         getDeque().addFirst(insert);
@@ -57,7 +56,7 @@ public interface TokenDeque {
         String tokstr = token.asString();
         for (ReservedWord rw:res) {
             String rwname = rw.externalName();
-            if (token != END_TOKEN && !token.is(rw) && tokstr.startsWith(rwname)) {
+            if (!token.isEndToken() && !token.is(rw) && tokstr.startsWith(rwname)) {
                 insert(Token.getInstance(tokstr.substring(rwname.length())));
                 return Token.getInstance(rw);
             }
@@ -70,7 +69,7 @@ public interface TokenDeque {
         String tokstr = token.asString();
         for (ReservedWord rw:res) {
             String rwname = rw.externalName();
-            if (token != END_TOKEN && !token.is(rw) && tokstr.endsWith(rwname)) {
+            if (!token.isEndToken() && !token.is(rw) && tokstr.endsWith(rwname)) {
                 insert(Token.getInstance(rw));
                 return Token.getInstance(tokstr.substring(0, tokstr.length() - rwname.length()));
             }
@@ -80,7 +79,7 @@ public interface TokenDeque {
     
     public default void noMoreTokens() {
         Token token = getDeque().peekFirst();
-        if (token == null || token == Token.END_TOKEN) {
+        if (token == null || token.isEndToken()) {
         } else {
             LOG(M90,token);    // "unused tokens - starting at %s"
             skipTokens();
@@ -117,7 +116,7 @@ public interface TokenDeque {
           EnumSet<AccessFlag> accflags = EnumSet.noneOf(AccessFlag.class);
           while (true) {
               Token token = peekToken();
-              if (token == END_TOKEN) {
+              if (token.isEndToken()) {
                   break;
               }
               Optional<AccessFlag> afopt = AccessFlag.fromString(token.asString());

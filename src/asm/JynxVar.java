@@ -59,7 +59,7 @@ public class JynxVar {
         JynxLabel fromref = labelmap.startLabel();
         JynxLabel toref = labelmap.endLabel();
         Token token = line.peekToken();
-        if (token != Token.END_TOKEN) {
+        if (!token.isEndToken()) {
             String fromname = line.after(res_from);
             fromref = labelmap.useOfJynxLabel(fromname, line);
             String toname = line.after(res_to);
@@ -88,7 +88,8 @@ public class JynxVar {
             Label to = jto.asmlabel();
             mv.visitLocalVariable(name, desc, signature, from, to, varnum);
         } else {
-            LOG(line,M217,fromref.name(),toref.name()); //"from label %s is not before to label %s"
+            //"from label %s is not before to label %s"
+            LOG(line.toString(), M217, fromref.name(), toref.name());
         }
     }
 }

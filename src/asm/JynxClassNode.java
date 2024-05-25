@@ -155,7 +155,7 @@ public abstract class JynxClassNode {
         } catch (AnalyzerException | IllegalArgumentException e) {
             String emsg = e.getMessage();
             // "Method %s failed %s check:%n    %s"
-            LOG(e, M75,mnode.name, verifiername, emsg);
+            LOG(e, M75, mnode.name, verifiername, emsg);
         }
         if (verified) {
             try {

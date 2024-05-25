@@ -113,7 +113,7 @@ public class JynxLabel {
         weakList.add(line);
     }
     
-    public void usedAt(int minoffset,int maxoffset, int adjust) {
+    public void usedAt(int minoffset, int maxoffset, int adjust) {
         if (!hasOffset() && adjust != 0) {
             Integer before = usedAtMap.put(minoffset, adjust);
             assert before == null;

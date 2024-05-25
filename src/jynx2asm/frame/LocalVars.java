@@ -118,7 +118,7 @@ public class LocalVars {
             JynxLabel label = lastLab.get();
             if (label.getLocals() == null) {
                 // "label %s defined before use - locals assumed as before last unconditional op"
-                LOG(label.definedLine(),M213,label);
+                LOG(label.definedLine().toString(), M213, label);
                 setLocals(lastlocals, lastLab);
             } else {
                 setLocals(label.getLocals(),Optional.empty());

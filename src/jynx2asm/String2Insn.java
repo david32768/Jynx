@@ -22,6 +22,8 @@ import jvm.HandleType;
 import jvm.OpArg;
 import jynx.GlobalOption;
 import jynx.LogIllegalStateException;
+import jynx2asm.frame.OperandStack;
+import jynx2asm.frame.OperandStackFrame;
 import jynx2asm.handles.FieldHandle;
 import jynx2asm.handles.MethodHandle;
 import jynx2asm.ops.*;
@@ -85,8 +87,19 @@ public class String2Insn {
     }
 
     private void addLabel(String lab, InstList instlist) {
+        Token stack = line.nextToken();
         line.noMoreTokens();
         JynxLabel target = labelMap.defineJynxLabel(lab, line);
+        if (!stack.isEndToken()) {
+            String desc = stack.asString();
+            desc = TRANSLATE_PARMS(desc);
+            boolean ok = NameDesc.PARMS.validate(desc);
+            if (ok) {
+                FrameElement[] elements = OperandStack.frameElementsFrom(desc);
+                OperandStackFrame osf = new OperandStackFrame(elements);
+                target.updateStack(osf);
+            }
+        }
         instlist.add(new LabelInstruction(JvmOp.xxx_label,target));
     }
     

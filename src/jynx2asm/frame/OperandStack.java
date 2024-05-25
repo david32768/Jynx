@@ -4,6 +4,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -145,14 +146,15 @@ public class OperandStack {
         rfe.ifPresent(this::push);
     }
 
-    public void adjustDesc(String desc) {
-        assert desc.charAt(0) == '(';
-        assert desc.charAt(desc.length() - 2) == ')';
-        String parmstr = desc.substring(1, desc.length() - 2);
+    public void adjustOpDesc(String opdesc) {
+        Objects.requireNonNull(opdesc);
+        assert opdesc.charAt(0) == '(';
+        assert opdesc.charAt(opdesc.length() - 2) == ')';
+        String parmstr = opdesc.substring(1, opdesc.length() - 2);
         FrameElement[] parms = parmstr.chars()
                 .mapToObj(c -> FrameElement.fromStack((char)c))
                 .toArray(FrameElement[]::new);
-        char rtype = desc.charAt(desc.length() - 1);
+        char rtype = opdesc.charAt(opdesc.length() - 1);
         Optional<FrameElement> rfe = FrameElement.fromReturn(rtype);
         adjust(parms, rfe);
     }
@@ -179,13 +181,22 @@ public class OperandStack {
     
     public void adjustOperand(String desc) {
         Type mt = Type.getMethodType(desc);
-        Type[] args = mt.getArgumentTypes();
-        FrameElement[] parms = Stream.of(args)
-                .map(FrameElement::fromType)
-                .toArray(FrameElement[]::new);
+        FrameElement[] parms = frameElementsFrom(mt);
         Type rtype = mt.getReturnType();
         Optional<FrameElement> rfe = FrameElement.fromReturnType(rtype);
         adjust(parms, rfe);
+    }
+
+    public static FrameElement[] frameElementsFrom(String desc) {
+        Type mt = Type.getMethodType(desc);
+        return frameElementsFrom(mt);
+    }
+
+    private static FrameElement[] frameElementsFrom(Type mt) {
+        Type[] args = mt.getArgumentTypes();
+        return Stream.of(args)
+                .map(FrameElement::fromType)
+                .toArray(FrameElement[]::new);
     }
 
     public void adjustStackOp(JvmOp op) {

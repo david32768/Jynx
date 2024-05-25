@@ -156,7 +156,10 @@ public class String2Object {
             case ct_char:
                 return (int)token.asChar(); // Integer needed for invokedynamic parameters
             default:
-                return consttype.getValue(token);
+                if (consttype == ConstType.ct_object) {
+                    throw new AssertionError(); // to prevent infinite loop
+                }
+                return token.getValue(consttype);
         }
     }
     

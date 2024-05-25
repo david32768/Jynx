@@ -11,6 +11,8 @@ import static jynx2asm.handles.HandlePart.NAME;
 import static jynx2asm.NameDesc.METHOD_NAME;
 import static jynx2asm.NameDesc.METHOD_NAME_DESC;
 
+import jvm.Constants;
+
 public class LocalMethodHandle implements JynxHandle, Comparable<LocalMethodHandle> {
 
     private final String name;
@@ -33,6 +35,10 @@ public class LocalMethodHandle implements JynxHandle, Comparable<LocalMethodHand
 
     public boolean isInit() {
         return HandlePart.isInit(name, desc);
+    }
+
+    public static LocalMethodHandle of(Constants cnst) {
+        return getInstance(cnst.stringValue());
     }
     
     public static LocalMethodHandle getInstance(String mspec) {

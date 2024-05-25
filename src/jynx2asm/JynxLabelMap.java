@@ -111,7 +111,8 @@ public class JynxLabelMap {
             JynxLabel from = getBase(jcatch.fromLab());
             JynxLabel to = getBase(jcatch.toLab());
             if (!from.isLessThan(to)) {
-                LOG(line,M217,from,to); // "from label %s is not before to label %s"
+                // "from label %s is not before to label %s"
+                LOG(line.toString(), M217, from, to);
             }
         }
     }
