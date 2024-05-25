@@ -15,7 +15,8 @@ More checking is done before using ASM. For example
 
 ASM is used to generate stack maps where required. However a stack map
 must be provided if any label after an unconditional branch is
-not previously branched to or is not an exception handler.
+not previously branched to or is not an exception handler
+(however if the only change is the stack, a stack description can be added to label; () is assumed). 
 
 The opportunity has beeen taken to change the syntax of some statements.
 
