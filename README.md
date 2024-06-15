@@ -78,8 +78,7 @@ Options for 2JYNX are:
 *	--SKIP_ANNOTATIONS do not produce annotations
 *	--DOWN_CAST if necessary reduces JVM release to maximum supported by ASM version
 *	--DEBUG exit with stack trace if error
-*	--VERBOSE print all log messages
-
+*	--INCREASE_MESSAGE_SEVERITY treat warnings as errors etc.
 
 Options for ROUNDTRIP are:
 
