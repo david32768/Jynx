@@ -19,6 +19,7 @@ import asm.instruction.LabelInstruction;
 import asm.instruction.LineInstruction;
 import asm.JynxVar;
 import jvm.Feature;
+import jynx.Directive;
 import jynx.GlobalOption;
 import jynx2asm.frame.LocalFrame;
 import jynx2asm.frame.LocalVars;
@@ -188,9 +189,11 @@ public class StackLocals {
         maxLength += in.maxLength();
         assert maxLength >= minLength;
         if (minbefore <= MAX_CODE && minLength > MAX_CODE) {
-            LOG(M311); // "maximum code size exceeded"
+            // "maximum code size of %d exceeded; current size = [%d,%d]"
+            LOG(M311, MAX_CODE, minLength, maxLength);
         } else if (maxbefore <= MAX_CODE && maxLength > MAX_CODE) {
-            LOG(M312); // "maximum code size may have been exceeded"
+            // "maximum code size of %d may have been exceeded; current size = [%d,%d]"
+            LOG(M312, MAX_CODE, minLength, maxLength);
         }
     }
     
@@ -204,7 +207,9 @@ public class StackLocals {
             return true;
         }
         if (isUnreachable()) {
-            LOG(M121,jvmop,lastop);  // "Instruction '%s' dropped as unreachable after '%s' without intervening label"
+            Object drop = in instanceof LineInstruction? Directive.dir_line: jvmop;
+            // "Instruction '%s' dropped as unreachable after '%s' without intervening label"
+            LOG(M121, drop, lastop);
             return false;
         }
         if (in instanceof LineInstruction) {
@@ -298,8 +303,13 @@ public class StackLocals {
             default:
                 throw new AssertionError();
         }
-        // "min length = %d max length = %d"
-        LOG(M801, minLength, maxLength);
+        if (minLength > MAX_CODE) {
+            // "maximum code size of %d exceeded; method size = [%d,%d]"
+            LOG(M330, MAX_CODE, minLength, maxLength);
+        } else {
+            // "min length = %d max length = %d"
+            LOG(M801, minLength, maxLength);
+        }
     }
 
     private void updateLocal(JynxLabel label, LocalFrame osf) {

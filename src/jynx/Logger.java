@@ -7,13 +7,12 @@ import java.util.Objects;
 import java.util.Set;
 
 import static jynx.Global.OPTION;
-import static jynx.GlobalOption.VERBOSE;
 
 import static jynx.Message.*;
 
 public class Logger {
 
-    private static final int MAX_ERRORS = 5;
+    private static final int MAX_ERRORS = 20;
 
     private final Deque<String> contexts;
     private final Deque<String> lines;
@@ -23,13 +22,16 @@ public class Logger {
     private String currentLine;
     private String lastErrorLine;
     
-    private int errct = 0;
+    private int errct;
+    private final int maxerr;
 
     Logger(String type) {
         this.contexts = new ArrayDeque<>();
         this.lines = new ArrayDeque<>();
         this.endinfo = new LinkedHashSet<>(); // so order of info messages is reproducible
         this.type = type;
+        this.errct = 0;
+        this.maxerr = MAX_ERRORS;
     }
 
     public int numErrors() {
@@ -103,8 +105,8 @@ public class Logger {
 
     private static LogMsgType msgType(Message msg) {
         LogMsgType logtype = msg.getLogtype();
-        if (logtype == LogMsgType.WARNING && OPTION(GlobalOption.TREAT_WARNINGS_AS_ERRORS)) {
-            logtype = LogMsgType.ERROR;
+        if (OPTION(GlobalOption.INCREASE_MESSAGE_SEVERITY)) {
+            logtype = logtype.up();
         }
         if (logtype == LogMsgType.ERROR && OPTION(GlobalOption.__EXIT_IF_ERROR)) {
             logtype = LogMsgType.SEVERE;
@@ -129,7 +131,7 @@ public class Logger {
                 break;
             case ERROR:
                 printError(msg,objs);
-                if (errct > MAX_ERRORS) {
+                if (errct > maxerr) {
                     printInfo(M85,type); // "%s terminated because of too many errors"
                     throw new SevereError();
                 }
@@ -146,9 +148,7 @@ public class Logger {
             case FINE:
             case FINER:
             case FINEST:
-                if (OPTION(VERBOSE)) {
-                    printLineMessage(msg,objs);
-                }
+                // use INCREASE_MESSAGE_SEVERITY to print
                 break;
             default:
                 throw new EnumConstantNotPresentException(logtype.getClass(),logtype.name());

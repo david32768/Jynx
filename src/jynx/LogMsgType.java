@@ -31,12 +31,23 @@ public enum LogMsgType {
 
     public LogMsgType up() {
         switch(this) {
+            case ENDINFO:
+                return INFO;
+            case WARNING:
+                return ERROR;
+            case FINEST:
+            case FINER:
+            case FINE:
+                return LINE;
+            case INFO:
+            case LINE:
+            case BLANK:
+            case STYLE:
+            case ERROR:
             case SEVERE:
                 return this;
-            case INFO:
-                return WARNING;
             default:
-                return values()[ordinal() + 1];
+                throw new EnumConstantNotPresentException(this.getClass(), this.name());
         }
     }
 }

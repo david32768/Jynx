@@ -1,14 +1,8 @@
 package asm;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Optional;
 
 import org.objectweb.asm.ClassReader;
@@ -18,11 +12,11 @@ import static jynx.Global.OPTION;
 import static jynx.GlobalOption.DOWN_CAST;
 import static jynx.Message.M238;
 import static jynx.Message.M285;
-import static jynx.Message.M286;
 import static jynx.Message.M287;
 import static jynx.Message.M288;
 
 import jvm.JvmVersion;
+import jynx.ClassUtil;
 import jynx.LogIllegalArgumentException;
 
 public class JynxClassReader extends ClassReader {
@@ -45,19 +39,9 @@ public class JynxClassReader extends ClassReader {
         }
     }
 
-    public static byte[] getClassBytes(String name) throws IOException {
-        Path path;
-        if (name.endsWith(".class")) {
-            path = Paths.get(name);
-            return Files.readAllBytes(path);
-        } else {
-            return bytes4Class(name);
-        }
-    }
-
     public static Optional<ClassReader> getClassReader(String name) {
         try {
-            byte[] ba = getClassBytes(name);
+            byte[] ba = ClassUtil.getClassBytes(name);
             ClassReader cr = getClassReader(ba);
             return Optional.of(cr);
         } catch (IOException ex) {
@@ -97,34 +81,6 @@ public class JynxClassReader extends ClassReader {
             }
         }
         return ba;
-    }
-    
-    private static final int BUFFER_SIZE = 1<<14;
-    
-    private static byte[] bytes4Class(String name) throws IOException {
-        assert !name.endsWith(".class");
-        InputStream isx = ClassLoader.getSystemResourceAsStream(name.replace('.', '/') + ".class");
-        if (isx == null) {
-            //"%s is not (a known) class"
-            throw new LogIllegalArgumentException(M286, name);
-        }
-        try (InputStream is = isx) {
-            byte[] ba = new byte[BUFFER_SIZE];
-            int readct = is.read(ba, 0, BUFFER_SIZE >> 1);
-            if (readct < 0) {
-                return new byte[0];
-            }
-            int readct2 = is.read(ba, readct, BUFFER_SIZE - readct);
-            if (readct2 < 0) {
-                return Arrays.copyOf(ba, readct);
-            }
-            readct += readct2;
-            ByteArrayOutputStream os = new ByteArrayOutputStream(BUFFER_SIZE << 1);
-            do {
-                os.write(ba, 0, readct);
-            } while ((readct = is.read(ba))>= 0);
-            return os.toByteArray();
-        }
     }
     
     private int readUnsignedInt(int offset) {

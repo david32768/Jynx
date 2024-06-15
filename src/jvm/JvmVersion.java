@@ -50,6 +50,8 @@ public enum JvmVersion {
     V21_PREVIEW(65 | Opcodes.V_PREVIEW),  // Opcodes.V21
     V22(66), // Opcodes.V22
     V22_PREVIEW(66 | Opcodes.V_PREVIEW),  // Opcodes.V22
+    V23(67), // Opcodes.V23
+    V23_PREVIEW(67 | Opcodes.V_PREVIEW),  // Opcodes.V23
     
     NEVER(-1); // must be last 0xffff ffff
     
@@ -123,7 +125,8 @@ public enum JvmVersion {
         }
         assert PREVIEW == Opcodes.V_PREVIEW >>> 16;
         int maxasm = CheckOpcodes.getMaxJavaVersion();
-        JvmVersion asmversion = PARSE_MAP.get(String.format("V%d_PREVIEW", maxasm));
+        String maxstr = String.format("V%d_PREVIEW", maxasm);
+        JvmVersion asmversion = PARSE_MAP.get(maxstr);
         if (asmversion == null) {
             asmversion = SUPPORTED_VERSION;
         }

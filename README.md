@@ -7,7 +7,7 @@ This is a rewritten version of [Jasmin](https://github.com/davidar/jasmin)
  (versions 9.1 - 9.5 will reduce maximum JVM version supported).
  (version 9.7 sometimes fails [BASIC|SIMPLE] Verifier checks because of ASM issue #318014).
 It is written in Java V11
- and supports all features up to V21 except user attributes.
+ and supports all features up to V22 except user attributes.
 
 More checking is done before using ASM. For example
  stack and local variables types are checked assuming
@@ -16,7 +16,7 @@ More checking is done before using ASM. For example
 ASM is used to generate stack maps where required. However a stack map
 must be provided if any label after an unconditional branch is
 not previously branched to or is not an exception handler
-(however if the only change is the stack, a stack description can be added to label; () is assumed). 
+(however if the only change is the stack, a stack description like a method parameter list can be added to label; () is assumed). 
 
 The opportunity has beeen taken to change the syntax of some statements.
 
@@ -68,8 +68,7 @@ Options for JYNX are:
 *	--VALIDATE_ONLY do not output class file
 *	--TRACE print (ASMifier) trace
 *	--DEBUG exit with stack trace if error
-*	--VERBOSE print all log messages
-*	--TREAT_WARNINGS_AS_ERRORS treat warnings as errors
+*	--INCREASE_MESSAGE_SEVERITY treat warnings as errors etc.
 
 Options for 2JYNX are:
 
@@ -169,6 +168,7 @@ invokeinterface @java/util/Enumeration.hasMoreElements()Z
 *	labels in .catch must not be previously defined
 *	if .var labels are omitted then from start_method to end_method is assumed
 *	float constants must be suffixed by 'F' and long constants by 'L'
+*	NaN and Infinity must be preceded by '+' in ldc instructions
 *	hexadecimal constants are supported
 *	default version is V17(61.0)
   
