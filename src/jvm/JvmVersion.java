@@ -9,6 +9,7 @@ import static jynx.Global.LOG;
 import static jynx.Message.*;
 
 import asm.CheckOpcodes;
+import jynx.Directive;
 
 public enum JvmVersion {
 
@@ -203,8 +204,12 @@ public enum JvmVersion {
                 //"%s is deprecated in version %s"
                 LOG(M263,versioned,this);
             }
+        } else if (versioned == Directive.dir_stack) {
+            // "%s has been used for checking but has not been written to class file as only supported %s"
+            LOG(M149, versioned, versioned.range());
         } else {
-            LOG(M57,this,versioned,versioned.range());    // "Version %s does not support %s (supported %s)"
+            // "Version %s does not support %s (supported %s)"
+            LOG(M57,this,versioned,versioned.range());
         }
         return supported;
     }

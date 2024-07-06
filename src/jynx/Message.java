@@ -153,7 +153,7 @@ public enum Message {
     M146("constant type = %s not valid in this context"),
     M147(WARNING,"unknown Java version %s - %s used"),
     M148("unknown access flag %s"),
-    
+    M149(ENDINFO,"%s has been used for checking but has not been written to class file as only supported %s"),
     M150("expected equal values for index length = %d numind = %d"),
     M151(ENDINFO,"Class.forName(%s) has been used"),
     M152("zero length name"),
