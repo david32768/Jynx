@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.function.Predicate;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -15,8 +16,7 @@ import static jynx.Constants.SUFFIX;
 import static jynx.Global.CLASS_NAME;
 import static jynx.Global.LOG;
 import static jynx.Global.OPTION;
-import static jynx.GlobalOption.SYSIN;
-import static jynx.GlobalOption.VALIDATE_ONLY;
+import static jynx.GlobalOption.*;
 import static jynx.Message.M116;
 import static jynx.Message.M222;
 import static jynx.Message.M6;
@@ -33,21 +33,33 @@ public enum MainOption {
     ASSEMBLY(MainOption::j2a,"jynx",
             " {options} " + SUFFIX + "_file",
             "produces a class file from a " + SUFFIX + " file",
-            ""),
+            "",
+            EnumSet.of(SYSIN, USE_STACK_MAP, WARN_UNNECESSARY_LABEL, WARN_STYLE, 
+                    GENERATE_LINE_NUMBERS, BASIC_VERIFIER, ALLOW_CLASS_FORNAME,
+                    CHECK_REFERENCES, VALIDATE_ONLY, TRACE, SYMBOLIC_LOCAL,
+                    DEBUG, INCREASE_MESSAGE_SEVERITY)
+    ),
     DISASSEMBLY(MainOption::a2j,"2jynx",
             " {options}  class-name|class_file > " + SUFFIX + "_file",
             "produces a " + SUFFIX + " file from a class",
             String.format("any %s options are added to %s directive",
-                    ASSEMBLY.extname.toUpperCase(), Directive.dir_version)),
+                    ASSEMBLY.extname.toUpperCase(), Directive.dir_version),
+            EnumSet.of(SKIP_CODE, SKIP_DEBUG, SKIP_FRAMES, SKIP_ANNOTATIONS, DOWN_CAST,
+                    DEBUG, INCREASE_MESSAGE_SEVERITY)
+    ),
     ROUNDTRIP(MainOption::a2j2a,"roundtrip",
             " {options}  class-name|class_file",
             String.format("checks that %s followed by %s produces an equivalent class (according to ASM Textifier)",
                     DISASSEMBLY.extname.toUpperCase(), ASSEMBLY.extname.toUpperCase()),
-            ""),
+            "",
+            EnumSet.of(USE_STACK_MAP, BASIC_VERIFIER, ALLOW_CLASS_FORNAME, SKIP_FRAMES, DEBUG)
+    ),
     STRUCTURE(MainOption::structure,"structure",
             " {options}  class-name|class_file",
             "prints a skeleton of class structure",
-            ""),
+            "",
+            EnumSet.of(DETAIL, DEBUG)
+    ),
     ;
 
     private final Predicate<Optional<String>> fn;
@@ -55,14 +67,16 @@ public enum MainOption {
     private final String usage;
     private final String longdesc;
     private final String adddesc;
+    private final EnumSet<GlobalOption> options;
 
     private MainOption(Predicate<Optional<String>> fn, String extname,
-            String usage, String longdesc, String adddesc) {
+            String usage, String longdesc, String adddesc, EnumSet<GlobalOption> options) {
         this.fn = fn;
         this.extname = extname;
         this.usage = " " + extname.toLowerCase() + usage;
         this.longdesc = longdesc;
         this.adddesc = adddesc;
+        this.options = options;
     }
 
     public Predicate<Optional<String>> fn() {
@@ -77,6 +91,14 @@ public enum MainOption {
         return String.format("Jynx %s %s",this.name(),Constants.version(OPTION(GlobalOption.DEBUG)));
     }
 
+    public boolean usesOption(GlobalOption opt) {
+        return options.contains(opt);
+    }
+
+    public EnumSet<GlobalOption> options() {
+        return options;
+    }
+    
     public void appUsageSummary() {
         System.err.println(usage);
         System.err.format("   (%s)%n", longdesc);
@@ -91,7 +113,7 @@ public enum MainOption {
     public void appUsage() {
         appUsageSummary();
         Global.LOG(M6); // "Options are:%n"
-        for (GlobalOption opt:GlobalOption.getValidFor(this)) {
+        for (GlobalOption opt:options) {
             System.err.println(" " + opt.description());            
         }
         System.err.println();

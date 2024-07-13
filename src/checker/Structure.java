@@ -23,6 +23,7 @@ import jvm.AttributeType;
 import jvm.ConstantPoolType;
 import jvm.Context;
 import jvm.JvmVersion;
+import jynx.ClassUtil;
 import jynx.GlobalOption;
 import jynx.LogIllegalArgumentException;
 
@@ -40,7 +41,7 @@ public class Structure {
     
     public static void checkInstance(PrintWriter pw, String klass) throws IOException {
         IndentPrinter ptr = new IndentPrinter(pw);
-        ByteBuffer bb = ByteBuffer.wrap(JynxClassReader.getClassBytes(klass));
+        ByteBuffer bb = ByteBuffer.wrap(ClassUtil.getClassBytes(klass));
         bb = bb.asReadOnlyBuffer();
         bb.order(ByteOrder.BIG_ENDIAN);
         int qmagic = bb.getInt();

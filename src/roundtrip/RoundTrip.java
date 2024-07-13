@@ -20,6 +20,7 @@ import static jynx.Message.M87;
 
 import asm.JynxClassReader;
 import asm2jynx.JynxDisassemble;
+import jynx.ClassUtil;
 import jynx.Global;
 import jynx.GlobalOption;
 import jynx.MainOption;
@@ -44,10 +45,10 @@ public class RoundTrip {
     public static boolean roundTrip(Optional<String> optfname) {
         String classname = optfname.get();
         EnumSet<GlobalOption> options = OPTIONS(); 
-        boolean error = options.retainAll(GlobalOption.getValidFor(MainOption.ROUNDTRIP));
+        boolean error = options.retainAll(MainOption.ROUNDTRIP.options());
         if (error) {
             for (GlobalOption opt:OPTIONS()) {
-                if (!opt.isRelevent(MainOption.ROUNDTRIP)) {
+                if (!MainOption.ROUNDTRIP.usesOption(opt)) {
                     LOG(M73,opt); // "irrelevant option %s ignored"
                 }
             }
@@ -75,7 +76,7 @@ public class RoundTrip {
         }
         byte[] ba2;
         try {
-            ba2 = JynxClassReader.getClassBytes(classname);
+            ba2 = ClassUtil.getClassBytes(classname);
         } catch (IOException ex) {
             ex.printStackTrace();
             return false;

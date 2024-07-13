@@ -5,7 +5,7 @@ import java.io.PrintWriter;
 
 import org.objectweb.asm.util.Printer;
 
-import asm.JynxClassReader;
+import jynx.ClassUtil;
 import textifier.JynxText;
 
 public class Jynxifier {
@@ -15,7 +15,7 @@ public class Jynxifier {
     }
     
     public static void main(final String[] args) throws IOException {
-        byte[] ba = JynxClassReader.getClassBytes(args[0]);
+        byte[] ba = ClassUtil.getClassBytes(args[0]);
         try (PrintWriter pw = new PrintWriter(System.out)) {
             JynxText.jynxify(ba,pw);
         }

@@ -369,7 +369,7 @@ public class JynxDisassemble {
                 .append(jvmVersion.asJava());
         OPTIONS().stream()
                 .filter(GlobalOption::isExternal)
-                .filter(opt->opt.isRelevent(MainOption.ASSEMBLY))
+                .filter(opt -> MainOption.ASSEMBLY.usesOption(opt))
                 .filter(opt-> opt != GlobalOption.SYSIN)
                 .forEach(jp::append);
         jp.nl()
