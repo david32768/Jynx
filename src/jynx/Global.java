@@ -9,6 +9,7 @@ import static jynx.Message.M218;
 import static jynx.Message.M219;
 import static jynx.Message.M32;
 import static jynx.Message.M4;
+import static jynx.Message.M73;
 import static jynx.Message.M999;
 
 import jvm.ConstantPoolType;
@@ -109,11 +110,17 @@ public class Global {
     }
     
     public static boolean ADD_OPTION(GlobalOption option) {
-        return global.options.add(option);
+        if (global.main.usesOption(option)) {
+            return global.options.add(option);
+        } else {
+            LOG(M73,option); // "irrelevant option %s ignored"
+            return false;
+        }
     }
     
-    public static boolean ADD_OPTIONS(EnumSet<GlobalOption> optionset) {
-        return global.options.addAll(optionset);
+    public static void ADD_OPTIONS(EnumSet<GlobalOption> optionset) {
+        optionset.stream()
+                .forEach(Global::ADD_OPTION);
     }
     
     public static boolean OPTION(GlobalOption option) {
@@ -137,10 +144,6 @@ public class Global {
                 if (opt.isPresent()) {
                     GlobalOption option = opt.get();
                     ADD_OPTION(option);
-                    if (option == GlobalOption.DEBUG) {
-                        ADD_OPTION(GlobalOption.__EXIT_IF_ERROR);
-                        ADD_OPTION(GlobalOption.__PRINT_STACK_TRACES);
-                    }
                 } else {
                     LOG(M32,argi); // "%s is not a valid option"
                 }
@@ -169,14 +172,14 @@ public class Global {
     }
 
     public static void LOG(Throwable ex, Message msg, Object... objs) {
-        if (OPTION(GlobalOption.__PRINT_STACK_TRACES)) {
+        if (OPTION(GlobalOption.DEBUG)) {
             ex.printStackTrace();;
         }
         global.logger.log(msg, objs);
     }
 
     public static void LOG(Throwable ex) {
-        if (OPTION(GlobalOption.__PRINT_STACK_TRACES)) {
+        if (OPTION(GlobalOption.DEBUG)) {
             ex.printStackTrace();;
         }
         if (ex instanceof LogIllegalArgumentException) {

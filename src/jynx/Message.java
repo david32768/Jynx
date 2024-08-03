@@ -17,7 +17,7 @@ public enum Message {
     M10(BLANK,"warn if label unreferenced or alias"),
     M11(BLANK,"let simple verifier use Class.forName() for non-java classes"),
     M12(BLANK,"%nUsage:%n"),
-    M13(BLANK,"exit with stack trace if error"),
+    M13(BLANK,"print stack trace(s)"),
     M14(BLANK,"if necessary reduces JVM release to maximum supported by ASM version"),
     M15(BLANK,"warn if names non-standard"),
     M16(BLANK,"use ASM BasicVerifier instead of ASM SimpleVerifier"),
@@ -31,7 +31,7 @@ public enum Message {
     M24(BLANK,"%s %s     gives list of options"),
     M25(BLANK,"treat warnings as errors etc."),
     M26(BLANK,"invalid main-option name - %s"),
-
+    M27("allow unsigned long i.e. > Long.MAX_VALUE"),
     M28("no args have been specified for main option %s"),
     M29(BLANK,"do not produce debug info"),
     M30(BLANK,"do not produce stack map"),
@@ -387,6 +387,8 @@ public enum Message {
     M525("CP entry is %s but should be one of %s"),
     M526("type_path_kind = %d is not in range [0,3]"),
     M527("type_argument_index is %d but must be 0 for type_path_kind [0,2]"),
+
+    M600(INFO,"%s not actioned as a method contains %s"),
     
     M800(ENDINFO,"line number 0 changed to 1; ASM Issue #317989"),
     M801(FINE,"min length = %d max length = %d"),
@@ -402,6 +404,7 @@ public enum Message {
     M908("unexpected Op %s in this instruction"),
     M909("unknown ASM Node %s in instruction list"),
     M910("indent depth is now negative"),
+    M911("indent depth would be below lower limit %d"),
     
     // for debugging
     M990(BLANK,"%s"),

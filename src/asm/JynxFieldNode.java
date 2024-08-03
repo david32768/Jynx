@@ -56,7 +56,7 @@ public class JynxFieldNode implements ContextDependent, HasAccessFlags {
             token.mustBe(equals_sign);
             token = line.lastToken();
             CHECK_SUPPORTS(ConstantValue);
-            ConstType ctf = ConstType.getFromDesc(desc, Context.FIELD);
+            ConstType ctf = ConstType.getFromDesc(desc, Context.FIELD_VALUE);
             value = token.getValue(ctf);    // check range
             value = ctf.toJvmValue(value);
             if (accessname.is(acc_static)) {

@@ -15,6 +15,7 @@ import org.objectweb.asm.util.TraceClassVisitor;
 
 import static jvm.Context.CLASS;
 import static jvm.Context.FIELD;
+import static jvm.Context.FIELD_VALUE;
 import static jvm.Context.INNER_CLASS;
 import static jynx.Directive.dir_enclosing_method;
 import static jynx.Directive.dir_field;
@@ -227,7 +228,7 @@ public class JynxText extends Textifier {
                 .append(descriptor);
         if (value != null) {
             jvmVersion.checkSupports(StandardAttribute.ConstantValue);
-            ConstType ct = ConstType.getFromDesc(descriptor, FIELD);
+            ConstType ct = ConstType.getFromDesc(descriptor, FIELD_VALUE);
             jsb.append(equals_sign)
                     .append(o2s.stringFrom(ct, value));
         }

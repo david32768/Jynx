@@ -43,9 +43,10 @@ public enum LogMsgType {
             case LINE:
             case BLANK:
             case STYLE:
-            case ERROR:
             case SEVERE:
                 return this;
+            case ERROR:
+                return SEVERE;
             default:
                 throw new EnumConstantNotPresentException(this.getClass(), this.name());
         }

@@ -96,7 +96,7 @@ public class Main {
         try {
             success = main.fn().test(optname);
         } catch (SevereError ex) {
-            if (OPTION(GlobalOption.__PRINT_STACK_TRACES)) {
+            if (OPTION(GlobalOption.DEBUG)) {
                 ex.printStackTrace();;
             }
             success = false;

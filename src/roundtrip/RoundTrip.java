@@ -15,7 +15,6 @@ import org.objectweb.asm.util.TraceClassVisitor;
 import static jynx.Global.ADD_OPTIONS;
 import static jynx.Global.LOG;
 import static jynx.Global.OPTIONS;
-import static jynx.Message.M73;
 import static jynx.Message.M87;
 
 import asm.JynxClassReader;
@@ -45,14 +44,6 @@ public class RoundTrip {
     public static boolean roundTrip(Optional<String> optfname) {
         String classname = optfname.get();
         EnumSet<GlobalOption> options = OPTIONS(); 
-        boolean error = options.retainAll(MainOption.ROUNDTRIP.options());
-        if (error) {
-            for (GlobalOption opt:OPTIONS()) {
-                if (!MainOption.ROUNDTRIP.usesOption(opt)) {
-                    LOG(M73,opt); // "irrelevant option %s ignored"
-                }
-            }
-        }
         if (Global.OPTION(GlobalOption.SKIP_FRAMES) && Global.OPTION(GlobalOption.USE_STACK_MAP)) {
             LOG(M87,GlobalOption.SKIP_FRAMES,GlobalOption.USE_STACK_MAP); // "options %s and %s conflict"
             return false;
@@ -74,6 +65,8 @@ public class RoundTrip {
             System.out.format("assembly of %s failed%n", classname);
             return false;
         }
+        Global.newGlobal(MainOption.DISASSEMBLY);
+        ADD_OPTIONS(options);
         byte[] ba2;
         try {
             ba2 = ClassUtil.getClassBytes(classname);

@@ -19,7 +19,7 @@ public class String2Object {
     private final boolean ulong;
     
     public String2Object() {
-        this.ulong = OPTION(GlobalOption.__UNSIGNED_LONG);
+        this.ulong = OPTION(GlobalOption.UNSIGNED_LONG);
     }
     
     public boolean parseBoolean(String token) {
@@ -47,6 +47,7 @@ public class String2Object {
     }
     
     public long decodeLong(String token, NumType nt) {
+        token = removeLastIf(token, 'L');
         long var;
         if (token.toUpperCase().startsWith("0X")) {
             var = Long.parseUnsignedLong(token.substring(2), 16);
@@ -58,6 +59,8 @@ public class String2Object {
     }
 
     public long decodeUnsignedLong(String token, NumType nt) {
+        token = removeLastIf(token, 'L');
+        token = removeLastIf(token, 'U');
         long var;
         if (token.toUpperCase().startsWith("0X")) {
             var = Long.parseUnsignedLong(token.substring(2), 16);
@@ -69,11 +72,13 @@ public class String2Object {
     }
 
     public Float parseFloat(String token) {
-        return Float.parseFloat(token);
+        token = removeLastIf(token, 'F');
+        return Float.valueOf(token);
     }
     
     public Double parseDouble(String token) {
-        return Double.parseDouble(token);
+        token = removeLastIf(token, 'D');
+        return Double.valueOf(token);
     }
     
     public Type parseType(String token) {
@@ -86,6 +91,15 @@ public class String2Object {
         return JynxHandle.getHandle(token);
     }
 
+    private String removeLastIf(String token, char dfl) {
+        int lastindex = token.length() - 1;
+        char lastch = token.charAt(lastindex);
+        if (Character.toUpperCase(lastch) == Character.toUpperCase(dfl)) {
+            return token.substring(0, lastindex);
+        }
+        return token;
+    }
+    
     private ConstType typeConstant(String constant) {
         assert !constant.isEmpty();
         char typeconstant = constant.charAt(0);
@@ -132,12 +146,15 @@ public class String2Object {
 
         ConstType consttype = typeConstant(constant);
         char first = constant.charAt(0);
-        char last = constant.toUpperCase().charAt(constant.length() - 1);
+        String constantUC = constant.toUpperCase();
+        char last = constantUC.charAt(constant.length() - 1);
         switch(consttype) {
             case ct_long:
-                Long lval = ulong && first != '-'? token.asUnsignedLong(): token.asLong();
+                boolean unsigned = constantUC.startsWith("0X")
+                        || constantUC.contains("U") && first != '-';
+                unsigned |= ulong && first != '-';
+                Long lval = unsigned? token.asUnsignedLong(): token.asLong();
                 if (last != 'L') {
-                    boolean unsigned = constant.toUpperCase().startsWith("0X");
                     if (NumType.t_int.isInRange(lval)
                             || unsigned && NumType.t_int.isInUnsignedRange(lval)) {
                             return lval.intValue();

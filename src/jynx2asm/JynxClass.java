@@ -87,7 +87,7 @@ public class JynxClass implements ContextDependent {
             }
             return jclass.toByteArray();
         } catch (RuntimeException rtex) {
-            if (OPTION(GlobalOption.__PRINT_STACK_TRACES)) {
+            if (OPTION(GlobalOption.DEBUG)) {
                 rtex.printStackTrace();;
             }
             LOG(M123, source, rtex); // "compilation of %s failed because of %s"
@@ -154,12 +154,9 @@ public class JynxClass implements ContextDependent {
                 break;
             }
             Optional<GlobalOption> option = GlobalOption.optInstance(token.asString());
-            if (option.isPresent() && MainOption.ASSEMBLY.usesOption(option.get())) {
+            if (option.isPresent()
+                    && MainOption.ASSEMBLY.usesOption(option.get()) && option.get() != GlobalOption.SYSIN) {
                 boolean added = ADD_OPTION(option.get());
-                if (added && option.get() == GlobalOption.DEBUG) {
-                    ADD_OPTION(GlobalOption.__EXIT_IF_ERROR);
-                    ADD_OPTION(GlobalOption.__PRINT_STACK_TRACES);
-                }
             } else {
                 LOG(M105,token); // "unknown option %s - ignored"
             }

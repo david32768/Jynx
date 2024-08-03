@@ -24,6 +24,7 @@ public enum Context {
     
     ANNOTATION,
     JVMCONSTANT,
+    FIELD_VALUE,
     
     ATTRIBUTE,
     

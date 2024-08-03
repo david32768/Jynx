@@ -37,7 +37,7 @@ public enum MainOption {
             EnumSet.of(SYSIN, USE_STACK_MAP, WARN_UNNECESSARY_LABEL, WARN_STYLE, 
                     GENERATE_LINE_NUMBERS, BASIC_VERIFIER, ALLOW_CLASS_FORNAME,
                     CHECK_REFERENCES, VALIDATE_ONLY, TRACE, SYMBOLIC_LOCAL,
-                    DEBUG, INCREASE_MESSAGE_SEVERITY)
+                    DEBUG, INCREASE_MESSAGE_SEVERITY, __STRUCTURED_LABELS, UNSIGNED_LONG, __WARN_INDENT)
     ),
     DISASSEMBLY(MainOption::a2j,"2jynx",
             " {options}  class-name|class_file > " + SUFFIX + "_file",
@@ -52,7 +52,7 @@ public enum MainOption {
             String.format("checks that %s followed by %s produces an equivalent class (according to ASM Textifier)",
                     DISASSEMBLY.extname.toUpperCase(), ASSEMBLY.extname.toUpperCase()),
             "",
-            EnumSet.of(USE_STACK_MAP, BASIC_VERIFIER, ALLOW_CLASS_FORNAME, SKIP_FRAMES, DEBUG)
+            EnumSet.of(USE_STACK_MAP, BASIC_VERIFIER, ALLOW_CLASS_FORNAME, SKIP_FRAMES, DOWN_CAST, DEBUG)
     ),
     STRUCTURE(MainOption::structure,"structure",
             " {options}  class-name|class_file",
@@ -92,13 +92,10 @@ public enum MainOption {
     }
 
     public boolean usesOption(GlobalOption opt) {
-        return options.contains(opt);
+        return options.contains(opt)
+                || this == DISASSEMBLY && ASSEMBLY.usesOption(opt) && opt != SYSIN;
     }
 
-    public EnumSet<GlobalOption> options() {
-        return options;
-    }
-    
     public void appUsageSummary() {
         System.err.println(usage);
         System.err.format("   (%s)%n", longdesc);

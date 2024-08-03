@@ -292,7 +292,7 @@ public class JynxDisassemble {
                 .appendNonNull(fn.desc);
         if (fn.value != null) {
             jvmVersion.checkSupports(StandardAttribute.ConstantValue);
-            ConstType ct = ConstType.getFromDesc(fn.desc,FIELD);
+            ConstType ct = ConstType.getFromDesc(fn.desc, FIELD_VALUE);
             jp.append(equals_sign, o2s.stringFrom(ct,fn.value));
         }
         String line = jp.line();
@@ -358,16 +358,17 @@ public class JynxDisassemble {
     }
 
     private void printVersionSource() {
+        EnumSet<GlobalOption> options = OPTIONS();
         // "options = %s"
-        LOG(M88, OPTIONS());
-        jp.appendComment("options = " + OPTIONS().toString())
+        LOG(M88, options);
+        jp.appendComment("options = " + options.toString())
                 .nl()
                 .comment()
                 .append(MainOption.DISASSEMBLY.version())
                 .nl()
                 .append(dir_version)
                 .append(jvmVersion.asJava());
-        OPTIONS().stream()
+        options.stream()
                 .filter(GlobalOption::isExternal)
                 .filter(opt -> MainOption.ASSEMBLY.usesOption(opt))
                 .filter(opt-> opt != GlobalOption.SYSIN)

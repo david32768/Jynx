@@ -140,29 +140,19 @@ public class Token {
         return (int)S2O.decodeLong(token, NumType.t_int);
     }
 
-    private String removeLastIf(char dfl) {
-        checkNotEnd();
-        int lastindex = token.length() - 1;
-        char lastch = token.charAt(lastindex);
-        if (Character.toUpperCase(lastch) == Character.toUpperCase(dfl)) {
-            return token.substring(0, lastindex);
-        }
-        return token;
-    }
-    
     public long asLong() {
         checkNotEnd();
-        return S2O.decodeLong(removeLastIf('L'),NumType.t_long);
+        return S2O.decodeLong(token, NumType.t_long);
     }
     
     public float asFloat() {
         checkNotEnd();
-        return S2O.parseFloat(removeLastIf('F'));
+        return S2O.parseFloat(token);
     }
     
     public double asDouble() {
         checkNotEnd();
-        return S2O.parseDouble(removeLastIf('D'));
+        return S2O.parseDouble(token);
     }
     
     public Type asType() {

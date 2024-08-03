@@ -20,29 +20,30 @@ import jynx.LogIllegalArgumentException;
 
 public enum ConstType {
 
-    ct_boolean('Z', Boolean.class, EnumSet.of(FIELD,ANNOTATION)),
-    ct_byte('B', Byte.class, EnumSet.of(FIELD,ANNOTATION)),
-    ct_char('C', Character.class, EnumSet.of(FIELD,ANNOTATION)),
-    ct_short('S', Short.class, EnumSet.of(FIELD,ANNOTATION)),
+    ct_boolean('Z', Boolean.class, EnumSet.of(FIELD, FIELD_VALUE, ANNOTATION)),
+    ct_byte('B', Byte.class, EnumSet.of(FIELD, FIELD_VALUE, ANNOTATION)),
+    ct_char('C', Character.class, EnumSet.of(FIELD, FIELD_VALUE, ANNOTATION)),
+    ct_short('S', Short.class, EnumSet.of(FIELD, FIELD_VALUE, ANNOTATION)),
     
-    ct_int('I', Integer.class, EnumSet.of(JVMCONSTANT,FIELD,ANNOTATION)),
-    ct_long('J', Long.class, EnumSet.of(JVMCONSTANT,FIELD,ANNOTATION)),
-    ct_float('F', Float.class, EnumSet.of(JVMCONSTANT,FIELD,ANNOTATION)),
-    ct_double('D', Double.class, EnumSet.of(JVMCONSTANT,FIELD,ANNOTATION)),
+    ct_int('I', Integer.class, EnumSet.of(JVMCONSTANT, FIELD, FIELD_VALUE, ANNOTATION)),
+    ct_long('J', Long.class, EnumSet.of(JVMCONSTANT, FIELD, FIELD_VALUE, ANNOTATION)),
+    ct_float('F', Float.class, EnumSet.of(JVMCONSTANT, FIELD, FIELD_VALUE, ANNOTATION)),
+    ct_double('D', Double.class, EnumSet.of(JVMCONSTANT, FIELD, FIELD_VALUE, ANNOTATION)),
     
-    ct_string('s', String.class, EnumSet.of(JVMCONSTANT,FIELD,ANNOTATION)),
+    ct_string('s', String.class, EnumSet.of(JVMCONSTANT, FIELD, FIELD_VALUE, ANNOTATION)),
 
-    ct_class('c', Class.class, EnumSet.of(JVMCONSTANT,ANNOTATION), Type.class),
+    ct_class('c', Class.class, EnumSet.of(JVMCONSTANT, ANNOTATION), Type.class),
     ct_method_handle('h', MethodHandle.class, EnumSet.of(JVMCONSTANT), Handle.class),
     ct_method_type('t', MethodType.class, EnumSet.of(JVMCONSTANT), Type.class),
     ct_const_dynamic('k', ConstantDynamic.class, EnumSet.of(JVMCONSTANT)),
-    ct_enum('e', (new String[0]).getClass(), EnumSet.of(JVMCONSTANT,ANNOTATION)),
-    ct_annotation('@', AnnotationNode.class, EnumSet.of(JVMCONSTANT,ANNOTATION)),
+    ct_enum('e', (new String[0]).getClass(), EnumSet.of(JVMCONSTANT, ANNOTATION)),
+    ct_annotation('@', AnnotationNode.class, EnumSet.of(JVMCONSTANT, ANNOTATION)),
 
-    ct_object('o',Object.class,EnumSet.of(JVMCONSTANT));    // must be last
+    ct_object('o',Object.class,EnumSet.of(JVMCONSTANT, FIELD));    // must be last
 
     private final String desc;
     private final char jynx_desc;
+    private final String boxdesc;
     private final Class<?> ASMklass;
     private final EnumSet<Context> contexts;
     
@@ -52,11 +53,9 @@ public enum ConstType {
 
     private ConstType(char jynx_desc, Class<?> klass, EnumSet<Context> contexts, Class<?> ASMklass) {
         this.contexts = contexts;
-        if (Character.isUpperCase(jynx_desc)) {
-            this.desc = String.valueOf(jynx_desc);
-        } else {
-            this.desc = "L" + klass.getName().replace('.','/') + ";";
-        }
+        this.boxdesc = "L" + klass.getName().replace('.','/') + ";";
+        boolean primitive = Character.isUpperCase(jynx_desc);
+        this.desc = primitive? String.valueOf(jynx_desc): boxdesc;
         this.jynx_desc = jynx_desc;
         this.ASMklass = ASMklass;
     }
@@ -175,6 +174,8 @@ public enum ConstType {
         ConstType ct;
         if (!ctopt.isPresent() && context == Context.ANNOTATION) {
             ct = ct_annotation;
+        } else if (!ctopt.isPresent() && context == Context.FIELD) {
+            ct = ct_object;
         } else {
             ct = ctopt
                 .orElseThrow(()->new LogIllegalArgumentException(M183,str)); // "Type is not known - %s"

@@ -32,18 +32,14 @@ public enum GlobalOption {
     SKIP_ANNOTATIONS(M18), // "do not produce annotations"
     DOWN_CAST(M14), // "if necessary reduces JVM release to maximum supported by ASM version"
     
-    DEBUG(M13), // "exit with stack trace if error"
+    DEBUG(M13), // "print stack trace(s)"
     DETAIL(M17),  // "prints constant pool, instructions and other detail"
-    // may change
     INCREASE_MESSAGE_SEVERITY(M25), // "treat warnings as errors etc."
+    UNSIGNED_LONG(M27), // "allow unsigned long i.e. > Long.MAX_VALUE"
     
     // internal
-    __EXIT_IF_ERROR(null), // "exit if error"
-    __PRINT_STACK_TRACES(null), // "print stack trace of exceptions"
-
 
     __STRUCTURED_LABELS(null), // labels are numeric level
-    __UNSIGNED_LONG(null), // allow unsigned long i.e. > Long.MAX_VALUE
     __WARN_INDENT(null), // "check indent for structured code"
     ;
 

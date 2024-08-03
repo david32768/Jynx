@@ -108,9 +108,6 @@ public class Logger {
         if (OPTION(GlobalOption.INCREASE_MESSAGE_SEVERITY)) {
             logtype = logtype.up();
         }
-        if (logtype == LogMsgType.ERROR && OPTION(GlobalOption.__EXIT_IF_ERROR)) {
-            logtype = LogMsgType.SEVERE;
-        }
         return logtype;
     }
     

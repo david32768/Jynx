@@ -40,17 +40,20 @@ public class JynxConstantDynamic {
 
     private final Line line;
     private final ClassChecker checker;
+    
+    private final Context context;
 
     public JynxConstantDynamic(Line line, ClassChecker checker) {
         this.line = line;
         this.checker = checker;
         Global.CHECK_SUPPORTS(BootstrapMethods);
+        this.context = Context.FIELD;
     }
 
     private ConstantDynamic getConstantDynamic(ConstType ct) {
         ConstantDynamic cdv = getConstantDynamic4Load();
         String desc = cdv.getDescriptor();
-        ConstType actual = ConstType.getFromDesc(desc, Context.JVMCONSTANT);
+        ConstType actual = ConstType.getFromDesc(desc, context);
         if (ct != ConstType.ct_object && ct != actual) {
             LOG(M259,actual,ct); // "dynamic constant is %s but %s expected"
         }
