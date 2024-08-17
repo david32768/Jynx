@@ -98,13 +98,17 @@ public enum NumType {
 
     public void checkInRange(long var) {
         if (!isInRange(var)) {
-            throw new LogIllegalArgumentException(M77,this,var,minvalue,maxvalue); // "%s value %d is not in range [%d,%d]"
+            // "%s value %d is not in range [%d,%d]"
+            String msg = M77.format(this, var, minvalue, maxvalue);
+            throw new NumberFormatException(msg);
         }
     }
     
     public void checkInUnsignedRange(long var) {
         if (!isInUnsignedRange(var)) {
-            throw new LogIllegalArgumentException(M77,this,var,0,1+2*maxvalue); // "%s value %d is not in range [%d,%d]"
+            // "%s value %d is not in range [%d,%d]"
+            String msg = M77.format(this, var, 0, 1+2*maxvalue); 
+            throw new NumberFormatException(msg);
         }
     }
     

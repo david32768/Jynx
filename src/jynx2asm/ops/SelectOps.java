@@ -166,11 +166,11 @@ public enum SelectOps implements SelectOp {
         }
         
         private int getIldc(Line line,InstList instlist) {
-            Token token = line.peekToken();
+            Token token = line.nextToken();
             int ival = token.asInt();
             int rval = rangeType(ival);
-            if (rval <= 6) {
-                line.nextToken();
+            if (rval > 6) {
+                line.insert(Integer.toString(ival));
             }
             return rval;
         }

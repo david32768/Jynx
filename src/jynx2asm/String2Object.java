@@ -10,24 +10,19 @@ import static jynx.Message.*;
 import jvm.ConstType;
 import jvm.HandleType;
 import jvm.NumType;
-import jynx.GlobalOption;
 import jynx.StringUtil;
 import jynx2asm.handles.JynxHandle;
 
 public class String2Object {
 
-    private final boolean ulong;
-    
-    public String2Object() {
-        this.ulong = OPTION(GlobalOption.UNSIGNED_LONG);
-    }
+    public String2Object() {}
     
     public boolean parseBoolean(String token) {
         token = token.toLowerCase();
         if (token.equals("true")) return true;
         if (token.equals("false")) return false;
         long val = decodeLong(token, t_boolean);
-        return val == 1;
+        return val != 0;
     }
   
     public char parseCharacter(String token) {
@@ -47,38 +42,71 @@ public class String2Object {
     }
     
     public long decodeLong(String token, NumType nt) {
-        token = removeLastIf(token, 'L');
-        long var;
-        if (token.toUpperCase().startsWith("0X")) {
-            var = Long.parseUnsignedLong(token.substring(2), 16);
-        } else {
-            var = Long.parseLong(token);
+        if ((nt == NumType.t_long || nt == NumType.t_int) && isUnsigned(token)) {
+            return decodeUnsignedLong(token, nt);
         }
-        nt.checkInRange(var);
-        return var;
+        token = removeL(token, nt);
+        try {
+            long var = parseLong(token);
+            nt.checkInRange(var);
+            return var;
+        } catch(NumberFormatException nex) {
+            // "%s%n  zero assumed"
+            LOG(M157, nex.getMessage());
+            return 0L;
+        }
     }
 
+    private long parseLong(String token) {
+        if (token.toUpperCase().startsWith("0X")) {
+            return Long.parseLong(token.substring(2), 16);
+        } else {
+            return Long.parseLong(token);
+        }
+    }
+    
     public long decodeUnsignedLong(String token, NumType nt) {
-        token = removeLastIf(token, 'L');
+        token = removeL(token, nt);
         token = removeLastIf(token, 'U');
-        long var;
-        if (token.toUpperCase().startsWith("0X")) {
-            var = Long.parseUnsignedLong(token.substring(2), 16);
-        } else {
-            var = Long.parseUnsignedLong(token);
+        try {
+            long var = parseUnsignedLong(token);
+            nt.checkInUnsignedRange(var);
+            return var;
+        } catch(NumberFormatException nex) {
+            // "%s%n  zero assumed"
+            LOG(M157, nex.getMessage());
+            return 0L;
         }
-        nt.checkInUnsignedRange(var);
-        return var;
     }
 
+    private long parseUnsignedLong(String token) {
+        if (token.toUpperCase().startsWith("0X")) {
+            return Long.parseUnsignedLong(token.substring(2), 16);
+        } else {
+            return Long.parseUnsignedLong(token);
+        }
+    }
+    
     public Float parseFloat(String token) {
         token = removeLastIf(token, 'F');
-        return Float.valueOf(token);
+        try {
+            return Float.valueOf(token);
+        } catch(NumberFormatException nex) {
+            // "%s%n  zero assumed"
+            LOG(M157, nex.getMessage());
+            return 0.0F;
+        }
     }
     
     public Double parseDouble(String token) {
         token = removeLastIf(token, 'D');
-        return Double.valueOf(token);
+        try {
+            return Double.valueOf(token);
+        } catch(NumberFormatException nex) {
+            // "%s%n  zero assumed"
+            LOG(M157, nex.getMessage());
+            return 0.0;
+        }
     }
     
     public Type parseType(String token) {
@@ -91,15 +119,37 @@ public class String2Object {
         return JynxHandle.getHandle(token);
     }
 
-    private String removeLastIf(String token, char dfl) {
+    private String removeL(String token, NumType nt) {
         int lastindex = token.length() - 1;
         char lastch = token.charAt(lastindex);
-        if (Character.toUpperCase(lastch) == Character.toUpperCase(dfl)) {
+        if (isEqualIgnoreCase(lastch, 'L')) {
+            if (nt != NumType.t_long) {
+                // "value %s has 'L' suffix but must be a %s constant"
+                LOG(M113, token, nt);
+            }
             return token.substring(0, lastindex);
         }
         return token;
     }
     
+    private String removeLastIf(String token, char dfl) {
+        int lastindex = token.length() - 1;
+        char lastch = token.charAt(lastindex);
+        if (isEqualIgnoreCase(lastch, dfl)) {
+            return token.substring(0, lastindex);
+        }
+        return token;
+    }
+    
+    private boolean isEqualIgnoreCase(char x, char y) {
+        return Character.toUpperCase(x) == Character.toUpperCase(y);
+    }
+    
+     private boolean isUnsigned(String token) {
+        token = removeLastIf(token, 'L');
+        return isEqualIgnoreCase(token.charAt(token.length() - 1), 'U');
+    }
+     
     private ConstType typeConstant(String constant) {
         assert !constant.isEmpty();
         char typeconstant = constant.charAt(0);
@@ -145,25 +195,15 @@ public class String2Object {
         }
 
         ConstType consttype = typeConstant(constant);
-        char first = constant.charAt(0);
-        String constantUC = constant.toUpperCase();
-        char last = constantUC.charAt(constant.length() - 1);
+        char last = constant.toUpperCase().charAt(constant.length() - 1);
         switch(consttype) {
             case ct_long:
-                boolean unsigned = constantUC.startsWith("0X")
-                        || constantUC.contains("U") && first != '-';
-                unsigned |= ulong && first != '-';
-                Long lval = unsigned? token.asUnsignedLong(): token.asLong();
-                if (last != 'L') {
-                    if (NumType.t_int.isInRange(lval)
-                            || unsigned && NumType.t_int.isInUnsignedRange(lval)) {
-                            return lval.intValue();
-                    } else {
-                        // "value %s requires 'L' suffix as is a long constant"
-                        LOG(M113,lval);
-                    }
+                // NB cannot use ?: unless both cast to Object
+                if (last == 'L') {
+                    return token.asLong();
+                } else {
+                    return token.asInt();
                 }
-                return lval;
             case ct_double:
                 // NB cannot use ?: unless both cast to Object
                 if (last == 'F') {

@@ -35,7 +35,7 @@ public enum GlobalOption {
     DEBUG(M13), // "print stack trace(s)"
     DETAIL(M17),  // "prints constant pool, instructions and other detail"
     INCREASE_MESSAGE_SEVERITY(M25), // "treat warnings as errors etc."
-    UNSIGNED_LONG(M27), // "allow unsigned long i.e. > Long.MAX_VALUE"
+    SUPPRESS_WARNINGS(M27), // "suppress warnings"
     
     // internal
 

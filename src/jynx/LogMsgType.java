@@ -31,24 +31,44 @@ public enum LogMsgType {
 
     public LogMsgType up() {
         switch(this) {
-            case ENDINFO:
-                return INFO;
-            case WARNING:
-                return ERROR;
             case FINEST:
             case FINER:
             case FINE:
+            case ENDINFO:
                 return LINE;
+            case WARNING:
+                return ERROR;
+            case ERROR:
+                return SEVERE;
             case INFO:
             case LINE:
             case BLANK:
             case STYLE:
             case SEVERE:
                 return this;
-            case ERROR:
-                return SEVERE;
             default:
                 throw new EnumConstantNotPresentException(this.getClass(), this.name());
         }
     }
+
+    public LogMsgType supress() {
+        switch(this) {
+            case FINEST:
+            case FINER:
+            case FINE:
+            case ENDINFO:
+            case WARNING:
+            case INFO:
+            case LINE:
+            case STYLE:
+                return FINEST;
+            case BLANK:
+            case ERROR:
+            case SEVERE:
+                return this;
+            default:
+                throw new EnumConstantNotPresentException(this.getClass(), this.name());
+        }
+    }
+
 }

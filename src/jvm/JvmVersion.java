@@ -53,6 +53,8 @@ public enum JvmVersion {
     V22_PREVIEW(66 | Opcodes.V_PREVIEW),  // Opcodes.V22
     V23(67), // Opcodes.V23
     V23_PREVIEW(67 | Opcodes.V_PREVIEW),  // Opcodes.V23
+    V24(68), // Opcodes.V24
+    V24_PREVIEW(68 | Opcodes.V_PREVIEW),  // Opcodes.V24
     
     NEVER(-1); // must be last 0xffff ffff
     

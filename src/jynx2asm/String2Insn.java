@@ -232,11 +232,15 @@ public class String2Insn {
             case ct_long:
                 if (!ldc2) {
                     jvmop = JvmOp.opc_ldc2_w;
+                    // "%s changed to %s where necessary"
+                    LOG(M154, JvmOp.asm_ldc, JvmOp.opc_ldc2_w);
                 }
                 break;
             case ct_double:
                 if (!ldc2) {
                     jvmop = JvmOp.opc_ldc2_w;
+                    // "%s changed to %s where necessary"
+                    LOG(M154, JvmOp.asm_ldc, JvmOp.opc_ldc2_w);
                 }
                 break;
             case ct_method_handle:
@@ -260,8 +264,12 @@ public class String2Insn {
         if (desc.length() == 1) {
             ct = ConstType.getFromDesc(desc,Context.JVMCONSTANT);
         }
-        if (dyn.getSize() == 2) {
-            jvmop = JvmOp.opc_ldc2_w;
+        JvmOp actual = jvmop == JvmOp.opc_ldc_w? JvmOp.asm_ldc: jvmop;
+        JvmOp required = dyn.getSize() == 2? JvmOp.opc_ldc2_w: JvmOp.asm_ldc;
+        if (required != actual) {
+            // "%s changed to %s where necessary"
+            LOG(M154, jvmop, required);
+            jvmop = required;
         }
         return new LdcInstruction(jvmop,dyn,ct);
     }

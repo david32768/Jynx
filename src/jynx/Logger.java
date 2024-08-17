@@ -108,6 +108,9 @@ public class Logger {
         if (OPTION(GlobalOption.INCREASE_MESSAGE_SEVERITY)) {
             logtype = logtype.up();
         }
+        if (OPTION(GlobalOption.SUPPRESS_WARNINGS)) {
+            logtype = logtype.supress();
+        }
         return logtype;
     }
     

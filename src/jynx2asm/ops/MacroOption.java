@@ -5,7 +5,6 @@ import jynx.GlobalOption;
 public enum MacroOption {
     
     STRUCTURED_LABELS(GlobalOption.__STRUCTURED_LABELS),
-    UNSIGNED_LONG(GlobalOption.UNSIGNED_LONG),
     INDENT(GlobalOption.__WARN_INDENT),
     ;
     

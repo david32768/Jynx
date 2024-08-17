@@ -61,14 +61,15 @@ Options for JYNX are:
 *	--WARN_UNNECESSARY_LABEL warn if label unreferenced or alias
 *	--WARN_STYLE warn if names non-standard
 *	--GENERATE_LINE_NUMBERS generate line numbers
-*	--SYMBOLIC_LOCAL local variables are symbolic not absolute integers
 *	--BASIC_VERIFIER use ASM BasicVerifier instead of ASM SimpleVerifier
 *	--ALLOW_CLASS_FORNAME let simple verifier use Class.forName() for non-java classes
 *	--CHECK_REFERENCES check that called methods or used fields exist (on class path)
 *	--VALIDATE_ONLY do not output class file
 *	--TRACE print (ASMifier) trace
+*	--SYMBOLIC_LOCAL local variables are symbolic not absolute integers
 *	--DEBUG exit with stack trace if error
 *	--INCREASE_MESSAGE_SEVERITY treat warnings as errors etc.
+*	--SUPPRESS_WARNINGS suppress warnings
 
 Options for 2JYNX are:
 
@@ -86,6 +87,8 @@ Options for ROUNDTRIP are:
 *	--BASIC_VERIFIER use ASM BasicVerifier instead of ASM SimpleVerifier
 *	--ALLOW_CLASS_FORNAME let simple verifier use Class.forName() for non-java classes
 *	--SKIP_FRAMES do not produce stack map
+*	--DEBUG exit with stack trace if error
+*	--SUPPRESS_WARNINGS suppress warnings
 
 Options for STRUCTURE are:
 
