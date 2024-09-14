@@ -134,6 +134,7 @@ public enum Message {
     M127("directive %s reached before %s"),
     M128("% directive not allowed for component method %s"),
     M129("invalid typecode - %d"),
+    @Deprecated
     M130("unknown attribute %s"),
     M131(BLANK,"class %s %s completed  unsuccesfully - number of errors is %d"),
     M132("%s must have a %s method of type %s"),
@@ -171,12 +172,14 @@ public enum Message {
     M164("stack overflow"),
     M165(SEVERE,"Directive in wrong place; Current state = %s%n  Expected state was one of %s"),
     M166("top of stack(%s) is not a 32 bit type"),
-
+    M167(WARNING,"type annotation %s not known"),
     M168("unexpected directive(%s) in annotation"),
     M169(WARNING,"package %s used in %s has been added to %s"),
     M170("invalid type annotation directive - %s"),
     M171(WARNING,"version %s outside range [%s,%s] - %s used"),
-
+    M172("known attribute %s not catered for in context %s"),
+    M173(WARNING,"unknown attribute %s in context %s ignored"),
+    M174(INFO,"%s is omitted as pseudo_access flag %s is used"),
     M175("unknown Jynx desc = %c"),
     M176("%s not found as a macro library service"),
     M177("missing %s"),
@@ -290,7 +293,7 @@ public enum Message {
     M286(SEVERE,"%s is not (a known) class"),
     M287(WARNING,"JVM version %s is not supported by the version of ASM used; %s substituted"),
     M288(SEVERE,"JVM version %s is not supported by the version of ASM used; maximum version is %s "),
-
+    M289(SEVERE,"file %s does not exist"),
     M290(BLANK,";%s  %s -> %s"),
     M291(BLANK,";%s  %s = %s"),
     M292(BLANK,"%s  +%s"),
@@ -311,7 +314,8 @@ public enum Message {
     M308("parameter number %d is not in range [0,%d]"),
     M309("missing %s %d : null parameter added"),
     M310("parameter %d has already been defined: %s"),
-    M311("maximum code size of %d exceeded; current size = [%d,%d]"),
+    @Deprecated
+    M311("maximum code size exceeded"),
     M312(WARNING,"maximum code size of %d may have been exceeded; current size = [%d,%d]"),
     M313("final class cannot have %s"),
     M314(ENDINFO,"parameter type %s changed to %s"),
@@ -339,6 +343,7 @@ public enum Message {
     M336("option '%s' has invalid name"),
     M337("%s is predefined"),
     M338("code missing but method is not native or abstract"),
+    M339("maximum code size of %d exceeded; current size = [%d,%d]"),
     
     M362("expected arg %s but was %s"),
 

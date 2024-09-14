@@ -15,8 +15,6 @@ import static jynx.Message.M502;
 import static jynx.Message.M503;
 import static jynx.Message.M517;
 
-
-import asm.JynxClassReader;
 import jvm.AccessFlag;
 import jvm.Attribute;
 import jvm.AttributeType;
@@ -82,12 +80,13 @@ public class Structure {
     private void checkClass(IndentPrinter ptr, Buffer buffer, int access) {
         try {
             ptr.println("CLASS %s %s", classname, accessString(CLASS, access));
+            Context context = classname.equals("module-info")? MODULE: CLASS;
             buffer.nextShort(); // super
             int ct = buffer.nextUnsignedShort();
             buffer.advance(2*ct);
             check_fields(ptr,buffer);
             check_methods(ptr,buffer);
-            check_attrs(CLASS,ptr,buffer);
+            check_attrs(context,ptr,buffer);
             if (buffer.hasRemaining()) {
                 // "%s %s has %d extra bytes at end"
                 LOG(M502, CLASS, classname, buffer.remaining());

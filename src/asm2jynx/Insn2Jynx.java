@@ -120,7 +120,7 @@ public class Insn2Jynx {
     private void arg_atype(AbstractInsnNode in) {
         IntInsnNode iin = (IntInsnNode)in;
         NumType type = NumType.getInstance(iin.operand);
-        lb.append(asmop).append(type).nl();
+        lb.append(asmop).append(type.classType()).nl();
     }
 
     

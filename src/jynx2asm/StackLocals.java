@@ -190,7 +190,7 @@ public class StackLocals {
         assert maxLength >= minLength;
         if (minbefore <= MAX_CODE && minLength > MAX_CODE) {
             // "maximum code size of %d exceeded; current size = [%d,%d]"
-            LOG(M311, MAX_CODE, minLength, maxLength);
+            LOG(M339, MAX_CODE, minLength, maxLength);
         } else if (maxbefore <= MAX_CODE && maxLength > MAX_CODE) {
             // "maximum code size of %d may have been exceeded; current size = [%d,%d]"
             LOG(M312, MAX_CODE, minLength, maxLength);

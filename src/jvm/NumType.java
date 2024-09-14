@@ -52,20 +52,24 @@ public enum NumType {
         return typecode;
     }
 
+    public String classType() {
+        return classtype;
+    }
+
     public long unsignedMaxvalue() {
         return unsignedMaxvalue;
     }
 
+    public String externalName() {
+        return name().substring(2);
+    }
+    
     public static NumType getInstance(int typecode) {
         return Stream.of(values())
                 .filter(nt->nt.typecode == typecode)
                 .findFirst()
                 // "invalid typecode - %d" 
                 .orElseThrow(()->new LogIllegalArgumentException(M129,typecode));
-    }
-    
-    public String externalName() {
-        return name().substring(2);
     }
     
     @Override
