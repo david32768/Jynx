@@ -56,7 +56,7 @@ public enum JvmVersion {
     V24(68), // Opcodes.V24
     V24_PREVIEW(68 | Opcodes.V_PREVIEW),  // Opcodes.V24
     
-    NEVER(-1); // must be last 0xffff ffff
+    NEVER(0xffff); // must be last
     
     private final long release; // 0x00000000 major minor
     private final int major;

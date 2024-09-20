@@ -66,7 +66,7 @@ public enum Message {
     M59("method %s cannot be abstract in final class"),
     M60(WARNING,"local variables [%s ] are written but not read"),
     M61("invalid stack frame type(%s) - %s assumed"),
-    M62("macro nest level exceeds %d"),
+    M62("macro nest level is negative or exceeds %d"),
     M63("Loading of %s not supported in %s"),
     M64(STYLE,"final static field name (%s) is not in uppercase"),
     M65("local variables [%s ] are read but not written"),

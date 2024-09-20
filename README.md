@@ -103,6 +103,7 @@ Changes are:
 
 *	unicode escape sequences are actioned before parsing line
 *	.end_method instead of .end method
+*	access flag fpstrict renamed strict
 *	newarray - new format
 ```
 ; use Z,B,S,C,I,J,F,D for boolean, byte, short, int, long, float, double

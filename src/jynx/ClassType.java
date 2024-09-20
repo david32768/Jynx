@@ -88,6 +88,7 @@ public enum ClassType {
     }
 
     public Directive getInnerDir() {
+        Objects.nonNull(innerDir);
         return innerDir;
     }
 

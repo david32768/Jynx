@@ -1,6 +1,6 @@
 package jvm;
 
-import java.util.Objects;
+import java.util.EnumSet;
 
 import static jvm.JvmVersion.*;
 
@@ -13,7 +13,7 @@ public enum Feature implements JvmVersioned {
 
     invokespecial(V1_0_2),
     superflag(V1_0_2),
-    finalize(V1_0_2,V1_0_2,V9,NEVER),
+    finalize(V1_0_2,V9,NEVER),
     v1_0_2(V1_0_2),
     
     deprecated(V1_1),
@@ -22,8 +22,8 @@ public enum Feature implements JvmVersioned {
     synthetic(V1_1), // synthetic attribute in [V1_1, V1_4], real acc flag from V1_5 
     synthetic_attribute(V1_1, V1_5),
     
-    fpstrict(V1_2,V17),
-    strictfp_rw(V1_2,NEVER),
+    fpstrict(V1_2,V17), // access flag
+    strictfp_rw(V1_2,NEVER), // rw = RESERVED WORD
     
     V3methods(V1_3),
 
@@ -64,31 +64,28 @@ public enum Feature implements JvmVersioned {
     constant_dynamic(V11),
     
     typedesc(V12), // invokedynamic third parameter is Ljava/lang/invoke/TypeDescriptor;
-    switch_expression(V12_PREVIEW,V13,NEVER,NEVER),
+    switch_expression(EnumSet.of(V12_PREVIEW), V13, NEVER, NEVER),
     
-    record(V14_PREVIEW,V16,NEVER, NEVER),
+    record(EnumSet.of(V14_PREVIEW, V15_PREVIEW), V16, NEVER, NEVER),
     
-    sealed(V15_PREVIEW,V17,NEVER,NEVER),
+    sealed(EnumSet.of(V15_PREVIEW, V16_PREVIEW), V17, NEVER, NEVER),
     ;
     
     private final JvmVersionRange jvmRange;
 
     private Feature(JvmVersion start) {
-        this(start,start,NEVER,NEVER);
+        this(start, NEVER);
     }
     
-    private Feature(JvmVersion start,JvmVersion end) {
-        this(start,start,end,end);
+    private Feature(JvmVersion start, JvmVersion end) {
+        this(EnumSet.noneOf(JvmVersion.class), start, end, end);
     }
 
-    private Feature(JvmVersion preview, JvmVersion start, JvmVersion deprecate, JvmVersion end) {
-        Objects.nonNull(preview);
-        Objects.nonNull(start);
-        Objects.nonNull(deprecate);
-        Objects.nonNull(end);
-        assert start.compareTo(end) <= 0;
-        assert preview.compareTo(start) < 0 && preview.isPreview() || preview.equals(start);
-        assert deprecate.compareTo(start) >= 0 && deprecate.compareTo(end) <= 0;
+    private Feature(JvmVersion start, JvmVersion deprecate, JvmVersion end) {
+        this(EnumSet.noneOf(JvmVersion.class), start, deprecate, end);
+    }
+
+    private Feature(EnumSet<JvmVersion> preview, JvmVersion start, JvmVersion deprecate, JvmVersion end) {
         this.jvmRange = new JvmVersionRange(preview, start, deprecate, end);
     }
 

@@ -114,7 +114,7 @@ public class Access {
     }
 
     private void allOf(EnumSet<AccessFlag> flags) {
-        allOf(flags.toArray(new AccessFlag[0]));
+        allOf(flags.toArray(AccessFlag[]::new));
     }
     
     private void noneOf(AccessFlag... flags) {
@@ -217,7 +217,7 @@ public class Access {
             }
         } else {
             if (accflags.contains(acc_abstract)) {
-                noneOf(acc_private, acc_static, acc_final, acc_synchronized, acc_native, acc_fpstrict);
+                noneOf(acc_private, acc_static, acc_final, acc_synchronized, acc_native, acc_strict);
             }
             if (classType == ClassType.INTERFACE || classType == ClassType.ANNOTATION_CLASS) {
                 noneOf(acc_protected, acc_final, acc_synchronized, acc_native);
