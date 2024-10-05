@@ -185,14 +185,14 @@ public class ClassChecker {
     public Access getAccess(Context context, Line line) {
         EnumSet<AccessFlag> flags = line.getAccFlags();
         String name = line.nextToken().asName();
-        return Access.getInstance(flags, jvmVersion, name,classType);
+        return Access.getInstance(flags, jvmVersion, name, classType);
     }
     
     public Access getAccessOptName(Context context, Line line) {
         EnumSet<AccessFlag> flags = line.getAccFlags();
         Token optname = line.nextToken();
         String name = optname.isEndToken()? null: optname.asName();
-        return Access.getInstance(flags, jvmVersion, name,classType);
+        return Access.getInstance(flags, jvmVersion, name, classType);
     }
     
     public void checkComponent(JynxComponentNode jcn) {
@@ -442,6 +442,7 @@ public class ClassChecker {
                 break;
             case ENUM:
             case BASIC:
+            case VALUE_CLASS:
                 visitClassEnd();
                 break;
             case INTERFACE:

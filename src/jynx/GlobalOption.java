@@ -25,6 +25,7 @@ public enum GlobalOption {
     TRACE(M23), // "print (ASMifier) trace"
     SYMBOLIC_LOCAL(M44), // "local variables are symbolic not absolute integers"
     USE_CLASSFILE(M74), // "use java.lang.classfile"
+    VALHALLA(M601), // "Valhalla - limited support; may change"
     
     SKIP_CODE(M39), // "do not produce code"
     SKIP_DEBUG(M29), // "do not produce debug info"

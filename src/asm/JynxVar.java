@@ -1,5 +1,6 @@
 package asm;
 
+import java.util.Optional;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 
@@ -55,7 +56,7 @@ public class JynxVar {
         int varnum = line.nextToken().asUnsignedShort();
         String name = line.after(res_is);
         String desc = line.nextToken().asString();
-        String vsignature = line.optAfter(res_signature);
+        Optional<String> vsignature = line.optAfter(res_signature);
         JynxLabel fromref = labelmap.startLabel();
         JynxLabel toref = labelmap.endLabel();
         Token token = line.peekToken();
@@ -68,12 +69,12 @@ public class JynxVar {
             line.nextToken();
         }
         line.noMoreTokens();
-        if (vsignature != null) {
-            Global.CHECK_SUPPORTS(LocalVariableTypeTable);
-            Global.CHECK_SUPPORTS(Signature);
-            NameDesc.FIELD_SIGNATURE.validate(vsignature);
-        }
-        return new JynxVar(varnum, name, desc, vsignature, fromref, toref, line);
+        vsignature.ifPresent(sig -> {
+                Global.CHECK_SUPPORTS(LocalVariableTypeTable);
+                Global.CHECK_SUPPORTS(Signature);
+                NameDesc.FIELD_SIGNATURE.validate(sig);
+            });
+        return new JynxVar(varnum, name, desc, vsignature.orElse(null), fromref, toref, line);
     }
     
     public static JynxVar getIntance(int varnum, String name, String desc) {

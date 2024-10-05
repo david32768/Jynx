@@ -98,7 +98,7 @@ public enum Message {
     M91("invalid minor version for major version (spec table 4.1A) - %s"),
     M92("%s count(%d) must be in range [%d,%d]"),
     M93(STYLE,"class name (%s) does not start with uppercase letter"),
-    M94("incorret order: last = %s this = %s"),
+    M94("incorrect order: last = %s this = %s"),
     M95(ENDINFO,".line directives ignored as %s specified"),
     M96("syntax error in annotation field type"),
     M97("file(%s) does not have %s suffix"),
@@ -114,7 +114,7 @@ public enum Message {
     M107("unknown access flag (%#04x) in context %s ignored"),
     M108("type index (%d) outside range [0 - %d]"),
     M109("reserved word %s expected but found %s"),
-    M110("access flag(s) %s not valid for version %s"),
+    M110("access flag(s) %s in context %s not valid for version %s"),
     M111(ENDINFO,"instructions = %d labels = %d directives = %d pre_comments = %d"),
     M112(ENDINFO,"stackmap locals have been ignored as %s specified"),
     M113("value %s has 'L' suffix but must be a %s constant"),
@@ -153,7 +153,7 @@ public enum Message {
     M145("Invalid method description %s"),
     M146("constant type = %s not valid in this context"),
     M147(WARNING,"unknown Java version %s - %s used"),
-    M148("unknown access flag %s"),
+
     M149(ENDINFO,"%s has been used for checking but has not been written to class file as only supported %s"),
     M150("expected equal values for index length = %d numind = %d"),
     M151(ENDINFO,"Class.forName(%s) has been used"),
@@ -186,7 +186,7 @@ public enum Message {
     M178("invalid type ref sort - %d"),
     M179("String length of %d exceeds maximum %d"),
     M180("top of stack(%s) and next on stack('%c') are not both 32 bit types"),
-
+    M181("outer class must be absent if inner name is absent but is %s"),
     M182("top of stack is %s but required is %s"),
     M183("Type is not known - %s"),
     M184("current stack is %s but %s is %s"),
@@ -394,6 +394,8 @@ public enum Message {
     M527("type_argument_index is %d but must be 0 for type_path_kind [0,2]"),
 
     M600(INFO,"%s not actioned as a method contains %s"),
+    M601(BLANK,"Valhalla - limited support; may change"),
+    M602("Version %s certainly does not support valhalla"),
     
     M800(ENDINFO,"line number 0 changed to 1; ASM Issue #317989"),
     M801(FINE,"min length = %d max length = %d"),

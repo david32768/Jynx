@@ -6,6 +6,8 @@ import java.util.Map;
 import org.objectweb.asm.Opcodes;
 
 import static jynx.Global.LOG;
+import static jynx.Global.OPTION;
+import static jynx.GlobalOption.VALHALLA;
 import static jynx.Message.*;
 
 import asm.CheckOpcodes;
@@ -101,6 +103,12 @@ public enum JvmVersion {
     public String asJava() {
         return name();
     }
+
+    private void checkValhalla() {
+        if (OPTION(VALHALLA) && !supports(Feature.valhalla)) {
+           LOG(M602, this); // "Version %s certainly does not support valhalla" 
+        }
+    }
     
     @Override
     public String toString() {
@@ -111,7 +119,7 @@ public enum JvmVersion {
     
     public final static JvmVersion MIN_VERSION = V1_0_2;
     public final static JvmVersion DEFAULT_VERSION = V17;
-    public final static JvmVersion SUPPORTED_VERSION = V22;
+    public final static JvmVersion SUPPORTED_VERSION = V23;
     public final static JvmVersion MAX_VERSION;
 
     static {
@@ -121,7 +129,7 @@ public enum JvmVersion {
             assert last == null
                     || version == V1_6  && last == V1_6JSR
                     || last.release < version.release
-                    // "incorret order: last = %s this = %s"
+                    // "incorrect order: last = %s this = %s"
                     :M94.format(last,version);
             PARSE_MAP.put(version.asJava(), version);
             last = version;
@@ -150,13 +158,14 @@ public enum JvmVersion {
             version = MAX_VERSION;
         }
         version.checkSupported();
+        version.checkValhalla();
         return version;
     }
     
     public static JvmVersion fromASM(int release) {
         int major = release & 0xffff;
         int minor = release >>>16;
-        return from((major << 16) | minor);
+        return from(major, minor);
     }
     
     public static JvmVersion from(int major, int minor) {
@@ -176,17 +185,18 @@ public enum JvmVersion {
         long release = Integer.toUnsignedLong(majmin);
         JvmVersion last = values()[0];
         for (JvmVersion version:values()) {
+            if (release == last.release) {
+                break;
+            }
             if (release < version.release) {
                 // "unknown release (major = %d, minor = %d): used %s"
                 LOG(M200, release >>> 16, release & 0xffff, last);
-                return last;
-            }
-            if (release == version.release) {
-                return version;
+                break;
             }
             last = version;
         }
-        throw new AssertionError();
+        last.checkValhalla();
+        return last;
     }
     
     public void checkSupported() {
