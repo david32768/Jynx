@@ -329,14 +329,14 @@ public class JynxDisassemble {
                     .nl();
         }
         for (ModuleExportNode men: nonNullList(module.exports)) {
-            accflags = AccessFlag.getEnumSet(men.access, MODULE,jvmVersion);
+            accflags = AccessFlag.getEnumSet(men.access, EXPORT,jvmVersion);
             jp.append(dir_exports)
                     .appendFlags(accflags)
                     .appendName(men.packaze)
                     .appendRWArray(res_to, men.modules);
         }
         for (ModuleOpenNode mon: nonNullList(module.opens)) {
-            accflags = AccessFlag.getEnumSet(mon.access, MODULE,jvmVersion);
+            accflags = AccessFlag.getEnumSet(mon.access, OPEN,jvmVersion);
             jp.append(dir_opens)
                     .appendFlags(accflags)
                     .appendName(mon.packaze)

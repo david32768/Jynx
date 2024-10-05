@@ -136,7 +136,7 @@ public class JynxClass implements ContextDependent {
     }
 
     private void visitJvmVersion(JvmVersion jvmversion) {
-        if (jvmVersion != null) {
+        if (this.jvmVersion != null) {
             throw new IllegalStateException();
         }
         this.jvmVersion = jvmversion;
@@ -208,23 +208,20 @@ public class JynxClass implements ContextDependent {
         }
     }
 
-    private Access getAccess(Line line, ClassType classtype, JvmVersion jvmversion) {
+    private Access getAccess(Line line, EnumSet<AccessFlag> flags, ClassType classtype, JvmVersion jvmversion) {
         String cname;
-        EnumSet<AccessFlag> flags;
         switch (classtype) {
             case MODULE_CLASS:
                 flags = EnumSet.noneOf(AccessFlag.class); // read in JynxModule
                 cname = Constants.MODULE_CLASS_NAME.stringValue();
                 break;
             case PACKAGE:
-                flags = line.getAccFlags();
                 cname = line.nextToken().asName();
                 CLASS_NAME.validate(cname);
                 cname += "/" + Constants.PACKAGE_INFO_NAME.stringValue();
                 jvmversion.checkSupports(Feature.package_info);
                 break;
             default:
-                flags = line.getAccFlags();
                 cname = line.nextToken().asName();
                 CLASS_NAME.validate(cname);
                 break;
@@ -237,9 +234,11 @@ public class JynxClass implements ContextDependent {
     }
     
     public void setClass(Directive dir) {
-        ClassType classtype = ClassType.of(dir);
+        Line line = js.getLine();
+        var flags = line.getAccFlags();
+        ClassType classtype = ClassType.of(dir, flags);
         LOG(M89, file_source,jvmVersion); // "file = %s version = %s"
-        Access accessname = getAccess(js.getLine(), classtype, jvmVersion);
+        Access accessname = getAccess(line, flags, classtype, jvmVersion);
         jclassnode = JynxClassNode.getInstance(accessname);
         jclasshdr = jclassnode.getJynxClassHdr(source, defaultSource);
         Global.setClassName(jclasshdr.getClassName());

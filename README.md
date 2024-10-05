@@ -8,6 +8,7 @@ This is a rewritten version of [Jasmin](https://github.com/davidar/jasmin)
  (version 9.7 sometimes fails [BASIC|SIMPLE] Verifier checks because of ASM issue #318014).
 It is written in Java V11
  and supports all features up to V22 except user attributes.
+(V23 is supported if an ASM 9.8 snapshot which corrects ASM issue #318014 is used).
 
 More checking is done before using ASM. For example
  stack and local variables types are checked assuming

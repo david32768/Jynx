@@ -73,20 +73,20 @@ public class Structure {
         }
     }
     
-    private String accessString(Context context, int access) {
-        return AccessFlag.getEnumSet(access, context, jvmVersion).toString();
-    }
-
     private void checkClass(IndentPrinter ptr, Buffer buffer, int access) {
         try {
-            ptr.println("CLASS %s %s", classname, accessString(CLASS, access));
             Context context = classname.equals("module-info")? MODULE: CLASS;
+            setLoggerContext(context, buffer);
+            ptr.println("CLASS %s %s", classname, accessString(CLASS, access));
             buffer.nextShort(); // super
             int ct = buffer.nextUnsignedShort();
             buffer.advance(2*ct);
             check_fields(ptr,buffer);
+            setLoggerContext(context, buffer);
             check_methods(ptr,buffer);
+            setLoggerContext(context, buffer);
             check_attrs(context,ptr,buffer);
+            setLoggerContext(context, buffer);
             if (buffer.hasRemaining()) {
                 // "%s %s has %d extra bytes at end"
                 LOG(M502, CLASS, classname, buffer.remaining());
@@ -98,34 +98,40 @@ public class Structure {
     }
     
     private void check_fields(IndentPrinter ptr,Buffer buffer) {
-        Context context = FIELD;
         int ct = buffer.nextUnsignedShort();
+        Context context = FIELD;
         for (int i = 0; i < ct; ++i) {
+            setLoggerContext(context, buffer);
+            int start_offset = buffer.position();
             int access = buffer.nextShort();
             String name = (String)buffer.nextPoolValue();
             String type = (String)buffer.nextPoolValue();
-            ptr.println("%s %s %s %s", context, name, type, accessString(FIELD, access));
+            ptr.println("%s %s %s %s start = %#x", context, name, type,
+                    accessString(FIELD, access), start_offset);
             check_attrs(context,ptr.shift(),buffer);
         }
     }
 
     private void check_methods(IndentPrinter ptr,Buffer buffer) {
-        Context context = METHOD;
         int ct = buffer.nextUnsignedShort();
+        Context context = METHOD;
         for (int i = 0; i < ct; ++i) {
+            setLoggerContext(context, buffer);
+            int start_offset = buffer.position();
             int access = buffer.nextShort();
             String name = (String)buffer.nextPoolValue();
             String type = (String)buffer.nextPoolValue();
-            ptr.println("%s %s%s %s", context, name, type, accessString(METHOD, access));
+            ptr.println("%s %s%s %s start = %#x", context, name, type,
+                    accessString(METHOD, access), start_offset);
             check_attrs(context,ptr.shift(),buffer);
         }
     }
 
     private void check_attrs(Context context, IndentPrinter ptr, Buffer buffer) {
-
         Set<Attribute> attrset = new HashSet<>();
         int attrs_ct = buffer.nextUnsignedShort();
         for (int i = 0; i < attrs_ct; ++i) {
+            setLoggerAttributeContext(context, buffer);
             int start_offset = buffer.position();
             String attrnamestr = (String)buffer.nextPoolValue();
             int size = buffer.nextSize();
@@ -196,6 +202,23 @@ public class Structure {
         }
     }
 
+    private String accessString(Context context, int access) {
+        return AccessFlag.getEnumSet(access, context, jvmVersion).toString();
+    }
+
+    private void setLoggerContext(Context context, Buffer buffer) {
+        log("", context, buffer);
+    }
+    
+    private void setLoggerAttributeContext(Context context, Buffer buffer) {
+        log(" Attribute", context, buffer);
+    }
+    
+    private void log(String attribute, Context context, Buffer buffer) {
+        String line = String.format("Context %s%s: start = %#x", context, attribute, buffer.position());
+        LOGGER().setLine(line);
+    }
+    
     public static boolean PrintClassStructure(String klass, PrintWriter pw) {
         try {
             pw.println("START " + klass);

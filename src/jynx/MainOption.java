@@ -38,6 +38,7 @@ public enum MainOption {
                     GENERATE_LINE_NUMBERS, BASIC_VERIFIER, ALLOW_CLASS_FORNAME,
                     CHECK_REFERENCES, VALIDATE_ONLY, TRACE, SYMBOLIC_LOCAL,
                     DEBUG, INCREASE_MESSAGE_SEVERITY, SUPPRESS_WARNINGS,
+                    VALHALLA,
                     __STRUCTURED_LABELS, __WARN_INDENT)
     ),
     DISASSEMBLY(MainOption::a2j,"2jynx",
@@ -46,6 +47,7 @@ public enum MainOption {
             String.format("any %s options are added to %s directive",
                     ASSEMBLY.extname.toUpperCase(), Directive.dir_version),
             EnumSet.of(SKIP_CODE, SKIP_DEBUG, SKIP_FRAMES, SKIP_ANNOTATIONS, DOWN_CAST,
+                    VALHALLA,
                     DEBUG, INCREASE_MESSAGE_SEVERITY)
     ),
     ROUNDTRIP(MainOption::a2j2a,"roundtrip",
@@ -60,7 +62,7 @@ public enum MainOption {
             " {options}  class-name|class_file",
             "prints a skeleton of class structure",
             "",
-            EnumSet.of(DETAIL, DEBUG)
+            EnumSet.of(DETAIL, DEBUG, VALHALLA)
     ),
     ;
 

@@ -4,13 +4,16 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.tree.InnerClassNode;
 import org.objectweb.asm.TypePath;
 
 import static jvm.AccessFlag.acc_final;
+import static jvm.AccessFlag.acc_super;
 import static jynx.Global.*;
+import static jynx.GlobalOption.VALHALLA;
 import static jynx.Message.*;
 import static jynx.ReservedWord.*;
 import static jynx2asm.NameDesc.*;
@@ -181,10 +184,14 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
     }
 
     private void setInnerClass(Directive dir,Line line) {
+        EnumSet<AccessFlag> accflags = line.getAccFlags();
         ClassType classtype;
         switch (dir) {
             case dir_inner_class:
                 classtype = ClassType.BASIC;
+                if (OPTION(VALHALLA) && !accflags.contains(acc_super)) {
+                    classtype = ClassType.VALUE_CLASS;
+                }
                 break;
             case dir_inner_enum:
                 classtype = ClassType.ENUM;
@@ -201,24 +208,31 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
             default:
                 throw new EnumConstantNotPresentException(dir.getClass(), dir.name());
         }
-        EnumSet<AccessFlag> accflags = line.getAccFlags();
         String innerclass = line.nextToken().asName();
-        String outerclass = line.optAfter(res_outer);
-        String innername = line.optAfter(res_innername);
+        Optional<String> outerclass = line.optAfter(res_outer);
+        Optional<String> innername = line.optAfter(res_innername);
         line.noMoreTokens();
         accflags.addAll(classtype.getMustHave4Inner(jvmVersion));
         Access accessname = Access.getInstance(accflags, jvmVersion, innerclass,classtype);
         accessname.check4InnerClass();
         int flags = accessname.getAccess();
         CLASS_NAME.validate(innerclass);
-        if (innername != null) {
-            INNER_CLASS_NAME.validate(innername);
-            if (innerclass.equals(innername)) {
-                LOG(M247,innerclass,res_innername,innername); // "inner class %s must be different from %s %s"
-            }
+        if (jvmVersion.compareTo(JvmVersion.V1_7) >= 0 && innername.isEmpty() && outerclass.isPresent()) {
+            //"outer class must be absent if inner name is absent but is %s"
+            LOG(M181,outerclass.orElseThrow());
+            outerclass = Optional.empty();
         }
-        if (outerclass != null) CLASS_NAME.validate(outerclass);
-        InnerClassNode in = new InnerClassNode(innerclass, outerclass,innername, flags);
+        innername.ifPresent(iname -> {
+                INNER_CLASS_NAME.validate(iname);
+                if (innerclass.equals(iname)) {
+                    LOG(M247,innerclass,res_innername,iname); // "inner class %s must be different from %s %s"
+                }
+            });
+        outerclass.ifPresent(CLASS_NAME::validate);
+        InnerClassNode in = new InnerClassNode(innerclass,
+                outerclass.orElse(null),
+                innername.orElse(null),
+                flags);
         ObjectLine<InnerClassNode> inline = new ObjectLine<>(in,line);
         ObjectLine<InnerClassNode> previous = innerClasses.putIfAbsent(innerclass, inline);
         if (previous == null) {

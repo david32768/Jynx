@@ -6,7 +6,7 @@ import static jvm.JvmVersion.*;
 
 public enum Feature implements JvmVersioned {
 
-    never(MIN_VERSION,MIN_VERSION),
+    never(NEVER,NEVER),
     unlimited(MIN_VERSION,NEVER),
     
     invokenonvirtual(MIN_VERSION,V1_0_2),
@@ -69,6 +69,9 @@ public enum Feature implements JvmVersioned {
     record(EnumSet.of(V14_PREVIEW, V15_PREVIEW), V16, NEVER, NEVER),
     
     sealed(EnumSet.of(V15_PREVIEW, V16_PREVIEW), V17, NEVER, NEVER),
+    
+    valhalla(V23,V24),
+    value(EnumSet.of(V23_PREVIEW),NEVER,NEVER,NEVER),
     ;
     
     private final JvmVersionRange jvmRange;

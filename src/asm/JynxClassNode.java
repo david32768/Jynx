@@ -24,6 +24,7 @@ import static jynx.Message.*;
 
 import classfile.ClassFileClassNode;
 import jvm.AccessFlag;
+import jvm.Feature;
 import jynx.Access;
 import jynx.ClassType;
 import jynx.Directive;
@@ -46,15 +47,17 @@ public abstract class JynxClassNode {
     private final TypeHints hints;
     
 
-    protected JynxClassNode(Access accessname, ClassVisitor cn, TypeHints hints) {
+    protected JynxClassNode(Access accessname, ClassVisitor basecv, TypeHints hints) {
         this.hints = hints;
         if (OPTION(TRACE)) {
             Printer printer = new ASMifier();
             PrintWriter pw = new PrintWriter(System.out);
-            TraceClassVisitor tcv = new TraceClassVisitor(cn, printer, pw);
+            TraceClassVisitor tcv = new TraceClassVisitor(basecv, printer, pw);
             this.cv = new CheckClassAdapter(tcv, false);
         } else {
-            this.cv = new CheckClassAdapter(cn, false);
+            this.cv = OPTION(GlobalOption.VALHALLA) && SUPPORTS(Feature.value)?
+                    basecv:
+                    new CheckClassAdapter(basecv, false);
         }
         this.accessName = accessname;
         this.checker = ClassChecker.getInstance(accessname);

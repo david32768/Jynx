@@ -1,5 +1,6 @@
 package asm;
 
+import java.util.Optional;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.TypePath;
@@ -112,8 +113,8 @@ public class JynxAnnotation {
                     indices[i] = line.nextToken().asInt();
                 }
                 int typeref = tr.getTypeRef(indices);
-                String typepathstr = line.optAfter(res_typepath);
-                TypePath typepath = TypePath.fromString(typepathstr);
+                Optional<String> typepathstr = line.optAfter(res_typepath);
+                TypePath typepath = TypePath.fromString(typepathstr.orElse(null));
                 String desc = line.nextToken().asString();
                 av = sd.visitTypeAnnotation(typeref, typepath, desc, visibility == res_visible);
                 break;
