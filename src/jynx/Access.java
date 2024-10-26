@@ -12,6 +12,7 @@ import static jynx.Directive.*;
 import static jynx.Global.LOG;
 import static jynx.Global.OPTION;
 import static jynx.Global.SUPPORTS;
+import static jynx.GlobalOption.VALHALLA;
 import static jynx.Message.*;
 
 import jvm.AccessFlag;
@@ -155,6 +156,9 @@ public class Access {
     public void check4Class() {
         checkValid(CLASS,classType.getDir());
         allOf(classType.getMustHave4Class(jvmVersion));
+        if (OPTION(VALHALLA)) {
+            oneOf(acc_super, valhalla_acc_value);
+        }
     }
 
     // nested class - Table 4.7.6A
@@ -168,6 +172,9 @@ public class Access {
         }
         checkValid(INNER_CLASS,classType.getInnerDir());
         allOf(classType.getMustHave4Inner(jvmVersion));
+        if (OPTION(VALHALLA)) {
+            oneOf(valhalla_acc_identity, valhalla_acc_value);
+        }
     }
 
     // Field - Table 4.5A

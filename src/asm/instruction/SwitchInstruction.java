@@ -12,6 +12,7 @@ import static jynx.Message.M244;
 import static jynx.Message.M256;
 import static jynx.Message.M323;
 import static jynx.Message.M331;
+import static jynx.Message.M340;
 import static jynx.ReservedWord.res_default;
 import static jynx2asm.ops.JvmOp.asm_tableswitch;
 import static jynx2asm.ops.JvmOp.opc_switch;
@@ -64,21 +65,31 @@ public abstract class SwitchInstruction extends Instruction {
     public static Instruction getInstance(JvmOp jvmop, JynxLabel dflt, SortedMap<Integer,JynxLabel> swmap) {
         if (swmap.isEmpty()) {
             if (jvmop == asm_tableswitch) {
-                LOG(M224,jvmop,res_default); // "invalid %s as only has %s"
+                // "invalid %s as only has %s: case 0 -> %s added"
+                LOG(M224,jvmop,res_default, dflt.name());
+                swmap.put(0, dflt);
+            } else {
+                return new LookupInstruction(dflt,swmap);        
             }
-            return new LookupInstruction(dflt,swmap);        
         }
-        long min = swmap.firstKey().longValue();
-        long max = swmap.lastKey().longValue();
-        long range = max - min + 1;
+        
+        int min = swmap.firstKey();
+        int max = swmap.lastKey();
+        long range = 1L + max - min;
+        if (range > Integer.MAX_VALUE && jvmop == JvmOp.asm_tableswitch) {
+            // "range of cases [%d, %d] is too big for %s, so %s substituted"
+            LOG(M340, min, max, asm_tableswitch, JvmOp.asm_lookupswitch);
+            jvmop = JvmOp.asm_lookupswitch;
+        }
+        
         if (jvmop == JvmOp.asm_tableswitch) {
-            if (range == swmap.size()) {
-                return lookupToTableSwitch(min, max, dflt, swmap);
+            if (range != swmap.size()) {
+                //"missing cases in %s instructions will branch to default label"
+                LOG(M331, asm_tableswitch);
             }
-            // "%s changed to %s as entries are not consecutive"
-            LOG(M331, asm_tableswitch,opc_switch);
-            jvmop = opc_switch;
+            return lookupToTableSwitch(min, max, dflt, swmap);
         }
+        
         long lookupsz = LookupInstruction.minsize(swmap.size());
         long tablesz = TableInstruction.minsize(range);
         boolean consec = range == swmap.size();
@@ -86,29 +97,28 @@ public abstract class SwitchInstruction extends Instruction {
         if (jvmop == opc_switch && tablesmaller) {
             return lookupToTableSwitch(min, max, dflt, swmap);
         }
-        if (consec && swmap.size() > 1) {
-            // "%s could be used as entries are consecutive"
-            LOG(M244,JvmOp.asm_tableswitch);
-        } else if (tablesmaller) {
-            // "by adding dflt entries %s (size %d) would still be smaller than %s (size %d); range = %d labels = %d"
-            LOG(M323, JvmOp.asm_tableswitch, tablesz, JvmOp.asm_lookupswitch, lookupsz, range, swmap.size());
+        
+        // use lookupswitch
+        if (jvmop == JvmOp.asm_lookupswitch) {
+            if (consec && swmap.size() > 1) {
+                // "%s could be used as entries are consecutive"
+                LOG(M244,JvmOp.asm_tableswitch);
+            } else if (tablesmaller) {
+                // "by adding dflt entries %s (size %d) would still be smaller than %s (size %d); range = %d labels = %d"
+                LOG(M323, JvmOp.asm_tableswitch, tablesz, JvmOp.asm_lookupswitch, lookupsz, range, swmap.size());
+            }
         }
         return new LookupInstruction(dflt,swmap);
     }
     
-    private static Instruction lookupToTableSwitch(long min, long max, JynxLabel dflt,SortedMap<Integer,JynxLabel> swmap) {
+    private static Instruction lookupToTableSwitch(int min, int max, JynxLabel dflt,SortedMap<Integer,JynxLabel> swmap) {
+        assert max >= min;
         List<JynxLabel> labellist = new ArrayList<>();
-        long lastkey = min - 1;
-        for (Map.Entry<Integer,JynxLabel> me : swmap.entrySet()) {
-            int key = me.getKey();
-            for (long i = lastkey + 1; i < key; ++i) {
-                labellist.add(dflt); // fill in gaps with dflt label
-            }
-            JynxLabel label = me.getValue();
+        for (int i = min; i <= max; ++i) {
+            JynxLabel label = swmap.getOrDefault(i, dflt);
             labellist.add(label);
-            lastkey = key;
         }
-        return new TableInstruction((int)min, (int)max, dflt, labellist);
+        return new TableInstruction(min, max, dflt, labellist);
     }
     
 }

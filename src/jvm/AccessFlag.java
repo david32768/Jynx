@@ -264,11 +264,11 @@ public enum AccessFlag implements JvmVersioned {
         var flagset = stream()
                 .filter(flag->flag.isPresent(access, context, jvmversion))
                 .collect(()->EnumSet.noneOf(AccessFlag.class), EnumSet::add, EnumSet::addAll);
-        if (OPTION(VALHALLA)
-                && (context == CLASS || context == INNER_CLASS)
-                && !flagset.contains(acc_super)
-                && !flagset.contains(valhalla_acc_identity)) {
-            flagset.add(valhalla_acc_value);
+        if (OPTION(VALHALLA) && (context == CLASS || context == INNER_CLASS)) {
+            if (flagset.contains(acc_super) || flagset.contains(valhalla_acc_identity)) {
+            } else {
+                flagset.add(valhalla_acc_value);
+            }
         }
         return flagset;
     }

@@ -47,7 +47,7 @@ public enum MainOption {
             String.format("any %s options are added to %s directive",
                     ASSEMBLY.extname.toUpperCase(), Directive.dir_version),
             EnumSet.of(SKIP_CODE, SKIP_DEBUG, SKIP_FRAMES, SKIP_ANNOTATIONS, DOWN_CAST,
-                    VALHALLA,
+                    VALHALLA, GENERIC_SWITCH,
                     DEBUG, INCREASE_MESSAGE_SEVERITY)
     ),
     ROUNDTRIP(MainOption::a2j2a,"roundtrip",

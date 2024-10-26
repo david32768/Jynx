@@ -32,6 +32,7 @@ public enum GlobalOption {
     SKIP_FRAMES(M30), // "do not produce stack map"
     SKIP_ANNOTATIONS(M18), // "do not produce annotations"
     DOWN_CAST(M14), // "if necessary reduces JVM release to maximum supported by ASM version"
+    GENERIC_SWITCH(M148), // "generate generic switch instruction"
     
     DEBUG(M13), // "print stack trace(s)"
     DETAIL(M17),  // "prints constant pool, instructions and other detail"

@@ -6,7 +6,7 @@ public class Constants {
 
     private final static int JYNX_VERSION = 0;
     private final static int JAVA_RELEASE = 23;
-    private final static int JYNX_BUILD = 0;
+    private final static int JYNX_BUILD = 1;
     
     public static String version(boolean exact) {
         if (exact) {

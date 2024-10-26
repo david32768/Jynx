@@ -37,6 +37,7 @@ import jvm.NumType;
 import jvm.OpArg;
 import jvm.StandardAttribute;
 import jynx.Directive;
+import jynx.GlobalOption;
 import jynx.LogAssertionError;
 import jynx.ReservedWord;
 import jynx2asm.handles.HandlePart;
@@ -218,16 +219,19 @@ public class Insn2Jynx {
             labels = tsin.labels;
         }
         assert keys.length == labels.size();
-        lb.append(asmop)
+        JvmOp switchop = OPTION(GlobalOption.GENERIC_SWITCH)? JvmOp.opc_switch: asmop;
+        lb.append(switchop)
                 .append(ReservedWord.res_default, dflt)
                 .append(ReservedWord.dot_array)
                 .nl();
         int i = 0;
         lb.incrDepth();
         for (LabelNode labelnode:labels) {
-            lb.append(keys[i])
-                    .append(ReservedWord.right_arrow,labelnode)
-                    .nl();
+            if (switchop == asmop || !labelnode.equals(dflt)) {
+                lb.append(keys[i])
+                        .append(ReservedWord.right_arrow,labelnode)
+                        .nl();
+            }
             ++i;
         }
         lb.decrDepth();

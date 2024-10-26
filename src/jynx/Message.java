@@ -153,7 +153,7 @@ public enum Message {
     M145("Invalid method description %s"),
     M146("constant type = %s not valid in this context"),
     M147(WARNING,"unknown Java version %s - %s used"),
-
+    M148(BLANK,"generate generic switch instruction"),
     M149(ENDINFO,"%s has been used for checking but has not been written to class file as only supported %s"),
     M150("expected equal values for index length = %d numind = %d"),
     M151(ENDINFO,"Class.forName(%s) has been used"),
@@ -194,7 +194,7 @@ public enum Message {
     M186("%s for %s must be %s"),
     M187("annotation parameter count(%d) not in range[1,%d]"),
     M188("n (%d) is greater than current local size(%d)"),
-
+    M189(LINE,"case %d -> %s dropped from %s as default label"),
     M190("mismatched local %d: required %s but found %s"),
     M191("method requires %s but found %s"),
 
@@ -228,12 +228,12 @@ public enum Message {
     M221("required %s for var %d but found %s"),
     M222("either option %s is specified or file name is present but not both"),
     M223("Annotation for unknown variables [%s ]"),
-    M224(WARNING,"invalid %s as only has %s"),
+    M224(WARNING,"invalid %s as only has %s: case 0 -> %s added"),
     M225(WARNING,"empty %s ignored"),
     M226("invalid access flags %s for component"),
     M227(WARNING,"possible serialization method %s does not match %s"),
     M228(WARNING,"indent %d found but expected %d"),
-    M229("duplicate key %d; previous target = %s, current target = %s"),
+    M229("ambiguous key %d; previous target = %s, current target = %s"),
     M230("attempting to overwrite %s using %s"),
     M231(WARNING,"Last instruction was %s: expected %s"),
     M232("Last instruction was %s: expected %s"),
@@ -259,7 +259,7 @@ public enum Message {
     M252("own init method %s not found"),
     M253("illegal number of dimensions %d; must be in range [0,%d]"),
     M254("%s is used in a macro after a mulit-line op"),
-
+    M255(WARNING,"duplicate key %d; target = %s"),
     M256("size of %s is %d which exceeds %d"),
     M257("argument count %d is not in range [0,%d]"),
     M258(WARNING,"%s is a reserved word and cannot be a Java Id"),
@@ -335,7 +335,7 @@ public enum Message {
     M328(WARNING,"%s nest level is already zero"),
     M329(INFO,"print options = %s"),
     M330("maximum code size of %d exceeded; method size = [%d,%d]"),
-    M331("%s changed to %s as entries are not consecutive"),
+    M331(ENDINFO,"missing cases in %s instructions will branch to default label"),
     M332(BLANK,"GlobalOption abbreviations are not unique after transform"),
     M333(BLANK,"GlobalOption names are not unique after transform"),
     M334("abbrev '%s' for option %s has invalid name"),
@@ -344,6 +344,7 @@ public enum Message {
     M337("%s is predefined"),
     M338("code missing but method is not native or abstract"),
     M339("maximum code size of %d exceeded; current size = [%d,%d]"),
+    M340("range of cases [%d, %d] is too big for %s, so %s substituted"),
     
     M362("expected arg %s but was %s"),
 
@@ -396,6 +397,13 @@ public enum Message {
     M600(INFO,"%s not actioned as a method contains %s"),
     M601(BLANK,"Valhalla - limited support; may change"),
     M602("Version %s certainly does not support valhalla"),
+    M603("duplicate case %d in %s"),
+    M604("lowest case value (%d) is lower than low (%d)"),
+    M605("highest case value (%d) is higher than high (%d)"),
+    M606("high (%d) is less than low (%d) in %s"),
+    M607("number of entries in %s (%d) exceeds maximum possible %d"),
+    M608(INFO,"maxstack: code (%d) >  checker (%d)"),
+    M609("maxstack: code (%d) < checker (%d): %d used"),
     
     M800(ENDINFO,"line number 0 changed to 1; ASM Issue #317989"),
     M801(FINE,"min length = %d max length = %d"),
