@@ -88,7 +88,7 @@ public class JynxMethodPrinter {
     private void printCode(MethodNode mn, String classname, boolean isstatic) {
         jvmVersion.checkSupports(StandardAttribute.Code);
         if (OPTION(GlobalOption.SKIP_CODE)) {
-            jp.appendComment(GlobalOption.SKIP_CODE).nl();
+            jp.appendComment(GlobalOption.SKIP_CODE);
             return;
         }
         LocalMethodHandle lmh = LocalMethodHandle.of(mn);

@@ -362,10 +362,8 @@ public class JynxDisassemble {
         // "options = %s"
         LOG(M88, options);
         jp.appendComment("options = " + options.toString())
-                .nl()
-                .comment()
-                .append(MainOption.DISASSEMBLY.version())
-                .nl()
+                // "Jynx %s %s"
+                .comment(M192, Global.MAIN_OPTION().name(), Global.MAIN_OPTION().version())
                 .append(dir_version)
                 .append(jvmVersion.asJava());
         options.stream()

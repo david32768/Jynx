@@ -369,6 +369,9 @@ public class String2Insn {
     private Instruction arg_switch(JvmOp jvmop) {
         line.nextToken().mustBe(res_default);
         JynxLabel dflt = getJynxLabel(line.nextToken());
+        if (OPTION(GlobalOption.GENERIC_SWITCH)) {
+            jvmop = JvmOp.opc_switch;
+        }
         SortedMap<Integer,JynxLabel> swmap = new TreeMap<>();
         try (TokenArray dotarray = line.getTokenArray()) {
             multi |= dotarray.isMultiLine(); 
@@ -383,10 +386,9 @@ public class String2Insn {
                 JynxLabel target = getJynxLabel(label);
                 dotarray.noMoreTokens();
 
-                if (jvmop == JvmOp.opc_switch && target.equals(dflt) && !swmap.containsKey(key)) {
-                    // "case %d -> %s dropped from %s as default label"
+                if (jvmop != JvmOp.asm_tableswitch && target.equals(dflt)) {
+                    // "unneccessary case %d -> %s in %s as target is default label"
                     LOG(M189, key, target, jvmop);
-                    continue;
                 }
                 JynxLabel previous = swmap.putIfAbsent(key, target);
                 if (previous != null) {

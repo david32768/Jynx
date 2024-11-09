@@ -2,7 +2,6 @@ package asm.instruction;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.SortedMap;
 
 import static jvm.Constants.MAX_CODE;
@@ -11,7 +10,6 @@ import static jynx.Message.M224;
 import static jynx.Message.M244;
 import static jynx.Message.M256;
 import static jynx.Message.M323;
-import static jynx.Message.M331;
 import static jynx.Message.M340;
 import static jynx.ReservedWord.res_default;
 import static jynx2asm.ops.JvmOp.asm_tableswitch;
@@ -66,7 +64,7 @@ public abstract class SwitchInstruction extends Instruction {
         if (swmap.isEmpty()) {
             if (jvmop == asm_tableswitch) {
                 // "invalid %s as only has %s: case 0 -> %s added"
-                LOG(M224,jvmop,res_default, dflt.name());
+                LOG(M224, jvmop, res_default, dflt.name());
                 swmap.put(0, dflt);
             } else {
                 return new LookupInstruction(dflt,swmap);        
@@ -76,22 +74,18 @@ public abstract class SwitchInstruction extends Instruction {
         int min = swmap.firstKey();
         int max = swmap.lastKey();
         long range = 1L + max - min;
-        if (range > Integer.MAX_VALUE && jvmop == JvmOp.asm_tableswitch) {
+        long tablesz = TableInstruction.minsize(range);
+        if (jvmop == JvmOp.asm_tableswitch && tablesz > UNPADDED_MAX) {
             // "range of cases [%d, %d] is too big for %s, so %s substituted"
             LOG(M340, min, max, asm_tableswitch, JvmOp.asm_lookupswitch);
             jvmop = JvmOp.asm_lookupswitch;
         }
         
         if (jvmop == JvmOp.asm_tableswitch) {
-            if (range != swmap.size()) {
-                //"missing cases in %s instructions will branch to default label"
-                LOG(M331, asm_tableswitch);
-            }
             return lookupToTableSwitch(min, max, dflt, swmap);
         }
         
         long lookupsz = LookupInstruction.minsize(swmap.size());
-        long tablesz = TableInstruction.minsize(range);
         boolean consec = range == swmap.size();
         boolean tablesmaller = tablesz < lookupsz;
         if (jvmop == opc_switch && tablesmaller) {

@@ -20,6 +20,7 @@ import jvm.AccessFlag;
 import jynx.Directive;
 import jynx.LogAssertionError;
 import jynx.LogIllegalStateException;
+import jynx.Message;
 import jynx.ReservedWord;
 import jynx.StringUtil;
 import jynx2asm.ops.IndentType;
@@ -215,9 +216,10 @@ public class JynxStringBuilder {
         return  toString();
     }
 
-    public JynxStringBuilder comment() {
+    public JynxStringBuilder comment(Message message, Object... objs) {
         sep();
-        sb.append(';');
+        String msg = message.format(objs);
+        appendComment(msg);
         return this;
     }
 
@@ -229,7 +231,7 @@ public class JynxStringBuilder {
             LOG(M142,str); // "comment contains unprintable characters (replaced by '?'); comment = '%s'"
         }
         append(str);
-        return this;
+        return nl();
     }
 
     public JynxStringBuilder appendNonNull(String str) {
