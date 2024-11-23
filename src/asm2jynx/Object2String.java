@@ -70,7 +70,7 @@ public class Object2String {
         Float fval = (Float)value;
         String prefix = fval.isNaN() || fval == Float.POSITIVE_INFINITY?"+":"";
         String strval = Float.toHexString(fval);
-        return prefix + strval + "f";
+        return prefix + strval + "F";
     }
     
     public String char2String(Object value) {

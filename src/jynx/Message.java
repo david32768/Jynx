@@ -403,7 +403,8 @@ public enum Message {
     M605("highest case value (%d) is higher than high (%d)"),
     M606("high (%d) is less than low (%d) in %s"),
     M607("number of entries in %s (%d) exceeds maximum possible %d"),
-
+    M608(BLANK,"bci -> %d stack -> %s"),
+    M609(BLANK,"do not print stack after each instruction"),
     M610("ambiguous case %d in %s dropped"),
     M611(INFO,"case(s) with branch to default label in %s dropped"),
     M612(BLANK,"%s ; line %d"),
