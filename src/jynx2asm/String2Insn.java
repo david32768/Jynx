@@ -367,28 +367,39 @@ public class String2Insn {
     }
 
     private Instruction arg_switch(JvmOp jvmop) {
-        Token token1 = line.nextToken();
-        token1.mustBe(res_default);
+        line.nextToken().mustBe(res_default);
         JynxLabel dflt = getJynxLabel(line.nextToken());
+        if (OPTION(GlobalOption.GENERIC_SWITCH)) {
+            jvmop = JvmOp.opc_switch;
+        }
         SortedMap<Integer,JynxLabel> swmap = new TreeMap<>();
         try (TokenArray dotarray = line.getTokenArray()) {
             multi |= dotarray.isMultiLine(); 
             while (true) {
                 Token value = dotarray.firstToken();
-                Token label;
                 if (value.is(right_array)) {
                     return SwitchInstruction.getInstance(jvmop, dflt, swmap);
                 }
                 int key = value.asInt();
                 dotarray.nextToken().mustBe(right_arrow);
-                label = dotarray.nextToken();
+                Token label = dotarray.nextToken();
                 JynxLabel target = getJynxLabel(label);
-                JynxLabel mustbenull = swmap.put(key, target);
-                if (mustbenull != null && !mustbenull.equals(target)) {
-                    // "duplicate key %d; previous target = %s, current target = %s"
-                    LOG(M229,key,mustbenull.name(),target.name());
-                }
                 dotarray.noMoreTokens();
+
+                if (jvmop != JvmOp.asm_tableswitch && target.equals(dflt)) {
+                    // "unneccessary case %d -> %s in %s as target is default label"
+                    LOG(M189, key, target, jvmop);
+                }
+                JynxLabel previous = swmap.putIfAbsent(key, target);
+                if (previous != null) {
+                    if (previous.equals(target)) {
+                        // "duplicate key %d; target = %s"
+                        LOG(M255, key, target.name());
+                    } else {
+                        // "ambiguous key %d; previous target = %s, current target = %s"
+                        LOG(M229, key, previous.name(), target.name());
+                    }
+                } 
             }
         }
     }

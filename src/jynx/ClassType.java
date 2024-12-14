@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 import static jvm.AccessFlag.*;
 import static jynx.Directive.*;
 import static jynx.Global.LOG;
+import static jynx.GlobalOption.VALHALLA;
 import static jynx.Message.M186;
 import static jynx.Message.M283;
 import static jynx.Message.M327;
@@ -23,35 +24,56 @@ public enum ClassType {
     // default super class, mandated super, directive, inner directive, determinator, must_have
     
             // ANNOTATION must come before INTERFACE
-    ANNOTATION_CLASS(Constants.OBJECT_CLASS, true, dir_define_annotation, dir_inner_define_annotation, acc_annotation,
+    ANNOTATION_CLASS(Constants.OBJECT_CLASS, true,
+            dir_define_annotation, dir_inner_define_annotation,
+            EnumSet.of(acc_annotation),
             EnumSet.of(acc_annotation, acc_interface, acc_abstract)),
             // INTERFACE must be after ANNOTATION
-    INTERFACE(Constants.OBJECT_CLASS, false, dir_interface, dir_inner_interface, acc_interface,
+    INTERFACE(Constants.OBJECT_CLASS, false,
+            dir_interface, dir_inner_interface,
+            EnumSet.of(acc_interface),
             EnumSet.of(acc_interface, acc_abstract)),
             // PACKAGE must be after INTERFACE
-    PACKAGE(Constants.OBJECT_CLASS, true, dir_package, null, null,
+    PACKAGE(Constants.OBJECT_CLASS, true,
+            dir_package, null,
+            null,
             EnumSet.of(acc_interface,acc_abstract)),
-    ENUM(Constants.ENUM_SUPER, false, dir_enum, dir_inner_enum, acc_enum,
+    ENUM(Constants.ENUM_SUPER, false,
+            dir_enum, dir_inner_enum,
+            EnumSet.of(acc_enum),
             EnumSet.of(acc_enum, acc_super)),
-    MODULE_CLASS(null, true, dir_define_module, null, acc_module,
+    MODULE_CLASS(null, true,
+            dir_define_module, null,
+            EnumSet.of(acc_module),
             EnumSet.of(acc_module)),
-    RECORD(Constants.RECORD_SUPER, true, dir_record, dir_inner_record, acc_record,
+    RECORD(Constants.RECORD_SUPER, true,
+            dir_record, dir_inner_record,
+            EnumSet.of(acc_record),
             EnumSet.of(acc_record, acc_super)),
-    BASIC(Constants.OBJECT_CLASS, false, dir_class, dir_inner_class, acc_super,
+    BASIC(Constants.OBJECT_CLASS, false,
+            dir_class, dir_inner_class,
+            EnumSet.of(acc_super),
             EnumSet.of(acc_super)),
+    VALUE_CLASS(Constants.OBJECT_CLASS, false,
+            dir_class, dir_inner_class,
+            EnumSet.of(valhalla_acc_value),
+            EnumSet.noneOf(AccessFlag.class)),
     ;
 
     private final String defaultSuper;
-    private final boolean mandated;
+    private final boolean mandatedSuper;
     private final Directive dir;
     private final Directive innerDir;
-    private final AccessFlag determinator;
+    private final EnumSet<AccessFlag> determinator;
     private final EnumSet<AccessFlag> must;
 
-    private ClassType(Constants defaultSuper, boolean mandated, Directive dir, Directive innerDir, AccessFlag determinator, EnumSet<AccessFlag> must) {
-        assert determinator == null || must.contains(determinator);
+    private ClassType(Constants defaultSuper, boolean mandated,
+            Directive dir, Directive innerDir,
+            EnumSet<AccessFlag> determinator,
+            EnumSet<AccessFlag> must) {
+        assert determinator == null || must.isEmpty() || must.containsAll(determinator);
         this.defaultSuper = defaultSuper == null? null: defaultSuper.stringValue();
-        this.mandated = mandated;
+        this.mandatedSuper = mandated;
         this.dir = dir;
         this.innerDir = innerDir;
         this.determinator = determinator;
@@ -66,21 +88,27 @@ public enum ClassType {
     }
     
     private boolean isMe(EnumSet<AccessFlag> accflags) {
-        return determinator != null && accflags.contains(determinator);
+        return determinator != null && accflags.containsAll(determinator);
     }
     
     public static ClassType from(EnumSet<AccessFlag> accflags) {
-        return Stream.of(values())
+        var classtype = Stream.of(values())
                 .filter(ct->ct.isMe(accflags))
-                .findAny()
-                .orElse(BASIC); // super flag may not be present
+                .findFirst()
+                .orElse(BASIC);
+        return classtype;
     }
 
-    public static ClassType of(Directive dir) {
-        return Stream.of(values())
+    public static ClassType of(Directive dir, EnumSet<AccessFlag> flags) {
+        var classtype =  Stream.of(values())
                 .filter(ct->ct.dir == dir)
-                .findAny()
-                .orElse(BASIC);
+                .findFirst()
+                .orElseThrow();
+        if (Global.OPTION(VALHALLA) && classtype == BASIC
+                && !flags.contains(acc_super)) {
+            classtype = VALUE_CLASS;
+        }
+        return classtype;
     }
     
     public Directive getDir() {
@@ -117,7 +145,7 @@ public enum ClassType {
         if (Objects.equals(csuper, defaultSuper)) {
             return csuper;
         }
-        if (mandated) {
+        if (mandatedSuper) {
             // "%s for %s must be %s"
             LOG(M186, Directive.dir_super, this, defaultSuper);
             return defaultSuper;

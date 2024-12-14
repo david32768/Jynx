@@ -226,7 +226,7 @@ public class Insn2Jynx {
         lb.incrDepth();
         for (LabelNode labelnode:labels) {
             lb.append(keys[i])
-                    .append(ReservedWord.right_arrow,labelnode)
+                    .append(ReservedWord.right_arrow, labelnode)
                     .nl();
             ++i;
         }

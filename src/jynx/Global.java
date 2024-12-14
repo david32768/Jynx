@@ -27,7 +27,7 @@ public class Global {
     private Translator ttanslator;
     
     private Global() {
-        this.options = EnumSet.noneOf(GlobalOption.class);
+        this.options = EnumSet.of(GlobalOption.DEBUG);
         this.logger  = new Logger("");
         this.jvmVersion = null;
         this.classname = null;
@@ -45,24 +45,14 @@ public class Global {
     
     public static void newGlobal(MainOption type) {
         global = new Global(type, EnumSet.noneOf(GlobalOption.class));
-        // "%n%s; Java runtime version %s"
-        LOG(M4,type.version(),javaRuntimeVersion());
+        // "%nJynx %s %s; Java runtime version %s"
+        LOG(M4, type.name(), type.version(), Runtime.version());
     }
     
     public static Logger LOGGER() {
         return global.logger;
     }
 
-    public static String javaRuntimeVersion() {
-        String result = System.getProperty("java.runtime.version");
-        int plus = result.indexOf('+');
-        if (OPTION(GlobalOption.DEBUG) || plus < 0) {
-            return result;
-        } else {
-            return result.substring(0,plus);
-        }
-    }
-    
     public static void setJvmVersion(JvmVersion jvmversion) {
         assert global.jvmVersion == null || global.jvmVersion == jvmversion;
         global.jvmVersion = jvmversion;

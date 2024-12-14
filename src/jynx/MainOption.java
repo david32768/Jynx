@@ -12,7 +12,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static jynx.Constants.SUFFIX;
 import static jynx.Global.CLASS_NAME;
 import static jynx.Global.LOG;
 import static jynx.Global.OPTION;
@@ -31,21 +30,32 @@ import roundtrip.RoundTrip;
 public enum MainOption {
     
     ASSEMBLY(MainOption::j2a,"jynx",
-            " {options} " + SUFFIX + "_file",
-            "produces a class file from a " + SUFFIX + " file",
+            " {options} %s_file",
+            "produces a class file from a %s file",
             "",
             EnumSet.of(SYSIN, USE_STACK_MAP, WARN_UNNECESSARY_LABEL, WARN_STYLE, 
                     GENERATE_LINE_NUMBERS, BASIC_VERIFIER, ALLOW_CLASS_FORNAME,
                     CHECK_REFERENCES, VALIDATE_ONLY, TRACE, SYMBOLIC_LOCAL,
                     DEBUG, INCREASE_MESSAGE_SEVERITY, SUPPRESS_WARNINGS,
+                    VALHALLA, GENERIC_SWITCH,
                     __STRUCTURED_LABELS, __WARN_INDENT)
     ),
     DISASSEMBLY(MainOption::a2j,"2jynx",
-            " {options}  class-name|class_file > " + SUFFIX + "_file",
-            "produces a " + SUFFIX + " file from a class",
+            " {options}  class-name|class_file > %s_file",
+            "produces a %s file from a class",
             String.format("any %s options are added to %s directive",
                     ASSEMBLY.extname.toUpperCase(), Directive.dir_version),
             EnumSet.of(SKIP_CODE, SKIP_DEBUG, SKIP_FRAMES, SKIP_ANNOTATIONS, DOWN_CAST,
+                    VALHALLA,
+                    DEBUG, INCREASE_MESSAGE_SEVERITY)
+    ),
+    TOJYNX(MainOption::tojynx,"tojynx",
+            " {options}  class-name|class_file > %s_file",
+            "produces a %s file from a class",
+            String.format("any %s options are added to %s directive",
+                    ASSEMBLY.extname.toUpperCase(), Directive.dir_version),
+            EnumSet.of(SKIP_CODE, SKIP_DEBUG, SKIP_FRAMES, SKIP_ANNOTATIONS, DOWN_CAST,
+                    VALHALLA, SKIP_STACK,
                     DEBUG, INCREASE_MESSAGE_SEVERITY)
     ),
     ROUNDTRIP(MainOption::a2j2a,"roundtrip",
@@ -60,10 +70,19 @@ public enum MainOption {
             " {options}  class-name|class_file",
             "prints a skeleton of class structure",
             "",
-            EnumSet.of(DETAIL, DEBUG)
+            EnumSet.of(DETAIL, DEBUG, VALHALLA)
     ),
     ;
 
+    private final static int JYNX_VERSION = 0;
+    private final static int JYNX_RELEASE = 23;
+    private final static int JYNX_BUILD = 3;
+    private final static String SUFFIX = ".jx";
+
+
+    private final int version;
+    private final int release;
+    private final int build;
     private final Predicate<Optional<String>> fn;
     private final String extname;
     private final String usage;
@@ -75,10 +94,13 @@ public enum MainOption {
             String usage, String longdesc, String adddesc, EnumSet<GlobalOption> options) {
         this.fn = fn;
         this.extname = extname;
-        this.usage = " " + extname.toLowerCase() + usage;
-        this.longdesc = longdesc;
-        this.adddesc = adddesc;
+        this.usage = " " + extname.toLowerCase() + String.format(usage, SUFFIX);
+        this.longdesc = String.format(longdesc, SUFFIX);
+        this.adddesc = String.format(adddesc, SUFFIX);
         this.options = options;
+        this.version = JYNX_VERSION;
+        this.release = JYNX_RELEASE;
+        this.build = JYNX_BUILD;
     }
 
     public Predicate<Optional<String>> fn() {
@@ -90,7 +112,7 @@ public enum MainOption {
     }
 
     public String version() {
-        return String.format("Jynx %s %s",this.name(),Constants.version(OPTION(GlobalOption.DEBUG)));
+        return String.format("%d.%d.%d", version, release, build);
     }
 
     public boolean usesOption(GlobalOption opt) {
@@ -126,6 +148,10 @@ public enum MainOption {
                 .findAny();
     }
 
+    private static boolean tojynx(Optional<String> optfname) {
+        throw new UnsupportedOperationException();
+    }
+    
     private static boolean a2j(Optional<String> optfname) {
         String fname = optfname.get();
         PrintWriter pw = new PrintWriter(System.out);

@@ -8,16 +8,16 @@ import static jynx.GlobalOption.*;
 import static jynx.Message.*;
 
 import jvm.JvmVersion;
-import jynx.Constants;
+import jynx.Global;
 import jynx.GlobalOption;
 import jynx.MainOption;
 import jynx.SevereError;
 
 public class Main {
     
-    private static void outputVersion() {
+    private static void outputVersion(MainOption main) {
         // // "Jynx version %s; maximum Java version is %s"
-        LOG(M0,Constants.version(true),JvmVersion.MAX_VERSION);
+        LOG(M0, main.version(), JvmVersion.MAX_VERSION);
     }
 
     private static void appUsage() {
@@ -44,7 +44,7 @@ public class Main {
         String option = args[0];
         if (args.length == 1) {
             if (VERSION.isArg(option)) {
-                outputVersion();
+                outputVersion(MainOption.ASSEMBLY);
                 return Optional.empty();
             }
             if (HELP.isArg(option)) {
@@ -67,7 +67,7 @@ public class Main {
         option = args[1];
         if (args.length == 2) {
             if (VERSION.isArg(option)) {
-                outputVersion();
+                outputVersion(main);
                 return Optional.empty();
             }
             if (HELP.isArg(option)) {

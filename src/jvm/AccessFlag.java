@@ -9,9 +9,13 @@ import static org.objectweb.asm.Opcodes.*;
 import static jvm.Context.*;
 import static jynx.Directive.*;
 import static jynx.Global.LOG;
+import static jynx.Global.OPTION;
+import static jynx.GlobalOption.VALHALLA;
 import static jynx.Message.*;
 
 import jynx.Directive;
+import jynx.Global;
+import jynx.GlobalOption;
 
 // Class - Table 4.1B
 // Field - Table 4.5A
@@ -125,6 +129,13 @@ public enum AccessFlag implements JvmVersioned {
         acc_mandated(Feature.mandated,ACC_MANDATED,0x8000,
                 EnumSet.of(MODULE,PARAMETER,EXPORT,OPEN,REQUIRE),
                 EnumSet.of(dir_define_module,dir_parameter,dir_exports,dir_opens,dir_requires)),
+
+        valhalla_acc_strict(Feature.value, 0x800, 0x800,
+                EnumSet.of(FIELD),
+                EnumSet.of(dir_field)),
+        valhalla_acc_identity(Feature.valhalla,ACC_SUPER,0x0020,
+                EnumSet.of(INNER_CLASS),
+                EnumSet.of(dir_inner_class, dir_inner_record)),
     // ASM specific pseudo access flags - not written to class file - used if appropriate attribute present
         // acc_synthetic before V1_5
         acc_record(Feature.record, ACC_RECORD, 0x10000,
@@ -140,8 +151,12 @@ public enum AccessFlag implements JvmVersioned {
                         dir_class, dir_inner_class,
                         dir_field, dir_method)),
     // Jynx specific pseudo access flags 0x0
+        valhalla_acc_value(Feature.value, 0x0, 0x0,
+                EnumSet.of(CLASS,INNER_CLASS),
+                EnumSet.of(dir_class,dir_inner_class,
+                        dir_record, dir_inner_record)),
         // flag for internal use - xxx_ prefix and 0x0
-        xxx_component(Feature.record,0,0,
+        xxx_component(Feature.record, 0x0,0x0,
                 EnumSet.of(FIELD,METHOD),
                 EnumSet.of(dir_field,dir_method)),
     ;
@@ -163,7 +178,6 @@ public enum AccessFlag implements JvmVersioned {
         this.feature = feature;
         this.dirs = dirs;
     }
-
 
     public int getAccessFlag() {
         return access_flag;
@@ -187,15 +201,33 @@ public enum AccessFlag implements JvmVersioned {
         return where.contains(state) && dirs.contains(dir);
     }
 
+    public String stringValue() {
+        int index = name().lastIndexOf('_');
+        return name().substring(index + 1);
+    }
+    
+    private boolean requiresValhalla() {
+        return name().contains("valhalla");
+    }
+    
+    private boolean relevent() {
+        return !requiresValhalla() || Global.OPTION(GlobalOption.VALHALLA);
+    }
+    
     @Override
     public String toString() {
-        return name().substring(4);
+        return stringValue();
     }
 
+    public static Stream<AccessFlag> stream() {
+        return Stream.of(values())
+                .filter(AccessFlag::relevent);
+    }
+    
     public static Optional<AccessFlag> fromString(String token) {
         String tokenx = token.equals("fpstrict")? acc_strict.toString(): token;
-        return Stream.of(values())
-                .filter(acc->acc.toString().equals(tokenx))
+        return stream()
+                .filter(acc->acc.stringValue().equals(tokenx))
                 .findFirst();
     }
 
@@ -208,34 +240,53 @@ public enum AccessFlag implements JvmVersioned {
     }
 
     // basic check and disambiguate
-    public static EnumSet<AccessFlag> getEnumSet(final int access,final Context acctype, final JvmVersion jvmversion) {
+    public static EnumSet<AccessFlag> getEnumSet(int access, Context acctype, JvmVersion jvmversion) {
         assert acctype.usesAccessFlags(): "" + acctype.toString();
-        EnumSet<AccessFlag> flags = Stream.of(values())
-                .filter(flag->flag.isPresent(access,acctype,jvmversion))
-                .collect(()->EnumSet.noneOf(AccessFlag.class),EnumSet::add,EnumSet::addAll);
+        var flags = valid(access, acctype, jvmversion);
         int invalid = access &~ getAccess(flags);
         if (invalid != 0) {
-            EnumSet<AccessFlag> posflags = Stream.of(values())
-                    .filter(flag->flag.isPresent(invalid,acctype))
-                    .collect(()->EnumSet.noneOf(AccessFlag.class),EnumSet::add,EnumSet::addAll);
+            var posflags = known(invalid, acctype);
             int unknown = invalid &~ getAccess(posflags);
             if (!posflags.isEmpty()) {
-                LOG(M110,posflags,jvmversion); // "access flag(s) %s not valid for version %s"
+                // "access flag(s) %s in context %s not valid for version %s"
+                LOG(M110, posflags, acctype, jvmversion);
             }
             if (unknown != 0) {
-                LOG(M107,invalid,acctype);   // "unknown access flag (%#04x) in context %s ignored"
+                // "unknown access flag (%#04x) in context %s ignored"
+                LOG(M107, unknown, acctype);
             }
         }
         return flags;
     }
 
+    public static EnumSet<AccessFlag> valid(int access, Context context, JvmVersion jvmversion) {
+        assert context.usesAccessFlags(): "" + context.toString();
+        var flagset = stream()
+                .filter(flag->flag.isPresent(access, context, jvmversion))
+                .collect(()->EnumSet.noneOf(AccessFlag.class), EnumSet::add, EnumSet::addAll);
+        if (OPTION(VALHALLA) && (context == CLASS || context == INNER_CLASS)) {
+            if (flagset.contains(acc_super) || flagset.contains(valhalla_acc_identity)) {
+            } else {
+                flagset.add(valhalla_acc_value);
+            }
+        }
+        return flagset;
+    }
+
+    public static EnumSet<AccessFlag> known(int access, Context acctype) {
+        assert acctype.usesAccessFlags(): "" + acctype.toString();
+        return stream()
+                    .filter(flag->flag.isPresent(access, acctype))
+                    .collect(()->EnumSet.noneOf(AccessFlag.class), EnumSet::add, EnumSet::addAll);
+    }
+
     public static String[] stringArrayOf(EnumSet<AccessFlag> flags) {
         return flags.stream()
-                .map(AccessFlag::toString)
+                .map(AccessFlag::stringValue)
                 .toArray(String[]::new);
     }
 
-    private static int getAccess(EnumSet<AccessFlag> flags) {
+    public static int getAccess(EnumSet<AccessFlag> flags) {
         return flags.stream()
                 .mapToInt(AccessFlag::getAccessFlag)
                 .reduce(0, (accumulator, _item) -> accumulator | _item);

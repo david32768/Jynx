@@ -102,14 +102,14 @@ public interface TokenDeque {
         return nextToken().asReservedWordType(rw.rwtype());
     }
 
-    public default String optAfter(ReservedWord rw) {
+    public default Optional<String> optAfter(ReservedWord rw) {
         assert rw.isOptional();
         Token token = peekToken();
         if (token.is(rw)) {
             nextToken();
-            return nextToken().asReservedWordType(rw.rwtype());
+            return Optional.of(nextToken().asReservedWordType(rw.rwtype()));
         }
-        return null;
+        return Optional.empty();
     }
 
     public default EnumSet<AccessFlag> getAccFlags()  {

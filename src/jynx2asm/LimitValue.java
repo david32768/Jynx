@@ -42,8 +42,12 @@ public class LimitValue {
     public int checkedValue() {
         if (isSet()) {
             if (value > setvalue) {
-                LOG(M22,value,type,setvalue); // "value required (%d) for %s is more than limit value (%d)"
+                // "value required (%d) for %s is more than limit value (%d); %d used"
+                LOG(M22, value, type, setvalue, value); 
                 return value;
+            } else if (value < setvalue) {
+                // "value required (%d) for %s is less than limit value (%d); %d used"
+                LOG(M193, value, type, setvalue, setvalue);
             } 
             return setvalue;
         }

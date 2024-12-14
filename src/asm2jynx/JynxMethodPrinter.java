@@ -72,6 +72,7 @@ public class JynxMethodPrinter {
 
     private void printLocalVariables(MethodNode mn) {
         List<LocalVariableNode> lvnlist = mn.localVariables == null?new ArrayList<>():mn.localVariables;
+        jp.incrDepth();
         for (LocalVariableNode lvn : lvnlist) {
             jp.append(dir_var)
                     .append(lvn.index)
@@ -82,13 +83,14 @@ public class JynxMethodPrinter {
                     .append(res_to,lvn.end)
                     .nl();
         }
+        jp.decrDepth();
         annotator.printLocalVarAnnotations(mn.visibleLocalVariableAnnotations, mn.invisibleLocalVariableAnnotations);
     }
     
     private void printCode(MethodNode mn, String classname, boolean isstatic) {
         jvmVersion.checkSupports(StandardAttribute.Code);
         if (OPTION(GlobalOption.SKIP_CODE)) {
-            jp.appendComment(GlobalOption.SKIP_CODE).nl();
+            jp.appendComment(GlobalOption.SKIP_CODE);
             return;
         }
         LocalMethodHandle lmh = LocalMethodHandle.of(mn);
