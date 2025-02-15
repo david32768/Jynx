@@ -58,9 +58,9 @@ public enum JvmVersion {
     V24(68), // Opcodes.V24
     V24_PREVIEW(68 | Opcodes.V_PREVIEW),  // Opcodes.V24
     
-    NEVER(0xffff); // must be last
+    NEVER(0xffff, 0); // must be last
     
-    private final long release; // 0x00000000 major minor
+    private final long release; // 0x00000000_major_minor
     private final int major;
     private final int minor;
     
@@ -73,11 +73,11 @@ public enum JvmVersion {
         this.minor = minor;
         this.release = Integer.toUnsignedLong((major << 16) | minor);
         // "invalid major version - %s"
-        assert isUnsignedShort(major) && major > MAJOR_BASE:M20.format(this);
+        assert isUnsignedShort(major) && major > MAJOR_BASE:M20.format(this.name());
         // "invalid minor version - %s"
-        assert isUnsignedShort(minor):M21.format(this);
+        assert isUnsignedShort(minor):M21.format(this.name());
         // "invalid minor version for major version (spec table 4.1A) - %s"
-        assert major < MAJOR_PREVIEW || minor == 0 || minor == PREVIEW:M91.format(this);
+        assert major < MAJOR_PREVIEW || minor == 0 || minor == PREVIEW:M91.format(this.name());
     }
     
     private static boolean isUnsignedShort(int ushort) {
@@ -104,6 +104,10 @@ public enum JvmVersion {
         return name();
     }
 
+    public String asClassFile() {
+        return name().replace("V1_", "V");
+    }
+    
     private void checkValhalla() {
         if (OPTION(VALHALLA) && !supports(Feature.valhalla)) {
            LOG(M602, this); // "Version %s certainly does not support valhalla" 
@@ -132,6 +136,7 @@ public enum JvmVersion {
                     // "incorrect order: last = %s this = %s"
                     :M94.format(last,version);
             PARSE_MAP.put(version.asJava(), version);
+            PARSE_MAP.put(version.asClassFile(), version);
             last = version;
         }
         assert PREVIEW == Opcodes.V_PREVIEW >>> 16;

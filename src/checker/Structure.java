@@ -219,7 +219,7 @@ public class Structure {
         LOGGER().setLine(line);
     }
     
-    public static boolean PrintClassStructure(String klass, PrintWriter pw) {
+    public static boolean printClassStructure(String klass, PrintWriter pw) {
         try {
             pw.println("START " + klass);
             Structure.checkInstance(pw, klass);

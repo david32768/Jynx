@@ -336,7 +336,7 @@ public enum Message {
     M328(WARNING,"%s nest level is already zero"),
     M329(INFO,"print options = %s"),
     M330("maximum code size of %d exceeded; method size = [%d,%d]"),
-
+    M331("MainOption service for %s not found"),
     M332(BLANK,"GlobalOption abbreviations are not unique after transform"),
     M333(BLANK,"GlobalOption names are not unique after transform"),
     M334("abbrev '%s' for option %s has invalid name"),
@@ -408,6 +408,9 @@ public enum Message {
     M610("ambiguous case %d in %s dropped"),
     M611(INFO,"case(s) with branch to default label in %s dropped"),
     M612(BLANK,"%s ; line %d"),
+    M613(BLANK,"slot %d name = %s type = %s"),
+    M614(BLANK,"%s handled at %s"),
+    M615(BLANK,"%s handler"),
 
     M800(ENDINFO,"line number 0 changed to 1; ASM Issue #317989"),
     M801(FINE,"min length = %d max length = %d"),

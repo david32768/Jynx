@@ -8,4 +8,9 @@ module com.github.david32768x.jynx {
 	requires org.objectweb.asm.tree.analysis;
 	requires org.objectweb.asm.util;
  	uses jynx2asm.ops.MacroLib;
+        uses jynx.MainOptionService;
+        provides jynx.MainOptionService with asm2jynx.Main2Jynx,
+                checker.MainStructure,
+                jynx2asm.MainJynx,
+                roundtrip.MainRoundTrip;
 }

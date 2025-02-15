@@ -371,7 +371,7 @@ public class JynxClassHdr implements ContextDependent, HasAccessFlags {
             }
         }
         if (cname.contains("$") && !inner) {
-            LOG(M52); // "class name contains '$' but is not an internal class"
+            LOG("; .end_header",M52); // "class name contains '$' but is not an internal class"
         }
     }
 

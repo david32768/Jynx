@@ -157,10 +157,10 @@ public class Logger {
     }
 
     void log(String line, Message msg, Object... objs) {
-        String savedline = currentLine;
+        pushCurrent();
         setLine(line);
         log(msg,objs);
-        currentLine = savedline;
+        popCurrent();
     }
 
 }

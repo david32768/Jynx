@@ -14,15 +14,16 @@ import org.objectweb.asm.util.TraceClassVisitor;
 
 import static jynx.Global.ADD_OPTIONS;
 import static jynx.Global.LOG;
+import static jynx.Global.OPTION;
 import static jynx.Global.OPTIONS;
 import static jynx.Message.M87;
 
 import asm.JynxClassReader;
-import asm2jynx.JynxDisassemble;
 import jynx.ClassUtil;
 import jynx.Global;
 import jynx.GlobalOption;
 import jynx.MainOption;
+import jynx.MainOptionService;
 import jynx2asm.JynxClass;
 import jynx2asm.JynxScanner;
 
@@ -48,11 +49,20 @@ public class RoundTrip {
             LOG(M87,GlobalOption.SKIP_FRAMES,GlobalOption.USE_STACK_MAP); // "options %s and %s conflict"
             return false;
         }
-        Global.newGlobal(MainOption.DISASSEMBLY);
+        var disasm = OPTION(GlobalOption.USE_CLASSFILE)?
+                MainOption.TOJYNX:
+                MainOption.DISASSEMBLY;
+        options.remove(GlobalOption.USE_CLASSFILE);
+        return roundTripClass(classname, options, disasm);
+    }
+
+    private static boolean roundTripClass(String classname, EnumSet<GlobalOption> options, MainOption disasm) {
+        Global.newGlobal(disasm);
         ADD_OPTIONS(options);
+        var main = MainOptionService.find(disasm);
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
-        boolean success = JynxDisassemble.a2jpw(pw, classname);
+        boolean success = main.call(classname, pw);
         if (!success) {
             System.out.format("disassembly of %s failed%n", classname);
             return false;
@@ -84,5 +94,4 @@ public class RoundTrip {
         }
         return success;
     }
-    
 }

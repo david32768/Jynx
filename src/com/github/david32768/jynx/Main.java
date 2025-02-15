@@ -94,7 +94,7 @@ public class Main {
         }
         boolean success;
         try {
-            success = main.fn().test(optname);
+            success = main.run(optname);
         } catch (SevereError ex) {
             if (OPTION(GlobalOption.DEBUG)) {
                 ex.printStackTrace();;

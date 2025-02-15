@@ -53,7 +53,7 @@ public enum Directive implements JvmVersioned {
     end_comment(READ_END, EnumSet.noneOf(State.class)),
 
     dir_annotation(COMMON, EnumSet.of(CLASSHDR,FIELD_BLOCK, METHOD_BLOCK, MODULEHDR,COMPONENT_BLOCK,PACKAGEHDR),
-            RuntimeInvisibleAnnotations),
+            Feature.annotations),
 
     dir_param_type_annotation(COMMON, EnumSet.of(CLASSHDR, METHOD_BLOCK, MODULEHDR, PACKAGEHDR),
             Feature.type_annotations),
